@@ -1,0 +1,82 @@
+{% load static %}
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tenis systém Čimice — Domů</title>
+  <link rel="stylesheet" href="{% static 'home/landing.css' %}">
+</head>
+<body>
+  <!-- hvězdné/ball pozadí -->
+<canvas id="bg" data-ball-src="{% static 'home/tennisball.png' %}" aria-hidden="true"></canvas>
+
+
+  <header class="site-top">
+    <a class="brand" href="{% url 'home' %}">
+        <img src="{% static 'admin/tenis_logo.png' %}" alt="Tenis systém Čimice" class="brand-logo">
+        <span>Tenis systém Čimice</span>
+      </a>
+      
+
+    <nav class="top-links">
+      <a href="{{ pricing_url }}">Ceník</a>
+      <a href="{{ players_url }}">Hráči</a>
+      <a href="{{ payments_url }}">Platby</a>
+      <a href="{{ coaches_url }}">Trenéři</a>
+      <a class="cta" href="{{ admin_index_url }}">Přejít do administrace</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="chip">🎾 Live • Systém pro tenisové trenéry a kluby</p>
+      <h1>Trénink je umění<br><em>trenéři potřebují nástroje</em></h1>
+      <p class="lead">
+        Plánuj tréninky, účtuj korektně podle sazeb a období, vyplácej trenéry na pár kliků.
+        Celý klub v jedné aplikaci.
+      </p>
+      <div class="cta-row">
+        <a class="btn primary" href="{{ admin_index_url }}">Přejít do administrace</a>
+        <a class="btn ghost" href="{{ new_training_url }}">➕ Nový trénink</a>
+      </div>
+
+      <!-- ukázkový telefon/karta -->
+      <div class="glass phone">
+        <div class="phone-header">Dnešní trénink</div>
+        <ul class="list">
+          <li><span>08:00</span> Solo • Venku <b>1.0 h</b></li>
+          <li><span>13:00</span> Dvojice • Venku <b>1.0 h</b></li>
+          <li><span>18:00</span> Solo • Hala <b>1.5 h</b></li>
+        </ul>
+        <div class="total">K vyúčtování: <b>3 250 Kč</b></div>
+      </div>
+    </section>
+
+    <section class="features">
+      <article class="card">
+        <h3>Plánování &amp; docházka</h3>
+        <p>Solo, dvojice i skupiny, venek/ hala, délka v minutách – vše na jedné obrazovce.</p>
+      </article>
+      <article class="card">
+        <h3>Sazby podle období</h3>
+        <p>Nastav „od data“ (a volitelně „do data“). Minulé tréninky zůstanou správně oceněné.</p>
+      </article>
+      <article class="card">
+        <h3>Vyúčtování trenérů</h3>
+        <p>Souhrn hodin, zaplaceno, k vyplacení. Tlačítko <em>Zadat výplatu</em> přímo ze stránky.</p>
+      </article>
+      <article class="card">
+        <h3>Platby hráčů</h3>
+        <p>Naúčtováno vs. platby/vratky. Kredit vždy přehledně.</p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    © {{ now|default:2025 }} Tenis systém Čimice · <a href="{{ admin_index_url }}">Admin</a>
+  </footer>
+
+  <script src="{% static 'home/landing.js' %}"></script>
+</body>
+</html>

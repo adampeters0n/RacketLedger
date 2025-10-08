@@ -1,0 +1,95 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">Domů</a> › Core
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+
+  <div class="player-summary" style="margin-top:8px;">
+    <div class="ps-item"><div class="ps-label">Hráčů celkem</div><div class="ps-value">{{ kpis.players }}</div></div>
+    <div class="ps-item"><div class="ps-label">Dnešní tréninky</div><div class="ps-value">{{ kpis.trainings_today }}</div></div>
+    <div class="ps-item"><div class="ps-label">Odehrané hodiny (měsíc)</div><div class="ps-value">{{ kpis.hours_month }}</div></div>
+    <div class="ps-item"><div class="ps-label">Naúčtováno (měsíc)</div><div class="ps-value">{{ kpis.nauctovano_month }}</div></div>
+    <div class="ps-item"><div class="ps-label">Přijaté platby (měsíc)</div><div class="ps-value">{{ kpis.platby_month }}</div></div>
+  </div>
+
+  <div class="module" style="margin-top:12px;padding:12px 14px;">
+    <div class="object-tools" style="margin:0;padding:0;">
+      <a href="{{ quick.add_training }}">+ Nový trénink</a>
+      <a href="{{ quick.add_payment }}">+ Platba od hráče</a>
+      <a href="{{ quick.add_player }}">+ Nový hráč</a>
+      <a href="{{ quick.pricelist }}" class="secondary">Ceník</a>
+    </div>
+  </div>
+
+  <div style="display:grid; gap:14px; grid-template-columns: 1.2fr 1fr;">
+    <div class="module">
+      <h2>Dnešní a nejbližší tréninky</h2>
+      <table class="results">
+        <thead><tr><th>Datum &amp; čas</th><th>Formát</th><th>Kurt</th><th>Trenér</th><th>Hráči</th></tr></thead>
+        <tbody>
+          {% if upcoming %}
+            {% for r in upcoming %}
+              <tr>
+                <td><a href="{{ r.url }}">{{ r.when }}</a></td>
+                <td>{{ r.format }}</td>
+                <td>{{ r.kurt }}</td>
+                <td>{{ r.trener }}</td>
+                <td>{{ r.hraci }}</td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr><td colspan="5">Žádné nadcházející tréninky.</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="display:grid; gap:14px;">
+      <div class="module">
+        <h2>Poslední platby</h2>
+        <table class="results payments">
+          <thead><tr><th>Datum</th><th>Hráč</th><th>Částka</th></tr></thead>
+          <tbody>
+            {% if posledni_platby %}
+              {% for p in posledni_platby %}
+                <tr>
+                  <td><a href="{{ p.url }}">{{ p.when }}</a></td>
+                  <td>{{ p.hrac }}</td>
+                  <td class="center">{{ p.castka }}</td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr><td colspan="3">Žádné platby.</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="module">
+        <h2>Top dlužníci (hráči)</h2>
+        <table class="results">
+          <thead><tr><th>Hráč</th><th class="center">Kredit</th></tr></thead>
+          <tbody>
+            {% if debtors %}
+              {% for d in debtors %}
+                <tr>
+                  <td><a href="{{ d.url }}">{{ d.name }}</a></td>
+                  <td class="center">{{ d.kredit }}</td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr><td colspan="2">Nikdo nedluží 🎉</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

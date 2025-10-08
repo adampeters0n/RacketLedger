@@ -1,0 +1,150 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'admin/custom.css' %}">
+  <style>
+    .dash-wrap { padding:16px 20px; }
+    .kpi-grid { display:grid; grid-template-columns: repeat(4, minmax(180px,1fr)); gap:14px; margin-bottom:18px; }
+    .kpi { background:#fff; border-radius:12px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+    .kpi .label { color:#666; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    .kpi .value { font-size:22px; font-weight:700; margin-top:4px; }
+
+    .cols { display:grid; grid-template-columns: 2fr 1fr; gap:18px; }
+    .card { background:#fff; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+    .card h3 { margin:0; padding:12px 16px; border-bottom:1px solid #eee; font-weight:600; }
+    .card .inner { padding:10px 12px; }
+
+    .quick { display:flex; flex-wrap:wrap; gap:8px; padding:10px 12px; }
+    .quick a.button { padding:8px 12px; border-radius:10px; font-weight:600; }
+
+    table.list { width:100%; border-collapse:collapse; }
+    table.list th, table.list td { padding:8px 10px; border-bottom:1px solid #f0f0f0; }
+    table.list th { text-align:left; color:#666; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    table.list td.num { text-align:right; white-space:nowrap; }
+    .muted { color:#777; }
+    @media (max-width: 1100px) {
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .cols { grid-template-columns: 1fr; }
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="dash-wrap">
+
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="label">Odehrané hodiny (měsíc)</div>
+      <div class="value">{{ kpis.hours }}</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Naúčtováno (měsíc)</div>
+      <div class="value">{{ kpis.nauctovano }}</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Přijaté platby (měsíc)</div>
+      <div class="value">{{ kpis.platby }}</div>
+    </div>
+    <div class="kpi">
+      <div class="label">K vyplacení trenérům (měsíc)</div>
+      <div class="value">{{ kpis.k_vyplaceni }}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="quick">
+      <a class="button default" href="{{ quick.add_training }}">+ Nový trénink</a>
+      <a class="button" href="{{ quick.add_payment }}">+ Platba od hráče</a>
+      <a class="button" href="{{ quick.add_player }}">+ Nový hráč</a>
+      <a class="button" href="{{ quick.coaches }}">Přehled trenérů</a>
+    </div>
+  </div>
+
+  <div class="cols" style="margin-top:18px;">
+    <div>
+      <div class="card">
+        <h3>Poslední platby</h3>
+        <div class="inner">
+          <table class="list">
+            <thead><tr><th>Datum</th><th>Hráč</th><th class="num">Částka</th></tr></thead>
+            <tbody>
+            {% for p in posledni_platby %}
+              <tr>
+                <td><a href="{{ p.url }}">{{ p.when }}</a></td>
+                <td>{{ p.hrac }}</td>
+                <td class="num">{{ p.castka }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="3" class="muted">Žádné platby.</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <h3>Poslední tréninky</h3>
+        <div class="inner">
+          <table class="list">
+            <thead><tr><th>Datum</th><th>Trenér</th><th>Formát</th></tr></thead>
+            <tbody>
+            {% for t in posledni_treninky %}
+              <tr>
+                <td><a href="{{ t.url }}">{{ t.when }}</a></td>
+                <td>{{ t.trener }}</td>
+                <td>{{ t.format }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="3" class="muted">Žádné tréninky.</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h3>Top dlužníci (hráči)</h3>
+        <div class="inner">
+          <table class="list">
+            <thead><tr><th>Hráč</th><th class="num">Kredit</th></tr></thead>
+            <tbody>
+            {% for r in debtors %}
+              <tr>
+                <td><a href="{{ r.url }}">{{ r.name }}</a></td>
+                <td class="num">{{ r.kredit }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="2" class="muted">Nikdo nedluží 🎉</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px;">
+        <h3>K vyplacení trenérům</h3>
+        <div class="inner">
+          <table class="list">
+            <thead><tr><th>Trenér</th><th class="num">Částka</th></tr></thead>
+            <tbody>
+            {% for r in treneri %}
+              <tr>
+                <td><a href="{{ r.url }}">{{ r.name }}</a></td>
+                <td class="num">{{ r.balance }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="2" class="muted">Nic k vyplacení.</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <div id="content-main">
+    <div class="module">
+      <h2>Trenéři – přehled tréninků</h2>
+      <div class="results">
+        <table id="result_list" class="adminlist">
+          <thead>
+            <tr>
+              <th scope="col">Trenér</th>
+              <th scope="col">Datum</th>
+              <th scope="col">Čas</th>
+              <th scope="col">Formát</th>
+              <th scope="col">Kurt</th>
+              <th scope="col">Hráči</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in rows %}
+              <tr>
+                <td><a href="{{ r.trener_change_url }}">{{ r.trener }}</a></td>
+                <td><a href="{{ r.trening_change_url }}">{{ r.datum }}</a></td>
+                <td>{{ r.cas }}</td>
+                <td>{{ r.format }}</td>
+                <td>{{ r.kurt }}</td>
+                <td>{{ r.hraci }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="6">Žádné tréninky k zobrazení.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

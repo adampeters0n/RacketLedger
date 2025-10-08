@@ -1,0 +1,34 @@
+# --- Secrets ---
+.env
+*.env
+*.env.*
+
+# --- Python / Django ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.so
+*.egg-info/
+dist/
+build/
+
+# DB (lokální vývoj)
+db.sqlite3
+*.sqlite3
+*.sqlite3-journal
+
+# Statika: produkční výstup (sbírá se collectstatic)
+staticfiles/
+
+# Media (pokud máš lokálně nahrávané soubory)
+media/
+
+# Virtuální prostředí
+venv/
+.envrc
+
+# IDE/OS
+.DS_Store
+.vscode/
+.idea/
+*.swp

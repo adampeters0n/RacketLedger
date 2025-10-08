@@ -1,0 +1,43 @@
+{% extends "web/base.html" %}
+{% block title %}Platby • Tenis systém{% endblock %}
+{% block header %}Tabulka plateb{% endblock %}
+
+{% block content %}
+<div class="panel overflow-hidden">
+  <div class="p-4 border-b border-slate-700 text-slate-300">
+    Kredit • Naúčtováno od poslední platby • Hodiny od poslední platby
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead class="bg-slate-900 sticky top-0">
+        <tr>
+          <th class="text-left py-3 px-4">Hráč</th>
+          <th class="text-right py-3 px-4">Kredit</th>
+          <th class="text-right py-3 px-4">Naúčtováno</th>
+          <th class="text-right py-3 px-4">Hodiny</th>
+          <th class="py-3 px-4 text-center">Akce</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+          <tr class="border-t border-slate-800">
+            <td class="py-3 px-4">
+              <a href="/admin/core/hrac/{{ r.id }}/change/" class="hover:underline">{{ r.jmeno }}</a>
+            </td>
+            <td class="py-3 px-4 text-right">{{ r.kredit|floatformat:0 }} Kč</td>
+            <td class="py-3 px-4 text-right">{{ r.charges|floatformat:0 }} Kč</td>
+            <td class="py-3 px-4 text-right">{{ r.hours|floatformat:2 }} h</td>
+            <td class="py-3 px-4 text-center">
+              <a class="btn btn-primary"
+                 href="/admin/core/transakce/add/?hrac={{ r.id }}">Zadat platbu</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="py-8 text-center text-slate-400">Žádní hráči.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

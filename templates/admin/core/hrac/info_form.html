@@ -1,0 +1,20 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+  <div id="content" class="colM">
+    <h1>{{ title }}</h1>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="module aligned">
+        {{ form.as_p }}
+      </div>
+
+      <div class="submit-row">
+        <input type="submit" value="Uložit" class="default">
+        <a class="button" href="{% url 'admin:core_hrac_change' original.pk %}">Zpět na hráče</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}
