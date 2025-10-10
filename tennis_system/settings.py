@@ -108,6 +108,8 @@ DATABASES = {
     "default": dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
         conn_max_age=600,
+        conn_health_checks=True,   # ✅ PATCH: health-check spojení
+        ssl_require=True,          # ✅ PATCH: vynutit TLS pro Neon/Render
     )
 }
 
@@ -135,6 +137,10 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"          # kam se sbírá produkční statika
 STATICFILES_DIRS = [BASE_DIR / "static"]        # tvé zdrojové statické soubory (pokud složka existuje)
+
+# ✅ PATCH: cesty pro budoucí uploady médií
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # Django 5+: STORAGES – WhiteNoise s manifestem v produkci
 if not DEBUG:
@@ -181,6 +187,9 @@ else:
 # =====================================
 # PRODUKČNÍ BEZPEČNOST (když DEBUG=False)
 # =====================================
+# ✅ PATCH: za reverzní proxy používej host z X-Forwarded-Host
+USE_X_FORWARDED_HOST = True
+
 if not DEBUG:
     # za reverzní proxy (Render/Railway) – důležité pro správné schéma https
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
