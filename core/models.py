@@ -337,22 +337,21 @@ class Hrac(models.Model):
             </div>
             """
 
-            from_email = getattr(settings, "DEFAULT_FROM_EMAIL", None) or getattr(settings, "EMAIL_HOST_USER", None)
+            import logging
+            logger = logging.getLogger(__name__)
+
             msg = EmailMultiAlternatives(
                 subject,
                 text_body,
-                from_email,
+                getattr(settings, "DEFAULT_FROM_EMAIL", None),
                 [self.email],
             )
             msg.attach_alternative(html_body, "text/html")
-            try:
-                sent = msg.send(fail_silently=False)
-            except Exception as e:
-                import logging
-                logging.getLogger(__name__).exception(
-                    "Chyba při odeslání vyúčtování hráči %s (%s): %s",
-                    self.cele_jmeno, self.email, e
-                )
+
+            logger.info(">>> VYUCTOVANI: jdu poslat mail hraci=%s email=%s subject=%s", self.cele_jmeno, self.email, subject)
+            sent_count = msg.send(fail_silently=False)  # když selže, vyhodí výjimku do logu
+            logger.info(">>> VYUCTOVANI: odeslano OK, Django send() vratil=%s", sent_count)
+
 
         return vyuct
 
