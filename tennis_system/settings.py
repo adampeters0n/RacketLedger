@@ -162,18 +162,27 @@ REST_FRAMEWORK = {
 }
 
 # =====================================
-# E-MAIL (SMTP volny.cz) – upravené defaulty pro 587/TLS
+# E-MAIL (SMTP volny.cz) – výchozí 465/SSL
 # =====================================
 USE_SMTP = (not DEBUG) or (_get_bool("EMAIL_FORCE_SMTP", False))
 
 if USE_SMTP:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
     EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.volny.cz")
-    EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))  # ✅ default 587 = TLS
+
+    # Výchozí režim: SSL (465). TLS vypnuté.
+    EMAIL_USE_SSL = _get_bool("EMAIL_USE_SSL", True)
+    EMAIL_USE_TLS = _get_bool("EMAIL_USE_TLS", False)
+
+    # Pokud by někdo v env zapnul oboje, vynutíme SSL a TLS vypneme.
+    if EMAIL_USE_SSL and EMAIL_USE_TLS:
+        EMAIL_USE_TLS = False
+
+    # Port z env, jinak 465 pro SSL nebo 587 pro TLS
+    EMAIL_PORT = int(os.getenv("EMAIL_PORT", "465" if EMAIL_USE_SSL else "587"))
+
     EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "kptenis@volny.cz")
     EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
-    EMAIL_USE_SSL = _get_bool("EMAIL_USE_SSL", False)  # ✅ default False
-    EMAIL_USE_TLS = _get_bool("EMAIL_USE_TLS", True)   # ✅ default True
     EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "30"))
 
     DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Tenis Čimice <kptenis@volny.cz>")
@@ -184,6 +193,7 @@ else:
     DEFAULT_FROM_EMAIL = "Tenis Čimice <kptenis@volny.cz>"
     SERVER_EMAIL = "kptenis@volny.cz"
     EMAIL_SUBJECT_PREFIX = "[Tenis Čimice] "
+
 
 # =====================================
 # PRODUKČNÍ BEZPEČNOST (když DEBUG=False)
