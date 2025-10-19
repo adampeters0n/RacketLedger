@@ -12,6 +12,8 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django.utils import timezone as dj_tz
 from django.utils.html import format_html
+import logging
+logger = logging.getLogger(__name__)
 
 
 # =========================
@@ -335,17 +337,22 @@ class Hrac(models.Model):
             </div>
             """
 
+            from_email = getattr(settings, "DEFAULT_FROM_EMAIL", None) or getattr(settings, "EMAIL_HOST_USER", None)
             msg = EmailMultiAlternatives(
                 subject,
                 text_body,
-                getattr(settings, "DEFAULT_FROM_EMAIL", None),
+                from_email,
                 [self.email],
             )
             msg.attach_alternative(html_body, "text/html")
             try:
-                msg.send(fail_silently=False)
-            except Exception:
-                pass
+                sent = msg.send(fail_silently=False)
+            except Exception as e:
+                import logging
+                logging.getLogger(__name__).exception(
+                    "Chyba při odeslání vyúčtování hráči %s (%s): %s",
+                    self.cele_jmeno, self.email, e
+                )
 
         return vyuct
 

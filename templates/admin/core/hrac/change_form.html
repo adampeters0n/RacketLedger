@@ -119,7 +119,9 @@
 
   <!-- panel s vyúčtováním -->
   <div class="actions-row">
-    <form method="post" style="display:flex; gap:8px; align-items:center;">
+    <form method="post"
+          action="{% url 'admin:core_hrac_vyuctovat' original.pk %}"
+          style="display:flex; gap:8px; align-items:center;">
       {% csrf_token %}
       <label for="id_vyuct_from">Období</label>
       <input type="date" name="_vyuct_from" id="id_vyuct_from">
@@ -130,7 +132,7 @@
       <input type="number" name="_castka_k_uhrazeni" id="id_castka_k_uhrazeni"
              step="1" min="0" placeholder="např. 5000" style="width:120px;">
 
-      <button type="submit" name="_vygenerovat_vyuctovani" class="button default">
+      <button type="submit" class="button default">
         Vygenerovat vyúčtování teď
       </button>
     </form>

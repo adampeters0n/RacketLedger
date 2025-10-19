@@ -13,8 +13,6 @@ from django.urls import path, reverse
 from django.utils import timezone as dj_tz
 from django.utils.html import format_html, format_html_join
 from django import forms
-from django.contrib.auth.models import User
-from django.utils import timezone as dj_tz
 from django.contrib.admin.widgets import AdminSplitDateTime
 
 
@@ -49,7 +47,7 @@ class HracAdmin(admin.ModelAdmin):
     change_form_template = "admin/core/hrac/change_form.html"
     change_list_template = "admin/core/hrac/change_list.html"
 
-    # --- URL pro stránku "Změna informací" ---
+    # --- URL pro stránku "Změna informací" + POST vyúčtování ---
     def get_urls(self):
         from django.urls import path
         urls = super().get_urls()
@@ -58,6 +56,11 @@ class HracAdmin(admin.ModelAdmin):
                 "<int:object_id>/info/",
                 self.admin_site.admin_view(self.info_view),
                 name="core_hrac_info",
+            ),
+            path(
+                "<int:object_id>/vyuctovat/",
+                self.admin_site.admin_view(self.vyuctovat_view),
+                name="core_hrac_vyuctovat",
             ),
         ]
         return my + urls
@@ -92,6 +95,62 @@ class HracAdmin(admin.ModelAdmin):
         )
         return TemplateResponse(request, "admin/core/hrac/info_form.html", ctx)
 
+    def vyuctovat_view(self, request, object_id, *args, **kwargs):
+        """POST endpoint pro tlačítko 'Vygenerovat vyúčtování teď'."""
+        from decimal import Decimal, InvalidOperation
+        from datetime import datetime, time
+        from django.utils import timezone as dj_tz
+
+        hrac = self.get_object(request, object_id)
+        if not hrac:
+            self.message_user(request, "Hráč neexistuje.", level=messages.ERROR)
+            return redirect("admin:core_hrac_changelist")
+
+        if request.method != "POST":
+            return redirect("admin:core_hrac_change", object_id)
+
+        # volitelná částka k úhradě
+        raw_amt = (request.POST.get("_castka_k_uhrazeni") or "").strip()
+        override_amount = None
+        if raw_amt:
+            try:
+                override_amount = Decimal(raw_amt.replace(",", "."))
+                if override_amount < 0:
+                    override_amount = None
+            except (InvalidOperation, ValueError):
+                override_amount = None
+
+        # volitelné období Od/Do (YYYY-MM-DD)
+        def _parse_date(s: str, end: bool = False):
+            s = (s or "").strip()
+            if not s:
+                return None
+            try:
+                d = datetime.strptime(s, "%Y-%m-%d").date()
+            except Exception:
+                return None
+            t = time.max if end else time.min
+            return dj_tz.make_aware(datetime.combine(d, t), dj_tz.get_current_timezone())
+
+        vfrom = _parse_date(request.POST.get("_vyuct_from"), end=False)
+        vto   = _parse_date(request.POST.get("_vyuct_to"),   end=True)
+
+        vyuct = hrac.vygeneruj_vyuctovani(
+            duvod="manual",
+            send_email=True,
+            override_amount_due=override_amount,
+            override_period_from=vfrom,
+            override_period_to=vto,
+        )
+
+        self.message_user(
+            request,
+            f"Vyúčtování vytvořeno. K úhradě: {vyuct.amount_due:.0f} Kč. "
+            f"E-mail: {'odeslán' if hrac.email else 'není vyplněn'}",
+            level=messages.SUCCESS,
+        )
+        return redirect("admin:core_hrac_change", object_id)
+
     def kredit_display(self, obj):
         return f"{obj.kredit:.0f} Kč"
     kredit_display.short_description = "Kredit"
@@ -107,57 +166,6 @@ class HracAdmin(admin.ModelAdmin):
     
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
-        # --- POST: manuální vyúčtování (volitelná částka + období) ---
-        if request.method == "POST" and "_vygenerovat_vyuctovani" in request.POST:
-            hrac = Hrac.objects.get(pk=object_id)
-
-            # volitelná částka k úhradě
-            raw = (request.POST.get("_castka_k_uhrazeni") or "").strip()
-            override_amount = None
-            if raw:
-                try:
-                    override_amount = Decimal(raw.replace(",", "."))
-                    if override_amount < 0:
-                        override_amount = None
-                except (InvalidOperation, ValueError):
-                    override_amount = None
-
-            # volitelné období Od/Do
-            raw_from = (request.POST.get("_vyuct_from") or "").strip()
-            raw_to   = (request.POST.get("_vyuct_to") or "").strip()
-
-            def _parse_date(s: str, end: bool = False):
-                if not s:
-                    return None
-                try:
-                    d = datetime.strptime(s, "%Y-%m-%d").date()
-                    t = time.max if end else time.min
-                    return dj_tz.make_aware(
-                        datetime.combine(d, t),
-                        dj_tz.get_current_timezone()
-                    )
-                except Exception:
-                    return None
-
-            override_from = _parse_date(raw_from, end=False)
-            override_to   = _parse_date(raw_to, end=True)
-
-            vyuct = hrac.vygeneruj_vyuctovani(
-                duvod="manual",
-                send_email=True,
-                override_amount_due=override_amount,
-                override_period_from=override_from,
-                override_period_to=override_to,
-            )
-
-            self.message_user(
-                request,
-                f"Vyúčtování vytvořeno. K úhradě: {vyuct.amount_due:.0f} Kč. "
-                f"E-mail: {'odeslán' if hrac.email else 'není vyplněn'}",
-                level=messages.SUCCESS,
-            )
-            return redirect(request.path)
-
         # --- GET: detail s historií + FILTR OBDOBÍ ---
         hrac = Hrac.objects.get(pk=object_id)
 
