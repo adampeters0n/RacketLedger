@@ -1,11 +1,10 @@
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
-from datetime import datetime, timedelta, time
-
+from datetime import datetime, time, timedelta
+import logging
 
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-
 from django.db.models import Sum, Case, When, F, Value, DecimalField
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
@@ -14,7 +13,6 @@ from django.utils import timezone as dj_tz
 from django.utils.html import format_html, format_html_join
 from django import forms
 from django.contrib.admin.widgets import AdminSplitDateTime
-
 
 from .models import (
     Hrac,
@@ -31,7 +29,7 @@ from .models import (
 )
 
 User = get_user_model()
-
+logger = logging.getLogger(__name__)
 
 
 # -----------------------------
@@ -40,8 +38,8 @@ User = get_user_model()
 @admin.register(Hrac)
 class HracAdmin(admin.ModelAdmin):
     list_display = ("jmeno", "email", "kredit_display", "rodina_link")
-    search_fields = ("jmeno",) 
-    fields = ("jmeno", "email", "rodina")   # ⬅️ umožní nastavit rodinu v detailu
+    search_fields = ("jmeno",)
+    fields = ("jmeno", "email", "rodina")
     actions = ["akce_vygenerovat_vyuctovani"]
 
     change_form_template = "admin/core/hrac/change_form.html"
@@ -49,7 +47,6 @@ class HracAdmin(admin.ModelAdmin):
 
     # --- URL pro stránku "Změna informací" + POST vyúčtování ---
     def get_urls(self):
-        from django.urls import path
         urls = super().get_urls()
         my = [
             path(
@@ -97,10 +94,6 @@ class HracAdmin(admin.ModelAdmin):
 
     def vyuctovat_view(self, request, object_id, *args, **kwargs):
         """POST endpoint pro tlačítko 'Vygenerovat vyúčtování teď'."""
-        from decimal import Decimal, InvalidOperation
-        from datetime import datetime, time
-        from django.utils import timezone as dj_tz
-
         hrac = self.get_object(request, object_id)
         if not hrac:
             self.message_user(request, "Hráč neexistuje.", level=messages.ERROR)
@@ -133,7 +126,12 @@ class HracAdmin(admin.ModelAdmin):
             return dj_tz.make_aware(datetime.combine(d, t), dj_tz.get_current_timezone())
 
         vfrom = _parse_date(request.POST.get("_vyuct_from"), end=False)
-        vto   = _parse_date(request.POST.get("_vyuct_to"),   end=True)
+        vto = _parse_date(request.POST.get("_vyuct_to"), end=True)
+
+        logger.info(
+            ">>> HRAC_VYUCTOVAT: start hrac_id=%s jmeno=%s email=%s override_amount=%s vfrom=%s vto=%s",
+            hrac.pk, hrac.jmeno, hrac.email, override_amount, vfrom, vto
+        )
 
         vyuct = hrac.vygeneruj_vyuctovani(
             duvod="manual",
@@ -141,6 +139,11 @@ class HracAdmin(admin.ModelAdmin):
             override_amount_due=override_amount,
             override_period_from=vfrom,
             override_period_to=vto,
+        )
+
+        logger.info(
+            ">>> HRAC_VYUCTOVAT: hotovo hrac_id=%s amount_due=%s vyuct_id=%s",
+            hrac.pk, getattr(vyuct, "amount_due", None), getattr(vyuct, "pk", None)
         )
 
         self.message_user(
@@ -162,11 +165,27 @@ class HracAdmin(admin.ModelAdmin):
         nazev = obj.rodina.nazev or f"Rodina #{obj.rodina_id}"
         return format_html('<a href="{}">{}</a>', url, nazev)
     rodina_link.short_description = "Rodina"
-   
-    
+
+    # Admin akce: vygenerovat vyúčtování pro vybrané hráče
+    def akce_vygenerovat_vyuctovani(self, request, queryset):
+        count = 0
+        for hrac in queryset:
+            vyuct = hrac.vygeneruj_vyuctovani(
+                duvod="manual",
+                send_email=True,
+                override_amount_due=None,
+                override_period_from=None,
+                override_period_to=None,
+            )
+            logger.info(
+                ">>> HRAC_AKCE_VYUCTOVAT: hrac_id=%s email=%s amount_due=%s vyuct_id=%s",
+                hrac.pk, hrac.email, getattr(vyuct, "amount_due", None), getattr(vyuct, "pk", None)
+            )
+            count += 1
+        self.message_user(request, f"Vyúčtování vytvořeno pro {count} hráčů.", level=messages.SUCCESS)
+    akce_vygenerovat_vyuctovani.short_description = "Vygenerovat vyúčtování (poslat e-mail)"
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
-        # --- GET: detail s historií + FILTR OBDOBÍ ---
         hrac = Hrac.objects.get(pk=object_id)
 
         def _parse_date(s: str):
@@ -178,7 +197,6 @@ class HracAdmin(admin.ModelAdmin):
         dfrom = _parse_date(request.GET.get("from", ""))
         dto = _parse_date(request.GET.get("to", ""))
 
-        # Základní QS pro přehled – CHARGES (tréninky) a PAYMENTS
         charges_qs = (
             hrac.transakce
             .filter(typ=Transakce.Typ.NAUCTOVANO)
@@ -199,7 +217,6 @@ class HracAdmin(admin.ModelAdmin):
         if dto:
             pays_qs = pays_qs.filter(vytvoreno__date__lte=dto)
 
-        # Počáteční kredit před obdobím (pro správný průběžný kredit v tabulce)
         start_credit = Decimal("0")
         if dfrom:
             before_charges = (
@@ -214,18 +231,17 @@ class HracAdmin(admin.ModelAdmin):
             )
             start_credit = (Decimal(before_pays) - Decimal(before_charges)).quantize(Decimal("0.01"))
 
-        # Sloučíme do jedné časové osy
         events = []
         for tx in charges_qs:
             dt = tx.trening.datum if tx.trening else tx.vytvoreno
             if dj_tz.is_aware(dt):
                 dt = dj_tz.localtime(dt)
-            events.append((dt, tx, True))   # True = trénink (NAUČTOVANO)
+            events.append((dt, tx, True))
         for tx in pays_qs:
             dt = tx.vytvoreno
             if dj_tz.is_aware(dt):
                 dt = dj_tz.localtime(dt)
-            events.append((dt, tx, False))  # False = platba/vratka
+            events.append((dt, tx, False))
         events.sort(key=lambda t: t[0])
 
         def _fmt_dt(dt):
@@ -235,7 +251,6 @@ class HracAdmin(admin.ModelAdmin):
                 dt = dj_tz.localtime(dt)
             return dt.strftime("%d.%m.%Y"), dt.strftime("%H:%M")
 
-        # Stavba řádků + součty v období
         rows = []
         running_credit = start_credit
         total_min = 0
@@ -280,7 +295,6 @@ class HracAdmin(admin.ModelAdmin):
         trainings_hours = (Decimal(total_min) / Decimal(60)).quantize(Decimal("0"))
         end_credit = running_credit
 
-        # --- extra_context pro šablonu ---
         extra_context = extra_context or {}
         extra_context["ledger_rows"] = rows
         extra_context["ledger_totals"] = {
@@ -294,7 +308,6 @@ class HracAdmin(admin.ModelAdmin):
         extra_context["show_generate_button"] = True
         extra_context["vyuctovani_list_url"] = f"{reverse('admin:core_vyuctovani_changelist')}?hrac__id__exact={object_id}"
 
-        # Souhrnné kartičky
         extra_context["player_summary"] = {
             "trainings_count": trainings_count,
             "trainings_sum": f"{sum_cena:.0f} Kč",
@@ -302,7 +315,6 @@ class HracAdmin(admin.ModelAdmin):
             "credit": f"{end_credit:.0f} Kč",
             "credit_raw": end_credit,
         }
-        
 
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
 
@@ -312,22 +324,19 @@ class HracAdmin(admin.ModelAdmin):
 # -----------------------------
 @admin.register(Rodina)
 class RodinaAdmin(admin.ModelAdmin):
-    # seznam rodin – bez čísla, jen název + souhrnný kredit
     list_display = ("nazev", "kredit_total_display")
     list_display_links = ("nazev",)
     ordering = ("nazev",)
     search_fields = ("nazev", "clenove__jmeno")
 
-    # ✅ ve formuláři zobrazíme jen název, e-mail a náhled členů rodiny
     fields = ("nazev", "kontakt_email", "clenove_preview")
     readonly_fields = ("clenove_preview",)
 
-    change_list_template = "admin/core/rodina/change_list.html"   # živé hledání jako u hráčů
-    change_form_template = "admin/core/rodina/change_form.html"   # historie + vyúčtování rodiny
+    change_list_template = "admin/core/rodina/change_list.html"
+    change_form_template = "admin/core/rodina/change_form.html"
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        # souhrnný kredit rodiny = sum(platby/vratky) - sum(naúčtováno) napříč členy
         return qs.annotate(
             _kredit=Sum(
                 Case(
@@ -351,7 +360,6 @@ class RodinaAdmin(admin.ModelAdmin):
     kredit_total_display.short_description = "KREDIT"
     kredit_total_display.admin_order_field = "_kredit"
 
-    # ✅ Readonly box s přehledem členů (odkazy + aktuální kredit)
     def clenove_preview(self, obj):
         if not obj or not getattr(obj, "pk", None):
             return "Nejprve uložte rodinu. Poté se zde zobrazí její členové."
@@ -378,11 +386,9 @@ class RodinaAdmin(admin.ModelAdmin):
         )
     clenove_preview.short_description = "Členové rodiny"
 
-    # ===== DETAIL RODINY – historie + vyúčtování rodiny =====
     def change_view(self, request, object_id, form_url="", extra_context=None):
         family = self.get_object(request, object_id)
 
-        # --- POST: vyúčtování rodiny (volitelně s konkrétní částkou) ---
         if request.method == "POST" and "_vyuctovat_rodinu" in request.POST:
             def _parse_date(s, end=False):
                 s = (s or "").strip()
@@ -396,9 +402,8 @@ class RodinaAdmin(admin.ModelAdmin):
                 return dj_tz.make_aware(datetime.combine(d, t), dj_tz.get_current_timezone())
 
             vfrom = _parse_date(request.POST.get("_vyuct_from"), end=False)
-            vto   = _parse_date(request.POST.get("_vyuct_to"),   end=True)
+            vto = _parse_date(request.POST.get("_vyuct_to"), end=True)
 
-            # volitelná celková částka pro rodinu
             raw_amt = (request.POST.get("_castka_k_uhrazeni") or "").strip()
             override_total = None
             if raw_amt:
@@ -418,7 +423,6 @@ class RodinaAdmin(admin.ModelAdmin):
             count = 0
 
             if override_total is not None:
-                # 1) spočti "dluh" každého člena v období (naúčtováno - platby)
                 comp_map = {}
                 positive_sum = Decimal("0.00")
                 for h in members:
@@ -432,7 +436,6 @@ class RodinaAdmin(admin.ModelAdmin):
                     if comp > 0:
                         positive_sum += comp
 
-                # 2) rozděl override_total – poměrně dle dluhu (>0), jinak rovnoměrně
                 cents_total = int((override_total * 100).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
                 allocations = {}
                 if positive_sum > 0:
@@ -449,7 +452,6 @@ class RodinaAdmin(admin.ModelAdmin):
                         allocations[h] = Decimal(per) / 100
                     allocations[members[-1]] = Decimal(cents_total - per * (len(members) - 1)) / 100
 
-                # 3) vyúčtování každému členu s jeho alokací
                 for h in members:
                     vyuct = h.vygeneruj_vyuctovani(
                         duvod="rodina",
@@ -461,7 +463,6 @@ class RodinaAdmin(admin.ModelAdmin):
                     total_due += Decimal(vyuct.amount_due or 0)
                     count += 1
             else:
-                # bez konkrétní částky – standardní výpočet každému členovi
                 for h in members:
                     vyuct = h.vygeneruj_vyuctovani(
                         duvod="rodina",
@@ -479,7 +480,6 @@ class RodinaAdmin(admin.ModelAdmin):
             )
             return redirect(request.path)
 
-        # --- GET: historie všech členů rodiny ---
         def _parse_date(s):
             try:
                 return datetime.strptime(s or "", "%Y-%m-%d").date()
@@ -487,7 +487,7 @@ class RodinaAdmin(admin.ModelAdmin):
                 return None
 
         dfrom = _parse_date(request.GET.get("from"))
-        dto   = _parse_date(request.GET.get("to"))
+        dto = _parse_date(request.GET.get("to"))
 
         members = list(family.clenove.all())
         member_ids = [m.id for m in members] or [-1]
@@ -505,12 +505,11 @@ class RodinaAdmin(admin.ModelAdmin):
 
         if dfrom:
             charges_qs = charges_qs.filter(trening__datum__date__gte=dfrom)
-            pays_qs    = pays_qs.filter(vytvoreno__date__gte=dfrom)
+            pays_qs = pays_qs.filter(vytvoreno__date__gte=dfrom)
         if dto:
             charges_qs = charges_qs.filter(trening__datum__date__lte=dto)
-            pays_qs    = pays_qs.filter(vytvoreno__date__lte=dto)
+            pays_qs = pays_qs.filter(vytvoreno__date__lte=dto)
 
-        # počáteční kredit celé rodiny před obdobím
         start_credit = Decimal("0.00")
         if dfrom:
             before_charges = (
@@ -525,18 +524,17 @@ class RodinaAdmin(admin.ModelAdmin):
             )
             start_credit = (Decimal(before_pays) - Decimal(before_charges)).quantize(Decimal("0.01"))
 
-        # sloučená časová osa
         events = []
         for tx in charges_qs:
             dt = tx.trening.datum if tx.trening else tx.vytvoreno
             if dj_tz.is_aware(dt):
                 dt = dj_tz.localtime(dt)
-            events.append((dt, tx, True))     # True = charge
+            events.append((dt, tx, True))
         for tx in pays_qs:
             dt = tx.vytvoreno
             if dj_tz.is_aware(dt):
                 dt = dj_tz.localtime(dt)
-            events.append((dt, tx, False))    # False = payment
+            events.append((dt, tx, False))
         events.sort(key=lambda t: t[0])
 
         def _fmt_dt(dt):
@@ -587,7 +585,7 @@ class RodinaAdmin(admin.ModelAdmin):
 
         trainings_hours = (Decimal(total_min) / Decimal(60)).quantize(Decimal("0"))
         end_credit = running_credit
-        trainings_count = charges_qs.count()  # <<< počet tréninků v období
+        trainings_count = charges_qs.count()
 
         extra_context = extra_context or {}
         extra_context.update({
@@ -601,8 +599,6 @@ class RodinaAdmin(admin.ModelAdmin):
             "filter_from": dfrom,
             "filter_to": dto,
             "family_members": family.clenove.all(),
-
-            # >>> summary boxy pro rodinu
             "family_summary": {
                 "trainings_count": trainings_count,
                 "trainings_sum": f"{sum_cena:.0f} Kč",
@@ -612,11 +608,6 @@ class RodinaAdmin(admin.ModelAdmin):
             },
         })
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
-
-
-
-
-
 
 
 # -----------------------------
@@ -635,7 +626,6 @@ class CenikAdmin(admin.ModelAdmin):
 class DochazkaInlineForm(forms.ModelForm):
     class Meta:
         model = Dochazka
-        # trenér zadává jen hráče; „prisel“ se neukazuje
         fields = ["hrac"]
 
     def save(self, commit=True):
@@ -651,16 +641,13 @@ class DochazkaInline(admin.TabularInline):
     model = Dochazka
     form = DochazkaInlineForm
     extra = 1
-
-    # >>> psací pole s našeptávačem pro hráče
     autocomplete_fields = ("hrac",)
 
-    # zobrazíme Hráč + informativní sloupce
     fields = (
         "hrac",
-        "cena_preview",          # výpočet dle ceníku
-        "castka_nauc_display",   # naúčtováno (Kč)
-        "nauceno_kdy_display",   # naúčtováno kdy
+        "cena_preview",
+        "castka_nauc_display",
+        "nauceno_kdy_display",
     )
     readonly_fields = (
         "cena_preview",
@@ -668,10 +655,8 @@ class DochazkaInline(admin.TabularInline):
         "nauceno_kdy_display",
     )
 
-    # „Přišel“ ze formuláře úplně vyřadíme
     exclude = ("prisel",)
 
-    # Vypneme akční ikony (+/edit/view) u pole Hráč i bez CSS
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         field = super().formfield_for_foreignkey(db_field, request, **kwargs)
         if db_field.name == "hrac":
@@ -681,14 +666,11 @@ class DochazkaInline(admin.TabularInline):
                     setattr(w, attr, False)
         return field
 
-    # (volitelné) držíme parent Trénink
     def get_formset(self, request, obj=None, **kwargs):
         self.parent_obj = obj
         return super().get_formset(request, obj, **kwargs)
 
-    # === sloupce ===
     def cena_preview(self, obj):
-        """Cena pro 1 hráče podle ceníku a délky tréninku (funguje i u nového řádku)."""
         tr = obj.trening if getattr(obj, "trening_id", None) else getattr(self, "parent_obj", None)
         if not tr:
             return "—"
@@ -720,12 +702,10 @@ class DochazkaInline(admin.TabularInline):
             return str(dt)
     nauceno_kdy_display.short_description = "Naúčtováno kdy"
 
-    
 
 # -----------------------------
 #  TRÉNINK
 # -----------------------------
-# --- Textový time input s datalistem (06:00–23:00 po 30 min) ---
 class TimeDatalistTextInput(forms.TextInput):
     input_type = "text"
 
@@ -734,21 +714,18 @@ class TimeDatalistTextInput(forms.TextInput):
         attrs.setdefault("placeholder", "např. 13:00")
         attrs.setdefault("autocomplete", "off")
         attrs.setdefault("inputmode", "numeric")
-        # nepovinné: validace formátu HH:MM v prohlížeči
         attrs.setdefault("pattern", r"^([01]\d|2[0-3]):[0-5]\d$")
         attrs.setdefault("title", "Zadej čas ve tvaru HH:MM (např. 13:00)")
         super().__init__(*args, **kwargs)
 
     def render(self, name, value, attrs=None, renderer=None):
         attrs = {} if attrs is None else attrs.copy()
-        # unikátní id pro datalist – vychází z id pole
         base_id = attrs.get("id", name)
         list_id = f"{base_id}-time-suggest"
-        attrs["list"] = list_id  # <<< klíčové – skutečně přidá <input list="...">
+        attrs["list"] = list_id
 
         html = super().render(name, value, attrs, renderer)
 
-        # vygeneruj <datalist> s půlhodinami 06:00–23:00
         options = []
         for h in range(6, 24):
             options.append(f"<option value='{h:02d}:00'></option>")
@@ -758,13 +735,9 @@ class TimeDatalistTextInput(forms.TextInput):
 
 
 class AdminSplitDateTimeWithDatalist(AdminSplitDateTime):
-    """
-    Stejný vzhled jako standardní AdminSplitDateTime,
-    ale čas je textové pole s datalistem návrhů.
-    """
+    """AdminSplitDateTime s textovým time inputem + datalist návrhy."""
     def __init__(self, attrs=None):
         super().__init__(attrs=attrs)
-        # nahradíme time widget
         self.widgets[1] = TimeDatalistTextInput()
 
 
@@ -781,15 +754,14 @@ class TreningAdmin(admin.ModelAdmin):
     inlines = [DochazkaInline]
     actions = ["znovu_zpracovat_uctovani"]
 
-    # --- Přepis pole "delka_minut" na výběr hodin + default 1 h ---
     def get_form(self, request, obj=None, **kwargs):
         Form = super().get_form(request, obj, **kwargs)
         if "delka_minut" in Form.base_fields:
             field = Form.base_fields["delka_minut"]
             field.label = "Délka (hodiny)"
             CHOICES = [
-                (60,  "1 h"),
-                (90,  "1,5 h"),
+                (60, "1 h"),
+                (90, "1,5 h"),
                 (120, "2 h"),
                 (150, "2,5 h"),
                 (180, "3 h"),
@@ -797,21 +769,16 @@ class TreningAdmin(admin.ModelAdmin):
             field.widget = forms.Select(choices=CHOICES)
             field.help_text = ""
             if obj is None:
-                field.initial = 60  # 1 h
+                field.initial = 60
         return Form
 
-    # --- Pole DATUM: textový čas s návrhy (06:00–23:00 po 30 min) ---
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "datum":
             kwargs["widget"] = AdminSplitDateTimeWithDatalist()
         return super().formfield_for_dbfield(db_field, request, **kwargs)
 
-
-
-
     # --- vlastní admin URL: ROZVRH + souhrn/detail trenérů ---
     def get_urls(self):
-        from django.urls import path
         urls = super().get_urls()
         extra = [
             path("schedule/", self.admin_site.admin_view(self.schedule_view), name="core_trening_schedule"),
@@ -839,19 +806,17 @@ class TreningAdmin(admin.ModelAdmin):
         return f"{obj.cena_na_hrace()} Kč"
     castka_na_hrace_kc.short_description = "Částka / hráč"
 
-    # >>> ROZVRH – týdenní/denní přehled (OPRAVENO: počítáme offset/duration v Pythonu)
+    # >>> ROZVRH – týdenní/denní přehled
     def schedule_view(self, request):
         """Týdenní/denní rozvrh tréninků s filtry + rozložení překryvů do pruhů."""
         q = request.GET
         CZECH_DOW = ["po", "út", "st", "čt", "pá", "so", "ne"]
 
-
-        # helper: bezpečný slug pro CSS třídu z názvu formátu (bez diakritiky)
         def _slug(s: str) -> str:
             s = (s or "").strip().lower()
-            repl = (("á","a"),("č","c"),("ď","d"),("é","e"),("ě","e"),("í","i"),
-                    ("ň","n"),("ó","o"),("ř","r"),("š","s"),("ť","t"),("ú","u"),
-                    ("ů","u"),("ý","y"),("ž","z"))
+            repl = (("á", "a"), ("č", "c"), ("ď", "d"), ("é", "e"), ("ě", "e"), ("í", "i"),
+                    ("ň", "n"), ("ó", "o"), ("ř", "r"), ("š", "s"), ("ť", "t"), ("ú", "u"),
+                    ("ů", "u"), ("ý", "y"), ("ž", "z"))
             for a, b in repl:
                 s = s.replace(a, b)
             import re
@@ -860,17 +825,15 @@ class TreningAdmin(admin.ModelAdmin):
                 s = f"f-{s or 'neznamy'}"
             return s
 
-        # vybrané datum + režim (week/day)
         try:
             base_date = datetime.strptime(q.get("date", ""), "%Y-%m-%d").date()
         except Exception:
             base_date = dj_tz.localdate()
 
-        mode = q.get("view", "week")  # "week" | "day"
+        mode = q.get("view", "week")
         start_day = base_date if mode == "day" else (base_date - timedelta(days=base_date.weekday()))
         end_day = start_day if mode == "day" else (start_day + timedelta(days=6))
 
-        # POZOR: pokud projekt běží bez USE_TZ, můžeš make_aware vynechat
         start_dt = dj_tz.make_aware(datetime.combine(start_day, time.min))
         end_dt = dj_tz.make_aware(datetime.combine(end_day, time.max))
 
@@ -879,17 +842,15 @@ class TreningAdmin(admin.ModelAdmin):
             Trening.objects
             .filter(datum__range=(start_dt, end_dt))
             .select_related("trener")
-            .prefetch_related("hraci")
+            .prefetch_related("dochazky__hrac")
             .order_by("datum")
         )
         if trainer_id:
             qs = qs.filter(trener_id=trainer_id)
 
-        # grid od 6:00 do 22:00
         day_start_min = 6 * 60
         hours = list(range(6, 23))
 
-        # dny v intervalu
         day_count = (end_day - start_day).days + 1
         days = []
         for i in range(day_count):
@@ -898,8 +859,6 @@ class TreningAdmin(admin.ModelAdmin):
             days.append({"date": d, "label": label, "events": []})
         idx_by_date = {(start_day + timedelta(days=i)): i for i in range(day_count)}
 
-
-        # naplnění událostmi (zatím bez pruhů)
         for t in qs:
             local = dj_tz.localtime(t.datum) if dj_tz.is_aware(t.datum) else t.datum
             d = local.date()
@@ -908,7 +867,7 @@ class TreningAdmin(admin.ModelAdmin):
                 continue
 
             start_min = local.hour * 60 + local.minute
-            offset = max(0, start_min - day_start_min)  # minuty od 6:00
+            offset = max(0, start_min - day_start_min)
             dur = int(t.delka_minut)
 
             fmt_label = t.get_format_display()
@@ -919,45 +878,36 @@ class TreningAdmin(admin.ModelAdmin):
                 "offset_min": offset,
                 "dur_min": dur,
                 "end_min": offset + dur,
-                "title": ", ".join(h.jmeno for h in t.hraci.all()) or "—",
+                "title": ", ".join(
+                    dch.hrac.jmeno for dch in t.dochazky.select_related("hrac").filter(prisel=True)
+                ) or "—",
                 "sub": f"{fmt_label} • {t.get_kurt_display()}",
-                "fmt": fmt_slug,          # pro CSS třídu ev--{fmt}
-                "fmt_label": fmt_label,   # čitelné jméno do případné legendy
+                "fmt": fmt_slug,
+                "fmt_label": fmt_label,
             }
             days[i]["events"].append(ev)
 
-        # Rozložení překryvů do „lanes“ pro každý den zvlášť
         def assign_lanes(evs):
-            """
-            Greedy interval-coloring po shlucích: každý souběh dostane lane index
-            a všem ve shluku nastavíme stejný počet pruhů (lanes).
-            """
             if not evs:
                 return
-
-            # seřadit podle začátku, sekundárně délek
             evs.sort(key=lambda e: (e["offset_min"], e["dur_min"]))
 
             cluster = []
             cluster_max_end = -1
 
             def finalize_cluster(cluster_events):
-                # přiřazení pruhů ve shluku
-                lanes_end = []  # poslední end v každém pruhu
+                lanes_end = []
                 for e in cluster_events:
                     placed = False
                     for idx, end in enumerate(lanes_end):
                         if e["offset_min"] >= end:
-                            # vejde se do existujícího pruhu
                             e["lane"] = idx
                             lanes_end[idx] = e["end_min"]
                             placed = True
                             break
                     if not placed:
-                        # nový pruh
                         lanes_end.append(e["end_min"])
                         e["lane"] = len(lanes_end) - 1
-
                 total = len(lanes_end)
                 for e in cluster_events:
                     e["lanes"] = total
@@ -967,14 +917,11 @@ class TreningAdmin(admin.ModelAdmin):
                     cluster = [e]
                     cluster_max_end = e["end_min"]
                     continue
-
                 if e["offset_min"] < cluster_max_end:
-                    # stále se překrývá se shlukem
                     cluster.append(e)
                     if e["end_min"] > cluster_max_end:
                         cluster_max_end = e["end_min"]
                 else:
-                    # shluk končí, uzavři a začni nový
                     finalize_cluster(cluster)
                     cluster = [e]
                     cluster_max_end = e["end_min"]
@@ -985,7 +932,6 @@ class TreningAdmin(admin.ModelAdmin):
         for day in days:
             assign_lanes(day["events"])
 
-        # navigace
         step = 7 if mode == "week" else 1
         ctx = dict(self.admin_site.each_context(request))
         ctx.update({
@@ -1003,11 +949,8 @@ class TreningAdmin(admin.ModelAdmin):
         })
         return TemplateResponse(request, "admin/core/trening/kalendar.html", ctx)
 
-
-
     # === SOUHRN TRENÉRŮ ===
     def treneri_summary_view(self, request):
-        # ... beze změny ...
         def _parse(s):
             try:
                 return datetime.strptime(s, "%Y-%m-%d").date()
@@ -1087,7 +1030,6 @@ class TreningAdmin(admin.ModelAdmin):
 
     # === DETAIL TRENÉRA (S FORMULÁŘEM PRO SAZBU) ===
     def trener_detail_view(self, request, user_id: int):
-        # ... (beze změny, tvůj existující kód celé funkce) ...
         u = User.objects.get(pk=user_id)
 
         if request.method == "POST" and "_nastavit_sazbu" in request.POST:
@@ -1187,7 +1129,6 @@ class TreningAdmin(admin.ModelAdmin):
         rate_today_date = dj_tz.localdate().strftime("%Y-%m-%d")
         rate_form_initial_date = rate_today_date
 
-
         sazby = (
             TrenerSazba.objects.filter(user=u).order_by("-platnost_od")
             .values("id", "platnost_od", "platnost_do", "sazba_za_hodinu")
@@ -1214,10 +1155,6 @@ class TreningAdmin(admin.ModelAdmin):
             active_menu="treneri",
         )
         return TemplateResponse(request, "admin/core/trening/trener_detail.html", ctx)
-
-
-
-
 
 
 # -----------------------------
@@ -1449,12 +1386,9 @@ def _month_range(today):
     end = today
     return start, end
 
-# === CORE APP DASHBOARD (/admin/core/) =======================================
+
 def core_app_dashboard_view(request):
-    """
-    Vylepšená app-index stránka pro /admin/core/ – rychlé akce, KPI,
-    dnešní tréninky, poslední platby a top dlužníci.
-    """
+    """Vylepšená app-index stránka pro /admin/core/ – rychlé akce, KPI, dnešní tréninky, poslední platby a top dlužníci."""
     today = dj_tz.localdate()
     now = dj_tz.now()
 
@@ -1510,16 +1444,13 @@ def core_app_dashboard_view(request):
                   .order_by("-vytvoreno")[:8])
     ]
 
-    # --- Top dlužníci (hráči) — bez .only("kredit"), použijeme SQL anotaci ---
     debt_qs = (
         Hrac.objects
         .annotate(
             credit=Sum(
                 Case(
-                    When(transakce__typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA],
-                         then=F("transakce__castka")),
-                    When(transakce__typ=Transakce.Typ.NAUCTOVANO,
-                         then=-F("transakce__castka")),
+                    When(transakce__typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA], then=F("transakce__castka")),
+                    When(transakce__typ=Transakce.Typ.NAUCTOVANO, then=-F("transakce__castka")),
                     default=Value(0),
                     output_field=DecimalField(max_digits=12, decimal_places=2),
                 )
@@ -1547,8 +1478,8 @@ def core_app_dashboard_view(request):
         quick={
             "add_training": reverse("admin:core_trening_add"),
             "add_payment": reverse("admin:core_transakce_add"),
-            "add_player":  reverse("admin:core_hrac_add"),
-            "pricelist":   reverse("admin:core_cenik_changelist"),
+            "add_player": reverse("admin:core_hrac_add"),
+            "pricelist": reverse("admin:core_cenik_changelist"),
         },
         upcoming=upcoming_rows,
         posledni_platby=posledni_platby,
@@ -1561,7 +1492,6 @@ def admin_dashboard_view(request):
     today = dj_tz.localdate()
     m_from, m_to = _month_range(today)
 
-    # KPI (měsíc)
     tqs = Trening.objects.filter(datum__date__gte=m_from, datum__date__lte=m_to)
     total_min = tqs.aggregate(s=Sum("delka_minut"))["s"] or 0
     hours = (Decimal(total_min) / Decimal(60)).quantize(Decimal("0.01"))
@@ -1576,7 +1506,6 @@ def admin_dashboard_view(request):
         typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA],
     ).aggregate(s=Sum("castka"))["s"] or Decimal("0")
 
-    # K vyplacení trenérům (měsíc)
     trener_due_total = Decimal("0.00")
     trener_rows = []
     trener_ids = list(tqs.values_list("trener_id", flat=True).distinct())
@@ -1607,19 +1536,17 @@ def admin_dashboard_view(request):
     trener_rows.sort(key=lambda r: int(r["balance"].split()[0]), reverse=True)
     trener_rows = trener_rows[:5]
 
-    # Top dlužníci (hráči)
     debtors = []
-    for h in Hrac.objects.all():   # ⬅️ odstraněno .only(..., "kredit")
-        if h.kredit < 0:           # využijeme property/modelový výpočet
+    for h in Hrac.objects.all():
+        if h.kredit < 0:
             debtors.append({
                 "name": h.jmeno,
                 "kredit": f"{h.kredit:.0f} Kč",
                 "url": reverse("admin:core_hrac_change", args=[h.id]),
             })
-    debtors.sort(key=lambda r: int(r["kredit"].split()[0]))  # největší dluh nahoře
+    debtors.sort(key=lambda r: int(r["kredit"].split()[0]))
     debtors = debtors[:8]
 
-    # Poslední platby a tréninky
     posledni_platby = [
         {
             "when": (dj_tz.localtime(p.vytvoreno) if dj_tz.is_aware(p.vytvoreno) else p.vytvoreno).strftime("%d.%m.%Y %H:%M"),
@@ -1652,8 +1579,8 @@ def admin_dashboard_view(request):
         quick={
             "add_training": reverse("admin:core_trening_add"),
             "add_payment": reverse("admin:core_transakce_add"),
-            "add_player":  reverse("admin:core_hrac_add"),
-            "coaches":     reverse("admin:core_treneri_summary"),
+            "add_player": reverse("admin:core_hrac_add"),
+            "coaches": reverse("admin:core_treneri_summary"),
         },
         debtors=debtors,
         treneri=trener_rows,
@@ -1661,7 +1588,6 @@ def admin_dashboard_view(request):
         posledni_treninky=posledni_treninky,
     )
     return TemplateResponse(request, "admin/dashboard.html", ctx)
-
 
 
 # -----------------------------
@@ -1675,7 +1601,7 @@ def _treneri_urls_for_site(site):
         return site.admin_view(view)
 
     def summary_view(request, *args, **kwargs):
-        ma = site._registry[Trening]  # instance TreningAdmin
+        ma = site._registry[Trening]
         return ma.treneri_summary_view(request)
 
     def detail_view(request, user_id, *args, **kwargs):
@@ -1692,22 +1618,22 @@ def _treneri_urls_for_site(site):
 #  Sjednocený patch admin.get_urls (dashboard + trenéři)
 # -----------------------------
 _original_get_urls = admin.site.get_urls
+
+
 def _new_get_urls():
     urls = _original_get_urls()
     extra = [
         path("", admin.site.admin_view(admin_dashboard_view), name="index"),
-        # >>> přidá vlastní app-dashboard pro /admin/core/
         path("core/", admin.site.admin_view(core_app_dashboard_view), name="core_app_dashboard"),
     ]
-    # přidej top-level trenérské URL (pokud funkce existuje)
     try:
         extra += _treneri_urls_for_site(admin.site)
     except Exception:
         pass
-    # naše URL před defaultní
     return extra + urls
-admin.site.get_urls = _new_get_urls
 
+
+admin.site.get_urls = _new_get_urls
 
 # Branding adminu
 admin.site.site_header = "Tenis systém Čimice"
