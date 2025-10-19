@@ -253,11 +253,51 @@ table.payments tbody tr:nth-child(even){ background:#FFF9EC !important; }
 
 /* formuláře */
 input, select, textarea{
-  background:var(--surface) !important; border:1px solid var(--line-200) !important; color:var(--text) !important; border-radius:8px !important;
+  background:var(--surface) !important;
+  border:1px solid var(--line-200) !important;  /* tvá standardní šedá */
+  color:var(--text) !important;
+  border-radius:8px !important;
 }
 input:focus, select:focus, textarea:focus{
-  outline:2px solid var(--brand) !important; border-color:var(--brand) !important; box-shadow:0 0 0 3px rgba(230,120,23,.15) !important;
+  outline:2px solid var(--brand) !important;
+  border-color:var(--brand) !important;
+  box-shadow:0 0 0 3px rgba(230,120,23,.15) !important;
 }
+
+/* --- NOVÉ: jemné oddělovače řádků a černé labely ve formulářích --- */
+/* (platí pro všechny add/edit stránky; historie/ledgeru se to netýká) */
+body.change-form .aligned table,
+body.change-form .aligned tbody,
+body.change-form .aligned tr,
+body.change-form .aligned th,
+body.change-form .aligned td{
+  border: none !important;
+  border-bottom: 1px solid #e5e7eb !important;  /* velmi jemná šedá linka */
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* některé inlines mají místo <tr> jen .form-row */
+body.change-form .form-row{
+  border: none !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  box-shadow: none !important;
+}
+
+/* labely (Jméno, Email, Rodina…) černě a trochu výrazněji */
+body.change-form .aligned th,
+body.change-form label,
+body.change-form .readonly label{
+  color:#000 !important;
+  font-weight:600;
+}
+
+/* příjemné odsazení buněk */
+body.change-form .aligned th,
+body.change-form .aligned td{
+  padding:10px 12px !important;
+}
+
 
 /* tlačítka (globálně) */
 .button, input[type=submit], .submit-row input, a.button{

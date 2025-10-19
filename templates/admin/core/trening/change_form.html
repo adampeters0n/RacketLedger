@@ -45,30 +45,36 @@
 {% block extrastyle %}
   {{ block.super }}
 
-  <!-- ===== Horní formulář – beze změn rozložení (ponecháno) ===== -->
+  <!-- ===== Horní formulář – kompaktní grid karty ===== -->
   <style>
     :root{
       --label-w:160px; --field-w:360px; --row-gap:14px;
       --row-min: calc(var(--label-w) + var(--field-w) + 2*var(--row-gap));
     }
+    /* obal modulu – šířka dle obsahu a horizontální scroll na malých */
     body.app-core.model-trening.change-form #content-main .module.aligned{
       width:max-content; min-width:var(--row-min); max-width:none;
       overflow-x:auto; -webkit-overflow-scrolling:touch;
     }
+    /* jeden řádek = karta */
     body.app-core.model-trening.change-form .module.aligned .form-row{
       display:grid !important; grid-template-columns:var(--label-w) var(--field-w) !important;
       align-items:center; gap:var(--row-gap); margin-bottom:12px;
       padding:8px 12px; background:#fff; border-radius:10px; box-shadow:0 1px 2px rgba(0,0,0,.04);
       width:max-content;
+      border-bottom:1px solid #e5e7eb; /* jemná linka pro návaznost se zbytkem UI */
     }
+    /* labely */
     body.app-core.model-trening.change-form .module.aligned .form-row > label{
       margin:0 !important; width:var(--label-w); font-weight:700; color:#111827; white-space:nowrap; text-align:left;
     }
+    /* vstupy */
     body.app-core.model-trening.change-form .module.aligned .form-row input,
     body.app-core.model-trening.change-form .module.aligned .form-row select,
     body.app-core.model-trening.change-form .module.aligned .form-row textarea{
       width:var(--field-w) !important; max-width:var(--field-w) !important; min-width:var(--field-w) !important;
       box-sizing:border-box; height:36px; padding:6px 10px; border:1px solid #E5E7EB; border-radius:8px; font-size:14px; line-height:1.2;
+      background:#fff;
     }
     body.app-core.model-trening.change-form .module.aligned .form-row textarea{ height:64px; resize:vertical; }
     body.app-core.model-trening.change-form .datetimeshortcuts{ white-space:nowrap; }
@@ -79,29 +85,35 @@
     }
   </style>
 
-  <!-- ===== Docházka – původní vzhled (tabulka hráčů) ===== -->
+  <!-- ===== Docházka – světlá tabulka bez „černé plochy“ dole ===== -->
   <style>
     :root{ --w-col:200px; --w-fixed:calc(var(--w-col) * 4); }
 
+    /* obal inline skupiny */
     #dochazka_set-group, .x-dochazka-inline{
       background:#fff; border:0 !important; border-radius:12px; box-shadow:0 1px 2px rgba(16,24,40,.06);
       overflow:hidden; margin-top:12px;
     }
+    /* tabulka */
     #dochazka_set-group table, .x-dochazka-inline table{
       width:100%; table-layout:fixed; border-collapse:separate; border-spacing:0; font-size:14px;
+      background:#fff; /* jistota – žádné tmavé pozadí */
     }
+    /* hlavička */
     #dochazka_set-group thead th, .x-dochazka-inline thead th{
       background:#FFF6CC; color:#111827; text-transform:uppercase; font-weight:800; font-size:12.5px; letter-spacing:.02em;
       padding:10px 12px; border-top:0; border-bottom:1px solid #F4E0A6; white-space:nowrap; text-align:center;
     }
+    /* buňky těla */
     #dochazka_set-group tbody td, .x-dochazka-inline tbody td{
-      padding:12px 12px; border-top:1px solid #F2F2F2; vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      padding:12px 12px; background:#fff; border-top:1px solid #E5E7EB; /* jemná linka */
+      vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
       font-weight:700; text-align:center; position:relative;
     }
+
+    /* šířky sloupců – poslední 4 pevné */
     #dochazka_set-group thead th:first-child, .x-dochazka-inline thead th:first-child{ text-align:left; }
-    #dochazka_set-group tbody td:first-child, .x-dochazka-inline tbody td:first-child{
-      text-align:left; width:calc(100% - var(--w-fixed)) !important;
-    }
+    #dochazka_set-group tbody td:first-child, .x-dochazka-inline tbody td:first-child{ text-align:left; width:calc(100% - var(--w-fixed)) !important; }
     #dochazka_set-group thead th:nth-last-child(4),
     #dochazka_set-group thead th:nth-last-child(3),
     #dochazka_set-group thead th:nth-last-child(2),
@@ -112,10 +124,14 @@
     #dochazka_set-group tbody td:nth-last-child(1){
       width:var(--w-col) !important; text-align:center;
     }
+
+    /* skryj staré inline labely/original */
     #dochazka_set-group .inline_label, #dochazka_set-group .inline_label a,
     #dochazka_set-group td.original, #dochazka_set-group td.original a, #dochazka_set-group th.original{
       display:none !important; width:0 !important; padding:0 !important; border:0 !important; overflow:hidden !important;
     }
+
+    /* první buňka – výběr hráče */
     #dochazka_set-group td:first-child .related-widget-wrapper{
       display:inline-flex; align-items:center; gap:8px; width:clamp(360px,55vw,720px) !important; max-width:100%;
     }
@@ -124,6 +140,8 @@
       border:1px solid #E5E7EB; border-radius:10px; background:#fff;
     }
     #dochazka_set-group td:first-child .related-widget-wrapper a{ display:inline-flex; align-items:center; justify-content:center; }
+
+    /* poslední sloupec – akce doprostřed */
     #dochazka_set-group thead th:last-child, #dochazka_set-group tbody td:last-child{ text-align:center !important; vertical-align:middle !important; }
     #dochazka_set-group tbody td:last-child a,
     #dochazka_set-group tbody td:last-child .inline-deletelink,
@@ -132,9 +150,17 @@
       display:inline-flex !important; align-items:center !important; justify-content:center !important; width:28px; height:28px; margin:0 auto;
     }
 
-    /* === JEDINÝ FIX: tlačítko "Přidat Docházku" není nikdy na 100% === */
-    #dochazka_set-group tr.add-row > td{
-      text-align:left !important; /* ať se nestrká do středu ani neroste přes flex */
+    /* === FIX „černé plochy“: řádek s tlačítkem add-row i případný tfoot === */
+    #dochazka_set-group tr.add-row,
+    .x-dochazka-inline tr.add-row{
+      background:#fff !important;
+    }
+    #dochazka_set-group tr.add-row > td,
+    .x-dochazka-inline tr.add-row > td{
+      background:#fff !important;
+      border-top:1px solid #E5E7EB !important; /* jemná horní linka */
+      text-align:left !important;
+      padding:12px !important;
     }
     #dochazka_set-group tr.add-row > td > a,
     .x-dochazka-inline tr.add-row > td > a,
@@ -142,18 +168,22 @@
     #dochazka_set-group .add-row a:link,
     #dochazka_set-group .add-row a:visited{
       display:inline-block !important;
-      width:auto !important;
-      max-width:none !important;
-      min-width:0 !important;
+      width:auto !important; max-width:none !important; min-width:0 !important;
       white-space:nowrap !important;
-      flex:0 0 auto !important;
-      align-self:flex-start !important;
+      flex:0 0 auto !important; align-self:flex-start !important;
 
-      /* zachovat tvůj vzhled */
+      /* vzhled tlačítka v tvém brandu */
       background:#E67817; border:3px solid #D1640C; color:#fff;
       padding:7px 12px; border-radius:999px; text-decoration:none;
       font-weight:800; letter-spacing:.2px;
     }
     #dochazka_set-group .add-row a:hover{ filter:brightness(1.05); }
+
+    /* sjednocení případného tfoot (když by se někdy vykreslil) */
+    #dochazka_set-group tfoot,
+    .x-dochazka-inline tfoot{
+      background:#fff !important;
+      border-top:1px solid #E5E7EB !important;
+    }
   </style>
 {% endblock %}
