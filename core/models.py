@@ -340,17 +340,23 @@ class Hrac(models.Model):
             import logging
             logger = logging.getLogger(__name__)
 
-            msg = EmailMultiAlternatives(
-                subject,
-                text_body,
-                getattr(settings, "DEFAULT_FROM_EMAIL", None),
-                [self.email],
-            )
-            msg.attach_alternative(html_body, "text/html")
+        from_email = getattr(settings, "DEFAULT_FROM_EMAIL", None) or getattr(settings, "EMAIL_HOST_USER", None)
+        msg = EmailMultiAlternatives(
+            subject,
+            text_body,
+            from_email,
+            [self.email],
+        )
+        msg.attach_alternative(html_body, "text/html")
 
-            logger.info(">>> VYUCTOVANI: jdu poslat mail hraci=%s email=%s subject=%s", self.cele_jmeno, self.email, subject)
-            sent_count = msg.send(fail_silently=False)  # když selže, vyhodí výjimku do logu
+        logger.info(">>> VYUCTOVANI: jdu poslat mail hraci=%s email=%s subject=%s", self.cele_jmeno, self.email, subject)
+        try:
+            sent_count = msg.send(fail_silently=False)  # když selže, vyhodí výjimku
             logger.info(">>> VYUCTOVANI: odeslano OK, Django send() vratil=%s", sent_count)
+        except Exception as e:
+            logger.exception(">>> VYUCTOVANI: odeslani e-mailu SELHALO hraci=%s email=%s: %s", self.cele_jmeno, self.email, e)
+            sent_count = 0
+
 
 
         return vyuct
