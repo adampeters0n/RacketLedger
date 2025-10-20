@@ -74,29 +74,38 @@
 {% block after_field_sets %}
   {{ block.super }}
 
+  {# --- TLAČÍTKO vedle jména nahoře (jen při EDITACI existujícího hráče) --- #}
   {% if original and original.pk %}
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       var playerName = "{{ original.jmeno|escapejs }}";
       if (!playerName) return;
+
       var root = document.getElementById('content');
       if (!root) return;
+
       var tw = document.createTreeWalker(
         root,
         NodeFilter.SHOW_TEXT,
-        { acceptNode: function(node){
+        {
+          acceptNode: function(node){
             var t = (node.nodeValue || "").trim();
             return (t === playerName) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
-          } }
+          }
+        }
       );
+
       var textNode = tw.nextNode();
       if (!textNode) return;
+
       var wrap = document.createElement('span');
       wrap.style.display = 'inline-flex';
       wrap.style.alignItems = 'center';
       wrap.style.gap = '8px';
+
       textNode.parentNode.insertBefore(wrap, textNode);
       wrap.appendChild(textNode);
+
       var link = document.createElement('a');
       link.href = "{% url 'admin:core_hrac_info' original.pk %}";
       link.className = 'button';
@@ -106,25 +115,30 @@
   </script>
   {% endif %}
 
-  <!-- panel s vyúčtováním (POZOR: bez <form> – používáme formaction) -->
+  <!-- panel s vyúčtováním + odkaz na seznam vyúčtování (jen pro existujícího hráče) -->
+  {% if original and original.pk %}
   <div class="actions-row">
-    <label for="id_vyuct_from">Období</label>
-    <input type="date" name="_vyuct_from" id="id_vyuct_from">
-    <span>–</span>
-    <input type="date" name="_vyuct_to" id="id_vyuct_to">
+    <form method="post" style="display:flex; gap:8px; align-items:center;" action="{% url 'admin:core_hrac_vyuctovat' original.pk %}">
+      {% csrf_token %}
+      <label for="id_vyuct_from">Období</label>
+      <input type="date" name="_vyuct_from" id="id_vyuct_from">
+      <span>–</span>
+      <input type="date" name="_vyuct_to" id="id_vyuct_to">
 
-    <label for="id_castka_k_uhrazeni" style="margin-left:10px;">Částka k úhradě</label>
-    <input type="number" name="_castka_k_uhrazeni" id="id_castka_k_uhrazeni"
-           step="1" min="0" placeholder="např. 5000" style="width:120px;">
+      <label for="id_castka_k_uhrazeni" style="margin-left:10px;">Částka k úhradě</label>
+      <input type="number" name="_castka_k_uhrazeni" id="id_castka_k_uhrazeni"
+             step="1" min="0" placeholder="např. 5000" style="width:120px;">
 
-    <button type="submit"
-            class="button default"
-            formaction="{% url 'admin:core_hrac_vyuctovat' original.pk %}"
-            formmethod="post"
-            formnovalidate>
-      Vygenerovat vyúčtování teď
-    </button>
+      <button type="submit" class="button default">
+        Vygenerovat vyúčtování teď
+      </button>
+    </form>
+
+    {% if vyuctovani_list_url %}
+      <a href="{{ vyuctovani_list_url }}" class="button default">Otevřít vyúčtování hráče</a>
+    {% endif %}
   </div>
+  {% endif %}
 {% endblock %}
 
 {% block after_related_objects %}
