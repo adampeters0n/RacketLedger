@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
+from core.utils.email_archive import send_and_append_to_sent
 from django.db import models, transaction
 from django.db.models import Q, Sum
 from django.db.models.signals import post_save
@@ -340,22 +341,18 @@ class Hrac(models.Model):
             import logging
             logger = logging.getLogger(__name__)
 
-        from_email = getattr(settings, "DEFAULT_FROM_EMAIL", None) or getattr(settings, "EMAIL_HOST_USER", None)
-        msg = EmailMultiAlternatives(
-            subject,
-            text_body,
-            from_email,
-            [self.email],
+        ok_send, ok_archive = send_and_append_to_sent(
+            subject=subject,
+            body=text_body,        # textová verze (fallback)
+            html_body=html_body,   # HTML verze
+            to=self.email,
         )
-        msg.attach_alternative(html_body, "text/html")
 
-        logger.info(">>> VYUCTOVANI: jdu poslat mail hraci=%s email=%s subject=%s", self.cele_jmeno, self.email, subject)
-        try:
-            sent_count = msg.send(fail_silently=False)  # když selže, vyhodí výjimku
-            logger.info(">>> VYUCTOVANI: odeslano OK, Django send() vratil=%s", sent_count)
-        except Exception as e:
-            logger.exception(">>> VYUCTOVANI: odeslani e-mailu SELHALO hraci=%s email=%s: %s", self.cele_jmeno, self.email, e)
-            sent_count = 0
+        logger.info(
+            ">>> VYUCTOVANI: email_send=%s, saved_to_sent=%s, hrac=%s, email=%s, subject=%s",
+            ok_send, ok_archive, self.cele_jmeno, self.email, subject
+        )
+
 
 
 
