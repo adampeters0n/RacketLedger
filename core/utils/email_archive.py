@@ -37,6 +37,7 @@ def send_and_append_to_sent(subject, body, to, html_body=None, cc=None, bcc=None
     port = int(os.environ.get("IMAP_PORT", "993"))
     user = os.environ.get("EMAIL_HOST_USER")
     pwd  = os.environ.get("EMAIL_HOST_PASSWORD")
+    preferred = os.environ.get("IMAP_SENT_MAILBOX")  # <<< ručně zadaná schránka
 
     ok_archive = False
     try:
@@ -44,36 +45,55 @@ def send_and_append_to_sent(subject, body, to, html_body=None, cc=None, bcc=None
         try:
             M.login(user, pwd)
 
-            # najdi \Sent, jinak běžné názvy
             sent_box = None
-            typ, boxes = M.list()
-            if typ == "OK" and boxes:
-                for b in boxes:
-                    line = b.decode("utf-8", "ignore")
-                    if "\\Sent" in line:
-                        sent_box = line.split(' "')[-1].rstrip('"')
-                        break
+
+            # 0) preferuj ručně zadanou schránku (ASCII název)
+            if preferred:
+                if M.select(f'"{preferred}"')[0] == "OK":
+                    sent_box = preferred
+
+            # 1) zkus \Sent z LISTu
             if not sent_box:
-                for name in ['Sent', 'Odeslaná', 'Odeslaná pošta', 'Odeslané', 'Sent Items']:
+                typ, boxes = M.list()
+                if typ == "OK" and boxes:
+                    for b in boxes:
+                        line = b.decode("utf-8", "ignore")
+                        if "\\Sent" in line:
+                            name = line.split(' "')[-1].rstrip('"')
+                            if M.select(f'"{name}"')[0] == "OK":
+                                sent_box = name
+                                break
+
+            # 2) obvyklé ASCII názvy (bez diakritiky)
+            if not sent_box:
+                for name in ["INBOX.Sent", "Sent", "Sent Items", "INBOX.Sent Items", "Sent Messages"]:
                     if M.select(f'"{name}"')[0] == "OK":
                         sent_box = name
                         break
-            if not sent_box:
-                sent_box = "Kopie odeslané"
-                M.create(sent_box)
-                M.select(f'"{sent_box}"')
 
-            # *** KLÍČOVÁ OPRAVA: aware datetime ***
+            # 3) fallback – vytvoř vlastní ASCII složku
+            if not sent_box:
+                for name in ["INBOX.Sent Messages", "Sent Messages", "INBOX.Sent", "Sent"]:
+                    try:
+                        M.create(name)
+                    except Exception:
+                        pass
+                    if M.select(f'"{name}"')[0] == "OK":
+                        sent_box = name
+                        break
+
+            # 4) APPEND – aware UTC čas + správné flagy
             aware_utc = datetime.datetime.now(datetime.timezone.utc)
-            M.append(sent_box, "\\Seen", imaplib.Time2Internaldate(aware_utc), raw_bytes)
+            M.append(f'"{sent_box}"', '(\\Seen)', imaplib.Time2Internaldate(aware_utc), raw_bytes)
             ok_archive = True
+
         finally:
             try:
                 M.logout()
             except Exception:
                 pass
     except Exception:
-        # nezastavuj aplikaci, když IMAP kopie selže
         ok_archive = False
 
     return True, ok_archive
+
