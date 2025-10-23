@@ -995,3 +995,41 @@ table tbody tr:hover > td{ background:#fff3df !important; color:var(--text) !imp
   color-scheme: light !important;
   mix-blend-mode: normal !important;
 }
+
+/* ==== KILL: column-hover z Django adminu – žádné černé sloupce ==== */
+
+/* žádné triky s pozicováním */
+#result_list td, #result_list th,
+.results td, .results th { position: static !important; }
+
+/* zrušit pseudo-elementy, které kreslí tmavou masku přes celý sloupec */
+#result_list td:hover::before,
+#result_list td:hover::after,
+#result_list th:hover::before,
+#result_list th:hover::after,
+#result_list td:focus-within::before,
+#result_list td:focus-within::after,
+#result_list th:focus-within::before,
+#result_list th:focus-within::after,
+.results td:hover::before,
+.results td:hover::after,
+.results th:hover::before,
+.results th:hover::after,
+.results td:focus-within::before,
+.results td:focus-within::after,
+.results th:focus-within::before,
+.results th:focus-within::after{
+  content: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  mix-blend-mode: normal !important;
+  filter: none !important;
+}
+
+/* kdyby tam JS přidával třídu na celý sloupec */
+#result_list .column-hover,
+.results .column-hover { background: inherit !important; box-shadow: none !important; }
+
+/* necháme jen jemný HOVER na řádek */
+#result_list tbody tr:hover > td,
+.results tbody tr:hover > td { background: #fff3df !important; color: var(--text) !important; }
