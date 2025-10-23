@@ -943,3 +943,55 @@ table tbody tr:hover > td{ background:#fff3df !important; color:var(--text) !imp
   box-shadow: none !important;
   filter: none !important;
 }
+
+/* === STOP column highlight & sticky artefacts ===================== */
+
+/* 1) Žádný vlastní hover na jednotlivé buňce (necháme jen hover na řádku) */
+#result_list td:hover,
+#result_list th:hover,
+.results td:hover,
+.results th:hover {
+  background: inherit !important;
+  color: var(--text) !important;
+}
+
+/* 2) Vypnout pseudo-elementové překryvy pro zvýraznění sloupce */
+#result_list td::before,  #result_list td::after,
+#result_list th::before,  #result_list th::after,
+.results td::before,      .results td::after,
+.results th::before,      .results th::after {
+  content: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  mix-blend-mode: normal !important;
+}
+
+/* 3) Kdyby téma používalo <colgroup> k highlightu sloupce */
+#result_list col, .results col { background: transparent !important; }
+
+/* 4) Sticky první sloupec – vždy světlé pozadí a bez „masky“ */
+#result_list tbody th,        /* Django používá <th scope="row"> v prvním sloupci */
+.results tbody th {
+  position: static !important;           /* nebo odlep sticky úplně */
+  /* pokud sticky potřebuješ, dej si raději toto:
+     position: sticky !important; left: 0; z-index: 2;
+  */
+  background: #fff !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+/* 5) Jistota: žádné sloupcové „hover“ třídy z JS */
+#result_list td.column-hover,
+#result_list th.column-hover,
+.results td.column-hover,
+.results th.column-hover {
+  background: inherit !important;
+}
+
+/* 6) Finální – u tabulek nikdy nepoužívej auto-dark/mix-blend */
+#result_list, .results, #result_list * , .results * {
+  color-scheme: light !important;
+  mix-blend-mode: normal !important;
+}
