@@ -912,3 +912,66 @@ table.payments tbody td {
 }
 table.payments tbody tr:nth-child(even){ background:#fffaf0 !important; }
 table.payments tbody tr:hover td{ background:#fff3df !important; }
+
+
+
+/* === HLAVIČKY TABULEK (changelist) – žádné černání ani efekty === */
+.change-list table thead th,
+.change-list .results thead th {
+  background: var(--amber-100) !important;
+  color: var(--text) !important;
+  background-image: none !important;   /* vypne tmavé gradienty */
+  box-shadow: none !important;
+  filter: none !important;
+}
+.change-list table thead th.sorted,
+.change-list table thead th:hover,
+.change-list table thead th:focus {
+  background: var(--amber-100) !important;
+  color: var(--text) !important;
+}
+/* některé skiny dávají overlay přes ::before/::after – vypnout */
+.change-list table thead th::before,
+.change-list table thead th::after {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* pro jistotu i explicitně první sloupec (kde se to ukazovalo) */
+.change-list table thead th:first-child {
+  background: var(--amber-100) !important;
+  background-image: none !important;
+}
+
+/* === TĚLO TABULEK (zůstane světlé) === */
+.change-list table tbody tr         { background: #fff !important; }
+.change-list table tbody tr:nth-child(even) { background: #fffaf0 !important; }
+.change-list table tbody tr > td    { background: inherit !important; color: var(--text) !important; }
+.change-list table tbody tr:hover > td { background: #fff3df !important; }
+
+/* === DOCHÁZKA: pole "Hráč" – natvrdo světlé === */
+/* obyčejný <select> v inline řádku */
+#dochazka_set-group td:first-child select,
+.x-dochazka-inline td:first-child select,
+.inline-group .related-widget-wrapper select {
+  background-color: #fff !important;
+  color: #111 !important;
+  -webkit-text-fill-color: #111 !important; /* WebKit */
+  border: 1px solid #E5E7EB !important;
+  border-radius: 8px !important;
+  background-image: none !important;
+  appearance: auto !important;
+}
+/* Select2 varianta (autocomplete) */
+.select2-container--admin-autocomplete .select2-selection--single {
+  background: #fff !important;
+  color: #111 !important;
+  border: 1px solid #E5E7EB !important;
+  border-radius: 8px !important;
+}
+.select2-container--admin-autocomplete .select2-dropdown {
+  background: #fff !important;
+  color: #111 !important;
+}
+/* formulářově přepneme barvový režim na světlý, aby OS/Chrome netlačil "auto-dark" */
+body.change-form { color-scheme: light !important; }
