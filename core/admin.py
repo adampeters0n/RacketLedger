@@ -44,7 +44,11 @@ class HracAdmin(admin.ModelAdmin):
 
     change_form_template = "admin/core/hrac/change_form.html"
     change_list_template = "admin/core/hrac/change_list.html"
-
+   
+    # přidej/změň:
+    list_per_page = 10_000          # nebo klidně 1_000_000
+    list_max_show_all = 10_000
+    
     # --- URL pro stránku "Změna informací" + POST vyúčtování ---
     def get_urls(self):
         urls = super().get_urls()

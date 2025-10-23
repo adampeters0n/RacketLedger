@@ -431,7 +431,7 @@ ul.messagelist li.warning{ background:var(--amber-100) !important; color:#6B4E00
 .change-list .results, .results, .module table, .payments-card,
 .grp-changelist-results, .grp-module, .grp-module .module,
 #changelist-form, #changelist-form .results{ background:var(--surface) !important; color:var(--text) !important; }
-tr{ background:transparent !important; }
+
 
 /* historie/ledger boxy */
 .history-wrapper, .history-card, .history-panel,
@@ -799,4 +799,53 @@ tr{ background:transparent !important; }
 .grp-submit-row input[name="_continue"],
 .grp-submit-row button[name="_continue"]{
   display: none !important;
+}
+
+/* ===== FIX 1: Hlavička tabulek – žádný hover, drž krémovou ===== */
+#result_list thead th,
+.module table thead th,
+.results thead th {
+  background: var(--amber-100) !important;
+  color: var(--text) !important;
+}
+
+/* jakýkoliv hover na thead zrušit (když přijde z default admin CSS) */
+#result_list thead tr:hover th,
+.module table thead tr:hover th,
+.results thead tr:hover th,
+table thead tr:hover th {
+  background: var(--amber-100) !important;
+  color: var(--text) !important;
+}
+
+/* hover jen na tělo tabulky, ne na thead */
+#result_list tbody tr:hover td,
+.module table tbody tr:hover td,
+.results tbody tr:hover td {
+  background: #fff8e6 !important; /* jemný krémový */
+}
+
+/* ===== FIX 2: Kalendář v „Přidat trénink“ ===== */
+.calendarbox,
+.clockbox {
+  z-index: 10000 !important; /* ať je nad sticky věcmi */
+}
+
+/* pevné pozadí hlavičky kalendáře/caption */
+.calendarbox table thead th,
+.calendarbox table caption {
+  background: var(--amber-100) !important;
+  color: var(--text) !important;
+}
+
+/* zruš jakékoliv globální tr:hover uvnitř kalendáře */
+.calendarbox table tr:hover th,
+.calendarbox table tr:hover td {
+  background: initial !important;
+  color: inherit !important;
+}
+
+/* příjemný hover jen na konkrétní dny */
+.calendarbox .calendar tbody td:hover {
+  background: #fff8e6 !important;
 }
