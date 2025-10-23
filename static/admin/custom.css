@@ -849,3 +849,66 @@ table thead tr:hover th {
 .calendarbox .calendar tbody td:hover {
   background: #fff8e6 !important;
 }
+
+/* === FINAL FIX pro seznamy (changelist) – vždy světlé řádky === */
+
+/* bílé pozadí celé oblasti s výsledky */
+.change-list #changelist,
+.change-list .results,
+.change-list table {
+  background:#fff !important;
+  color:var(--text) !important;
+}
+
+/* tělo tabulky – každý řádek a buňka bílé */
+.change-list .results tbody tr,
+.change-list #result_list tbody tr,
+.change-list .module table tbody tr {
+  background:#ffffff !important;
+}
+.change-list .results tbody tr > td,
+.change-list #result_list tbody tr > td,
+.change-list .module table tbody tr > td {
+  background:inherit !important;
+  color:var(--text) !important;
+}
+
+/* zebra + hover jemně krémové */
+.change-list .results tbody tr:nth-child(even),
+.change-list #result_list tbody tr:nth-child(even),
+.change-list .module table tbody tr:nth-child(even) {
+  background:#fffaf0 !important;
+}
+.change-list .results tbody tr:hover td,
+.change-list #result_list tbody tr:hover td,
+.change-list .module table tbody tr:hover td {
+  background:#fff3df !important;
+}
+
+/* hlavička tabulek – krémová, bez ztmavování */
+.change-list .results thead th,
+.change-list #result_list thead th {
+  background:var(--amber-100) !important;
+  color:var(--text) !important;
+}
+.change-list .results thead tr:hover th,
+.change-list #result_list thead tr:hover th {
+  background:var(--amber-100) !important;
+  color:var(--text) !important;
+}
+
+/* vybraný řádek (checkbox) zůstane zeleně zvýrazněný */
+.change-list .results tbody tr.selected td,
+.change-list #result_list tbody tr.selected td {
+  background:var(--accent-100) !important;
+  outline:2px solid var(--accent) !important;
+}
+
+/* Speciálně pro PLATBY (má vlastní třídu) */
+table.payments tbody tr,
+table.payments tbody td {
+  background:#fff !important;
+  color:var(--text) !important;
+}
+table.payments tbody tr:nth-child(even){ background:#fffaf0 !important; }
+table.payments tbody tr:hover td{ background:#fff3df !important; }
