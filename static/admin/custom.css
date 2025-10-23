@@ -902,3 +902,44 @@ table tbody tr:hover > td{ background:#fff3df !important; color:var(--text) !imp
 }
 .calendarbox .calendar tbody td:hover{ background:#fff8e6 !important; }
 
+/* ==== KILL: sloupcové zvýraznění v tabulkách (černý sloupec) ==== */
+.change-list .results td,
+.change-list .results th,
+.results td,
+.results th {
+  position: relative !important;
+}
+
+/* zrušit pseudo-elementy, co kreslí sloupec při hoveru */
+.change-list .results td::before,
+.change-list .results td::after,
+.change-list .results th::before,
+.change-list .results th::after,
+.results td::before,
+.results td::after,
+.results th::before,
+.results th::after {
+  content: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  mix-blend-mode: normal !important;
+}
+
+/* samotný hover nech jen jemně krémový na ŘÁDEK, ne na sloupec */
+.change-list .results tbody tr:hover > td,
+.results tbody tr:hover > td {
+  background: #fff3df !important;  /* stejné jako jinde */
+  color: var(--text) !important;
+}
+
+/* jistota proti auto-dark/mix-blend módům v tabulkách */
+.change-list .results,
+.results,
+.change-list .results * ,
+.results * {
+  color-scheme: light !important;
+  mix-blend-mode: normal !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
