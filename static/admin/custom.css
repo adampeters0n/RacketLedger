@@ -1037,3 +1037,74 @@ table tbody tr:hover > td { background:#fff3df !important; color:var(--text) !im
   border:1px solid #E5E7EB !important;
   border-radius:8px !important;
 }
+
+/* ==== HARD FIX: force světlo pro tabulky, Select2 a kalendář ==== */
+
+/* 0) vynuceně světlé schéma i na stránkách se seznamy */
+html, body, .change-list, .results, table, .select2-container {
+  color-scheme: light !important;
+}
+
+/* 1) TABULKY – žádné zčernání řádků */
+table thead th {
+  background: var(--amber-100) !important;
+  color: var(--text) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+table thead th::before,
+table thead th::after { background: transparent !important; box-shadow: none !important; }
+
+table tbody tr,
+table tbody td { background: #fff !important; color: var(--text) !important; }
+table tbody tr:nth-child(even) { background: #fffaf0 !important; }
+/* hover vždy jen jemně krémový */
+table tbody tr:hover > td,
+table tbody tr:hover > th { background: #fff3df !important; color: var(--text) !important; }
+
+/* 2) SELECT2 – dropdown i položky natvrdo světlé */
+.select2-container--admin-autocomplete .select2-selection--single {
+  background: #fff !important; color: #111 !important; border: 1px solid #E5E7EB !important; border-radius: 8px !important;
+}
+.select2-container--admin-autocomplete .select2-dropdown,
+.select2-container .select2-dropdown {
+  background: #fff !important; color: #111 !important; border: 1px solid #e5e7eb !important;
+}
+.select2-search--dropdown .select2-search__field {
+  background: #fff !important; color: #111 !important; -webkit-text-fill-color: #111 !important;
+  border: 1px solid #e5e7eb !important; border-radius: 8px !important;
+}
+.select2-container--admin-autocomplete .select2-results__options,
+.select2-container .select2-results__options { background: #fff !important; }
+.select2-results__option { background: #fff !important; color: #111 !important; }
+.select2-results__option--highlighted:not([aria-selected]) { background: #fff7ed !important; color: #111 !important; }
+.select2-results__option--highlighted[aria-selected] { background: #f59e0b !important; color: #fff !important; }
+.select2-container--admin-autocomplete .select2-results__option[aria-selected="true"] {
+  background: #ffedd5 !important; color: #92400e !important;
+}
+
+/* 3) DOCHÁZKA – <select> uvnitř první buňky vždy světlý */
+#dochazka_set-group td:first-child select,
+.x-dochazka-inline td:first-child select,
+.inline-group .related-widget-wrapper select {
+  background: #fff !important; color: #111 !important; -webkit-text-fill-color:#111 !important;
+  border: 1px solid #E5E7EB !important; border-radius: 8px !important; appearance: auto !important;
+}
+
+/* 4) KALENDÁŘ – celé tělo tabulky světle */
+.calendarbox table,
+.calendarbox table tbody,
+.calendarbox table tbody tr,
+.calendarbox table tbody td,
+.calendarbox table tbody th,
+.calendarbox .calendar td,
+.calendarbox .calendar th {
+  background: #fff !important; color: var(--text) !important;
+}
+.calendarbox table thead th,
+.calendarbox table caption {
+  background: var(--amber-100) !important; color: var(--text) !important;
+}
+/* jemný hover jen na konkrétní den */
+.calendarbox .calendar tbody td:hover { background: #fff8e6 !important; }
