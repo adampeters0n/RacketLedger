@@ -850,61 +850,56 @@ table thead tr:hover th {
   background: #fff8e6 !important;
 }
 
-/* === HARD KILL: černé sloupce/hover v admin tabulkách === */
+/* === FINAL PATCH: světlo pro tabulky, Select2 a kalendář === */
 
-/* zruš sticky/efekty prvního sloupce v těle tabulky */
-#result_list tbody th,
-.results tbody th {
-  position: static !important;
-  left: auto !important;
-  z-index: auto !important;
-  background: #fff !important;
+/* vynutit světlé schéma i proti auto-dark */
+html, body, .change-list, .results, table, .select2-container, .calendarbox { 
+  color-scheme: light !important; 
+}
+
+/* TABULKY (hlavička + řádky + hover) */
+table thead th{
+  background: var(--amber-100) !important;
   color: var(--text) !important;
-  box-shadow: none !important;
-  filter: none !important;
-  mix-blend-mode: normal !important;
-}
-
-/* zruš pseudo-elementy a masky */
-#result_list td::before,  #result_list td::after,
-#result_list th::before,  #result_list th::after,
-.results td::before,      .results td::after,
-.results th::before,      .results th::after {
-  content: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  mix-blend-mode: normal !important;
-}
-
-/* ignoruj třídy z JS: column-hover / *-hover */
-#result_list td.column-hover,
-#result_list th.column-hover,
-.results   td.column-hover,
-.results   th.column-hover,
-#result_list td[class$="-hover"],
-#result_list th[class$="-hover"],
-.results   td[class$="-hover"],
-.results   th[class$="-hover"] {
-  background: inherit !important;
-  color: inherit !important;
-  box-shadow: none !important;
-  mix-blend-mode: normal !important;
-}
-
-/* zachovej jen jemný hover na ŘÁDEK */
-#result_list tbody tr:hover > td,
-.results     tbody tr:hover > td {
-  background: #fff3df !important;
-  color: var(--text) !important;
-}
-
-/* jistota proti auto-dark/mix-blend uvnitř výsledků */
-#result_list, .results, #result_list * , .results * {
-  color-scheme: light !important;
-  mix-blend-mode: normal !important;
   background-image: none !important;
-  filter: none !important;
+  box-shadow:none !important; filter:none !important;
+}
+table thead th::before, table thead th::after{ background:transparent !important; box-shadow:none !important; }
+
+table tbody tr, table tbody td{ background:#fff !important; color:var(--text) !important; }
+table tbody tr:nth-child(even){ background:#fffaf0 !important; }
+table tbody tr:hover > td{ background:#fff3df !important; color:var(--text) !important; }
+
+/* SELECT2 (dropdown, vyhledávací input, položky) */
+.select2-container--admin-autocomplete .select2-selection--single{
+  background:#fff !important; color:#111 !important; border:1px solid #E5E7EB !important; border-radius:8px !important;
+}
+.select2-container .select2-dropdown{
+  background:#fff !important; color:#111 !important; border:1px solid #e5e7eb !important;
+}
+.select2-search--dropdown .select2-search__field{
+  background:#fff !important; color:#111 !important; -webkit-text-fill-color:#111 !important;
+  border:1px solid #e5e7eb !important; border-radius:8px !important;
+}
+.select2-results__option{ background:#fff !important; color:#111 !important; }
+.select2-results__option--highlighted:not([aria-selected]){ background:#fff7ed !important; color:#111 !important; }
+.select2-results__option--highlighted[aria-selected]{ background:#f59e0b !important; color:#fff !important; }
+
+/* DOCHÁZKA – <select> v první buňce vždy světlý */
+#dochazka_set-group td:first-child select,
+.x-dochazka-inline td:first-child select,
+.inline-group .related-widget-wrapper select{
+  background:#fff !important; color:#111 !important; -webkit-text-fill-color:#111 !important;
+  border:1px solid #E5E7EB !important; border-radius:8px !important; appearance:auto !important;
 }
 
+/* KALENDÁŘ (widget) */
+.calendarbox table, .calendarbox .calendar td, .calendarbox .calendar th{
+  background:#fff !important; color:var(--text) !important; box-shadow:none !important; filter:none !important;
+}
+.calendarbox table thead th, .calendarbox table caption{
+  background:var(--amber-100) !important; color:var(--text) !important;
+}
+.calendarbox .calendar tbody td:hover{ background:#fff8e6 !important; }
 
 
