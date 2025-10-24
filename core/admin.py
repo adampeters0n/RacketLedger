@@ -188,6 +188,7 @@ class HracAdmin(admin.ModelAdmin):
             count += 1
         self.message_user(request, f"Vyúčtování vytvořeno pro {count} hráčů.", level=messages.SUCCESS)
     akce_vygenerovat_vyuctovani.short_description = "Vygenerovat vyúčtování (poslat e-mail)"
+# admin.py -> class HracAdmin
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         hrac = Hrac.objects.get(pk=object_id)
@@ -268,7 +269,11 @@ class HracAdmin(admin.ModelAdmin):
             if is_charge and tx.trening:
                 total_min += (tx.trening.delka_minut or 0)
                 sum_cena += Decimal(tx.castka or 0)
-                hodiny = str((Decimal(tx.trening.delka_minut) / Decimal(60)).quantize(Decimal("0")))
+
+                # ZDE JE FINÁLNÍ OPRAVA pro řádky tabulky
+                hodiny_decimal = (Decimal(tx.trening.delka_minut) / Decimal(60)).normalize()
+                hodiny = str(hodiny_decimal).replace('.', ',')
+
                 skupina = tx.trening.get_format_display()
                 sezona = "léto" if 5 <= dt.month <= 10 else "zima"
                 cena = f"{Decimal(tx.castka):.0f}"
@@ -280,17 +285,13 @@ class HracAdmin(admin.ModelAdmin):
 
             display_kredit = f"{running_credit:.0f}"
             
-                # --- ZDE JE OPRAVA ---
             delete_link = ""
             if is_charge and tx.trening:
-                # Pokud je to naúčtování za trénink, odkaz směřuje na smazání tréninku
                 delete_url = reverse("admin:core_trening_delete", args=[tx.trening.id])
                 delete_link = format_html('<a href="{}" class="deletelink">Smazat</a>', delete_url)
             elif not is_charge:
-                # Pokud je to platba/vratka, odkaz směřuje na smazání transakce
                 delete_url = reverse("admin:core_transakce_delete", args=[tx.id])
                 delete_link = format_html('<a href="{}" class="deletelink">Smazat</a>', delete_url)
-            # --- KONEC OPRAVY ---
 
             rows.append({
                 "datum": datum_str,
@@ -306,13 +307,17 @@ class HracAdmin(admin.ModelAdmin):
             })
 
         trainings_count = charges_qs.count()
-        trainings_hours = (Decimal(total_min) / Decimal(60)).quantize(Decimal("0"))
+        
+        # ZDE JE FINÁLNÍ OPRAVA pro součtový řádek
+        trainings_hours_decimal = (Decimal(total_min) / Decimal(60)).normalize()
+        trainings_hours = str(trainings_hours_decimal).replace('.', ',')
+        
         end_credit = running_credit
 
         extra_context = extra_context or {}
         extra_context["ledger_rows"] = rows
         extra_context["ledger_totals"] = {
-            "hodiny": f"{trainings_hours:.0f}",
+            "hodiny": trainings_hours,
             "cena": f"{sum_cena:.0f}",
             "zaplaceno": f"{sum_paid:.0f}",
             "credit": f"{end_credit:.0f}",
@@ -569,7 +574,8 @@ class RodinaAdmin(admin.ModelAdmin):
             if is_charge and tx.trening:
                 total_min += (tx.trening.delka_minut or 0)
                 sum_cena += Decimal(tx.castka or 0)
-                hodiny = str((Decimal(tx.trening.delka_minut) / Decimal(60)).quantize(Decimal("0")))
+                hodiny_decimal = (Decimal(tx.trening.delka_minut) / Decimal(60)).normalize()
+                hodiny = str(hodiny_decimal).replace('.', ',')
                 skupina = tx.trening.get_format_display()
                 sezona = "léto" if 5 <= dt.month <= 10 else "zima"
                 cena = f"{Decimal(tx.castka):.0f}"
@@ -607,7 +613,8 @@ class RodinaAdmin(admin.ModelAdmin):
                 "typ": tx.typ,
             })
 
-        trainings_hours = (Decimal(total_min) / Decimal(60)).quantize(Decimal("0"))
+        trainings_hours_decimal = (Decimal(total_min) / Decimal(60)).normalize()
+        trainings_hours = str(trainings_hours_decimal).replace('.', ',')
         end_credit = running_credit
         trainings_count = charges_qs.count()
 
@@ -615,7 +622,7 @@ class RodinaAdmin(admin.ModelAdmin):
         extra_context.update({
             "ledger_rows": rows,
             "ledger_totals": {
-                "hodiny": f"{trainings_hours:.0f}",
+                "hodiny": trainings_hours,
                 "cena": f"{sum_cena:.0f}",
                 "zaplaceno": f"{sum_paid:.0f}",
                 "credit": f"{end_credit:.0f}",
@@ -784,7 +791,10 @@ class TreningAdmin(admin.ModelAdmin):
         if "delka_minut" in Form.base_fields:
             field = Form.base_fields["delka_minut"]
             field.label = "Délka (hodiny)"
+            
+            # ZDE JE ZMĚNA: Přidán řádek pro 45 minut
             CHOICES = [
+                (45, "45 min"),  # <-- TENTO ŘÁDEK BYL PŘIDÁN
                 (60, "1 h"),
                 (90, "1,5 h"),
                 (120, "2 h"),
