@@ -641,7 +641,8 @@ class RodinaAdmin(admin.ModelAdmin):
 class CenikAdmin(admin.ModelAdmin):
     list_display = ("format", "kurt", "cena_za_hodinu", "platnost_od", "platnost_do")
     list_filter = ("format", "kurt")
-    search_fields = ("cena_za_hodinu",)
+    # Změna zde:
+    search_fields = ("format", "kurt")
 
 
 # -----------------------------

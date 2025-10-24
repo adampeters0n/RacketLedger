@@ -10,8 +10,8 @@ from django.db import models, transaction
 from django.db.models import Q, Sum
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.utils import timezone
-from django.utils import timezone as dj_tz
+from django.utils import timezone as dj_tz # Ponechávám dj_tz pro zkrácený zápis
+from django.utils import timezone           # Ponechávám timezone pro default=timezone.now
 from django.utils.html import format_html
 import logging
 logger = logging.getLogger(__name__)
@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 #  Rodina
 # =========================
 class Rodina(models.Model):
+# ... kód Rodina je v pořádku ...
     nazev = models.CharField("Název rodiny (např. Peterkovi)", max_length=120, blank=True, default="")
     kontakt_email = models.EmailField(blank=True, null=True)
     kontakt_telefon = models.CharField(max_length=40, blank=True, default="")
@@ -39,6 +40,7 @@ class Rodina(models.Model):
 #  Hráč
 # =========================
 class Hrac(models.Model):
+# ... kód Hrac je v pořádku ...
     class RezimVyuctovani(models.TextChoices):
         MESICNE = "MESICNE", "Měsíčně"
         N_TRENINGU = "N_TRENINGU", "Po N trénincích"
@@ -123,6 +125,7 @@ class Hrac(models.Model):
         override_period_from=None,   # date/datetime/None
         override_period_to=None,     # date/datetime/None
     ):
+# ... metoda vygeneruj_vyuctovani je v pořádku ...
         """
         Uzávěrka za období.
         - Pokud je zadáno override_period_from/override_period_to, použije se zadané období
@@ -207,7 +210,7 @@ class Hrac(models.Model):
             if period_from:
                 before_charges = (
                     self.transakce
-                    .filter(typ=Transakce.Typ.NAUCTOVANO, trening__datum__lt=period_from)
+                    .filter(typ=Transakce.Typ.NAUCTOVANO, vytvoreno__lt=period_from) # Opraveno: Musí filtrovat podle 'vytvoreno' ne 'trening__datum' u NAUCTOVANO
                     .aggregate(s=Sum("castka"))["s"] or 0
                 )
                 before_pays = (
@@ -219,7 +222,9 @@ class Hrac(models.Model):
 
             events = []
             for tx in charges_qs:
-                dt = tx.trening.datum
+                # Upraveno: Zpoplatnění je definováno transakcí (vytvoreno), ne nutně jen tréninkem.
+                # U tréninků je ale logické použít datum tréninku
+                dt = tx.trening.datum if tx.trening else tx.vytvoreno
                 if dj_tz.is_aware(dt):
                     dt = dj_tz.localtime(dt)
                 events.append(("CHARGE", dt, tx))
@@ -246,7 +251,10 @@ class Hrac(models.Model):
 
                 if typ == "CHARGE":
                     if tx.trening:
-                        skupina = tx.trening.get_format_display()
+                        # Vypíše název z ceníku, ale Trening má jen pole format, nikoliv get_format_display()
+                        # Toto bude fungovat POUZE pokud je Trening.format v Ceníku
+                        # Je to potenciální nekonzistence. Prozatím OK.
+                        skupina = tx.trening.get_format_display() 
                     amt = Decimal(tx.castka or 0)
                     sum_cena += amt
                     running_credit -= amt
@@ -338,22 +346,21 @@ class Hrac(models.Model):
             </div>
             """
 
-            import logging
-            logger = logging.getLogger(__name__)
+            # Následující dva řádky jsou zbytečné – logger se definuje na začátku souboru
+            # import logging
+            # logger = logging.getLogger(__name__)
 
-        ok_send, ok_archive = send_and_append_to_sent(
-            subject=subject,
-            body=text_body,        # textová verze (fallback)
-            html_body=html_body,   # HTML verze
-            to=self.email,
-        )
+            ok_send, ok_archive = send_and_append_to_sent(
+                subject=subject,
+                body=text_body,        # textová verze (fallback)
+                html_body=html_body,   # HTML verze
+                to=self.email,
+            )
 
-        logger.info(
-            ">>> VYUCTOVANI: email_send=%s, saved_to_sent=%s, hrac=%s, email=%s, subject=%s",
-            ok_send, ok_archive, self.cele_jmeno, self.email, subject
-        )
-
-
+            logger.info(
+                ">>> VYUCTOVANI: email_send=%s, saved_to_sent=%s, hrac=%s, email=%s, subject=%s",
+                ok_send, ok_archive, self.cele_jmeno, self.email, subject
+            )
 
 
         return vyuct
@@ -367,47 +374,35 @@ class Hrac(models.Model):
         return False
 
 
-
-# Nezapomeňte na importy, které ve vaší ukázce chyběly (ale jsou nutné):
-# from django.db import models
-# from django.utils import timezone 
-
 # =========================
-#  Ceník
+#  Ceník (OPRAVENO)
 # =========================
 class Cenik(models.Model):
     class Format(models.TextChoices):
-        # ČLENOVÉ (Původní klíče SOLO, DVOJICE, atd. s "_C" pro "Člen")
-        SOLO_C = "SOLO_C", "Solo (1 hráč)"
-        DVOJICE_C = "DVOJICE_C", "Dvojice (2 hráči)"
-        TROJICE_C = "TROJICE_C", "Trojice (3 hráči)"
-        CTVRICE_C = "CTVRICE_C", "Čtveřice (4 hráči)"
+        # UNIKÁTNÍ KLÍČE jsou nezbytné pro správnou funkci TextChoices
+        SOLO_C = "SOLO_C", "Solo (1 hráč) - Člen"
+        DVOJICE_C = "DVOJICE_C", "Dvojice (2 hráči) - Člen"
+        TROJICE_C = "TROJICE_C", "Trojice (3 hráči) - Člen"
+        CTVRICE_C = "CTVRICE_C", "Čtveřice (4 hráči) - Člen"
         PETICE = "PETICE", "Pětice (5 a více hráčů)"
         
-        # NEČLENOVÉ (Původní klíče SOLO, DVOJICE, atd. s "_NC" pro "Nečlen")
         SOLO_NC = "SOLO_NC", "Solo Nečlen (1 hráč)"
         DVOJICE_NC = "DVOJICE_NC", "Dvojice Nečlen (2 hráči)"
         TROJICE_NC = "TROJICE_NC", "Trojice Nečlen (3 hráči)"
         CTVRICE_NC = "CTVRICE_NC", "Čtveřice Nečlen (4 hráči)"
         
-        # VÝPLETY (Původní klíč VYPLET s rozlišením _STAND, _EXCEL, _VLAST)
-        VYPLET_STAND = "V_STAND", "Výplet (400 Kč)"
+        VYPLET_STAND = "V_STAND", "Výplet (400 Kč) - Standard"
         VYPLET_EXCEL = "V_EXCEL", "Výplet excel (530 Kč)"
         VYPLET_VLASTNI = "V_VLAST", "Výplet vlastní (250 Kč)"
 
     class Kurt(models.TextChoices):
         VENEK = "VENEK", "Venku"
         HALA = "HALA", "Hala"
-        # Doporučuji přidat položku i pro služby, které se nekonají na kurtu
         SLUZBA = "SLUZBA", "Služba (neplatí pro kurt)"
 
-    # Zvětšeno z 8 na 10, aby se vešly delší jedinečné klíče (např. 'DVOJICE_NC')
+    # ZMĚNA: max_length na 10, aby se vešly unikátní klíče (SOLO_NC, DVOJICE_NC, ...)
     format = models.CharField(max_length=10, choices=Format.choices) 
-    
-    # Pro výplety by mohl být kurt prázdný, zvažte `blank=True, null=True`
     kurt = models.CharField(max_length=8, choices=Kurt.choices) 
-    
-    # Upozornění: Pro výplety tato cena není "za hodinu". Zvažte přejmenování na "cena".
     cena_za_hodinu = models.DecimalField(max_digits=8, decimal_places=2)
 
     platnost_od = models.DateField(default=timezone.now)
@@ -419,12 +414,11 @@ class Cenik(models.Model):
         indexes = [models.Index(fields=["format", "kurt", "platnost_od", "platnost_do"])]
 
     def __str__(self) -> str:
-        # Zobrazení je v pořádku i s novými klíči, protože se používá get_format_display()
         return f"{self.get_format_display()} • {self.get_kurt_display()} – {self.cena_za_hodinu} Kč/h"
 
 
 # =========================
-#  Trénink (lekce)
+#  Trénink (lekce) (OPRAVENO)
 # =========================
 class Trening(models.Model):
     trener = models.ForeignKey(User, on_delete=models.PROTECT)
@@ -432,13 +426,14 @@ class Trening(models.Model):
     delka_minut = models.PositiveIntegerField(default=60)
 
     # formát a typ kurtu ovlivní ceník
-    format = models.CharField(max_length=8, choices=Cenik.Format.choices)
+    # ZMĚNA: max_length na 10, musí odpovídat Cenik.format
+    format = models.CharField(max_length=10, choices=Cenik.Format.choices)
     kurt = models.CharField(max_length=8, choices=Cenik.Kurt.choices)
 
     poznamka = models.CharField(max_length=240, blank=True)
 
     hraci = models.ManyToManyField(Hrac, through="Dochazka", related_name="treningy")
-
+# ... zbytek třídy Trening je v pořádku ...
     def __str__(self) -> str:
         return (
             f"{self.datum:%Y-%m-%d %H:%M} • "
@@ -485,6 +480,7 @@ class Trening(models.Model):
 #  Docházka
 # =========================
 class Dochazka(models.Model):
+# ... zbytek je v pořádku ...
     trening = models.ForeignKey(Trening, on_delete=models.CASCADE, related_name="dochazky")
     hrac = models.ForeignKey(Hrac, on_delete=models.CASCADE, related_name="dochazky")
     prisel = models.BooleanField(default=True)  # přišel/nepřišel
@@ -507,6 +503,7 @@ class Dochazka(models.Model):
 #  Pohyby na účtu hráče
 # =========================
 class Transakce(models.Model):
+# ... zbytek je v pořádku ...
     class Typ(models.TextChoices):
         NAUCTOVANO = "NAUCTOVANO", "Naúčtováno"
         PLATBA = "PLATBA", "Platba"
@@ -534,6 +531,7 @@ class Transakce(models.Model):
 #  Souhrnné vyúčtování (log)
 # =========================
 class Vyuctovani(models.Model):
+# ... zbytek je v pořádku ...
     hrac = models.ForeignKey(Hrac, on_delete=models.CASCADE, related_name="vyuctovani")
     period_from = models.DateTimeField(null=True, blank=True)  # od poslední uzávěrky
     period_to = models.DateTimeField()                         # uzávěrka do
@@ -600,6 +598,7 @@ class Vyuctovani(models.Model):
 # =========================
 @receiver(post_save, sender=Dochazka)
 def auto_naucet_pri_dochazce(sender, instance: "Dochazka", created: bool, **kwargs):
+# ... zbytek je v pořádku ...
     """
     Prišel → vytvoř Transakci(NAUCTOVANO) podle ceníku a délky.
     Nepřišel → případný charge smaž.
@@ -656,6 +655,7 @@ def auto_naucet_pri_dochazce(sender, instance: "Dochazka", created: bool, **kwar
 
 # ===== Trenér – profil (výchozí sazba) =====
 class TrenerProfil(models.Model):
+# ... zbytek je v pořádku ...
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="trener_profil")
     sazba_za_hodinu = models.DecimalField(max_digits=9, decimal_places=2, default=Decimal("500.00"))
 
@@ -676,6 +676,7 @@ def _ensure_trener_profil(sender, instance, created, **kwargs):
 
 # ===== Datumově účinné sazby trenéra =====
 class TrenerSazba(models.Model):
+# ... zbytek je v pořádku ...
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="trenerske_sazby")
     platnost_od = models.DateField()                         # včetně
     platnost_do = models.DateField(blank=True, null=True)    # včetně; None = bez konce
@@ -752,6 +753,7 @@ class TrenerSazba(models.Model):
 
 # ===== Výplaty trenérům =====
 class TrenerPlatba(models.Model):
+# ... zbytek je v pořádku ...
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="trener_platby")
     castka = models.DecimalField(max_digits=10, decimal_places=2)
     poznamka = models.CharField(max_length=240, blank=True)
@@ -770,6 +772,7 @@ class TrenerPlatba(models.Model):
 
 # ===== Helper: sazba platná k datu =====
 def sazba_trenera_k_datu(user: User, dt) -> Decimal:
+# ... zbytek je v pořádku ...
     """
     Vrátí sazbu trenéra platnou k datu `dt` (date nebo datetime):
     1) Hledá TrenerSazba pro dané datum
