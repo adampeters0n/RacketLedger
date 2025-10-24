@@ -450,6 +450,16 @@ class Trening(models.Model):
     def hodiny(self) -> Decimal:
         return (Decimal(self.delka_minut) / Decimal(60)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
+    # NOVÁ LOGIKA SEZÓNY
+    @property
+    def sezona_display(self) -> str:
+        """Vypočítá sezónu na základě kurtu."""
+        if self.kurt == Cenik.Kurt.VENEK:
+            return "Léto"
+        elif self.kurt == Cenik.Kurt.HALA:
+            return "Zima"
+        return "Celoroční"
+
     def aktualni_cenik(self) -> "Cenik | None":
         d = self.datum.date()
         qs = (
@@ -792,10 +802,13 @@ def sazba_trenera_k_datu(user: User, dt) -> Decimal:
         .first()
     )
     if rec:
-        return Decimal(rec.sazba_za_hodinu)
+        return rec.sazba_za_hodinu # <--- NÁVRAT HODNOTY!
 
-    # fallback na profil / default
+    # Fallback 2: Hledá profil trenéra
     try:
-        return Decimal(user.trener_profil.sazba_za_hodinu)
-    except Exception:
-        return Decimal("500.00")
+        return user.trener_profil.sazba_za_hodinu
+    except TrenerProfil.DoesNotExist:
+        pass
+
+    # Fallback 3: Výchozí sazba (pokud profil neexistuje)
+    return Decimal("500.00")
