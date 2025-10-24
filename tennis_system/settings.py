@@ -99,19 +99,26 @@ WSGI_APPLICATION = "tennis_system.wsgi.application"
 
 # =====================================
 # DATABÁZE
-#  - v produkci použij DATABASE_URL (Postgres)
-#  - lokálně fallback na SQLite
+#  - v produkci použij DATABASE_URL (Postgres, SSL)
+#  - lokálně fallback na SQLite (bez SSL)
 # =====================================
 import dj_database_url
 
-DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600,
-        conn_health_checks=True,   # ✅ PATCH: health-check spojení
-        ssl_require=True,          # ✅ PATCH: vynutit TLS pro Neon/Render
-    )
-}
+if os.environ.get("DATABASE_URL"):
+    DATABASES = {
+        "default": dj_database_url.config(
+            conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=True,   # jen pro Postgres
+        )
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # =====================================
 # HESLA

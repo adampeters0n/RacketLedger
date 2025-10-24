@@ -279,8 +279,18 @@ class HracAdmin(admin.ModelAdmin):
                 running_credit += Decimal(tx.castka or 0)
 
             display_kredit = f"{running_credit:.0f}"
-            delete_url = reverse("admin:core_transakce_delete", args=[tx.id])
-            delete_link = format_html('<a href="{}" class="deletelink">Smazat</a>', delete_url)
+            
+                # --- ZDE JE OPRAVA ---
+            delete_link = ""
+            if is_charge and tx.trening:
+                # Pokud je to naúčtování za trénink, odkaz směřuje na smazání tréninku
+                delete_url = reverse("admin:core_trening_delete", args=[tx.trening.id])
+                delete_link = format_html('<a href="{}" class="deletelink">Smazat</a>', delete_url)
+            elif not is_charge:
+                # Pokud je to platba/vratka, odkaz směřuje na smazání transakce
+                delete_url = reverse("admin:core_transakce_delete", args=[tx.id])
+                delete_link = format_html('<a href="{}" class="deletelink">Smazat</a>', delete_url)
+            # --- KONEC OPRAVY ---
 
             rows.append({
                 "datum": datum_str,
@@ -570,8 +580,18 @@ class RodinaAdmin(admin.ModelAdmin):
                 running_credit += Decimal(tx.castka or 0)
 
             display_kredit = f"{running_credit:.0f}"
-            delete_url = reverse("admin:core_transakce_delete", args=[tx.id])
-            delete_link = format_html('<a href="{}" class="deletelink">Smazat</a>', delete_url)
+
+                # --- ZDE JE OPRAVA ---
+            delete_link = ""
+            if is_charge and tx.trening:
+                # Pokud je to naúčtování za trénink, odkaz směřuje na smazání tréninku
+                delete_url = reverse("admin:core_trening_delete", args=[tx.trening.id])
+                delete_link = format_html('<a href="{}" class="deletelink">Smazat</a>', delete_url)
+            elif not is_charge:
+                # Pokud je to platba/vratka, odkaz směřuje na smazání transakce
+                delete_url = reverse("admin:core_transakce_delete", args=[tx.id])
+                delete_link = format_html('<a href="{}" class="deletelink">Smazat</a>', delete_url)
+            # --- KONEC OPRAVY ---
 
             rows.append({
                 "datum": datum_str,

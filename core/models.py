@@ -493,7 +493,7 @@ class Transakce(models.Model):
     typ = models.CharField(max_length=12, choices=Typ.choices)
     castka = models.DecimalField(max_digits=10, decimal_places=2)  # KLADNÁ částka
     popis = models.CharField(max_length=240, blank=True)
-    trening = models.ForeignKey(Trening, null=True, blank=True, on_delete=models.SET_NULL)
+    trening = models.ForeignKey(Trening, null=True, blank=True, on_delete=models.CASCADE)
     vytvoreno = models.DateTimeField(auto_now_add=True)
 
     class Meta:
