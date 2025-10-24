@@ -373,18 +373,18 @@ class Hrac(models.Model):
 # =========================
 class Cenik(models.Model):
     class Format(models.TextChoices):
-        SOLO = "SOLO", "Solo (1 hráč)"
-        DVOJICE = "DVOJICE", "Dvojice (2 hráči)"
-        TROJICE = "TROJICE", "Trojice (3 hráči)"
-        CTVRICE = "CTVRICE", "Čtveřice (4 hráči)"
+        SOLO1 = "SOLO", "Solo (1 hráč)"
+        DVOJICE1 = "DVOJICE", "Dvojice (2 hráči)"
+        TROJICE1 = "TROJICE", "Trojice (3 hráči)"
+        CTVRICE1 = "CTVRICE", "Čtveřice (4 hráči)"
         PETICE = "PETICE", "Pětice (5 a více hráčů)"
-        SOLO = "SOLO", "Solo Nečlen (1 hráč)"
-        DVOJICE = "DVOJICE", "Dvojice Nečlen (2 hráči)"
-        TROJICE = "TROJICE", "Trojice Nečlen (3 hráči)"
-        CTVRICE = "CTVRICE", "Čtveřice Nečlen (4 hráči)"
-        VYPLET = "VYPLET", "Výplet (400 Kč)"
-        VYPLET = "VYPLET", "Výplet excel (530 Kč)"
-        VYPLET = "VYPLET", "Výplet vlastní (250 Kč)"
+        SOLO2 = "SOLO", "Solo Nečlen (1 hráč)"
+        DVOJICE2 = "DVOJICE", "Dvojice Nečlen (2 hráči)"
+        TROJICE2 = "TROJICE", "Trojice Nečlen (3 hráči)"
+        CTVRICE2 = "CTVRICE", "Čtveřice Nečlen (4 hráči)"
+        VYPLET1 = "VYPLET", "Výplet (400 Kč)"
+        VYPLET2 = "VYPLET", "Výplet excel (530 Kč)"
+        VYPLET3 = "VYPLET", "Výplet vlastní (250 Kč)"
 
     class Kurt(models.TextChoices):
         VENEK = "VENEK", "Venku"
