@@ -368,30 +368,46 @@ class Hrac(models.Model):
 
 
 
+# Nezapomeňte na importy, které ve vaší ukázce chyběly (ale jsou nutné):
+# from django.db import models
+# from django.utils import timezone 
+
 # =========================
 #  Ceník
 # =========================
 class Cenik(models.Model):
     class Format(models.TextChoices):
-        SOLO1 = "SOLO", "Solo (1 hráč)"
-        DVOJICE1 = "DVOJICE", "Dvojice (2 hráči)"
-        TROJICE1 = "TROJICE", "Trojice (3 hráči)"
-        CTVRICE1 = "CTVRICE", "Čtveřice (4 hráči)"
+        # ČLENOVÉ (Původní klíče SOLO, DVOJICE, atd. s "_C" pro "Člen")
+        SOLO_C = "SOLO_C", "Solo (1 hráč)"
+        DVOJICE_C = "DVOJICE_C", "Dvojice (2 hráči)"
+        TROJICE_C = "TROJICE_C", "Trojice (3 hráči)"
+        CTVRICE_C = "CTVRICE_C", "Čtveřice (4 hráči)"
         PETICE = "PETICE", "Pětice (5 a více hráčů)"
-        SOLO2 = "SOLO", "Solo Nečlen (1 hráč)"
-        DVOJICE2 = "DVOJICE", "Dvojice Nečlen (2 hráči)"
-        TROJICE2 = "TROJICE", "Trojice Nečlen (3 hráči)"
-        CTVRICE2 = "CTVRICE", "Čtveřice Nečlen (4 hráči)"
-        VYPLET1 = "VYPLET", "Výplet (400 Kč)"
-        VYPLET2 = "VYPLET", "Výplet excel (530 Kč)"
-        VYPLET3 = "VYPLET", "Výplet vlastní (250 Kč)"
+        
+        # NEČLENOVÉ (Původní klíče SOLO, DVOJICE, atd. s "_NC" pro "Nečlen")
+        SOLO_NC = "SOLO_NC", "Solo Nečlen (1 hráč)"
+        DVOJICE_NC = "DVOJICE_NC", "Dvojice Nečlen (2 hráči)"
+        TROJICE_NC = "TROJICE_NC", "Trojice Nečlen (3 hráči)"
+        CTVRICE_NC = "CTVRICE_NC", "Čtveřice Nečlen (4 hráči)"
+        
+        # VÝPLETY (Původní klíč VYPLET s rozlišením _STAND, _EXCEL, _VLAST)
+        VYPLET_STAND = "V_STAND", "Výplet (400 Kč)"
+        VYPLET_EXCEL = "V_EXCEL", "Výplet excel (530 Kč)"
+        VYPLET_VLASTNI = "V_VLAST", "Výplet vlastní (250 Kč)"
 
     class Kurt(models.TextChoices):
         VENEK = "VENEK", "Venku"
         HALA = "HALA", "Hala"
+        # Doporučuji přidat položku i pro služby, které se nekonají na kurtu
+        SLUZBA = "SLUZBA", "Služba (neplatí pro kurt)"
 
-    format = models.CharField(max_length=8, choices=Format.choices)
-    kurt = models.CharField(max_length=8, choices=Kurt.choices)
+    # Zvětšeno z 8 na 10, aby se vešly delší jedinečné klíče (např. 'DVOJICE_NC')
+    format = models.CharField(max_length=10, choices=Format.choices) 
+    
+    # Pro výplety by mohl být kurt prázdný, zvažte `blank=True, null=True`
+    kurt = models.CharField(max_length=8, choices=Kurt.choices) 
+    
+    # Upozornění: Pro výplety tato cena není "za hodinu". Zvažte přejmenování na "cena".
     cena_za_hodinu = models.DecimalField(max_digits=8, decimal_places=2)
 
     platnost_od = models.DateField(default=timezone.now)
@@ -403,6 +419,7 @@ class Cenik(models.Model):
         indexes = [models.Index(fields=["format", "kurt", "platnost_od", "platnost_do"])]
 
     def __str__(self) -> str:
+        # Zobrazení je v pořádku i s novými klíči, protože se používá get_format_display()
         return f"{self.get_format_display()} • {self.get_kurt_display()} – {self.cena_za_hodinu} Kč/h"
 
 
