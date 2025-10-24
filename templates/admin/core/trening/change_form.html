@@ -45,7 +45,6 @@
 {% block extrastyle %}
   {{ block.super }}
 
-  <!-- ===== Horní formulář – kompaktní grid karty ===== -->
   <style>
     :root{
       --label-w:160px; --field-w:360px; --row-gap:14px;
@@ -85,7 +84,6 @@
     }
   </style>
 
-  <!-- ===== Docházka – světlá tabulka bez „černé plochy“ dole ===== -->
   <style>
     :root{ --w-col:200px; --w-fixed:calc(var(--w-col) * 4); }
 
@@ -186,4 +184,27 @@
       border-top:1px solid #E5E7EB !important;
     }
   </style>
-{% endblock %}
+
+  <style>
+    /* Oprava barvy textu vybraného hráče v poli */
+    .select2-container--admin-autocomplete .select2-selection--single .select2-selection__rendered {
+      color: #111827 !important; /* Vynutí černou barvu textu */
+    }
+
+    /* Oprava pozadí a textu v samotném dropdownu */
+    .select2-container .select2-dropdown {
+      background: #fff !important;
+      border: 1px solid #e5e7eb !important;
+    }
+    .select2-results__option {
+      background: #fff !important;
+      color: #111827 !important;
+    }
+
+    /* Zvýraznění položky při najetí myší (brand oranžová) */
+    .select2-results__option--highlighted[aria-selected] {
+      background: var(--brand) !important;
+      color: #fff !important;
+    }
+  </style>
+  {% endblock %}

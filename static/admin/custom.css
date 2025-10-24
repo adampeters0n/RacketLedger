@@ -937,8 +937,9 @@ table thead tr:hover th a {
     color: var(--text) !important;
 }
 
-/* 3. HOVER STAV TĚLA TABULKY: Toto je správný jemně oranžový efekt pro datové řádky. */
-table tbody tr:hover td {
-    background: #fff3df !important;
-    color: var(--text) !important;
+/* === GLOBÁLNÍ FIX: Hover efekt pro CELÝ řádek tabulky (včetně <th>) === */
+table tbody tr:hover td,
+table tbody tr:hover th {
+  background: #fff3df !important; /* Váš stávající jemně oranžový hover */
+  color: var(--text) !important;
 }
