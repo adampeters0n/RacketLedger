@@ -914,3 +914,24 @@ html, body, #result_list, .results, table {
 #result_list th::before, #result_list th::after { content: none !important; }
 #result_list tbody tr:hover > td { background: #fff3df !important; }
 
+/* =================================================================== */
+/* === GLOBÁLNÍ FIX: Hover efekt pro všechny tabulky v adminu === */
+/* =================================================================== */
+
+/* 1. Zamezí změně pozadí a barvy textu v HLAVIČCE jakékoliv tabulky */
+table thead tr:hover th {
+  background: var(--amber-100) !important;  /* Vždy držet krémovou barvu */
+  color: var(--text) !important;            /* Vždy držet standardní barvu textu */
+}
+
+/* 2. Zamezí změně barvy ODKAZŮ v hlavičce (pro řazení sloupců) */
+table thead tr:hover th a {
+  color: var(--text) !important;            /* Odkazy si udrží stejnou barvu jako text */
+  text-decoration: none !important;
+}
+
+/* 3. Definice správného hover efektu pro řádky v TĚLE tabulky */
+table tbody tr:hover td {
+  background: #fff3df !important;           /* Váš definovaný jemně oranžový hover */
+  color: var(--text) !important;
+}
