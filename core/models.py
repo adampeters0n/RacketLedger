@@ -378,6 +378,13 @@ class Cenik(models.Model):
         TROJICE = "TROJICE", "Trojice (3 hráči)"
         CTVRICE = "CTVRICE", "Čtveřice (4 hráči)"
         PETICE = "PETICE", "Pětice (5 a více hráčů)"
+        SOLO = "SOLO", "Solo Nečlen (1 hráč)"
+        DVOJICE = "DVOJICE", "Dvojice Nečlen (2 hráči)"
+        TROJICE = "TROJICE", "Trojice Nečlen (3 hráči)"
+        CTVRICE = "CTVRICE", "Čtveřice Nečlen (4 hráči)"
+        VYPLET = "VYPLET", "Výplet (400 Kč)"
+        VYPLET = "VYPLET", "Výplet excel (530 Kč)"
+        VYPLET = "VYPLET", "Výplet vlastní (250 Kč)"
 
     class Kurt(models.TextChoices):
         VENEK = "VENEK", "Venku"
