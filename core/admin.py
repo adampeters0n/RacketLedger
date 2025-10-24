@@ -14,6 +14,13 @@ from django.utils.html import format_html, format_html_join
 from django import forms
 from django.contrib.admin.widgets import AdminSplitDateTime
 
+# >>> PŘIDANÉ IMPORTY pro mazání tréninku (nic nepřepisují)
+from django.core.exceptions import PermissionDenied
+from django.db import transaction
+from django.shortcuts import get_object_or_404
+from django.middleware.csrf import get_token
+# <<<
+
 from .models import (
     Hrac,
     Trening,
@@ -63,6 +70,13 @@ class HracAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.vyuctovat_view),
                 name="core_hrac_vyuctovat",
             ),
+            # >>> PŘIDÁNO: mazání tréninku hráče (POST)
+            path(
+                "<int:object_id>/smazat-trening/<int:trening_id>/",
+                self.admin_site.admin_view(self.delete_trening_for_hrac),
+                name="core_hrac_smazat_trening",
+            ),
+            # <<<
         ]
         return my + urls
 
@@ -189,6 +203,47 @@ class HracAdmin(admin.ModelAdmin):
         self.message_user(request, f"Vyúčtování vytvořeno pro {count} hráčů.", level=messages.SUCCESS)
     akce_vygenerovat_vyuctovani.short_description = "Vygenerovat vyúčtování (poslat e-mail)"
 
+    # >>> PŘIDÁNO: HTML POST tlačítko pro smazání tréninku (s CSRF)
+    def _delete_trening_button(self, request, hrac_id: int, trening_id: int):
+        url = reverse("admin:core_hrac_smazat_trening", args=[hrac_id, trening_id])
+        csrf = get_token(request)
+        return format_html(
+            '<form method="post" action="{}" style="display:inline">'
+            '<input type="hidden" name="csrfmiddlewaretoken" value="{}">'
+            '<button type="submit" class="deletelink">Smazat</button>'
+            '</form>',
+            url, csrf
+        )
+    # <<<
+
+    # >>> PŘIDÁNO: samotný handler na smazání tréninku + přepočet kreditu
+    @transaction.atomic
+    def delete_trening_for_hrac(self, request, object_id: int, trening_id: int):
+        if not request.user.has_perm("core.delete_trening"):
+            raise PermissionDenied
+
+        hrac = get_object_or_404(Hrac, pk=object_id)
+        trening = get_object_or_404(Trening, pk=trening_id)
+
+        if request.method != "POST":
+            messages.error(request, "Smazání musí být potvrzeno POST požadavkem.")
+            return redirect(reverse("admin:core_hrac_change", args=[hrac.pk]))
+
+        trening.delete()  # CASCADE by měl odstranit i související NAÚČTOVÁNO transakci
+
+        # přepočet kreditu (pokud máš metodu; když ne, nic se nestane)
+        try:
+            if hasattr(hrac, "prepocitat_kredit"):
+                hrac.prepocitat_kredit()
+            elif hasattr(hrac, "recalculate_credit"):
+                hrac.recalculate_credit()
+        except Exception:
+            logger.exception("Chyba při přepočtu kreditu po smazání tréninku hrac_id=%s", hrac.pk)
+
+        messages.success(request, "Trénink byl smazán a kredit přepočítán.")
+        return redirect(reverse("admin:core_hrac_change", args=[hrac.pk]))
+    # <<<
+
     def change_view(self, request, object_id, form_url="", extra_context=None):
         hrac = Hrac.objects.get(pk=object_id)
 
@@ -279,8 +334,16 @@ class HracAdmin(admin.ModelAdmin):
                 running_credit += Decimal(tx.castka or 0)
 
             display_kredit = f"{running_credit:.0f}"
+
+            # PŮVODNÍ default mazací link (na transakci)
             delete_url = reverse("admin:core_transakce_delete", args=[tx.id])
             delete_link = format_html('<a href="{}" class="deletelink">Smazat</a>', delete_url)
+
+            # >>> ZMĚNA: pokud je to naúčtovaný TRÉNINK, nabídni mazání tréninku (POST)
+            trening_id = getattr(tx, "trening_id", None)
+            if is_charge and trening_id:
+                delete_link = self._delete_trening_button(request, hrac_id=hrac.pk, trening_id=trening_id)
+            # <<<
 
             rows.append({
                 "datum": datum_str,
@@ -612,6 +675,7 @@ class RodinaAdmin(admin.ModelAdmin):
             },
         })
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
+
 
 
 # -----------------------------

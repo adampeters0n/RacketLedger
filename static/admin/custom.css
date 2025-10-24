@@ -902,4 +902,15 @@ table tbody tr:hover > td{ background:#fff3df !important; color:var(--text) !imp
 }
 .calendarbox .calendar tbody td:hover{ background:#fff8e6 !important; }
 
+/* Pojistka proti force-dark z prohlížeče */
+html, body, #result_list, .results, table {
+  color-scheme: light !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+  mix-blend-mode: normal !important;
+}
+#result_list tbody th[scope="row"] { position: static !important; }
+#result_list td::before, #result_list td::after,
+#result_list th::before, #result_list th::after { content: none !important; }
+#result_list tbody tr:hover > td { background: #fff3df !important; }
 
