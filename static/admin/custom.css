@@ -915,23 +915,30 @@ html, body, #result_list, .results, table {
 #result_list tbody tr:hover > td { background: #fff3df !important; }
 
 /* =================================================================== */
-/* === GLOBÁLNÍ FIX: Hover efekt pro všechny tabulky v adminu === */
+/* === GLOBÁLNÍ FIX v2: Hover efekt pro všechny tabulky (agresivní) === */
 /* =================================================================== */
 
-/* 1. Zamezí změně pozadí a barvy textu v HLAVIČCE jakékoliv tabulky */
-table thead tr:hover th {
-  background: var(--amber-100) !important;  /* Vždy držet krémovou barvu */
-  color: var(--text) !important;            /* Vždy držet standardní barvu textu */
+/* 1. STATICKÝ STAV HLAVIČKY: Vynutí krémové pozadí a správnou barvu textu. */
+table thead th,
+table thead th a {
+    background: var(--amber-100) !important;
+    color: var(--text) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+    text-decoration: none !important;
 }
 
-/* 2. Zamezí změně barvy ODKAZŮ v hlavičce (pro řazení sloupců) */
+/* 2. HOVER STAV HLAVIČKY: Zůstaň krémová, nic neměň! */
+/* Toto je klíčová část, která aktivně bojuje proti nechtěnému černému hoveru. */
+table thead tr:hover th,
 table thead tr:hover th a {
-  color: var(--text) !important;            /* Odkazy si udrží stejnou barvu jako text */
-  text-decoration: none !important;
+    background: var(--amber-100) !important;
+    color: var(--text) !important;
 }
 
-/* 3. Definice správného hover efektu pro řádky v TĚLE tabulky */
+/* 3. HOVER STAV TĚLA TABULKY: Toto je správný jemně oranžový efekt pro datové řádky. */
 table tbody tr:hover td {
-  background: #fff3df !important;           /* Váš definovaný jemně oranžový hover */
-  color: var(--text) !important;
+    background: #fff3df !important;
+    color: var(--text) !important;
 }
