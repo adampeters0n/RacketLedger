@@ -1214,11 +1214,13 @@ class OnlyPaymentsFilter(admin.SimpleListFilter):
 
 @admin.register(Transakce)
 class TransakceAdmin(admin.ModelAdmin):
-    list_display = ("vytvoreno", "hrac", "typ", "castka", "popis", "trening")
+    list_display = ("vytvoreno", "hrac", "typ", "castka", "popis")
     list_filter = (OnlyPaymentsFilter, "vytvoreno")
     search_fields = ("hrac__jmeno", "popis")
     change_list_template = "admin/core/transakce/change_list.html"
-    exclude = ("trening",)
+    
+    # Tento řádek byl přidán pro kontrolu pořadí polí ve formuláři
+    fields = ('hrac', 'typ', 'castka', 'popis', 'vytvoreno')
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -1313,8 +1315,11 @@ class TrenerSazbaAdmin(admin.ModelAdmin):
 @admin.register(TrenerPlatba)
 class TrenerPlatbaAdmin(admin.ModelAdmin):
     list_display = ("vytvoreno", "uzivatel", "castka", "poznamka")
-    list_filter = ("user",)
+    list_filter = ("user", "vytvoreno") # Přidáno filtrování podle data
     search_fields = ("user__username", "user__first_name", "user__last_name", "poznamka")
+    
+    # Tento řádek byl přidán pro zobrazení a pořadí polí ve formuláři
+    fields = ('user', 'castka', 'poznamka', 'vytvoreno')
 
     def uzivatel(self, obj):
         return obj.user.get_full_name() or obj.user.username

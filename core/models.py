@@ -525,7 +525,7 @@ class Transakce(models.Model):
     castka = models.DecimalField(max_digits=10, decimal_places=2)  # KLADNÁ částka
     popis = models.CharField(max_length=240, blank=True)
     trening = models.ForeignKey(Trening, null=True, blank=True, on_delete=models.CASCADE)
-    vytvoreno = models.DateTimeField(auto_now_add=True)
+    vytvoreno = models.DateTimeField("Datum platby", default=timezone.now)
 
     class Meta:
         ordering = ["-vytvoreno"]
@@ -767,7 +767,7 @@ class TrenerPlatba(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="trener_platby")
     castka = models.DecimalField(max_digits=10, decimal_places=2)
     poznamka = models.CharField(max_length=240, blank=True)
-    vytvoreno = models.DateTimeField(auto_now_add=True)
+    vytvoreno = models.DateTimeField("Datum výplaty", default=timezone.now)
 
     class Meta:
         ordering = ["-vytvoreno"]
