@@ -275,7 +275,7 @@ class HracAdmin(admin.ModelAdmin):
                 hodiny = str(hodiny_decimal).replace('.', ',')
 
                 skupina = tx.trening.get_format_display()
-                sezona = "léto" if 5 <= dt.month <= 10 else "zima"
+                sezona = "léto" if tx.trening.kurt == "VENEK" else "zima"
                 cena = f"{Decimal(tx.castka):.0f}"
                 running_credit -= Decimal(tx.castka or 0)
             else:
@@ -577,7 +577,7 @@ class RodinaAdmin(admin.ModelAdmin):
                 hodiny_decimal = (Decimal(tx.trening.delka_minut) / Decimal(60)).normalize()
                 hodiny = str(hodiny_decimal).replace('.', ',')
                 skupina = tx.trening.get_format_display()
-                sezona = "léto" if 5 <= dt.month <= 10 else "zima"
+                sezona = "léto" if tx.trening.kurt == "VENEK" else "zima"
                 cena = f"{Decimal(tx.castka):.0f}"
                 running_credit -= Decimal(tx.castka or 0)
             else:
