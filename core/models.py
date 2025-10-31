@@ -392,6 +392,7 @@ class Cenik(models.Model):
         CTVRICE_NC = "CTVRICE_NC", "Čtveřice Nečlen (4 hráči)"
         
         SOBOTA_TRE = "SOBOTA_TRE", "Sobota Trénink"
+        KURT_TRE = "KURT_TRE", "Kurt Hodina"
 
         VYPLET_STAND = "V_STAND", "Výplet (400 Kč) - Standard"
         VYPLET_EXCEL = "V_EXCEL", "Výplet excel (530 Kč)"
