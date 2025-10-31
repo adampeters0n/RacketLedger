@@ -794,6 +794,7 @@ class TreningAdmin(admin.ModelAdmin):
             
             # ZDE JE ZMĚNA: Přidán řádek pro 45 minut
             CHOICES = [
+                (30, "30 min"),
                 (45, "45 min"),  # <-- TENTO ŘÁDEK BYL PŘIDÁN
                 (60, "1 h"),
                 (90, "1,5 h"),

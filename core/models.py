@@ -375,7 +375,7 @@ class Hrac(models.Model):
 
 
 # =========================
-#  Ceník (OPRAVENO)
+#  Ceník (OPRAVENO S VALIDACÍ)
 # =========================
 class Cenik(models.Model):
     class Format(models.TextChoices):
@@ -391,6 +391,8 @@ class Cenik(models.Model):
         TROJICE_NC = "TROJICE_NC", "Trojice Nečlen (3 hráči)"
         CTVRICE_NC = "CTVRICE_NC", "Čtveřice Nečlen (4 hráči)"
         
+        SOBOTA_TRE = "SOBOTA_TRE", "Sobota Trénink"
+
         VYPLET_STAND = "V_STAND", "Výplet (400 Kč) - Standard"
         VYPLET_EXCEL = "V_EXCEL", "Výplet excel (530 Kč)"
         VYPLET_VLASTNI = "V_VLAST", "Výplet vlastní (250 Kč)"
@@ -400,13 +402,42 @@ class Cenik(models.Model):
         HALA = "HALA", "Hala"
         SLUZBA = "SLUZBA", "Služba (neplatí pro kurt)"
 
-    # ZMĚNA: max_length na 10, aby se vešly unikátní klíče (SOLO_NC, DVOJICE_NC, ...)
-    format = models.CharField(max_length=10, choices=Format.choices) 
+    format = models.CharField(max_length=15, choices=Format.choices) 
     kurt = models.CharField(max_length=8, choices=Kurt.choices) 
     cena_za_hodinu = models.DecimalField(max_digits=8, decimal_places=2)
 
     platnost_od = models.DateField(default=timezone.now)
     platnost_do = models.DateField(blank=True, null=True)
+
+    # --- ZDE BYL PŘIDÁN KÓD ---
+    def clean(self):
+        """
+        Zabrání uložení, pokud se období platnosti pro stejný formát a kurt překrývá
+        s již existujícím záznamem.
+        """
+        super().clean()
+
+        # Najdi všechny ostatní záznamy pro stejný formát a kurt
+        qs = Cenik.objects.filter(format=self.format, kurt=self.kurt)
+        if self.pk:
+            qs = qs.exclude(pk=self.pk) # Vyloučí sama sebe při úpravě
+
+        # Zkontroluj překryv období
+        # Nové období začíná: self.platnost_od
+        # Nové období končí: self.platnost_do (může být None)
+        overlap_qs = qs.filter(
+            # Podmínka: Starý záznam končí PO začátku nového záznamu
+            Q(platnost_do__gte=self.platnost_od) | Q(platnost_do__isnull=True)
+        )
+        if self.platnost_do:
+            # A zároveň: Starý záznam začíná PŘED koncem nového záznamu
+            overlap_qs = overlap_qs.filter(platnost_od__lte=self.platnost_do)
+
+        if overlap_qs.exists():
+            raise ValidationError(
+                f"Období platnosti se překrývá s již existujícím ceníkem pro '{self.get_format_display()}' na kurtu '{self.get_kurt_display()}'."
+            )
+    # --- KONEC PŘIDANÉHO KÓDU ---
 
     class Meta:
         verbose_name = "Ceník"
