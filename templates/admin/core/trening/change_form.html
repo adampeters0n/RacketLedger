@@ -47,31 +47,29 @@
 
   <style>
     :root{
-      /* ZMĚNA: Proměnná --label-w již není potřeba, šířka bude flexibilní */
+      /* Ponecháme fixní šířku popisku z originálu */
+      --label-w: 160px; 
       --row-gap: 14px;
     }
 
-    /* Obal modulu – flexibilní a centrovaný (TOHLE ŘEŠÍ "ODŘÍZNUTÍ") */
+    /* Obal modulu – TOTO JE KLÍČOVÁ OPRAVA PRO "ODŘÍZNUTÍ" */
     body.app-core.model-trening.change-form #content-main .module.aligned{
-      width: 95%; /* Místo pevné šířky použije 95% okna */
-      max-width: 700px; /* Na desktopu nebude širší než 700px */
+      width: 95%;
+      max-width: 580px; /* (160px label + ~360px pole + mezery) */
       min-width: 0;
       overflow-x: hidden;
       margin-left: auto;
       margin-right: auto;
       box-sizing: border-box;
+      
+      /* PŘIDÁNO: Zrušení defaultního mobilního paddingu z Django admina */
+      padding: 0 !important; 
     }
     
     /* Jeden řádek = karta */
     body.app-core.model-trening.change-form .module.aligned .form-row{
       display: grid !important; 
-      
-      /* * ZMĚNA: Klíčová změna pro plynulé zmenšení.
-       * Popisek zabere 35% šířky a pole zbytek (1fr).
-       * Oba sloupce se budou zmenšovat.
-       */
-      grid-template-columns: 35% 1fr !important; 
-      
+      grid-template-columns: var(--label-w) 1fr !important; 
       align-items: center; 
       gap: var(--row-gap); 
       margin-bottom: 12px;
@@ -87,14 +85,13 @@
     /* Labely (popisky) */
     body.app-core.model-trening.change-form .module.aligned .form-row > label{
       margin: 0 !important; 
-      /* ZMĚNA: Odstraněna pevná šířka (width: var(--label-w)) */
-      /* ZMĚNA: Povoleno zalamování popisků (odstraněno white-space: nowrap) */
-      white-space: normal;
-      word-break: break-word; /* Pro jistotu, kdyby byl popisek moc dlouhý */
-      width: 100%; /* Vyplní svůj 35% grid sloupec */
+      width: var(--label-w); 
       font-weight: 700; 
       color: #111827; 
+      white-space: nowrap; 
       text-align: left;
+      /* PŘIDÁNO: Zrušení defaultní mobilní mezery z Django admina */
+      margin-bottom: 0 !important;
     }
     
     /* Vstupy (input, select, ...) */
@@ -103,11 +100,9 @@
     body.app-core.model-trening.change-form .module.aligned .form-row textarea,
     body.app-core.model-trening.change-form .module.aligned .form-row .select2-container,
     body.app-core.model-trening.change-form .module.aligned .form-row .related-widget-wrapper {
-      /* Pole stále zabírá 100% svého sloupce (který se teď zmenšuje) */
       width: 100% !important; 
       max-width: 100% !important; 
-      min-width: 0 !important;
-      
+      min-width: 0 !important; /* Dovolí poli se zmenšit */
       box-sizing: border-box; 
       height: 36px; 
       padding: 6px 10px; 
@@ -119,39 +114,14 @@
     }
     
     body.app-core.model-trening.change-form .module.aligned .form-row textarea{ height: 64px; resize: vertical; }
-       
-    body.app-core.model-trening.change-form .datetimeshortcuts{ 
-      white-space: nowrap; 
-      flex-wrap: wrap;
-      gap: 4px;
-    }
+    body.app-core.model-trening.change-form .datetimeshortcuts{ white-space:nowrap; flex-wrap: wrap; gap: 4px; }
   </style>
   <style>
     :root{ --w-col:200px; --w-fixed:calc(var(--w-col) * 4); }
-
-    /* obal inline skupiny */
-    #dochazka_set-group, .x-dochazka-inline{
-      background:#fff; border:0 !important; border-radius:12px; box-shadow:0 1px 2px rgba(16,24,40,.06);
-      overflow:hidden; margin-top:12px;
-    }
-    /* tabulka */
-    #dochazka_set-group table, .x-dochazka-inline table{
-      width:100%; table-layout:fixed; border-collapse:separate; border-spacing:0; font-size:14px;
-      background:#fff; /* jistota – žádné tmavé pozadí */
-    }
-    /* hlavička */
-    #dochazka_set-group thead th, .x-dochazka-inline thead th{
-      background:#FFF6CC; color:#111827; text-transform:uppercase; font-weight:800; font-size:12.5px; letter-spacing:.02em;
-      padding:10px 12px; border-top:0; border-bottom:1px solid #F4E0A6; white-space:nowrap; text-align:center;
-    }
-    /* buňky těla */
-    #dochazka_set-group tbody td, .x-dochazka-inline tbody td{
-      padding:12px 12px; background:#fff; border-top:1px solid #E5E7EB; /* jemná linka */
-      vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-      font-weight:700; text-align:center; position:relative;
-    }
-
-    /* šířky sloupců – poslední 4 pevné */
+    #dochazka_set-group, .x-dochazka-inline{ background:#fff; border:0 !important; border-radius:12px; box-shadow:0 1px 2px rgba(16,24,40,.06); overflow:hidden; margin-top:12px; }
+    #dochazka_set-group table, .x-dochazka-inline table{ width:100%; table-layout:fixed; border-collapse:separate; border-spacing:0; font-size:14px; background:#fff; }
+    #dochazka_set-group thead th, .x-dochazka-inline thead th{ background:#FFF6CC; color:#111827; text-transform:uppercase; font-weight:800; font-size:12.5px; letter-spacing:.02em; padding:10px 12px; border-top:0; border-bottom:1px solid #F4E0A6; white-space:nowrap; text-align:center; }
+    #dochazka_set-group tbody td, .x-dochazka-inline tbody td{ padding:12px 12px; background:#fff; border-top:1px solid #E5E7EB; vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:700; text-align:center; position:relative; }
     #dochazka_set-group thead th:first-child, .x-dochazka-inline thead th:first-child{ text-align:left; }
     #dochazka_set-group tbody td:first-child, .x-dochazka-inline tbody td:first-child{ text-align:left; width:calc(100% - var(--w-fixed)) !important; }
     #dochazka_set-group thead th:nth-last-child(4),
@@ -161,106 +131,73 @@
     #dochazka_set-group tbody td:nth-last-child(4),
     #dochazka_set-group tbody td:nth-last-child(3),
     #dochazka_set-group tbody td:nth-last-child(2),
-    #dochazka_set-group tbody td:nth-last-child(1){
-      width:var(--w-col) !important; text-align:center;
-    }
-
-    /* skryj staré inline labely/original */
+    #dochazka_set-group tbody td:nth-last-child(1){ width:var(--w-col) !important; text-align:center; }
     #dochazka_set-group .inline_label, #dochazka_set-group .inline_label a,
-    #dochazka_set-group td.original, #dochazka_set-group td.original a, #dochazka_set-group th.original{
-      display:none !important; width:0 !important; padding:0 !important; border:0 !important; overflow:hidden !important;
-    }
-
-    /* první buňka – výběr hráče */
-    #dochazka_set-group td:first-child .related-widget-wrapper{
-      display:inline-flex; align-items:center; gap:8px; width:clamp(360px,55vw,720px) !important; max-width:100%;
-    }
-    #dochazka_set-group td:first-child .related-widget-wrapper select{
-      width:100% !important; min-width:100% !important; max-width:none !important; height:34px; padding:6px 10px;
-      border:1px solid #E5E7EB; border-radius:10px; background:#fff;
-    }
+    #dochazka_set-group td.original, #dochazka_set-group td.original a, #dochazka_set-group th.original{ display:none !important; width:0 !important; padding:0 !important; border:0 !important; overflow:hidden !important; }
+    #dochazka_set-group td:first-child .related-widget-wrapper{ display:inline-flex; align-items:center; gap:8px; width:clamp(360px,55vw,720px) !important; max-width:100%; }
+    #dochazka_set-group td:first-child .related-widget-wrapper select{ width:100% !important; min-width:100% !important; max-width:none !important; height:34px; padding:6px 10px; border:1px solid #E5E7EB; border-radius:10px; background:#fff; }
     #dochazka_set-group td:first-child .related-widget-wrapper a{ display:inline-flex; align-items:center; justify-content:center; }
-
-    /* poslední sloupec – akce doprostřed */
     #dochazka_set-group thead th:last-child, #dochazka_set-group tbody td:last-child{ text-align:center !important; vertical-align:middle !important; }
     #dochazka_set-group tbody td:last-child a,
     #dochazka_set-group tbody td:last-child .inline-deletelink,
     #dochazka_set-group tbody td:last-child .deletelink,
-    #dochazka_set-group tbody td:last-child input[type="checkbox"]{
-      display:inline-flex !important; align-items:center !important; justify-content:center !important; width:28px; height:28px; margin:0 auto;
-    }
-
-    /* === FIX „černé plochy“: řádek s tlačítkem add-row i případný tfoot === */
+    #dochazka_set-group tbody td:last-child input[type="checkbox"]{ display:inline-flex !important; align-items:center !important; justify-content:center !important; width:28px; height:28px; margin:0 auto; }
     #dochazka_set-group tr.add-row,
-    .x-dochazka-inline tr.add-row{
-      background:#fff !important;
-    }
+    .x-dochazka-inline tr.add-row{ background:#fff !important; }
     #dochazka_set-group tr.add-row > td,
-    .x-dochazka-inline tr.add-row > td{
-      background:#fff !important;
-      border-top:1px solid #E5E7EB !important; /* jemná horní linka */
-      text-align:left !important;
-      padding:12px !important;
-    }
+    .x-dochazka-inline tr.add-row > td{ background:#fff !important; border-top:1px solid #E5E7EB !important; text-align:left !important; padding:12px !important; }
     #dochazka_set-group tr.add-row > td > a,
     .x-dochazka-inline tr.add-row > td > a,
     #dochazka_set-group .add-row a,
     #dochazka_set-group .add-row a:link,
-    #dochazka_set-group .add-row a:visited{
-      display:inline-block !important;
-      width:auto !important; max-width:none !important; min-width:0 !important;
-      white-space:nowrap !important;
-      flex:0 0 auto !important; align-self:flex-start !important;
-
-      /* vzhled tlačítka v tvém brandu */
-      background:#E67817; border:3px solid #D1640C; color:#fff;
-      padding:7px 12px; border-radius:999px; text-decoration:none;
-      font-weight:800; letter-spacing:.2px;
-    }
+    #dochazka_set-group .add-row a:visited{ display:inline-block !important; width:auto !important; max-width:none !important; min-width:0 !important; white-space:nowrap !important; flex:0 0 auto !important; align-self:flex-start !important; background:#E67817; border:3px solid #D1640C; color:#fff; padding:7px 12px; border-radius:999px; text-decoration:none; font-weight:800; letter-spacing:.2px; }
     #dochazka_set-group .add-row a:hover{ filter:brightness(1.05); }
-
-    /* sjednocení případného tfoot (když by se někdy vykreslil) */
     #dochazka_set-group tfoot,
-    .x-dochazka-inline tfoot{
-      background:#fff !important;
-      border-top:1px solid #E5E7EB !important;
-    }
+    .x-dochazka-inline tfoot{ background:#fff !important; border-top:1px solid #E5E7EB !important; }
   </style>
 
   <style>
-    /* Oprava barvy textu vybraného hráče v poli */
-    .select2-container--admin-autocomplete .select2-selection--single .select2-selection__rendered {
-      color: #111827 !important; /* Vynutí černou barvu textu */
-    }
-
-    /* Oprava pozadí a textu v samotném dropdownu */
-    .select2-container .select2-dropdown {
-      background: #fff !important;
-      border: 1px solid #e5e7eb !important;
-    }
-    .select2-results__option {
-      background: #fff !important;
-      color: #111827 !important;
-    }
-
-    /* Zvýraznění položky při najetí myší (brand oranžová) */
-    .select2-results__option--highlighted[aria-selected] {
-      background: var(--brand) !important;
-      color: #fff !important;
-    }
+    .select2-container--admin-autocomplete .select2-selection--single .select2-selection__rendered { color: #111827 !important; }
+    .select2-container .select2-dropdown { background: #fff !important; border: 1px solid #e5e7eb !important; }
+    .select2-results__option { background: #fff !important; color: #111827 !important; }
+    .select2-results__option--highlighted[aria-selected] { background: var(--brand) !important; color: #fff !important; }
   </style>
 
   <style>
     @media (max-width: 767px) {
         
         /*
-         * ZMĚNA: Celá sekce "1. Oprava horního formuláře" BYLA SMAZÁNA.
-         * Formulář se již nebude lámat.
+         * ZMĚNA: Tato pravidla PŘEBIJÍ defaultní Django styly
+         * a ZABRÁNÍ "zlomení" formuláře na mobilu.
          */
+        
+        /* 1. Vynucení dvou-sloupcového layoutu pro řádky */
+        body.app-core.model-trening.change-form .module.aligned .form-row {
+            display: grid !important; /* Vynutí grid */
+            grid-template-columns: var(--label-w) 1fr !important; /* Vynutí 2 sloupce */
+            padding: 8px 12px !important; /* Vrátí desktopový padding */
+            margin-bottom: 12px !important;
+            background: #fff !important; /* Vrátí bílé pozadí */
+            box-shadow: 0 1px 2px rgba(0,0,0,.04) !important; /* Vrátí stín */
+            border-bottom: 1px solid #e5e7eb !important; /* Vrátí linku */
+        }
+
+        /* 2. Vynucení vzhledu popisků */
+        body.app-core.model-trening.change-form .module.aligned .form-row > label {
+            width: var(--label-w) !important; /* Vynutí šířku popisku */
+            margin-bottom: 0 !important; /* Zruší mobilní mezeru pod popiskem */
+            white-space: nowrap !important; /* Ponechá na 1 řádku */
+        }
+        
+        /* 3. Zrušení mobilního paddingu na kontejneru */
+        body.app-core.model-trening.change-form #content-main .module.aligned {
+            padding: 0 !important;
+        }
 
         /*
+         * TATO ČÁST ZŮSTÁVÁ:
          * 2. Oprava tabulky "Docházka" (inline)
-         * TATO ČÁST ZDE MUSÍ ZŮSTAT, aby fungovalo rolování tabulky na mobilu.
+         * To zajistí rolování tabulky na mobilu, což chceme.
          */
 
         /* Obal tabulky: povolit horizontální rolování */
