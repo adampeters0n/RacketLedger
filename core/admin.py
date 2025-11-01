@@ -745,7 +745,7 @@ class TimeDatalistTextInput(forms.TextInput):
         attrs = kwargs.setdefault("attrs", {})
         attrs.setdefault("placeholder", "např. 13:00")
         attrs.setdefault("autocomplete", "off")
-        attrs.setdefault("inputmode", "numeric")
+        attrs.setdefault("inputmode", "text")
         attrs.setdefault("pattern", r"^([01]\d|2[0-3]):[0-5]\d$")
         attrs.setdefault("title", "Zadej čas ve tvaru HH:MM (např. 13:00)")
         super().__init__(*args, **kwargs)
