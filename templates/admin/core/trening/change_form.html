@@ -173,7 +173,7 @@
       flex:0 0 auto !important; align-self:flex-start !important;
 
       /* vzhled tlačítka v tvém brandu */
-      background:#E67817; border:3px solid #D1640C; color:#fff;
+      background:#E67817; border:3px solid #D16C; color:#fff;
       padding:7px 12px; border-radius:999px; text-decoration:none;
       font-weight:800; letter-spacing:.2px;
     }
@@ -255,8 +255,15 @@
         body.app-core.model-trening.change-form .module.aligned .form-row textarea,
         body.app-core.model-trening.change-form .module.aligned .form-row .select2-container,
         body.app-core.model-trening.change-form .module.aligned .form-row .related-widget-wrapper {
-            width: 100% !important;
-            max-width: 100% !important;
+            
+            /* * ===============================================
+             * == TADY JE TA OPRAVA ==
+             * ===============================================
+             * Změněno z width: 100% na pevnou šířku, aby to nevypadalo blbě.
+             */
+            width: 320px !important;
+            max-width: 320px !important; /* Změněno z 100% */
+            
             min-width: 0 !important;
             box-sizing: border-box !important;
         }
