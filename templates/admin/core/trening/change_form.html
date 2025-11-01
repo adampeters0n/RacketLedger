@@ -215,11 +215,10 @@
          */
         
         /* Reset proměnných, aby nebyly fixní šířky */
-        :root {
-            --label-w: 100%;
-            --field-w: 100%;
-            --row-gap: 8px; /* Menší mezera na mobilu */
-        }
+        /*
+           POZNÁMKA: :root v media query nemusí fungovat spolehlivě.
+           Místo toho přepisujeme styly přímo na elementech.
+        */
 
         /* Obal modulu: plná šířka, žádný scroll */
         body.app-core.model-trening.change-form #content-main .module.aligned {
@@ -228,32 +227,42 @@
             min-width: 0 !important;
             overflow-x: hidden !important;
             padding: 12px !important;
+            box-sizing: border-box; /* Zajistí, že padding neodtlačí box */
         }
 
         /* Řádek formuláře: 1 sloupec (popisek a pole pod sebou) */
         body.app-core.model-trening.change-form .module.aligned .form-row {
             grid-template-columns: 1fr !important; /* Jen jeden sloupec */
             width: 100% !important;
+            max-width: 100% !important;
             padding: 10px 0 !important;
             margin-bottom: 8px !important;
             background: transparent !important;
             box-shadow: none !important;
+            gap: 8px !important; /* Menší mezera na mobilu */
         }
 
         /* Popisek (label): plná šířka */
         body.app-core.model-trening.change-form .module.aligned .form-row > label {
             width: 100% !important;
             text-align: left !important;
-            margin-bottom: 4px !important; /* Mezera mezi popiskem a polem */
+            margin-bottom: 0 !important; /* Mezera je řešena přes 'gap' */
         }
 
         /* Vstupní pole: plná šířka */
         body.app-core.model-trening.change-form .module.aligned .form-row input,
         body.app-core.model-trening.change-form .module.aligned .form-row select,
-        body.app-core.model-trening.change-form .module.aligned .form-row textarea {
+        body.app-core.model-trening.change-form .module.aligned .form-row textarea,
+        body.app-core.model-trening.change-form .module.aligned .form-row .select2-container {
             width: 100% !important;
             max-width: 100% !important;
             min-width: 0 !important;
+            box-sizing: border-box; /* Důležité pro správnou šířku */
+        }
+        
+        /* Oprava pro widget data/času */
+        body.app-core.model-trening.change-form .datetimeshortcuts {
+            white-space: normal !important; /* Povolí zalamování odkazů "Dnes" */
         }
 
         /*
@@ -269,6 +278,12 @@
         /* Tabulka: nastavit minimální šířku, aby se rolování aktivovalo */
         #dochazka_set-group table, .x-dochazka-inline table {
             min-width: 600px !important; /* Dostatečná šířka pro zobrazení sloupců */
+        }
+        
+        /* Oprava pro výběr hráče v tabulce na mobilu */
+        #dochazka_set-group td:first-child .related-widget-wrapper {
+            width: 100% !important; /* Na mobilu zabere celou buňku */
+            min-width: 250px; /* Ale ne méně než... */
         }
     }
   </style>
