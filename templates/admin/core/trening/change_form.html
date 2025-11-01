@@ -207,4 +207,69 @@
       color: #fff !important;
     }
   </style>
+
+  <style>
+    @media (max-width: 767px) {
+        /*
+         * 1. Oprava horního formuláře
+         */
+        
+        /* Reset proměnných, aby nebyly fixní šířky */
+        :root {
+            --label-w: 100%;
+            --field-w: 100%;
+            --row-gap: 8px; /* Menší mezera na mobilu */
+        }
+
+        /* Obal modulu: plná šířka, žádný scroll */
+        body.app-core.model-trening.change-form #content-main .module.aligned {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            overflow-x: hidden !important;
+            padding: 12px !important;
+        }
+
+        /* Řádek formuláře: 1 sloupec (popisek a pole pod sebou) */
+        body.app-core.model-trening.change-form .module.aligned .form-row {
+            grid-template-columns: 1fr !important; /* Jen jeden sloupec */
+            width: 100% !important;
+            padding: 10px 0 !important;
+            margin-bottom: 8px !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        /* Popisek (label): plná šířka */
+        body.app-core.model-trening.change-form .module.aligned .form-row > label {
+            width: 100% !important;
+            text-align: left !important;
+            margin-bottom: 4px !important; /* Mezera mezi popiskem a polem */
+        }
+
+        /* Vstupní pole: plná šířka */
+        body.app-core.model-trening.change-form .module.aligned .form-row input,
+        body.app-core.model-trening.change-form .module.aligned .form-row select,
+        body.app-core.model-trening.change-form .module.aligned .form-row textarea {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        /*
+         * 2. Oprava tabulky "Docházka" (inline)
+         */
+
+        /* Obal tabulky: povolit horizontální rolování */
+        #dochazka_set-group, .x-dochazka-inline {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+        }
+
+        /* Tabulka: nastavit minimální šířku, aby se rolování aktivovalo */
+        #dochazka_set-group table, .x-dochazka-inline table {
+            min-width: 600px !important; /* Dostatečná šířka pro zobrazení sloupců */
+        }
+    }
+  </style>
   {% endblock %}
