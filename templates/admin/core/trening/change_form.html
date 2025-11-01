@@ -54,17 +54,25 @@
     body.app-core.model-trening.change-form #content-main .module.aligned{
       width:max-content; min-width:var(--row-min); max-width:none;
       overflow-x:auto; -webkit-overflow-scrolling:touch;
+      /* Přidáno: odsazení pro desktop, aby se řádky nedotýkaly okraje boxu */
+      padding: 12px;
       box-sizing: border-box;
     }
     /* jeden řádek = karta */
     body.app-core.model-trening.change-form .module.aligned .form-row{
       display:grid !important; grid-template-columns:var(--label-w) var(--field-w) !important;
       align-items:center; gap:var(--row-gap); margin-bottom:12px;
-      padding:8px 12px; background:#fff; border-radius:10px; box-shadow:0 1px 2px rgba(0,0,0,.04);
+      /* Odebráno odsazení, stín a linka - řeší rodič */
+      padding:0; background:#fff; border-radius:10px; 
       width:max-content;
-      border-bottom:1px solid #e5e7eb; /* jemná linka pro návaznost se zbytkem UI */
       box-sizing: border-box;
     }
+    
+    /* Poslední řádek by neměl mít mezeru dole */
+    body.app-core.model-trening.change-form .module.aligned .form-row:last-child {
+      margin-bottom: 0;
+    }
+
     /* labely */
     body.app-core.model-trening.change-form .module.aligned .form-row > label{
       margin:0 !important; width:var(--label-w); font-weight:700; color:#111827; white-space:nowrap; text-align:left;
@@ -79,11 +87,8 @@
     }
     body.app-core.model-trening.change-form .module.aligned .form-row textarea{ height:64px; resize:vertical; }
     body.app-core.model-trening.change-form .datetimeshortcuts{ white-space:nowrap; }
-    @media (max-width:480px){
-      :root{ --label-w:150px; --field-w:340px; --row-min: calc(var(--label-w) + var(--field-w) + 2*var(--row-gap)); }
-      body.app-core.model-trening.change-form .module.aligned .form-row input,
-      body.app-core.model-trening.change-form .module.aligned .form-row select{ height:38px; font-size:14px; }
-    }
+    
+    /* @media (max-width:480px) byl odstraněn, řeší to nový @media (max-width: 767px) níže */
   </style>
 
   <style>
@@ -211,19 +216,29 @@
   </style>
 
   <style>
+    /*
+     * 1. OPRAVA PRO DESKTOP (odstranění stínů)
+     */
+    body.app-core.model-trening.change-form .module.aligned .form-row {
+        /* Odstranění stínů a linek, které vypadaly divně */
+        box-shadow: none !important;
+        border-bottom: none !important;
+        /* Přidání malé mezery mezi řádky pro čistší vzhled */
+        margin-bottom: 16px !important; 
+    }
+
+    /*
+     * 2. OPRAVA PRO MOBILY (zarovnání)
+     */
     @media (max-width: 767px) {
         
-        /*
-         * 1. Oprava horního formuláře
-         */
-        
-        /* Obal modulu: plná šířka, s vnitřním odsazením */
+        /* Hlavní bílý box: plná šířka a vnitřní odsazení */
         body.app-core.model-trening.change-form #content-main .module.aligned {
             width: 100% !important;
             min-width: 0 !important;
             max-width: 100% !important;
             overflow-x: hidden !important;
-            padding: 10px 12px !important; /* Méně paddingu na mobilu */
+            padding: 16px !important; /* Vnitřní odsazení */
             box-sizing: border-box !important;
         }
 
@@ -232,11 +247,8 @@
             display: block !important;
             width: 100% !important;
             max-width: 100% !important;
-            padding: 0 !important; /* Zde žádný padding, ten je na rodiči */
-            margin-bottom: 8px !important;
-            background: transparent !important;
-            box-shadow: none !important; /* Odstranění stínu, který se zobrazoval divně */
-            border-bottom: none !important; /* Odstranění spodní linky, která tam nedávala smysl */
+            padding: 0 !important; /* Odsazení je na rodiči */
+            margin-bottom: 16px !important; /* Mezera mezi položkami */
             box-sizing: border-box !important;
         }
 
@@ -264,10 +276,8 @@
         /* Oprava pro widget data/času */
         body.app-core.model-trening.change-form .datetimeshortcuts {
             white-space: normal !important;
-            margin-top: 8px; /* Přidáme trochu mezery nad odkazem Dnes */
+            margin-top: 8px;
         }
-        
-        /* Korekce pro datetime-widget na mobilu */
         .datetime-widget {
             display: flex;
             flex-direction: column;
@@ -275,7 +285,7 @@
         }
 
         /*
-         * 2. Oprava tabulky "Docházka" (inline)
+         * 3. Oprava tabulky "Docházka" (inline)
          */
 
         /* Obal tabulky: povolit horizontální rolování */
@@ -283,13 +293,9 @@
             overflow-x: auto !important;
             -webkit-overflow-scrolling: touch !important;
         }
-
-        /* Tabulka: nastavit minimální šířku, aby se rolování aktivovalo */
         #dochazka_set-group table, .x-dochazka-inline table {
             min-width: 600px !important;
         }
-        
-        /* Oprava pro výběr hráče v tabulce na mobilu */
         #dochazka_set-group td:first-child .related-widget-wrapper {
             width: 100% !important;
             min-width: 250px;
