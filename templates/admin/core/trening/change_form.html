@@ -217,7 +217,7 @@
          * 1. Oprava horního formuláře
          */
         
-        /* Obal modulu: Oprava ořezávání hover efektu */
+        /* Obal modulu: vnitřní mezera 20px */
         body.app-core.model-trening.change-form #content-main .module.aligned {
             width: max-content !important; 
             min-width: 0 !important;
@@ -225,17 +225,17 @@
             overflow-x: visible !important; 
             padding: 10px 12px !important; 
             box-sizing: border-box !important;
-            margin-left: auto !important; 
-            margin-right: auto !important; 
+            margin-left: 2px !important; 
+            margin-right: 2px !important; 
         }
 
-        /* Řádek formuláře: Větší mezera */
+        /* Řádek formuláře: mezera pod 18px */
         body.app-core.model-trening.change-form .module.aligned .form-row {
             display: block !important;
             width: 100% !important;
             max-width: 100% !important;
             padding: 0 !important; 
-            margin-bottom: 14px !important; 
+            margin-bottom: 18px !important; 
             background: transparent !important;
             box-shadow: none !important; 
             border-bottom: none !important; 
@@ -290,9 +290,9 @@
         }
         
         /* === ZMĚNA #1: ŠÍŘKA POLÍ "DATUM" A "ČAS" === */
-        /* Toto přebije obecné pravidlo 300px a nastaví 200px */
-        .datetime-widget input.vDateField,
-        .datetime-widget input.vTimeField {
+        /* Toto pravidlo je teď specifičtější a přebije těch 300px */
+        body.app-core.model-trening.change-form .module.aligned .form-row .datetime-widget input.vDateField,
+        body.app-core.model-trening.change-form .module.aligned .form-row .datetime-widget input.vTimeField {
             width: 200px !important;
             max-width: 200px !important;
         }
