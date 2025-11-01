@@ -47,30 +47,18 @@
 
   <style>
     :root{
-      /* Ponecháme pevnou šířku popisku, ale pole bude flexibilní */
-      --label-w: 160px; 
+      /* ZMĚNA: Proměnná --label-w již není potřeba, šířka bude flexibilní */
       --row-gap: 14px;
-      
-      /* Tuto proměnnou už nepotřebujeme: --field-w:360px; */
-      /* Tuto proměnnou už nepotřebujeme: --row-min: ...; */
     }
 
-    /* Obal modulu – nyní flexibilní a centrovaný */
+    /* Obal modulu – flexibilní a centrovaný (TOHLE ŘEŠÍ "ODŘÍZNUTÍ") */
     body.app-core.model-trening.change-form #content-main .module.aligned{
-      /* ZMĚNA: Šířka je v %, aby se přizpůsobila */
-      width: 95%; 
-      
-      /* ZMĚNA: Maximální šířka, aby se na desktopu neroztáhl moc */
-      max-width: 700px; /* Můžete upravit podle potřeby */
-      
-      /* ZMĚNA: Odstraněno min-width a overflow-x: auto */
+      width: 95%; /* Místo pevné šířky použije 95% okna */
+      max-width: 700px; /* Na desktopu nebude širší než 700px */
       min-width: 0;
       overflow-x: hidden;
-      
-      /* PŘIDÁNO: Centrování kontejneru na stránce */
       margin-left: auto;
       margin-right: auto;
-      
       box-sizing: border-box;
     }
     
@@ -78,8 +66,11 @@
     body.app-core.model-trening.change-form .module.aligned .form-row{
       display: grid !important; 
       
-      /* ZMĚNA: Druhý sloupec (pole) je flexibilní (1fr = 1 frakce, zabere zbytek) */
-      grid-template-columns: var(--label-w) 1fr !important; 
+      /* * ZMĚNA: Klíčová změna pro plynulé zmenšení.
+       * Popisek zabere 35% šířky a pole zbytek (1fr).
+       * Oba sloupce se budou zmenšovat.
+       */
+      grid-template-columns: 35% 1fr !important; 
       
       align-items: center; 
       gap: var(--row-gap); 
@@ -88,10 +79,7 @@
       background: #fff; 
       border-radius: 10px; 
       box-shadow: 0 1px 2px rgba(0,0,0,.04);
-      
-      /* ZMĚNA: Řádek zabere 100% šířky svého rodiče (kontejneru) */
       width: 100%;
-      
       border-bottom: 1px solid #e5e7eb;
       box-sizing: border-box;
     }
@@ -99,10 +87,13 @@
     /* Labely (popisky) */
     body.app-core.model-trening.change-form .module.aligned .form-row > label{
       margin: 0 !important; 
-      width: var(--label-w); /* Stále používá pevnou šířku z proměnné */
+      /* ZMĚNA: Odstraněna pevná šířka (width: var(--label-w)) */
+      /* ZMĚNA: Povoleno zalamování popisků (odstraněno white-space: nowrap) */
+      white-space: normal;
+      word-break: break-word; /* Pro jistotu, kdyby byl popisek moc dlouhý */
+      width: 100%; /* Vyplní svůj 35% grid sloupec */
       font-weight: 700; 
       color: #111827; 
-      white-space: nowrap; 
       text-align: left;
     }
     
@@ -110,10 +101,9 @@
     body.app-core.model-trening.change-form .module.aligned .form-row input,
     body.app-core.model-trening.change-form .module.aligned .form-row select,
     body.app-core.model-trening.change-form .module.aligned .form-row textarea,
-    /* PŘIDÁNO: Pravidla musí platit i pro JS widgety jako Select2 */
     body.app-core.model-trening.change-form .module.aligned .form-row .select2-container,
     body.app-core.model-trening.change-form .module.aligned .form-row .related-widget-wrapper {
-      /* ZMĚNA: Pole nyní zabere 100% šířky svého sloupce v gridu */
+      /* Pole stále zabírá 100% svého sloupce (který se teď zmenšuje) */
       width: 100% !important; 
       max-width: 100% !important; 
       min-width: 0 !important;
@@ -129,14 +119,9 @@
     }
     
     body.app-core.model-trening.change-form .module.aligned .form-row textarea{ height: 64px; resize: vertical; }
-    
-    /* ZMĚNA: Původní @media (max-width: 480px) bylo smazáno, 
-       protože náš nový design je flexibilní by default.
-       O zlomení na mobilu se postará blok @media (max-width: 767px) na konci. */
        
     body.app-core.model-trening.change-form .datetimeshortcuts{ 
       white-space: nowrap; 
-      /* PŘIDÁNO: Zajistíme, aby se na malých obrazovkách "Dnes" a "Teď" zalamovaly */
       flex-wrap: wrap;
       gap: 4px;
     }
@@ -269,68 +254,13 @@
     @media (max-width: 767px) {
         
         /*
-         * 1. Oprava horního formuláře
+         * ZMĚNA: Celá sekce "1. Oprava horního formuláře" BYLA SMAZÁNA.
+         * Formulář se již nebude lámat.
          */
-        
-        /* Obal modulu: plná šířka, s vnitřním odsazením */
-        body.app-core.model-trening.change-form #content-main .module.aligned {
-            width: 100% !important;
-            min-width: 0 !important;
-            max-width: 100% !important;
-            overflow-x: hidden !important;
-            padding: 10px 12px !important; /* Méně paddingu na mobilu */
-            box-sizing: border-box !important;
-        }
-
-        /* Řádek formuláře: 1 sloupec (popisek a pole pod sebou) */
-        body.app-core.model-trening.change-form .module.aligned .form-row {
-            display: block !important; /* ZMĚNA z grid na block */
-            width: 100% !important;
-            max-width: 100% !important;
-            padding: 0 !important; /* Zde žádný padding, ten je na rodiči */
-            margin-bottom: 8px !important;
-            background: transparent !important;
-            box-shadow: none !important; /* Odstranění stínu, který se zobrazoval divně */
-            border-bottom: none !important; /* Odstranění spodní linky, která tam nedávala smysl */
-            box-sizing: border-box !important;
-        }
-
-        /* Popisek (label): plná šířka */
-        body.app-core.model-trening.change-form .module.aligned .form-row > label {
-            display: block !important;
-            width: 100% !important;
-            text-align: left !important;
-            margin-bottom: 6px !important;
-            white-space: normal !important; /* Povolí zalomení dlouhých popisků */
-        }
-
-        /* Vstupní pole: plná šířka */
-        body.app-core.model-trening.change-form .module.aligned .form-row input,
-        body.app-core.model-trening.change-form .module.aligned .form-row select,
-        body.app-core.model-trening.change-form .module.aligned .form-row textarea,
-        body.app-core.model-trening.change-form .module.aligned .form-row .select2-container,
-        body.app-core.model-trening.change-form .module.aligned .form-row .related-widget-wrapper {
-            width: 100% !important;
-            max-width: 100% !important;
-            min-width: 0 !important;
-            box-sizing: border-box !important;
-        }
-        
-        /* Oprava pro widget data/času */
-        body.app-core.model-trening.change-form .datetimeshortcuts {
-            white-space: normal !important;
-            margin-top: 8px; /* Přidáme trochu mezery nad odkazem Dnes */
-        }
-        
-        /* Korekce pro datetime-widget na mobilu */
-        .datetime-widget {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
 
         /*
          * 2. Oprava tabulky "Docházka" (inline)
+         * TATO ČÁST ZDE MUSÍ ZŮSTAT, aby fungovalo rolování tabulky na mobilu.
          */
 
         /* Obal tabulky: povolit horizontální rolování */
