@@ -271,59 +271,56 @@
          * 1. Oprava horního formuláře
          */
         
-        /* === TOTO JE TA KLÍČOVÁ OPRAVA === */
-        /* Obal modulu (bílý box) */
+        /* Obal modulu: vnitřní mezera 20px */
         body.app-core.model-trening.change-form #content-main .module.aligned {
-            width: 100% !important; /* Box bude 100% široký */
+            width: max-content !important; 
             min-width: 0 !important;
+            
+            /* === TADY JE TA OPRAVA === */
+            /* Změna ze 100% na 95%, aby vznikla mezera pro "ring" */
             max-width: 100% !important; 
-            overflow-x: hidden !important; /* Vynutíme skrytí přetékání */
             
-            /* PŘIDÁME PADDING (12px), do kterého se ring "schová" */
-            padding: 12px 12px !important; 
-            
+            overflow-x: visible !important; 
+            padding: 12px 20px !important; 
             box-sizing: border-box !important;
             margin-left: auto !important; 
             margin-right: auto !important; 
         }
 
-        /* Řádek formuláře */
+        /* Řádek formuláře: mezera pod 18px */
         body.app-core.model-trening.change-form .module.aligned .form-row {
             display: block !important;
-            width: 100% !important; /* Řádek zabere plnou šířku rodiče */
+            width: 100% !important;
             max-width: 100% !important;
-            
-            /* ZRUŠÍME padding a pozadí, aby byl "neviditelný" */
-            padding: 0 !important; 
-            margin-bottom: 18px !important; 
+            padding: 5px !important; 
+            margin-bottom: 5px !important; 
             background: transparent !important;
             box-shadow: none !important; 
             border-bottom: none !important; 
             box-sizing: border-box !important;
         }
 
-        /* Popisek (label) */
+        /* Popisek (label): beze změny */
         body.app-core.model-trening.change-form .module.aligned .form-row > label {
             display: block !important;
             width: 100% !important;
             text-align: left !important;
-            margin-bottom: 6px !important;
+            margin-bottom: 10px !important;
             white-space: normal !important;
         }
 
-        /* === VŠECHNA POLE === */
-        /* Pole se teď roztáhnou na 100% šířky řádku (který je uvnitř paddingu) */
+        /* === ZMĚNA #2: VŠECHNA POLE NA 300px === */
         body.app-core.model-trening.change-form .module.aligned .form-row input,
         body.app-core.model-trening.change-form .module.aligned .form-row select,
         body.app-core.model-trening.change-form .module.aligned .form-row textarea,
         body.app-core.model-trening.change-form .module.aligned .form-row .select2-container,
         body.app-core.model-trening.change-form .module.aligned .form-row .related-widget-wrapper,
+        /* Včetně polí pro Datum a Čas */
         .datetime-widget input.vDateField,
         .datetime-widget input.vTimeField {
             
-            /* Změna z 300px na 100% */
             width: 100% !important;
-            max-width: 100% !important;
+            max-width: 220px !important;
             
             min-width: 0 !important;
             box-sizing: border-box !important;
@@ -342,7 +339,7 @@
             width: 100% !important;
             text-align: left !important;
             margin-bottom: 6px !important; /* Mezera pod popiskem */
-            color: #111827 !important;     /* Černá barva */
+            color: #000000 !important;     /* Černá barva */
             font-weight: 700 !important;   /* Tučné */
         }
         
@@ -353,6 +350,10 @@
             gap: 14px; /* Mezera mezi blokem "Datum" a blokem "Čas" */
         }
         
+        /* === ZMĚNA #2 (konec): Smazán speciální blok pro 200px === */
+        /* (Byl tady blok pro .vDateField a .vTimeField, teď je smazaný) */
+
+
         /*
          * 2. Oprava tabulky "Docházka" (inline)
          */
