@@ -47,45 +47,100 @@
 
   <style>
     :root{
-      --label-w:160px; --field-w:360px; --row-gap:14px;
-      --row-min: calc(var(--label-w) + var(--field-w) + 2*var(--row-gap));
+      /* Ponecháme pevnou šířku popisku, ale pole bude flexibilní */
+      --label-w: 160px; 
+      --row-gap: 14px;
+      
+      /* Tuto proměnnou už nepotřebujeme: --field-w:360px; */
+      /* Tuto proměnnou už nepotřebujeme: --row-min: ...; */
     }
-    /* obal modulu – šířka dle obsahu a horizontální scroll na malých */
+
+    /* Obal modulu – nyní flexibilní a centrovaný */
     body.app-core.model-trening.change-form #content-main .module.aligned{
-      width:max-content; min-width:var(--row-min); max-width:none;
-      overflow-x:auto; -webkit-overflow-scrolling:touch;
+      /* ZMĚNA: Šířka je v %, aby se přizpůsobila */
+      width: 95%; 
+      
+      /* ZMĚNA: Maximální šířka, aby se na desktopu neroztáhl moc */
+      max-width: 700px; /* Můžete upravit podle potřeby */
+      
+      /* ZMĚNA: Odstraněno min-width a overflow-x: auto */
+      min-width: 0;
+      overflow-x: hidden;
+      
+      /* PŘIDÁNO: Centrování kontejneru na stránce */
+      margin-left: auto;
+      margin-right: auto;
+      
       box-sizing: border-box;
     }
-    /* jeden řádek = karta */
+    
+    /* Jeden řádek = karta */
     body.app-core.model-trening.change-form .module.aligned .form-row{
-      display:grid !important; grid-template-columns:var(--label-w) var(--field-w) !important;
-      align-items:center; gap:var(--row-gap); margin-bottom:12px;
-      padding:8px 12px; background:#fff; border-radius:10px; box-shadow:0 1px 2px rgba(0,0,0,.04);
-      width:max-content;
-      border-bottom:1px solid #e5e7eb; /* jemná linka pro návaznost se zbytkem UI */
+      display: grid !important; 
+      
+      /* ZMĚNA: Druhý sloupec (pole) je flexibilní (1fr = 1 frakce, zabere zbytek) */
+      grid-template-columns: var(--label-w) 1fr !important; 
+      
+      align-items: center; 
+      gap: var(--row-gap); 
+      margin-bottom: 12px;
+      padding: 8px 12px; 
+      background: #fff; 
+      border-radius: 10px; 
+      box-shadow: 0 1px 2px rgba(0,0,0,.04);
+      
+      /* ZMĚNA: Řádek zabere 100% šířky svého rodiče (kontejneru) */
+      width: 100%;
+      
+      border-bottom: 1px solid #e5e7eb;
       box-sizing: border-box;
     }
-    /* labely */
+    
+    /* Labely (popisky) */
     body.app-core.model-trening.change-form .module.aligned .form-row > label{
-      margin:0 !important; width:var(--label-w); font-weight:700; color:#111827; white-space:nowrap; text-align:left;
+      margin: 0 !important; 
+      width: var(--label-w); /* Stále používá pevnou šířku z proměnné */
+      font-weight: 700; 
+      color: #111827; 
+      white-space: nowrap; 
+      text-align: left;
     }
-    /* vstupy */
+    
+    /* Vstupy (input, select, ...) */
     body.app-core.model-trening.change-form .module.aligned .form-row input,
     body.app-core.model-trening.change-form .module.aligned .form-row select,
-    body.app-core.model-trening.change-form .module.aligned .form-row textarea{
-      width:var(--field-w) !important; max-width:var(--field-w) !important; min-width:var(--field-w) !important;
-      box-sizing:border-box; height:36px; padding:6px 10px; border:1px solid #E5E7EB; border-radius:8px; font-size:14px; line-height:1.2;
-      background:#fff;
+    body.app-core.model-trening.change-form .module.aligned .form-row textarea,
+    /* PŘIDÁNO: Pravidla musí platit i pro JS widgety jako Select2 */
+    body.app-core.model-trening.change-form .module.aligned .form-row .select2-container,
+    body.app-core.model-trening.change-form .module.aligned .form-row .related-widget-wrapper {
+      /* ZMĚNA: Pole nyní zabere 100% šířky svého sloupce v gridu */
+      width: 100% !important; 
+      max-width: 100% !important; 
+      min-width: 0 !important;
+      
+      box-sizing: border-box; 
+      height: 36px; 
+      padding: 6px 10px; 
+      border: 1px solid #E5E7EB; 
+      border-radius: 8px; 
+      font-size: 14px; 
+      line-height: 1.2;
+      background: #fff;
     }
-    body.app-core.model-trening.change-form .module.aligned .form-row textarea{ height:64px; resize:vertical; }
-    body.app-core.model-trening.change-form .datetimeshortcuts{ white-space:nowrap; }
-    @media (max-width:480px){
-      :root{ --label-w:150px; --field-w:340px; --row-min: calc(var(--label-w) + var(--field-w) + 2*var(--row-gap)); }
-      body.app-core.model-trening.change-form .module.aligned .form-row input,
-      body.app-core.model-trening.change-form .module.aligned .form-row select{ height:38px; font-size:14px; }
+    
+    body.app-core.model-trening.change-form .module.aligned .form-row textarea{ height: 64px; resize: vertical; }
+    
+    /* ZMĚNA: Původní @media (max-width: 480px) bylo smazáno, 
+       protože náš nový design je flexibilní by default.
+       O zlomení na mobilu se postará blok @media (max-width: 767px) na konci. */
+       
+    body.app-core.model-trening.change-form .datetimeshortcuts{ 
+      white-space: nowrap; 
+      /* PŘIDÁNO: Zajistíme, aby se na malých obrazovkách "Dnes" a "Teď" zalamovaly */
+      flex-wrap: wrap;
+      gap: 4px;
     }
   </style>
-
   <style>
     :root{ --w-col:200px; --w-fixed:calc(var(--w-col) * 4); }
 
@@ -229,7 +284,7 @@
 
         /* Řádek formuláře: 1 sloupec (popisek a pole pod sebou) */
         body.app-core.model-trening.change-form .module.aligned .form-row {
-            display: block !important;
+            display: block !important; /* ZMĚNA z grid na block */
             width: 100% !important;
             max-width: 100% !important;
             padding: 0 !important; /* Zde žádný padding, ten je na rodiči */
@@ -246,7 +301,7 @@
             width: 100% !important;
             text-align: left !important;
             margin-bottom: 6px !important;
-            white-space: normal !important;
+            white-space: normal !important; /* Povolí zalomení dlouhých popisků */
         }
 
         /* Vstupní pole: plná šířka */
@@ -296,4 +351,4 @@
         }
     }
   </style>
-  {% endblock %}
+{% endblock %}
