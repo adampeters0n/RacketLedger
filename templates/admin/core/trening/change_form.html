@@ -210,37 +210,39 @@
     }
   </style>
 
-  <style>
+<style>
     @media (max-width: 767px) {
         
         /*
          * 1. Oprava horního formuláře
          */
         
-        /* Obal modulu: plná šířka, s vnitřním odsazením */
+        /* Obal modulu: ZMĚNA pro opravu ořezávání hover efektu */
         body.app-core.model-trening.change-form #content-main .module.aligned {
-            width: 100% !important;
+            width: max-content !important; /* Šířka podle obsahu (pole 320px + padding) */
             min-width: 0 !important;
-            max-width: 100% !important;
-            overflow-x: hidden !important;
-            padding: 10px 12px !important; /* Méně paddingu na mobilu */
+            max-width: 100% !important; /* Ale ne širší než obrazovka */
+            overflow-x: visible !important; /* ZMĚNA: Povolí "přetékání" hover efektu */
+            padding: 10px 12px !important; 
             box-sizing: border-box !important;
+            margin-left: auto !important; /* PŘIDÁNO: Centrování boxu */
+            margin-right: auto !important; /* PŘIDÁNO: Centrování boxu */
         }
 
-        /* Řádek formuláře: 1 sloupec (popisek a pole pod sebou) */
+        /* Řádek formuláře: ZMĚNA mezery */
         body.app-core.model-trening.change-form .module.aligned .form-row {
             display: block !important;
             width: 100% !important;
             max-width: 100% !important;
-            padding: 0 !important; /* Zde žádný padding, ten je na rodiči */
-            margin-bottom: 8px !important;
+            padding: 0 !important; 
+            margin-bottom: 14px !important; /* ZMĚNA: Větší mezera (bylo 8px) */
             background: transparent !important;
-            box-shadow: none !important; /* Odstranění stínu, který se zobrazoval divně */
-            border-bottom: none !important; /* Odstranění spodní linky, která tam nedávala smysl */
+            box-shadow: none !important; 
+            border-bottom: none !important; 
             box-sizing: border-box !important;
         }
 
-        /* Popisek (label): plná šířka */
+        /* Popisek (label): beze změny */
         body.app-core.model-trening.change-form .module.aligned .form-row > label {
             display: block !important;
             width: 100% !important;
@@ -249,32 +251,27 @@
             white-space: normal !important;
         }
 
-        /* Vstupní pole: plná šířka */
+        /* Vstupní pole: Ponechána oprava z minula (320px) */
         body.app-core.model-trening.change-form .module.aligned .form-row input,
         body.app-core.model-trening.change-form .module.aligned .form-row select,
         body.app-core.model-trening.change-form .module.aligned .form-row textarea,
         body.app-core.model-trening.change-form .module.aligned .form-row .select2-container,
         body.app-core.model-trening.change-form .module.aligned .form-row .related-widget-wrapper {
             
-            /* * ===============================================
-             * == TADY JE TA OPRAVA ==
-             * ===============================================
-             * Změněno z width: 100% na pevnou šířku, aby to nevypadalo blbě.
-             */
-            width: 320px !important;
-            max-width: 320px !important; /* Změněno z 100% */
+            width: 300px !important;
+            max-width: 300px !important;
             
             min-width: 0 !important;
             box-sizing: border-box !important;
         }
         
-        /* Oprava pro widget data/času */
+        /* Oprava pro widget data/času: Ponecháno, řeší přesun "Dnes" */
         body.app-core.model-trening.change-form .datetimeshortcuts {
             white-space: normal !important;
-            margin-top: 8px; /* Přidáme trochu mezery nad odkazem Dnes */
+            margin-top: 8px; /* Mezera nad "Dnes" */
         }
         
-        /* Korekce pro datetime-widget na mobilu */
+        /* Korekce pro datetime-widget na mobilu: Ponecháno, řeší přesun "Dnes" */
         .datetime-widget {
             display: flex;
             flex-direction: column;
