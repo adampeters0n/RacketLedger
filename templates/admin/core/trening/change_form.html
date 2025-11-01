@@ -54,6 +54,7 @@
     body.app-core.model-trening.change-form #content-main .module.aligned{
       width:max-content; min-width:var(--row-min); max-width:none;
       overflow-x:auto; -webkit-overflow-scrolling:touch;
+      box-sizing: border-box; /* Přidáno pro konzistenci */
     }
     /* jeden řádek = karta */
     body.app-core.model-trening.change-form .module.aligned .form-row{
@@ -62,6 +63,7 @@
       padding:8px 12px; background:#fff; border-radius:10px; box-shadow:0 1px 2px rgba(0,0,0,.04);
       width:max-content;
       border-bottom:1px solid #e5e7eb; /* jemná linka pro návaznost se zbytkem UI */
+      box-sizing: border-box; /* Přidáno pro konzistenci */
     }
     /* labely */
     body.app-core.model-trening.change-form .module.aligned .form-row > label{
@@ -214,50 +216,47 @@
          * 1. Oprava horního formuláře
          */
         
-        /* Reset proměnných, aby nebyly fixní šířky */
-        /*
-           POZNÁMKA: :root v media query nemusí fungovat spolehlivě.
-           Místo toho přepisujeme styly přímo na elementech.
-        */
-
-        /* Obal modulu: plná šířka, žádný scroll */
+        /* Obal modulu: plná šířka, žádný scroll, žádný vnitřní padding */
         body.app-core.model-trening.change-form #content-main .module.aligned {
             width: 100% !important;
-            max-width: 100% !important;
             min-width: 0 !important;
+            max-width: 100% !important;
             overflow-x: hidden !important;
-            padding: 12px !important;
-            box-sizing: border-box; /* Zajistí, že padding neodtlačí box */
+            padding: 12px 0 !important; /* Dáme padding jen nahoře/dole */
+            box-sizing: border-box !important;
         }
 
         /* Řádek formuláře: 1 sloupec (popisek a pole pod sebou) */
         body.app-core.model-trening.change-form .module.aligned .form-row {
-            grid-template-columns: 1fr !important; /* Jen jeden sloupec */
+            display: block !important; /* Místo gridu, jednodušší block */
             width: 100% !important;
             max-width: 100% !important;
-            padding: 10px 0 !important;
+            padding: 10px 12px !important; /* Vnitřní padding řádku */
             margin-bottom: 8px !important;
             background: transparent !important;
             box-shadow: none !important;
-            gap: 8px !important; /* Menší mezera na mobilu */
+            box-sizing: border-box !important;
         }
 
         /* Popisek (label): plná šířka */
         body.app-core.model-trening.change-form .module.aligned .form-row > label {
+            display: block !important; /* Zajistí, že je na vlastním řádku */
             width: 100% !important;
             text-align: left !important;
-            margin-bottom: 0 !important; /* Mezera je řešena přes 'gap' */
+            margin-bottom: 6px !important; /* Mezera mezi popiskem a polem */
+            white-space: normal !important; /* Povolí zalamování popisku */
         }
 
         /* Vstupní pole: plná šířka */
         body.app-core.model-trening.change-form .module.aligned .form-row input,
         body.app-core.model-trening.change-form .module.aligned .form-row select,
         body.app-core.model-trening.change-form .module.aligned .form-row textarea,
-        body.app-core.model-trening.change-form .module.aligned .form-row .select2-container {
+        body.app-core.model-trening.change-form .module.aligned .form-row .select2-container,
+        body.app-core.model-trening.change-form .module.aligned .form-row .related-widget-wrapper {
             width: 100% !important;
             max-width: 100% !important;
             min-width: 0 !important;
-            box-sizing: border-box; /* Důležité pro správnou šířku */
+            box-sizing: border-box !important; /* KLÍČOVÉ */
         }
         
         /* Oprava pro widget data/času */
