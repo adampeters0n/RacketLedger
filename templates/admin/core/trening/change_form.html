@@ -78,7 +78,61 @@
       background:#fff;
     }
     body.app-core.model-trening.change-form .module.aligned .form-row textarea{ height:64px; resize:vertical; }
-    body.app-core.model-trening.change-form .datetimeshortcuts{ white-space:nowrap; }
+    
+    /* === ZMĚNA #1: OPRAVA VZHLEDU "DATUM" A "ČAS" NA DESKTOPU === */
+
+    /* Skryjeme hlavní popisek "Datum:", který je vlevo */
+    .form-row.field-datum > label {
+        display: none !important;
+    }
+    
+    /* Kontejner s poli Data/Času roztáhneme přes oba sloupce */
+    .form-row.field-datum > div {
+        grid-column: 1 / -1; /* Roztáhne se přes celý grid */
+    }
+    
+    /* Vnitřní widget nastylyjeme jako DVA NOVÉ ŘÁDKY */
+    .form-row.field-datum .datetime-widget {
+        display: grid;
+        /* Vytvoříme stejný grid, jako mají ostatní řádky */
+        grid-template-columns: var(--label-w) var(--field-w); 
+        align-items: center;
+        gap: var(--row-gap);
+        row-gap: 12px; /* Mezera mezi řádkem Datum a řádkem Čas */
+    }
+    
+    /* Šedé popisky "Datum:" a "Čas:" nastylyjeme jako hlavní popisky */
+    .form-row.field-datum .datetime-widget label {
+        margin: 0 !important;
+        width: var(--label-w);
+        font-weight: 700;
+        color: #111827 !important; /* Černá barva */
+        white-space: nowrap;
+        text-align: left;
+    }
+    
+    /* Tlačítka "Dnes" a kalendář přisuneme k poli Datum */
+    .form-row.field-datum .datetimeshortcuts {
+        white-space: nowrap;
+        margin: 0;
+        padding-left: 10px; /* Malá mezera od pole */
+        /* Musíme zrušit <br> tag, který je mezi nimi */
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .form-row.field-datum .datetimeshortcuts br {
+        display: none; /* Skryje zalomení řádku */
+    }
+    
+    /* Bloky s polem Data a Času zarovnáme */
+    .form-row.field-datum .datetime-widget > p {
+        display: contents; /* Zrušíme <p> tag, aby se prvky vešly do gridu */
+    }
+    
+    /* === KONEC ZMĚNY #1 === */
+    
+    
     @media (max-width:480px){
       :root{ --label-w:150px; --field-w:340px; --row-min: calc(var(--label-w) + var(--field-w) + 2*var(--row-gap)); }
       body.app-core.model-trening.change-form .module.aligned .form-row input,
@@ -223,10 +277,10 @@
             min-width: 0 !important;
             max-width: 100% !important; 
             overflow-x: visible !important; 
-            padding: 10px 12px !important; 
+            padding: 12px 12px !important; 
             box-sizing: border-box !important;
-            margin-left: 2px !important; 
-            margin-right: 2px !important; 
+            margin-left: auto !important; 
+            margin-right: auto !important; 
         }
 
         /* Řádek formuláře: mezera pod 18px */
@@ -251,12 +305,15 @@
             white-space: normal !important;
         }
 
-        /* Vstupní pole: šířka 300px (pro všechna OSTATNÍ pole) */
+        /* === ZMĚNA #2: VŠECHNA POLE NA 300px === */
         body.app-core.model-trening.change-form .module.aligned .form-row input,
         body.app-core.model-trening.change-form .module.aligned .form-row select,
         body.app-core.model-trening.change-form .module.aligned .form-row textarea,
         body.app-core.model-trening.change-form .module.aligned .form-row .select2-container,
-        body.app-core.model-trening.change-form .module.aligned .form-row .related-widget-wrapper {
+        body.app-core.model-trening.change-form .module.aligned .form-row .related-widget-wrapper,
+        /* Včetně polí pro Datum a Čas */
+        .datetime-widget input.vDateField,
+        .datetime-widget input.vTimeField {
             
             width: 300px !important;
             max-width: 300px !important;
@@ -289,13 +346,9 @@
             gap: 14px; /* Mezera mezi blokem "Datum" a blokem "Čas" */
         }
         
-        /* === ZMĚNA #1: ŠÍŘKA POLÍ "DATUM" A "ČAS" === */
-        /* Toto pravidlo je teď specifičtější a přebije těch 300px */
-        body.app-core.model-trening.change-form .module.aligned .form-row .datetime-widget input.vDateField,
-        body.app-core.model-trening.change-form .module.aligned .form-row .datetime-widget input.vTimeField {
-            width: 200px !important;
-            max-width: 200px !important;
-        }
+        /* === ZMĚNA #2 (konec): Smazán speciální blok pro 200px === */
+        /* (Byl tady blok pro .vDateField a .vTimeField, teď je smazaný) */
+
 
         /*
          * 2. Oprava tabulky "Docházka" (inline)
