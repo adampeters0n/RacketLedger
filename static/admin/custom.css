@@ -943,3 +943,19 @@ table tbody tr:hover th {
   background: #fff3df !important; /* Váš stávající jemně oranžový hover */
   color: var(--text) !important;
 }
+/* =================================================================== */
+/* === MOBILNÍ OPRAVY (přebijí vše ostatní) === */
+/* =================================================================== */
+
+@media (max-width: 820px) {
+
+  /* Skryje název "Tenis systém Čimice" */
+  #branding .brand .brand-title {
+      display: none !important;
+  }
+
+  /* Skryje celý blok s odkazy vpravo */
+  #user-tools {
+      display: none !important;
+  }
+}
