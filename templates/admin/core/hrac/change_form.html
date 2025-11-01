@@ -141,16 +141,16 @@
   <div class="ledger-card">
     <h2 class="ledger-title">Historie tréninků a plateb</h2>
 
-    <form method="get" class="ledger-filter" style="display:flex; gap:8px; align-items:center; margin:6px 0 10px;">
+    <div class="ledger-filter" style="display:flex; gap:8px; align-items:center; margin:6px 0 10px;">
       <label>Období:</label>
-      <input type="date" name="from" value="{{ filter_from|date:'Y-m-d' }}">
+      <input type="date" id="id_filter_from" name="from" value="{{ filter_from|date:'Y-m-d' }}">
       <span>–</span>
-      <input type="date" name="to"   value="{{ filter_to|date:'Y-m-d' }}">
-      <button class="button">Filtrovat</button>
+      <input type="date" id="id_filter_to"   name="to"   value="{{ filter_to|date:'Y-m-d' }}">
+      <a href="#" id="filter-button" class="button">Filtrovat</a>
       {% if filter_from or filter_to %}
         <a class="button" href="{{ request.path }}">Zrušit</a>
       {% endif %}
-    </form>
+    </div>
 
     <div class="ledger-wrap">
       <table class="ledger">
@@ -190,7 +190,7 @@
           <tr class="totals">
             <td class="totals-label">Součty:</td>
             <td></td>
-            <td class="totals-value tot-hodiny">{{ ledger_totals.hodiny }}</td>
+            <td class="totals-value tot-hodiny">{{ ledger_totals.hodiny|floatformat }}</td>
             <td></td>
             <td></td>
             <td class="totals-value">{{ ledger_totals.cena }} Kč</td>
@@ -215,4 +215,33 @@
     </div>
   </div>
   {% endif %}
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var filterBtn = document.getElementById('filter-button');
+      if (filterBtn) {
+        filterBtn.addEventListener('click', function(e) {
+          e.preventDefault(); // Zabrání odkazu, aby skočil na #
+          
+          var fromVal = document.getElementById('id_filter_from').value;
+          var toVal = document.getElementById('id_filter_to').value;
+          
+          // Použije aktuální URL bez starých parametrů
+          var baseUrl = window.location.pathname; 
+          var params = new URLSearchParams();
+          
+          if (fromVal) {
+            params.append('from', fromVal);
+          }
+          if (toVal) {
+            params.append('to', toVal);
+          }
+          
+          // Sestaví novou URL (např. .../change/?from=...&to=...)
+          // a znovu načte stránku s těmito parametry
+          window.location.href = baseUrl + '?' + params.toString();
+        });
+      }
+    });
+  </script>
 {% endblock %}
