@@ -45,10 +45,29 @@ class HracAdmin(admin.ModelAdmin):
     change_form_template = "admin/core/hrac/change_form.html"
     change_list_template = "admin/core/hrac/change_list.html"
    
-    # přidej/změň:
-    list_per_page = 10_000          # nebo klidně 1_000_000
+    list_per_page = 10_000
     list_max_show_all = 10_000
     
+    # === ZMĚNA #1: PŘEJMENOVÁNÍ ANOTACE PRO ŘAZENÍ ===
+    def get_queryset(self, request):
+        """
+        Přidá anotaci pro kredit, aby podle ní šlo řadit.
+        Pojmenujeme ji "_kredit_sort", aby nedošlo ke konfliktu.
+        """
+        queryset = super().get_queryset(request)
+        queryset = queryset.annotate(
+            _kredit_sort=Sum(  # Přejmenováno z "kredit"
+                Case(
+                    When(transakce__typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA], then=F("transakce__castka")),
+                    When(transakce__typ=Transakce.Typ.NAUCTOVANO, then=-F("transakce__castka")),
+                    default=Value(0),
+                    output_field=DecimalField(max_digits=12, decimal_places=2),
+                )
+            )
+        )
+        return queryset
+    # === KONEC ZMĚNY #1 ===
+
     # --- URL pro stránku "Změna informací" + POST vyúčtování ---
     def get_urls(self):
         urls = super().get_urls()
@@ -158,12 +177,14 @@ class HracAdmin(admin.ModelAdmin):
         )
         return redirect("admin:core_hrac_change", object_id)
 
+    # === ZMĚNA #2: PROPOJENÍ SLOUPCE S NOVOU HODNOTOU PRO ŘAZENÍ ===
     def kredit_display(self, obj):
-        # 'kredit' teď pochází z naší anotace v get_queryset
-        kredit_value = obj.kredit if obj.kredit is not None else Decimal(0)
-        return f"{kredit_value:.0f} Kč"
+        # Pro zobrazení stále používáme původní vlastnost modelu `obj.kredit`
+        return f"{obj.kredit:.0f} Kč"
     kredit_display.short_description = "Kredit"
-    kredit_display.admin_order_field = "kredit"  # <-- TOTO JE TEN PŘIDANÝ ŘÁDEK
+    # Pro řazení ale použijeme náš nový výpočet
+    kredit_display.admin_order_field = "_kredit_sort" 
+    # === KONEC ZMĚNY #2 ===
 
     def rodina_link(self, obj):
         if not obj.rodina_id:
@@ -191,7 +212,6 @@ class HracAdmin(admin.ModelAdmin):
             count += 1
         self.message_user(request, f"Vyúčtování vytvořeno pro {count} hráčů.", level=messages.SUCCESS)
     akce_vygenerovat_vyuctovani.short_description = "Vygenerovat vyúčtování (poslat e-mail)"
-# admin.py -> class HracAdmin
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         hrac = Hrac.objects.get(pk=object_id)
@@ -1493,10 +1513,11 @@ def core_app_dashboard_view(request):
                   .order_by("-vytvoreno")[:8])
     ]
 
+    # === ZMĚNA #3: PŘEJMENOVÁNÍ ANOTACE V CORE DASHBOARD ===
     debt_qs = (
         Hrac.objects
         .annotate(
-            credit=Sum(
+            _kredit_sort=Sum( # Přejmenováno z 'credit'
                 Case(
                     When(transakce__typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA], then=F("transakce__castka")),
                     When(transakce__typ=Transakce.Typ.NAUCTOVANO, then=-F("transakce__castka")),
@@ -1505,14 +1526,15 @@ def core_app_dashboard_view(request):
                 )
             )
         )
-        .filter(credit__lt=0)
-        .order_by("credit")[:8]
+        .filter(_kredit_sort__lt=0) # Přejmenováno
+        .order_by("_kredit_sort")[:8] # Přejmenováno
     )
     debtors = [{
         "name": h.jmeno,
-        "kredit": f"{(h.credit or 0):.0f} Kč",
+        "kredit": f"{(h._kredit_sort or 0):.0f} Kč", # Přejmenováno
         "url": reverse("admin:core_hrac_change", args=[h.id]),
     } for h in debt_qs]
+    # === KONEC ZMĚNY #3 ===
 
     ctx = dict(
         admin.site.each_context(request),
@@ -1585,10 +1607,10 @@ def admin_dashboard_view(request):
     trener_rows.sort(key=lambda r: int(r["balance"].split()[0]), reverse=True)
     trener_rows = trener_rows[:5]
 
-    # === ZMĚNA #1: VÝPOČET KREDITU A DLUŽNÍKŮ ===
-    # Vypočítáme kredit pro všechny hráče v databázi
+    # === ZMĚNA #4: PŘEJMENOVÁNÍ ANOTACE V HLAVNÍM DASHBOARD ===
+    # Přejmenovali jsme `kredit` na `_kredit_calculated`
     hraci_s_kreditem = Hrac.objects.annotate(
-        kredit=Sum(
+        _kredit_calculated=Sum(
             Case(
                 When(transakce__typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA], then=F("transakce__castka")),
                 When(transakce__typ=Transakce.Typ.NAUCTOVANO, then=-F("transakce__castka")),
@@ -1596,27 +1618,27 @@ def admin_dashboard_view(request):
                 output_field=DecimalField(max_digits=12, decimal_places=2),
             )
         )
-    ).filter(kredit__isnull=False) # Zajistíme, že máme jen hráče s transakcemi
+    ).filter(_kredit_calculated__isnull=False) # Zajistíme, že máme jen hráče s transakcemi
 
     # Agregujeme celkové stavy
     agregace_kreditu = hraci_s_kreditem.aggregate(
-        celkem=Sum('kredit'),
-        dluhy=Sum('kredit', filter=Q(kredit__lt=Decimal(0))),
-        prebytky=Sum('kredit', filter=Q(kredit__gt=Decimal(0)))
+        celkem=Sum('_kredit_calculated'),
+        dluhy=Sum('_kredit_calculated', filter=Q(_kredit_calculated__lt=Decimal(0))),
+        prebytky=Sum('_kredit_calculated', filter=Q(_kredit_calculated__gt=Decimal(0)))
     )
     
     total_balance = agregace_kreditu.get('celkem') or Decimal(0)
     total_debt = agregace_kreditu.get('dluhy') or Decimal(0)
     total_surplus = agregace_kreditu.get('prebytky') or Decimal(0)
 
-    # Použijeme už vypočítaná data pro Top dlužníky (oprava původní smyčky)
-    debtors_qs = hraci_s_kreditem.filter(kredit__lt=0).order_by("kredit")
+    # Použijeme přejmenovanou hodnotu `_kredit_calculated`
+    debtors_qs = hraci_s_kreditem.filter(_kredit_calculated__lt=0).order_by("_kredit_calculated")
     debtors = [{
         "name": h.jmeno,
-        "kredit": f"{(h.kredit or 0):.0f} Kč",
+        "kredit": f"{(h._kredit_calculated or 0):.0f} Kč", # Používáme _kredit_calculated
         "url": reverse("admin:core_hrac_change", args=[h.id]),
     } for h in debtors_qs]
-    # === KONEC ZMĚNY #1 ===
+    # === KONEC ZMĚNY #4 ===
 
     posledni_platby = [
         {
