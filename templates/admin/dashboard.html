@@ -51,7 +51,20 @@
       <div class="label">K vyplacení trenérům (měsíc)</div>
       <div class="value">{{ kpis.k_vyplaceni }}</div>
     </div>
-  </div>
+
+    <div class="kpi" style="border-top: 3px solid #EF4444;">
+      <div class="label">CELKEM DLUŽNÉ ČÁSTKY</div>
+      <div class="value" style="color: #EF4444;">{{ kpis.total_debt }}</div>
+    </div>
+    <div class="kpi" style="border-top: 3px solid #22C55E;">
+      <div class="label">CELKEM PŘEBYTKY</div>
+      <div class="value" style="color: #22C55E;">{{ kpis.total_surplus }}</div>
+    </div>
+    <div class="kpi" style="border-top: 3px solid #6B7280;">
+      <div class="label">CELKOVÁ FIN. ROVNOVÁHA</div>
+      <div class="value" style="color: #111827;">{{ kpis.total_balance }}</div>
+    </div>
+    </div>
 
   <div class="card">
     <div class="quick">

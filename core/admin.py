@@ -5,7 +5,7 @@ import logging
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.db.models import Sum, Case, When, F, Value, DecimalField
+from django.db.models import Sum, Case, When, F, Value, DecimalField, Q
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
@@ -159,8 +159,11 @@ class HracAdmin(admin.ModelAdmin):
         return redirect("admin:core_hrac_change", object_id)
 
     def kredit_display(self, obj):
-        return f"{obj.kredit:.0f} Kč"
+        # 'kredit' teď pochází z naší anotace v get_queryset
+        kredit_value = obj.kredit if obj.kredit is not None else Decimal(0)
+        return f"{kredit_value:.0f} Kč"
     kredit_display.short_description = "Kredit"
+    kredit_display.admin_order_field = "kredit"  # <-- TOTO JE TEN PŘIDANÝ ŘÁDEK
 
     def rodina_link(self, obj):
         if not obj.rodina_id:
@@ -1345,6 +1348,11 @@ class TrenerPlatbaAdmin(admin.ModelAdmin):
 # -----------------------------
 @admin.register(Vyuctovani)
 class VyuctovaniAdmin(admin.ModelAdmin):
+    
+    # === TOTO JE TEN NOVÝ KÓD ===
+    def has_add_permission(self, request):
+        # Tento řádek zakáže tlačítko "Přidat vyúčtování"
+        return False
     date_hierarchy = "created_at"
     ordering = ("-period_to",)
     list_filter = ("hrac", "reason", "created_at")
@@ -1577,16 +1585,38 @@ def admin_dashboard_view(request):
     trener_rows.sort(key=lambda r: int(r["balance"].split()[0]), reverse=True)
     trener_rows = trener_rows[:5]
 
-    debtors = []
-    for h in Hrac.objects.all():
-        if h.kredit < 0:
-            debtors.append({
-                "name": h.jmeno,
-                "kredit": f"{h.kredit:.0f} Kč",
-                "url": reverse("admin:core_hrac_change", args=[h.id]),
-            })
-    debtors.sort(key=lambda r: int(r["kredit"].split()[0]))
-    debtors = debtors[:8]
+    # === ZMĚNA #1: VÝPOČET KREDITU A DLUŽNÍKŮ ===
+    # Vypočítáme kredit pro všechny hráče v databázi
+    hraci_s_kreditem = Hrac.objects.annotate(
+        kredit=Sum(
+            Case(
+                When(transakce__typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA], then=F("transakce__castka")),
+                When(transakce__typ=Transakce.Typ.NAUCTOVANO, then=-F("transakce__castka")),
+                default=Value(0),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )
+        )
+    ).filter(kredit__isnull=False) # Zajistíme, že máme jen hráče s transakcemi
+
+    # Agregujeme celkové stavy
+    agregace_kreditu = hraci_s_kreditem.aggregate(
+        celkem=Sum('kredit'),
+        dluhy=Sum('kredit', filter=Q(kredit__lt=Decimal(0))),
+        prebytky=Sum('kredit', filter=Q(kredit__gt=Decimal(0)))
+    )
+    
+    total_balance = agregace_kreditu.get('celkem') or Decimal(0)
+    total_debt = agregace_kreditu.get('dluhy') or Decimal(0)
+    total_surplus = agregace_kreditu.get('prebytky') or Decimal(0)
+
+    # Použijeme už vypočítaná data pro Top dlužníky (oprava původní smyčky)
+    debtors_qs = hraci_s_kreditem.filter(kredit__lt=0).order_by("kredit")
+    debtors = [{
+        "name": h.jmeno,
+        "kredit": f"{(h.kredit or 0):.0f} Kč",
+        "url": reverse("admin:core_hrac_change", args=[h.id]),
+    } for h in debtors_qs]
+    # === KONEC ZMĚNY #1 ===
 
     posledni_platby = [
         {
@@ -1616,6 +1646,11 @@ def admin_dashboard_view(request):
             "nauctovano": f"{Decimal(nac):.0f} Kč",
             "platby": f"{Decimal(pays):.0f} Kč",
             "k_vyplaceni": f"{trener_due_total:.0f} Kč",
+
+            # === ZMĚNA #2: PŘIDÁNÍ NOVÝCH KPI ===
+            "total_debt": f"{total_debt:.0f} Kč",
+            "total_surplus": f"{total_surplus:.0f} Kč",
+            "total_balance": f"{total_balance:.0f} Kč",
         },
         quick={
             "add_training": reverse("admin:core_trening_add"),
