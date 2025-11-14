@@ -196,14 +196,44 @@ class HracAdmin(admin.ModelAdmin):
 
     # Admin akce: vygenerovat vyúčtování pro vybrané hráče
     def akce_vygenerovat_vyuctovani(self, request, queryset):
+        
+        # --- ZDE ZAČÍNÁ NOVÝ KÓD ---
+        # 1. Zkopírujeme pomocnou funkci pro parsování data (máš ji už ve vyuctovat_view)
+        def _parse_date(s: str, end: bool = False):
+            s = (s or "").strip()
+            if not s:
+                return None
+            try:
+                d = datetime.strptime(s, "%Y-%m-%d").date()
+            except Exception:
+                return None
+            t = time.max if end else time.min
+            return dj_tz.make_aware(datetime.combine(d, t), dj_tz.get_current_timezone())
+
+        # 2. Přečteme hodnoty z request.POST (které nám přidá JavaScript)
+        vfrom = _parse_date(request.POST.get("_bulk_vyuct_from"), end=False)
+        vto = _parse_date(request.POST.get("_bulk_vyuct_to"), end=True)
+        
+        raw_amt = (request.POST.get("_bulk_castka_k_uhrazeni") or "").strip()
+        override_amount = None
+        if raw_amt:
+            try:
+                override_amount = Decimal(raw_amt.replace(",", "."))
+                if override_amount < 0:
+                    override_amount = None
+            except (InvalidOperation, ValueError):
+                override_amount = None
+        # --- KONEC NOVÉHO KÓDU ---
+
         count = 0
         for hrac in queryset:
             vyuct = hrac.vygeneruj_vyuctovani(
                 duvod="manual",
                 send_email=True,
-                override_amount_due=None,
-                override_period_from=None,
-                override_period_to=None,
+                # --- ZMĚNA: Použijeme nové hodnoty ---
+                override_amount_due=override_amount,
+                override_period_from=vfrom,
+                override_period_to=vto,
             )
             logger.info(
                 ">>> HRAC_AKCE_VYUCTOVAT: hrac_id=%s email=%s amount_due=%s vyuct_id=%s",

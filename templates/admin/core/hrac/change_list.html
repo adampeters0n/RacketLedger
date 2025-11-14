@@ -1,76 +1,164 @@
 {% extends "admin/change_list.html" %}
+{% load static %}
 
+{# 
+  Tento blok kombinuje OBA JavaScripty:
+  1. Živé filtrování tabulky podle jména.
+  2. Přidání skrytých polí pro hromadné vyúčtování.
+#}
 {% block extrahead %}
 {{ block.super }}
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  const table = document.getElementById('result_list');
-  if (!table) return;
+document.addEventListener('DOMContentLoaded', function() {
 
-  const tbody = table.querySelector('tbody');
-  const rows  = Array.from(tbody.querySelectorAll('tr'));
-  const searchInput = document.getElementById('searchbar');
+  // === ČÁST 1: KÓD PRO ŽIVÉ FILTROVÁNÍ (z tvého prvního souboru) ===
+  (function() {
+    const table = document.getElementById('result_list');
+    if (!table) return;
 
-  // řádek "nic nenalezeno"
-  let emptyRow = document.getElementById('players-no-results');
-  if (!emptyRow) {
-    emptyRow = document.createElement('tr');
-    emptyRow.id = 'players-no-results';
-    const td = document.createElement('td');
-    td.colSpan = table.querySelectorAll('thead th').length || 3;
-    td.style.textAlign = 'center';
-    td.textContent = 'Nebyly nalezeny žádné výsledky.';
-    emptyRow.appendChild(td);
-    emptyRow.style.display = 'none';
-    tbody.appendChild(emptyRow);
-  }
+    const tbody = table.querySelector('tbody');
+    const rows  = Array.from(tbody.querySelectorAll('tr'));
+    const searchInput = document.getElementById('searchbar');
 
-  function norm(s){
-    return (s||'').toString().toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g,''); // bez diakritiky
-  }
+    // řádek "nic nenalezeno"
+    let emptyRow = document.getElementById('players-no-results');
+    if (!emptyRow) {
+      emptyRow = document.createElement('tr');
+      emptyRow.id = 'players-no-results';
+      const td = document.createElement('td');
+      td.colSpan = table.querySelectorAll('thead th').length || 3;
+      td.style.textAlign = 'center';
+      td.textContent = 'Nebyly nalezeny žádné výsledky.';
+      emptyRow.appendChild(td);
+      emptyRow.style.display = 'none';
+      tbody.appendChild(emptyRow);
+    }
 
-  // >>> filtrujeme jen JMÉNO (ne e-mail)
-  function haystack(tr){
-    // obvykle <th class="field-jmeno"><a>…</a></th>
-    const cell =
-      tr.querySelector('th.field-jmeno') ||
-      tr.querySelector('td.field-jmeno') ||
-      tr.querySelector('th a, td a') ||
-      tr.children[1]; // fallback (2. buňka po checkboxu)
-    return norm(cell ? cell.innerText : '');
-  }
+    function norm(s){
+      return (s||'').toString().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,''); // bez diakritiky
+    }
 
-  const cache = new WeakMap();
-  function getHay(tr){ if(!cache.has(tr)) cache.set(tr, haystack(tr)); return cache.get(tr); }
+    // >>> filtrujeme jen JMÉNO (ne e-mail)
+    function haystack(tr){
+      // obvykle <th class="field-jmeno"><a>…</a></th>
+      const cell =
+        tr.querySelector('th.field-jmeno') ||
+        tr.querySelector('td.field-jmeno') ||
+        tr.querySelector('th a, td a') ||
+        tr.children[1]; // fallback (2. buňka po checkboxu)
+      return norm(cell ? cell.innerText : '');
+    }
 
-  function applyFilter(q){
-    const terms = norm(q).split(/\s+/).filter(Boolean);
-    let visible = 0;
+    const cache = new WeakMap();
+    function getHay(tr){ if(!cache.has(tr)) cache.set(tr, haystack(tr)); return cache.get(tr); }
 
-    rows.forEach(tr => {
-      if (tr.id === 'players-no-results') return;
-      const ok = terms.length === 0 || terms.every(t => getHay(tr).includes(t));
-      tr.style.display = ok ? '' : 'none';
-      if (ok) visible++;
+    function applyFilter(q){
+      const terms = norm(q).split(/\s+/).filter(Boolean);
+      let visible = 0;
+
+      rows.forEach(tr => {
+        if (tr.id === 'players-no-results') return;
+        const ok = terms.length === 0 || terms.every(t => getHay(tr).includes(t));
+        tr.style.display = ok ? '' : 'none';
+        if (ok) visible++;
+      });
+
+      emptyRow.style.display = (visible === 0) ? '' : 'none';
+    }
+
+    // počáteční hodnota z ?q= (fallback z URL pro jistotu)
+    const initialQ = "{{ cl.query|default_if_none:''|escapejs }}" || new URLSearchParams(location.search).get('q') || '';
+    applyFilter(initialQ);
+
+    // živé filtrování při psaní
+    if (searchInput){
+      searchInput.addEventListener('input', () => applyFilter(searchInput.value || ''));
+    }
+  })(); // Konec skriptu pro filtrování
+
+
+  // === ČÁST 2: KÓD PRO HROMADNÉ VYÚČTOVÁNÍ (z tvého druhého souboru) ===
+  (function() {
+    // Najdeme hlavní formulář seznamu
+    var changelistForm = document.getElementById('changelist-form');
+    if (!changelistForm) return;
+
+    // Najdeme naše nová pole
+    var fromInput = document.getElementById('id_bulk_vyuct_from');
+    var toInput = document.getElementById('id_bulk_vyuct_to');
+    var amountInput = document.getElementById('id_bulk_castka_k_uhrazeni');
+    
+    // Pojistka, pokud by tato pole neexistovala
+    if (!fromInput || !toInput || !amountInput) return;
+
+    // Přidáme "posluchače" na odeslání formuláře (kliknutí na "Provést")
+    changelistForm.addEventListener('submit', function(e) {
+      
+      // Zkontrolujeme, zda je vybraná naše akce
+      var actionSelect = document.querySelector('select[name="action"]');
+      if (actionSelect && actionSelect.value === 'akce_vygenerovat_vyuctovani') {
+        
+        // Vytvoříme a přidáme skrytá pole do formuláře
+        // aby se jejich hodnoty odeslaly spolu s akcí
+        
+        var fromHidden = document.createElement('input');
+        fromHidden.type = 'hidden';
+        fromHidden.name = '_bulk_vyuct_from';
+        fromHidden.value = fromInput.value;
+        changelistForm.appendChild(fromHidden);
+
+        var toHidden = document.createElement('input');
+        toHidden.type = 'hidden';
+        toHidden.name = '_bulk_vyuct_to';
+        toHidden.value = toInput.value;
+        changelistForm.appendChild(toHidden);
+
+        var amountHidden = document.createElement('input');
+        amountHidden.type = 'hidden';
+        amountHidden.name = '_bulk_castka_k_uhrazeni';
+        amountHidden.value = amountInput.value;
+        changelistForm.appendChild(amountHidden);
+      }
     });
+  })(); // Konec skriptu pro vyúčtování
 
-    emptyRow.style.display = (visible === 0) ? '' : 'none';
-  }
-
-  // počáteční hodnota z ?q= (fallback z URL pro jistotu)
-  const initialQ = "{{ cl.query|default_if_none:''|escapejs }}" || new URLSearchParams(location.search).get('q') || '';
-  applyFilter(initialQ);
-
-  // živé filtrování při psaní
-  if (searchInput){
-    searchInput.addEventListener('input', () => applyFilter(searchInput.value || ''));
-  }
 });
 </script>
 {% endblock %}
 
-{# volitelné: tlačítko "Rodiny" vpravo nahoře u objektových nástrojů #}
+
+{# 
+  Tento blok přidá formulář pro "Nastavení hromadného vyúčtování"
+  PŘED standardní nástroje (tlačítko "Hráč: Přidat")
+#}
+{% block object-tools %}
+<div style="border: 1px solid #ddd; background: #f9f9f9; padding: 10px 15px; border-radius: 8px; margin-bottom: 15px;">
+  <h4 style="margin: 0 0 10px 0;">Nastavení pro hromadné vyúčtování</h4>
+  <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+    <label for="id_bulk_vyuct_from">Období:</label>
+    <input type="date" name="_bulk_vyuct_from" id="id_bulk_vyuct_from"
+           style="padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px;">
+    <span>–</span>
+    <input type="date" name="_bulk_vyuct_to" id="id_bulk_vyuct_to"
+           style="padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px;">
+
+    <label for="id_bulk_castka_k_uhrazeni" style="margin-left:10px;">Částka k úhradě:</label>
+    <input type="number" name="_bulk_castka_k_uhrazeni" id="id_bulk_castka_k_uhrazeni"
+           step="1" min="0" placeholder="např. 5000" style="width:120px; padding: 5px 8px; border: 1px solid #ccc; border-radius: 4px;">
+    <span style="font-size: 12px; color: #666;">(nechte prázdné pro výpočet)</span>
+  </div>
+</div>
+
+{# Tímto vykreslíme původní tlačítka ("Hráč: Přidat" atd.) #}
+{{ block.super }}
+{% endblock %}
+
+
+{# 
+  Tento blok přidá tlačítko "Rodiny"
+  MEZI standardní nástroje (vedle "Hráč: Přidat")
+#}
 {% block object-tools-items %}
   {{ block.super }}
   <li><a href="{% url 'admin:core_rodina_changelist' %}" class="viewsitelink">Rodiny</a></li>
