@@ -299,7 +299,7 @@ class Hrac(models.Model):
                 "Níže je přiložen podrobný rozpis všech položek.\n\n"
                 "---\n"
                 "**Souhrn financí:**\n\n"
-                f"Aktuální kredit (před vyúčtováním): {credit_start:.0f} Kč\n"
+                f"Aktuální kredit (před platbou): {credit_end:.0f} Kč\n"
                 f"Celková cena tréninků v tomto období: {sum_cena:.0f} Kč\n\n"
                 "Pro vyrovnání kreditu a jeho navýšení na další období je třeba uhradit:\n\n"
                 f"Částka k zaplacení: **{amount_due:.0f} Kč**\n\n"
@@ -330,7 +330,7 @@ class Hrac(models.Model):
               
               <h3 style="margin-top: 20px; margin-bottom: 10px;">Souhrn financí:</h3>
               <div style="font-size: 1.05em; line-height: 1.7;">
-                Aktuální kredit (před vyúčtováním): <strong>{credit_start:.0f} Kč</strong><br>
+                Aktuální kredit (před platbou): <strong>{credit_end:.0f} Kč</strong><br>
                 Celková cena tréninků v tomto období: <strong>{sum_cena:.0f} Kč</strong>
               </div>
 
