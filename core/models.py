@@ -40,7 +40,6 @@ class Rodina(models.Model):
 #  Hráč
 # =========================
 class Hrac(models.Model):
-# ... kód Hrac je v pořádku ...
     class RezimVyuctovani(models.TextChoices):
         MESICNE = "MESICNE", "Měsíčně"
         N_TRENINGU = "N_TRENINGU", "Po N trénincích"
@@ -125,7 +124,6 @@ class Hrac(models.Model):
         override_period_from=None,   # date/datetime/None
         override_period_to=None,     # date/datetime/None
     ):
-# ... metoda vygeneruj_vyuctovani je v pořádku ...
         """
         Uzávěrka za období.
         - Pokud je zadáno override_period_from/override_period_to, použije se zadané období
@@ -222,8 +220,6 @@ class Hrac(models.Model):
 
             events = []
             for tx in charges_qs:
-                # Upraveno: Zpoplatnění je definováno transakcí (vytvoreno), ne nutně jen tréninkem.
-                # U tréninků je ale logické použít datum tréninku
                 dt = tx.trening.datum if tx.trening else tx.vytvoreno
                 if dj_tz.is_aware(dt):
                     dt = dj_tz.localtime(dt)
@@ -251,9 +247,6 @@ class Hrac(models.Model):
 
                 if typ == "CHARGE":
                     if tx.trening:
-                        # Vypíše název z ceníku, ale Trening má jen pole format, nikoliv get_format_display()
-                        # Toto bude fungovat POUZE pokud je Trening.format v Ceníku
-                        # Je to potenciální nekonzistence. Prozatím OK.
                         skupina = tx.trening.get_format_display() 
                     amt = Decimal(tx.castka or 0)
                     sum_cena += amt
@@ -295,56 +288,93 @@ class Hrac(models.Model):
             table_txt = "\n".join(lines + [f"Součty\t\t\t{sum_cena:.0f} Kč\t{sum_paid:.0f} Kč\t{running_credit:.0f} Kč"])
 
             kredit_po_uhrade = (credit_end + amount_due).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-            subject = (
-                f"Vyúčtování – {self.cele_jmeno} "
-                f"({(period_from or period_to).strftime('%d.%m.%Y %H:%M') if period_from else 'začátek'} → {period_to.strftime('%d.%m.%Y %H:%M')})"
-            )
+            
+            # === ZMĚNA #1: NASTAVENÍ NOVÉHO PŘEDMĚTU E-MAILU ===
+            subject = f"Přehled tréninků a vyúčtování – {self.cele_jmeno}"
+            # === KONEC ZMĚNY #1 ===
 
+            # === ZMĚNA #2: NASTAVENÍ NOVÉHO TEXTOVÉHO TĚLA E-MAILU ===
             text_body = (
-                "Zdravím,\n\n"
-                f"zasílám vyúčtování za období"
-                f"{period_from.strftime('%d.%m.%Y %H:%M') if period_from else '—'} – {period_to.strftime('%d.%m.%Y %H:%M')}.\n\n"
-                f"Částka k zaplacení: {amount_due:.0f} Kč\n"
-                f"Aktuální kredit: {credit_end:.0f} Kč\n"
-                f"Kredit po zaplacení: {kredit_po_uhrade:.0f} Kč\n\n"
-                "Historie pohybů:\n"
+                f"Zasílám přehled tréninků a vyúčtování za období od {period_from.strftime('%d.%m.%Y') if period_from else 'začátku'} do {period_to.strftime('%d.%m.%Y')}.\n\n"
+                "Níže je přiložen podrobný rozpis všech položek.\n\n"
+                "---\n"
+                "**Souhrn financí:**\n\n"
+                f"Aktuální kredit (před vyúčtováním): {credit_start:.0f} Kč\n"
+                f"Celková cena tréninků v tomto období: {sum_cena:.0f} Kč\n\n"
+                "Pro vyrovnání kreditu a jeho navýšení na další období je třeba uhradit:\n\n"
+                f"Částka k zaplacení: **{amount_due:.0f} Kč**\n\n"
+                "Platební údaje:\n"
+                "Číslo účtu: **2102303853/2700**\n"
+                "Variabilní symbol: **Jméno hráče**\n\n" # <-- UPRAVENO ZDE
+                f"Po připsání platby bude stav kreditu: {kredit_po_uhrade:.0f} Kč\n"
+                "---\n\n"
+                "Detailní rozpis tréninků:\n\n"
                 f"{table_txt}\n\n"
-                "S pozdravem\nKateřina Peterková"
+                "Děkuji.\n\n"
+                "S pozdravem,\n\n"
+                "Kateřina Peterková\n"
+                "Tenis Čimice"
             )
+            # === KONEC ZMĚNY #2 ===
 
+            # === ZMĚNA #3: NASTAVENÍ NOVÉHO HTML TĚLA E-MAILU ===
             html_body = f"""
-            <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-height:1.5;">
-              <p>Zdravím,</p>
-              <p>zasílám vyúčtování za období
-                 <strong>{period_from.strftime('%d.%m.%Y %H:%M') if period_from else '—'}</strong>
-                 – <strong>{period_to.strftime('%d.%m.%Y %H:%M')}</strong>.
+            <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;">
+              <p>Zasílám přehled tréninků a vyúčtování za období od 
+                 <strong>{period_from.strftime('%d.%m.%Y') if period_from else 'začátku'}</strong>
+                 do <strong>{period_to.strftime('%d.%m.%Y')}</strong>.
               </p>
-
-              <div style="margin:12px 0 16px;">
-                <div><strong>Částka k zaplacení:</strong> {amount_due:.0f} Kč</div>
-                <br>
-                <div>Aktuální kredit: {credit_end:.0f} Kč</div>
-                <div>Kredit po zaplacení: {kredit_po_uhrade:.0f} Kč</div>
+              <p>Níže je přiložen podrobný rozpis všech položek.</p>
+              
+              <hr style="border:none; border-top:1px solid #e5e7eb; margin: 20px 0;">
+              
+              <h3 style="margin-top: 20px; margin-bottom: 10px;">Souhrn financí:</h3>
+              <div style="font-size: 1.05em; line-height: 1.7;">
+                Aktuální kredit (před vyúčtováním): <strong>{credit_start:.0f} Kč</strong><br>
+                Celková cena tréninků v tomto období: <strong>{sum_cena:.0f} Kč</strong>
               </div>
 
-              <h3 style="margin:16px 0 6px;">Historie tréninků a plateb</h3>
-              <table cellpadding="6" cellspacing="0" style="border-collapse:collapse;border:1px solid #e5e7eb;width:100%;">
+              <div style="margin: 20px 0;">
+                Pro vyrovnání kreditu a jeho navýšení na další období je třeba uhradit:
+              </div>
+              
+              <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                <div style="font-size: 1.1em; margin-bottom: 12px;">
+                  Částka k zaplacení: <strong style="font-size: 1.3em; color: #111827;">{amount_due:.0f} Kč</strong>
+                </div>
+                <div style="line-height: 1.7;">
+                  Platební údaje:<br>
+                  Číslo účtu: <strong>2102303853/2700</strong><br>
+                  Variabilní symbol: <strong>Jméno hráče</strong> 
+                </div>
+              </div>
+              
+              <div style="margin-bottom: 20px;">
+                Po připsání platby bude stav kreditu: <strong>{kredit_po_uhrade:.0f} Kč</strong>
+              </div>
+
+              <hr style="border:none; border-top:1px solid #e5e7eb; margin: 20px 0;">
+
+              <h3 style="margin:16px 0 6px;">Detailní rozpis tréninků:</h3>
+              <table cellpadding="6" cellspacing="0" style="border-collapse:collapse;border:1px solid #e5e7eb;width:100%;font-size:0.9em;">
                 <thead style="background:#f9fafb;">
                   <tr>
-                    <th align="left">Datum</th>
-                    <th align="left">Čas</th>
-                    <th align="left">Skupina</th>
-                    <th align="right">Cena</th>
-                    <th align="right">Zaplaceno</th>
-                    <th align="right">Kredit</th>
+                    <th align="left" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Datum</th>
+                    <th align="left" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Čas</th>
+                    <th align="left" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Skupina</th>
+                    <th align="right" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Cena</th>
+                    <th align="right" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Zaplaceno</th>
+                    <th align="right" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Kredit</th>
                   </tr>
                 </thead>
                 <tbody>{rows_html}</tbody>
               </table>
 
-              <p style="margin-top:16px;">S pozdravem,<br><br>Kateřina Peterková</p>
+              <p style="margin-top:20px;">Děkuji.</p>
+              <p style="margin-top:16px;">S pozdravem,<br><br>Kateřina Peterková<br>Tenis Čimice</p>
             </div>
             """
+            # === KONEC ZMĚNY #3 ===
 
             # Následující dva řádky jsou zbytečné – logger se definuje na začátku souboru
             # import logging
