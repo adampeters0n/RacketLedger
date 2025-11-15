@@ -44,7 +44,7 @@ class HracAdmin(admin.ModelAdmin):
 
     change_form_template = "admin/core/hrac/change_form.html"
     change_list_template = "admin/core/hrac/change_list.html"
-   
+    
     list_per_page = 10_000
     list_max_show_all = 10_000
     
@@ -115,6 +115,7 @@ class HracAdmin(admin.ModelAdmin):
         )
         return TemplateResponse(request, "admin/core/hrac/info_form.html", ctx)
 
+    # === ZMĚNA: UPRAVENÁ METODA PRO INDIVIDUÁLNÍ VYÚČTOVÁNÍ ===
     def vyuctovat_view(self, request, object_id, *args, **kwargs):
         """POST endpoint pro tlačítko 'Vygenerovat vyúčtování teď'."""
         hrac = self.get_object(request, object_id)
@@ -151,14 +152,19 @@ class HracAdmin(admin.ModelAdmin):
         vfrom = _parse_date(request.POST.get("_vyuct_from"), end=False)
         vto = _parse_date(request.POST.get("_vyuct_to"), end=True)
 
+        # === ZMĚNA: PŘEČTEME VARIANTU E-MAILU ===
+        email_variant = request.POST.get("_email_variant", "1")
+        # === KONEC ZMĚNY ===
+
         logger.info(
-            ">>> HRAC_VYUCTOVAT: start hrac_id=%s jmeno=%s email=%s override_amount=%s vfrom=%s vto=%s",
-            hrac.pk, hrac.jmeno, hrac.email, override_amount, vfrom, vto
+            ">>> HRAC_VYUCTOVAT: start hrac_id=%s jmeno=%s email=%s override_amount=%s vfrom=%s vto=%s variant=%s",
+            hrac.pk, hrac.jmeno, hrac.email, override_amount, vfrom, vto, email_variant
         )
 
         vyuct = hrac.vygeneruj_vyuctovani(
             duvod="manual",
             send_email=True,
+            email_variant=email_variant, # <-- PŘEDÁME VARIANTU
             override_amount_due=override_amount,
             override_period_from=vfrom,
             override_period_to=vto,
@@ -176,6 +182,7 @@ class HracAdmin(admin.ModelAdmin):
             level=messages.SUCCESS,
         )
         return redirect("admin:core_hrac_change", object_id)
+    # === KONEC UPRAVENÉ METODY ===
 
     # === ZMĚNA #2: PROPOJENÍ SLOUPCE S NOVOU HODNOTOU PRO ŘAZENÍ ===
     def kredit_display(self, obj):
@@ -194,6 +201,7 @@ class HracAdmin(admin.ModelAdmin):
         return format_html('<a href="{}">{}</a>', url, nazev)
     rodina_link.short_description = "Rodina"
 
+    # === ZMĚNA: UPRAVENÁ METODA PRO HROMADNOU AKCI ===
     # Admin akce: vygenerovat vyúčtování pro vybrané hráče
     def akce_vygenerovat_vyuctovani(self, request, queryset):
         
@@ -223,6 +231,10 @@ class HracAdmin(admin.ModelAdmin):
                     override_amount = None
             except (InvalidOperation, ValueError):
                 override_amount = None
+        
+        # === ZMĚNA: PŘEČTEME VARIANTU E-MAILU ===
+        email_variant = request.POST.get("_bulk_email_variant", "1")
+        # === KONEC ZMĚNY ===
         # --- KONEC NOVÉHO KÓDU ---
 
         count = 0
@@ -230,7 +242,7 @@ class HracAdmin(admin.ModelAdmin):
             vyuct = hrac.vygeneruj_vyuctovani(
                 duvod="manual",
                 send_email=True,
-                # --- ZMĚNA: Použijeme nové hodnoty ---
+                email_variant=email_variant, # <-- PŘEDÁME VARIANTU
                 override_amount_due=override_amount,
                 override_period_from=vfrom,
                 override_period_to=vto,
@@ -242,6 +254,7 @@ class HracAdmin(admin.ModelAdmin):
             count += 1
         self.message_user(request, f"Vyúčtování vytvořeno pro {count} hráčů.", level=messages.SUCCESS)
     akce_vygenerovat_vyuctovani.short_description = "Vygenerovat vyúčtování (poslat e-mail)"
+    # === KONEC UPRAVENÉ METODY ===
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         hrac = Hrac.objects.get(pk=object_id)

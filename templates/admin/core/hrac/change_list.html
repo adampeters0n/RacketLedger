@@ -51,7 +51,8 @@
     text-align: right;
     padding-right: 10px;
   }
-  .modal-fields input {
+  .modal-fields input,
+  .modal-fields select {
     padding: 8px 10px;
     border: 1px solid #ccc;
     border-radius: 6px;
@@ -150,8 +151,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var modalFromInput = document.getElementById('id_modal_vyuct_from');
     var modalToInput = document.getElementById('id_modal_vyuct_to');
     var modalAmountInput = document.getElementById('id_modal_castka_k_uhrazeni');
+    var modalVariantSelect = document.getElementById('id_modal_email_variant'); // <-- NOVÉ POLE
 
-    if (!modal || !modalConfirmBtn || !modalCancelBtn || !modalFromInput) return;
+    if (!modal || !modalConfirmBtn || !modalCancelBtn || !modalFromInput || !modalVariantSelect) return;
 
     // 1. Hlavní posluchač: Odchytí odeslání formuláře (kliknutí na "Provést")
     changelistForm.addEventListener('submit', function(e) {
@@ -169,7 +171,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // ZOBRAZÍME MODÁLNÍ OKNO
         modal.style.display = 'block';
       }
-      // Pokud je vybrána jiná akce, formulář se normálně odešle
     });
 
     // 2. Tlačítko "Zrušit" v modálním okně
@@ -183,6 +184,7 @@ document.addEventListener('DOMContentLoaded', function() {
       var fromVal = modalFromInput.value;
       var toVal = modalToInput.value;
       var amountVal = modalAmountInput.value;
+      var variantVal = modalVariantSelect.value; // <-- ČTEME NOVOU HODNOTU
 
       // Vytvoříme skrytá pole a přidáme je do HLAVNÍHO formuláře
       var fromHidden = document.createElement('input');
@@ -203,6 +205,12 @@ document.addEventListener('DOMContentLoaded', function() {
       amountHidden.value = amountVal;
       changelistForm.appendChild(amountHidden);
       
+      var variantHidden = document.createElement('input'); // <-- PŘIDÁME DALŠÍ SKRYTÉ POLE
+      variantHidden.type = 'hidden';
+      variantHidden.name = '_bulk_email_variant';
+      variantHidden.value = variantVal;
+      changelistForm.appendChild(variantHidden);
+      
       // Skryjeme modál a TEĎ TEPRVE ODEŠLEME HLAVNÍ FORMULÁŘ
       modal.style.display = 'none';
       changelistForm.submit();
@@ -215,7 +223,16 @@ document.addEventListener('DOMContentLoaded', function() {
 {% endblock %}
 
 
-{# Tento blok přidá tlačítko "Rodiny" vpravo nahoře #}
+{# Tento blok je teď PRÁZDNÝ, protože nechceme formulář nad tabulkou #}
+{% block object-tools %}
+{{ block.super }}
+{% endblock %}
+
+
+{# 
+  Tento blok přidá tlačítko "Rodiny"
+  MEZI standardní nástroje (vedle "Hráč: Přidat")
+#}
 {% block object-tools-items %}
   {{ block.super }}
   <li><a href="{% url 'admin:core_rodina_changelist' %}" class="viewsitelink">Rodiny</a></li>
@@ -235,18 +252,24 @@ document.addEventListener('DOMContentLoaded', function() {
       
       <div class="modal-fields">
         <label for="id_modal_vyuct_from">Období od:</label>
-        <input type="date" name="_bulk_vyuct_from" id="id_modal_vyuct_from">
+        <input type="date" name="_modal_vyuct_from" id="id_modal_vyuct_from">
         
         <label for="id_modal_vyuct_to">Období do:</label>
-        <input type="date" name="_bulk_vyuct_to" id="id_modal_vyuct_to">
+        <input type="date" name="_modal_vyuct_to" id="id_modal_vyuct_to">
         
         <label for="id_modal_castka_k_uhrazeni">Částka k úhradě:</label>
-        <input type="number" name="_bulk_castka_k_uhrazeni" id="id_modal_castka_k_uhrazeni"
+        <input type="number" name="_modal_castka_k_uhrazeni" id="id_modal_castka_k_uhrazeni"
                step="1" min="0" placeholder="např. 5000">
         
         <div></div> 
         <span style="font-size: 12px; color: #666;">(nechte prázdné pro výpočet)</span>
-      </div>
+
+        <label for="id_modal_email_variant">Varianta e-mailu:</label>
+        <select name="_modal_email_variant" id="id_modal_email_variant">
+            <option value="1" selected>Účet 1 AJ Sport</option>
+            <option value="2">Účet 2 Káťa</option>
+        </select>
+        </div>
 
       <div class="modal-actions">
         <button type="button" id="modal-cancel-button" class="button secondary">Zrušit</button>

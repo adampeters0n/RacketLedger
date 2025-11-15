@@ -120,15 +120,13 @@ class Hrac(models.Model):
         self,
         duvod: str = "manual",
         send_email: bool = False,
+        email_variant: str = "1",  # <-- NOVÝ PARAMETR
         override_amount_due: Decimal | None = None,
         override_period_from=None,   # date/datetime/None
         override_period_to=None,     # date/datetime/None
     ):
         """
         Uzávěrka za období.
-        - Pokud je zadáno override_period_from/override_period_to, použije se zadané období
-          a NEposouvá se kurzor poslední uzávěrky.
-        - Jinak se vezme [posledni_vyuctovani_at .. teď] a kurzor se posune.
         """
         def _normalize_dt(x, is_end=False):
             """date -> datetime (min/max), zajištění timezone-aware pokud USE_TZ."""
@@ -208,7 +206,7 @@ class Hrac(models.Model):
             if period_from:
                 before_charges = (
                     self.transakce
-                    .filter(typ=Transakce.Typ.NAUCTOVANO, vytvoreno__lt=period_from) # Opraveno: Musí filtrovat podle 'vytvoreno' ne 'trening__datum' u NAUCTOVANO
+                    .filter(typ=Transakce.Typ.NAUCTOVANO, vytvoreno__lt=period_from) 
                     .aggregate(s=Sum("castka"))["s"] or 0
                 )
                 before_pays = (
@@ -289,23 +287,29 @@ class Hrac(models.Model):
 
             kredit_po_uhrade = (credit_end + amount_due).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
             
-            # === ZMĚNA #1: NASTAVENÍ NOVÉHO PŘEDMĚTU E-MAILU ===
             subject = f"Přehled tréninků a vyúčtování – {self.cele_jmeno}"
-            # === KONEC ZMĚNY #1 ===
+            
+            # === ZMĚNA: VÝBĚR ČÍSLA ÚČTU PODLE VARIANTY ===
+            if email_variant == "2":
+                cislo_uctu_text = "2108539314/2700"
+                cislo_uctu_html = "<strong>2108539314/2700</strong>"
+            else:
+                cislo_uctu_text = "2102303853/2700"
+                cislo_uctu_html = "<strong>2102303853/2700</strong>"
+            # === KONEC ZMĚNY ===
 
-            # === ZMĚNA #2: NASTAVENÍ NOVÉHO TEXTOVÉHO TĚLA E-MAILU ===
             text_body = (
                 f"Zasílám přehled tréninků a vyúčtování za období od {period_from.strftime('%d.%m.%Y') if period_from else 'začátku'} do {period_to.strftime('%d.%m.%Y')}.\n\n"
                 "Níže je přiložen podrobný rozpis všech položek.\n\n"
                 "---\n"
-                "**Souhrn financí:**\n\n"
+                "**Přehled kreditu:**\n\n"
                 f"Aktuální kredit (před platbou): {credit_end:.0f} Kč\n"
                 f"Celková cena tréninků v tomto období: {sum_cena:.0f} Kč\n\n"
                 "Pro vyrovnání kreditu a jeho navýšení na další období je třeba uhradit:\n\n"
                 f"Částka k zaplacení: **{amount_due:.0f} Kč**\n\n"
                 "Platební údaje:\n"
-                "Číslo účtu: **2102303853/2700**\n"
-                "Variabilní symbol: **Jméno hráče**\n\n" # <-- UPRAVENO ZDE
+                f"Číslo účtu: **{cislo_uctu_text}**\n" # <-- POUŽITÍ PROMĚNNÉ
+                "Variabilní symbol: **Jméno hráče**\n\n"
                 f"Po připsání platby bude stav kreditu: {kredit_po_uhrade:.0f} Kč\n"
                 "---\n\n"
                 "Detailní rozpis tréninků:\n\n"
@@ -315,9 +319,7 @@ class Hrac(models.Model):
                 "Kateřina Peterková\n"
                 "Tenis Čimice"
             )
-            # === KONEC ZMĚNY #2 ===
 
-            # === ZMĚNA #3: NASTAVENÍ NOVÉHO HTML TĚLA E-MAILU ===
             html_body = f"""
             <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;">
               <p>Zasílám přehled tréninků a vyúčtování za období od 
@@ -328,7 +330,7 @@ class Hrac(models.Model):
               
               <hr style="border:none; border-top:1px solid #e5e7eb; margin: 20px 0;">
               
-              <h3 style="margin-top: 20px; margin-bottom: 10px;">Souhrn financí:</h3>
+              <h3 style="margin-top: 20px; margin-bottom: 10px;">Přehled kreditu:</h3>
               <div style="font-size: 1.05em; line-height: 1.7;">
                 Aktuální kredit (před platbou): <strong>{credit_end:.0f} Kč</strong><br>
                 Celková cena tréninků v tomto období: <strong>{sum_cena:.0f} Kč</strong>
@@ -344,8 +346,7 @@ class Hrac(models.Model):
                 </div>
                 <div style="line-height: 1.7;">
                   Platební údaje:<br>
-                  Číslo účtu: <strong>2102303853/2700</strong><br>
-                  Variabilní symbol: <strong>Jméno hráče</strong> 
+                  Číslo účtu: {cislo_uctu_html}<br> Variabilní symbol: <strong>Jméno hráče</strong> 
                 </div>
               </div>
               
@@ -374,16 +375,11 @@ class Hrac(models.Model):
               <p style="margin-top:16px;">S pozdravem,<br><br>Kateřina Peterková<br>Tenis Čimice</p>
             </div>
             """
-            # === KONEC ZMĚNY #3 ===
-
-            # Následující dva řádky jsou zbytečné – logger se definuje na začátku souboru
-            # import logging
-            # logger = logging.getLogger(__name__)
 
             ok_send, ok_archive = send_and_append_to_sent(
                 subject=subject,
-                body=text_body,        # textová verze (fallback)
-                html_body=html_body,   # HTML verze
+                body=text_body,
+                html_body=html_body,
                 to=self.email,
             )
 
