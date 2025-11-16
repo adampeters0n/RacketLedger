@@ -1,6 +1,8 @@
+# core/admin.py
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from datetime import datetime, time, timedelta
 import logging
+import json
 
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
@@ -33,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 
 # -----------------------------
-#  Hráči
+#  Hráči (beze změny)
 # -----------------------------
 @admin.register(Hrac)
 class HracAdmin(admin.ModelAdmin):
@@ -190,7 +192,7 @@ class HracAdmin(admin.ModelAdmin):
         return f"{obj.kredit:.0f} Kč"
     kredit_display.short_description = "Kredit"
     # Pro řazení ale použijeme náš nový výpočet
-    kredit_display.admin_order_field = "_kredit_sort" 
+    kredit_display.admin_order_field = "_kredit_sort"  
     # === KONEC ZMĚNY #2 ===
 
     def rodina_link(self, obj):
@@ -405,7 +407,7 @@ class HracAdmin(admin.ModelAdmin):
 
 
 # -----------------------------
-#  Rodina
+#  Rodina (beze změny)
 # -----------------------------
 @admin.register(Rodina)
 class RodinaAdmin(admin.ModelAdmin):
@@ -708,7 +710,7 @@ class RodinaAdmin(admin.ModelAdmin):
 
 
 # -----------------------------
-#  Ceník
+#  Ceník (beze změny)
 # -----------------------------
 @admin.register(Cenik)
 class CenikAdmin(admin.ModelAdmin):
@@ -719,7 +721,7 @@ class CenikAdmin(admin.ModelAdmin):
 
 
 # -----------------------------
-#  DOCHÁZKA – inline u tréninku (bez sloupce „Přišel“)
+#  DOCHÁZKA – inline (beze změny)
 # -----------------------------
 class DochazkaInlineForm(forms.ModelForm):
     class Meta:
@@ -802,7 +804,7 @@ class DochazkaInline(admin.TabularInline):
 
 
 # -----------------------------
-#  TRÉNINK
+#  TRÉNINK (beze změny)
 # -----------------------------
 class TimeDatalistTextInput(forms.TextInput):
     input_type = "text"
@@ -1260,7 +1262,7 @@ class TreningAdmin(admin.ModelAdmin):
 
 
 # -----------------------------
-#  PLATBY HRÁČŮ (Transakce) – jen platby/vratky v přehledu
+#  PLATBY HRÁČŮ (beze změny)
 # -----------------------------
 class OnlyPaymentsFilter(admin.SimpleListFilter):
     title = "Typ"
@@ -1349,7 +1351,7 @@ class TransakceAdmin(admin.ModelAdmin):
 
 
 # -----------------------------
-#  TRENÉR – VÝCHOZÍ SAZBA
+#  Ostatní modely (beze změny)
 # -----------------------------
 @admin.register(TrenerProfil)
 class TrenerProfilAdmin(admin.ModelAdmin):
@@ -1361,9 +1363,6 @@ class TrenerProfilAdmin(admin.ModelAdmin):
     uzivatel.short_description = "Trenér"
 
 
-# -----------------------------
-#  TRENÉR – SAZBY (OBDOBÍ)
-# -----------------------------
 @admin.register(TrenerSazba)
 class TrenerSazbaAdmin(admin.ModelAdmin):
     list_display = ("uzivatel", "platnost_od", "platnost_do", "sazba_za_hodinu")
@@ -1376,9 +1375,6 @@ class TrenerSazbaAdmin(admin.ModelAdmin):
     uzivatel.short_description = "Trenér"
 
 
-# -----------------------------
-#  TRENÉR – VÝPLATY
-# -----------------------------
 @admin.register(TrenerPlatba)
 class TrenerPlatbaAdmin(admin.ModelAdmin):
     list_display = ("vytvoreno", "uzivatel", "castka", "poznamka")
@@ -1406,9 +1402,6 @@ class TrenerPlatbaAdmin(admin.ModelAdmin):
         return initial
 
 
-# -----------------------------
-#  VYÚČTOVÁNÍ
-# -----------------------------
 @admin.register(Vyuctovani)
 class VyuctovaniAdmin(admin.ModelAdmin):
     
@@ -1602,25 +1595,183 @@ def core_app_dashboard_view(request):
     return TemplateResponse(request, "admin/core/app_dashboard.html", ctx)
 
 
-def admin_dashboard_view(request):
+# ✅ PATCH: KOMPLETNĚ PŘEPRACOVANÁ FUNKCE PRO ANALYTIKU
+def admin_analytika_view(request):
+    """Samostatná stránka pro KPI statistiky, 6M grafy a detailní tabulky."""
     today = dj_tz.localdate()
-    m_from, m_to = _month_range(today)
+    
+    # --- 1. Výpočty pro KPI boxy (aktuální měsíc) ---
+    m_from_current, m_to_current = _month_range(today)
+    
+    tqs_current = Trening.objects.filter(datum__date__gte=m_from_current, datum__date__lte=m_to_current)
+    total_min_current = tqs_current.aggregate(s=Sum("delka_minut"))["s"] or 0
+    hours_current = (Decimal(total_min_current) / Decimal(60)).quantize(Decimal("0.01"))
 
-    tqs = Trening.objects.filter(datum__date__gte=m_from, datum__date__lte=m_to)
-    total_min = tqs.aggregate(s=Sum("delka_minut"))["s"] or 0
-    hours = (Decimal(total_min) / Decimal(60)).quantize(Decimal("0.01"))
-
-    nac = Transakce.objects.filter(
-        vytvoreno__date__gte=m_from, vytvoreno__date__lte=m_to,
+    nac_current = Transakce.objects.filter(
+        vytvoreno__date__gte=m_from_current, vytvoreno__date__lte=m_to_current,
         typ=Transakce.Typ.NAUCTOVANO,
     ).aggregate(s=Sum("castka"))["s"] or Decimal("0")
 
-    pays = Transakce.objects.filter(
-        vytvoreno__date__gte=m_from, vytvoreno__date__lte=m_to,
+    pays_current = Transakce.objects.filter(
+        vytvoreno__date__gte=m_from_current, vytvoreno__date__lte=m_to_current,
         typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA],
     ).aggregate(s=Sum("castka"))["s"] or Decimal("0")
 
-    trener_due_total = Decimal("0.00")
+    trener_due_total_current = Decimal("0.00")
+    trener_ids_current = list(tqs_current.values_list("trener_id", flat=True).distinct())
+    for uid in trener_ids_current:
+        u = User.objects.get(pk=uid)
+        my_tr = tqs_current.filter(trener_id=uid)
+        due = Decimal("0.00")
+        for tr in my_tr:
+            rate = sazba_trenera_k_datu(u, tr.datum)
+            h = (Decimal(tr.delka_minut) / Decimal(60))
+            due += (h * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        paid = Decimal(
+            TrenerPlatba.objects.filter(
+                user=u,
+                vytvoreno__date__gte=m_from_current, vytvoreno__date__lte=m_to_current
+            ).aggregate(s=Sum("castka"))["s"] or 0
+        )
+        balance = (due - paid).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        trener_due_total_current += balance
+
+    # --- 2. Výpočty pro celkové statistiky (dluhy/přebytky) ---
+    hraci_s_kreditem = Hrac.objects.annotate(
+        _kredit_calculated=Sum(
+            Case(
+                When(transakce__typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA], then=F("transakce__castka")),
+                When(transakce__typ=Transakce.Typ.NAUCTOVANO, then=-F("transakce__castka")),
+                default=Value(0),
+                output_field=DecimalField(max_digits=12, decimal_places=2),
+            )
+        )
+    ).filter(_kredit_calculated__isnull=False)
+
+    agregace_kreditu = hraci_s_kreditem.aggregate(
+        celkem=Sum('_kredit_calculated'),
+        dluhy=Sum('_kredit_calculated', filter=Q(_kredit_calculated__lt=Decimal(0))),
+        prebytky=Sum('_kredit_calculated', filter=Q(_kredit_calculated__gt=Decimal(0)))
+    )
+    
+    total_balance = agregace_kreditu.get('celkem') or Decimal(0)
+    total_debt = agregace_kreditu.get('dluhy') or Decimal(0)
+    total_surplus = agregace_kreditu.get('prebytky') or Decimal(0)
+
+    # --- 3. Výpočty pro detailní tabulky (Dlužníci a Trenéři) ---
+    trener_rows = []
+    for uid in trener_ids_current:
+        u = User.objects.get(pk=uid)
+        # Znovu vypočítáme balance...
+        my_tr = tqs_current.filter(trener_id=uid)
+        due = Decimal("0.00")
+        for tr in my_tr:
+            rate = sazba_trenera_k_datu(u, tr.datum)
+            h = (Decimal(tr.delka_minut) / Decimal(60))
+            due += (h * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        paid = Decimal(
+            TrenerPlatba.objects.filter(
+                user=u,
+                vytvoreno__date__gte=m_from_current, vytvoreno__date__lte=m_to_current
+            ).aggregate(s=Sum("castka"))["s"] or 0
+        )
+        balance = (due - paid).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        trener_rows.append({
+            "name": u.get_full_name() or u.username,
+            "balance": f"{balance:.0f} Kč",
+            "url": reverse("admin:core_treneri_detail", args=[u.id]),
+        })
+    trener_rows.sort(key=lambda r: int(r["balance"].split()[0]), reverse=True)
+
+    debtors_qs = hraci_s_kreditem.filter(_kredit_calculated__lt=0).order_by("_kredit_calculated")
+    debtors = [{
+        "name": h.jmeno,
+        "kredit": f"{(h._kredit_calculated or 0):.0f} Kč",
+        "url": reverse("admin:core_hrac_change", args=[h.id]),
+    } for h in debtors_qs]
+
+    
+    # --- 4. NOVÁ LOGIKA PRO 6M GRAF ---
+    monthly_chart_data = []
+    czech_months = {
+        1: 'Led', 2: 'Úno', 3: 'Bře', 4: 'Dub', 5: 'Kvě', 6: 'Čer',
+        7: 'Čvc', 8: 'Srp', 9: 'Zář', 10: 'Říj', 11: 'Lis', 12: 'Pro'
+    }
+    current_month_start = today.replace(day=1)
+
+    for i in range(6): # 6 měsíců zpětně
+        month_start = current_month_start
+        if i > 0:
+            month_start = (month_start - timedelta(days=1)).replace(day=1)
+        
+        if month_start.month == 12:
+            month_end = month_start.replace(year=month_start.year + 1, month=1, day=1) - timedelta(days=1)
+        else:
+            month_end = month_start.replace(month=month_start.month + 1, day=1) - timedelta(days=1)
+
+        label = f"{czech_months[month_start.month]} '{month_start.strftime('%y')}"
+
+        # Hodiny (z tréninků)
+        month_trainings = Trening.objects.filter(datum__date__gte=month_start, datum__date__lte=month_end)
+        month_total_min = month_trainings.aggregate(s=Sum("delka_minut"))["s"] or 0
+        month_hours = (Decimal(month_total_min) / Decimal(60)).quantize(Decimal("0.01"))
+
+        # Naúčtováno (z transakcí)
+        month_charged = Transakce.objects.filter(
+            vytvoreno__date__gte=month_start, vytvoreno__date__lte=month_end,
+            typ=Transakce.Typ.NAUCTOVANO,
+        ).aggregate(s=Sum("castka"))["s"] or Decimal("0")
+
+        # Platby (z transakcí)
+        month_paid = Transakce.objects.filter(
+            vytvoreno__date__gte=month_start, vytvoreno__date__lte=month_end,
+            typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA],
+        ).aggregate(s=Sum("castka"))["s"] or Decimal("0")
+
+        monthly_chart_data.append({
+            "label": label,
+            "hours": float(month_hours),
+            "charged": float(month_charged),
+            "paid": float(month_paid),
+        })
+
+    monthly_chart_data.reverse() # Seřadíme od nejstaršího po nejnovější
+    # --- KONEC NOVÉ LOGIKY PRO GRAF ---
+
+    # --- 5. Finální kontext pro šablonu ---
+    ctx = dict(
+        admin.site.each_context(request),
+        title="Analytika",
+        kpis={
+            "hours": f"{hours_current:.2f} h",
+            "nauctovano": f"{Decimal(nac_current):.0f} Kč",
+            "platby": f"{Decimal(pays_current):.0f} Kč",
+            "k_vyplaceni": f"{trener_due_total_current:.0f} Kč",
+            "total_debt": f"{total_debt:.0f} Kč",
+            "total_surplus": f"{total_surplus:.0f} Kč",
+            "total_balance": f"{total_balance:.0f} Kč",
+        },
+        treneri=trener_rows,
+        debtors=debtors,
+        
+        # Předání dat pro 6M graf do šablony
+        monthly_chart_data=json.dumps(monthly_chart_data)
+    )
+    return TemplateResponse(request, "admin/analytika.html", ctx)
+
+
+# ✅ PATCH: UPRAVENÁ FUNKCE PRO PŮVODNÍ DASHBOARD /admin/
+def admin_dashboard_view(request):
+    """Hlavní dashboard - nyní zobrazuje POUZE seznamy (poslední platby, dlužníci atd.)."""
+    
+    # --- Většina logiky pro KPI byla odstraněna ---
+    
+    # 1. Logika pro "K vyplacení trenérům" (TOP 5)
+    # Musíme ji zde nechat, protože ji seznam používá
+    today = dj_tz.localdate()
+    m_from, m_to = _month_range(today)
+    tqs = Trening.objects.filter(datum__date__gte=m_from, datum__date__lte=m_to)
+
     trener_rows = []
     trener_ids = list(tqs.values_list("trener_id", flat=True).distinct())
     for uid in trener_ids:
@@ -1639,19 +1790,18 @@ def admin_dashboard_view(request):
             ).aggregate(s=Sum("castka"))["s"] or 0
         )
         balance = (due - paid).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        trener_due_total += balance
 
         trener_rows.append({
             "name": u.get_full_name() or u.username,
             "balance": f"{balance:.0f} Kč",
             "url": reverse("admin:core_treneri_detail", args=[u.id]),
         })
-
     trener_rows.sort(key=lambda r: int(r["balance"].split()[0]), reverse=True)
-    trener_rows = trener_rows[:5]
+    trener_rows = trener_rows[:5] # <-- Zde zůstává TOP 5
 
-    # === ZMĚNA #4: PŘEJMENOVÁNÍ ANOTACE V HLAVNÍM DASHBOARD ===
-    # Přejmenovali jsme `kredit` na `_kredit_calculated`
+
+    # 2. Logika pro "Top dlužníci"
+    # Musíme ji zde nechat, protože ji seznam používá
     hraci_s_kreditem = Hrac.objects.annotate(
         _kredit_calculated=Sum(
             Case(
@@ -1661,28 +1811,17 @@ def admin_dashboard_view(request):
                 output_field=DecimalField(max_digits=12, decimal_places=2),
             )
         )
-    ).filter(_kredit_calculated__isnull=False) # Zajistíme, že máme jen hráče s transakcemi
+    ).filter(_kredit_calculated__isnull=False)
 
-    # Agregujeme celkové stavy
-    agregace_kreditu = hraci_s_kreditem.aggregate(
-        celkem=Sum('_kredit_calculated'),
-        dluhy=Sum('_kredit_calculated', filter=Q(_kredit_calculated__lt=Decimal(0))),
-        prebytky=Sum('_kredit_calculated', filter=Q(_kredit_calculated__gt=Decimal(0)))
-    )
-    
-    total_balance = agregace_kreditu.get('celkem') or Decimal(0)
-    total_debt = agregace_kreditu.get('dluhy') or Decimal(0)
-    total_surplus = agregace_kreditu.get('prebytky') or Decimal(0)
-
-    # Použijeme přejmenovanou hodnotu `_kredit_calculated`
-    debtors_qs = hraci_s_kreditem.filter(_kredit_calculated__lt=0).order_by("_kredit_calculated")
+    # ✅ PATCH: Omezení na TOP 8 dlužníků (původně chybělo omezení)
+    debtors_qs = hraci_s_kreditem.filter(_kredit_calculated__lt=0).order_by("_kredit_calculated")[:8]
     debtors = [{
         "name": h.jmeno,
-        "kredit": f"{(h._kredit_calculated or 0):.0f} Kč", # Používáme _kredit_calculated
+        "kredit": f"{(h._kredit_calculated or 0):.0f} Kč",
         "url": reverse("admin:core_hrac_change", args=[h.id]),
     } for h in debtors_qs]
-    # === KONEC ZMĚNY #4 ===
 
+    # 3. Logika pro "Poslední platby"
     posledni_platby = [
         {
             "when": (dj_tz.localtime(p.vytvoreno) if dj_tz.is_aware(p.vytvoreno) else p.vytvoreno).strftime("%d.%m.%Y %H:%M"),
@@ -1690,9 +1829,10 @@ def admin_dashboard_view(request):
             "castka": f"{Decimal(p.castka):.0f} Kč",
             "url": reverse("admin:core_transakce_change", args=[p.id]),
         }
-        for p in Transakce.objects.filter(typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA]).order_by("-vytvoreno")[:5]
+        for p in Transakce.objects.filter(typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA]).select_related("hrac").order_by("-vytvoreno")[:5]
     ]
 
+    # 4. Logika pro "Poslední tréninky"
     posledni_treninky = []
     for t in Trening.objects.select_related("trener").order_by("-datum")[:5]:
         dt = dj_tz.localtime(t.datum) if dj_tz.is_aware(t.datum) else t.datum
@@ -1703,20 +1843,11 @@ def admin_dashboard_view(request):
             "url": reverse("admin:core_trening_change", args=[t.id]),
         })
 
+    # 5. Kontext pro šablonu (už bez 'kpis')
     ctx = dict(
         admin.site.each_context(request),
         title="Přehled",
-        kpis={
-            "hours": f"{hours:.2f} h",
-            "nauctovano": f"{Decimal(nac):.0f} Kč",
-            "platby": f"{Decimal(pays):.0f} Kč",
-            "k_vyplaceni": f"{trener_due_total:.0f} Kč",
-
-            # === ZMĚNA #2: PŘIDÁNÍ NOVÝCH KPI ===
-            "total_debt": f"{total_debt:.0f} Kč",
-            "total_surplus": f"{total_surplus:.0f} Kč",
-            "total_balance": f"{total_balance:.0f} Kč",
-        },
+        # KPI DICTIONARY JE PRYČ
         quick={
             "add_training": reverse("admin:core_trening_add"),
             "add_payment": reverse("admin:core_transakce_add"),
@@ -1728,11 +1859,12 @@ def admin_dashboard_view(request):
         posledni_platby=posledni_platby,
         posledni_treninky=posledni_treninky,
     )
+    # Vykreslíme upravenou šablonu (která už neobsahuje KPI boxy)
     return TemplateResponse(request, "admin/dashboard.html", ctx)
 
 
 # -----------------------------
-#  Vlastní TOP-LEVEL admin URL pro „Trenéři“
+#  Vlastní TOP-LEVEL admin URL pro „Trenéři“ (beze změny)
 # -----------------------------
 def _treneri_urls_for_site(site):
     """Vrátí URL patterns /admin/core/treneri/... pro daný AdminSite."""
@@ -1766,6 +1898,9 @@ def _new_get_urls():
     extra = [
         path("", admin.site.admin_view(admin_dashboard_view), name="index"),
         path("core/", admin.site.admin_view(core_app_dashboard_view), name="core_app_dashboard"),
+        
+        # ✅ PATCH: PŘIDÁNÍ NOVÉ URL PRO ANALYTIKU
+        path("analytika/", admin.site.admin_view(admin_analytika_view), name="analytika"),
     ]
     try:
         extra += _treneri_urls_for_site(admin.site)

@@ -5,15 +5,14 @@
   {{ block.super }}
   <link rel="stylesheet" href="{% static 'admin/custom.css' %}">
   <style>
+    /* Styly POUZE pro dashboard (KPI boxy jsou pryč) */
     .dash-wrap { padding:16px 20px; }
-    .kpi-grid { display:grid; grid-template-columns: repeat(4, minmax(180px,1fr)); gap:14px; margin-bottom:18px; }
-    .kpi { background:#fff; border-radius:12px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
-    .kpi .label { color:#666; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
-    .kpi .value { font-size:22px; font-weight:700; margin-top:4px; }
-
     .cols { display:grid; grid-template-columns: 2fr 1fr; gap:18px; }
     .card { background:#fff; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
-    .card h3 { margin:0; padding:12px 16px; border-bottom:1px solid #eee; font-weight:600; }
+    
+    /* Nadpis karet je tmavý */
+    .card h3 { margin:0; padding:12px 16px; border-bottom:1px solid #eee; font-weight:600; color: #0b1220; }
+
     .card .inner { padding:10px 12px; }
 
     .quick { display:flex; flex-wrap:wrap; gap:8px; padding:10px 12px; }
@@ -25,7 +24,6 @@
     table.list td.num { text-align:right; white-space:nowrap; }
     .muted { color:#777; }
     @media (max-width: 1100px) {
-      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
       .cols { grid-template-columns: 1fr; }
     }
   </style>
@@ -34,44 +32,14 @@
 {% block content %}
 <div class="dash-wrap">
 
-  <div class="kpi-grid">
-    <div class="kpi">
-      <div class="label">Odehrané hodiny (měsíc)</div>
-      <div class="value">{{ kpis.hours }}</div>
-    </div>
-    <div class="kpi">
-      <div class="label">Naúčtováno (měsíc)</div>
-      <div class="value">{{ kpis.nauctovano }}</div>
-    </div>
-    <div class="kpi">
-      <div class="label">Přijaté platby (měsíc)</div>
-      <div class="value">{{ kpis.platby }}</div>
-    </div>
-    <div class="kpi">
-      <div class="label">K vyplacení trenérům (měsíc)</div>
-      <div class="value">{{ kpis.k_vyplaceni }}</div>
-    </div>
-
-    <div class="kpi" style="border-top: 3px solid #EF4444;">
-      <div class="label">CELKEM DLUŽNÉ ČÁSTKY</div>
-      <div class="value" style="color: #EF4444;">{{ kpis.total_debt }}</div>
-    </div>
-    <div class="kpi" style="border-top: 3px solid #22C55E;">
-      <div class="label">CELKEM PŘEBYTKY</div>
-      <div class="value" style="color: #22C55E;">{{ kpis.total_surplus }}</div>
-    </div>
-    <div class="kpi" style="border-top: 3px solid #6B7280;">
-      <div class="label">CELKOVÁ FIN. ROVNOVÁHA</div>
-      <div class="value" style="color: #111827;">{{ kpis.total_balance }}</div>
-    </div>
-    </div>
-
   <div class="card">
     <div class="quick">
       <a class="button default" href="{{ quick.add_training }}">+ Nový trénink</a>
       <a class="button" href="{{ quick.add_payment }}">+ Platba od hráče</a>
       <a class="button" href="{{ quick.add_player }}">+ Nový hráč</a>
       <a class="button" href="{{ quick.coaches }}">Přehled trenérů</a>
+      
+      <a class="button" href="{% url 'admin:analytika' %}">Analytika</a>
     </div>
   </div>
 
