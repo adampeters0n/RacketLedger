@@ -38,8 +38,21 @@ DEBUG = _get_bool("DEBUG", True)
 _default_hosts = ["127.0.0.1", "localhost"]
 ALLOWED_HOSTS = [h for h in os.getenv("ALLOWED_HOSTS", ",".join(_default_hosts)).split(",") if h]
 
+# ✅ PATCH: Přidání vaší vlastní domény
+# Přidáme domény, ať už jsou v env nebo ne.
+ALLOWED_HOSTS.extend([
+    "tscimice.cz",
+    "www.tscimice.cz",
+])
+
 # CSRF důvěryhodné originy (z env, čárkami oddělené; musí mít https:// prefixy)
 CSRF_TRUSTED_ORIGINS = [o for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if o]
+
+# ✅ PATCH: Přidání vlastní domény pro CSRF (nutné pro přihlášení v adminu)
+CSRF_TRUSTED_ORIGINS.extend([
+    "https://tscimice.cz",
+    "https://www.tscimice.cz",
+])
 
 # =====================================
 # APLIKACE
