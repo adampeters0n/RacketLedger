@@ -1,144 +1,224 @@
 :root{
-    /* světlejší paleta */
-    --bg-1:#ffffff;
-    --bg-2:#f6f8fc;
-  
-    --accent:#ff7a00;           /* oranžová – navazuje na admin */
-    --ball:#e7ff58;             /* tenis žlutá */
-    --glass:rgba(10,16,28,.05); /* “sklo” na světlém pozadí */
-  
-    --text:#0b1220;             /* hlavní tmavý text */
-    --muted:#56627a;            /* sekundární text */
-    --ring:rgba(255,122,0,.25); /* stín pro CTA */
-  }
+  /* světlejší paleta */
+  --bg-1:#ffffff;
+  --bg-2:#f6f8fc;
 
-  /* Logo v top baru */
+  --accent:#ff7a00;           /* oranžová – navazuje na admin */
+  --ball:#e7ff58;             /* tenis žlutá */
+  --glass:rgba(10,16,28,.05); /* “sklo” na světlém pozadí */
+
+  --text:#0b1220;             /* hlavní tmavý text */
+  --muted:#56627a;            /* sekundární text */
+  --ring:rgba(255,122,0,.25); /* stín pro CTA */
+}
+
+/* Logo v top baru */
 .brand-logo{
-    width: 40px;
-    height: 40px;
-    display: inline-block;
-    object-fit: contain;   /* nechť se nedeformuje */
-    border-radius: 999px;    /* klidně 999px pokud chceš úplně kulaté */
-    box-shadow: 0 0 0 2px #c7df2f22, 0 2px 8px rgba(2,6,23,.12);
-    vertical-align: middle;
-    margin-right: .4rem;
-  }
-  
-  
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0;
-    color:var(--text);
-    /* jemné světle-modré “mraky” + bílý přechod */
-    background:
-      radial-gradient(1000px 600px at 20% -10%, #eef3ff 0%, transparent 50%),
-      radial-gradient(800px 500px at 90% 10%, #f2f6ff 0%, transparent 60%),
-      linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
-    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-    overflow-x:hidden;
-  }
-  
-  /* pozadí canvas */
+  width: 40px;
+  height: 40px;
+  display: inline-block;
+  object-fit: contain;   /* nechť se nedeformuje */
+  border-radius: 999px;    /* klidně 999px pokud chceš úplně kulaté */
+  box-shadow: 0 0 0 2px #c7df2f22, 0 2px 8px rgba(2,6,23,.12);
+  vertical-align: middle;
+  margin-right: .4rem;
+}
+
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  color:var(--text);
+  /* jemné světle-modré “mraky” + bílý přechod */
+  background:
+    radial-gradient(1000px 600px at 20% -10%, #eef3ff 0%, transparent 50%),
+    radial-gradient(800px 500px at 90% 10%, #f2f6ff 0%, transparent 60%),
+    linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  overflow-x:hidden;
+}
+
+/* pozadí canvas */
 #bg{
-    position: fixed;
-    inset: 0;
-    z-index: 0;           /* dříve -1 → tím byl za bílým pozadím */
-    pointer-events: none; /* ať neblokuje kliky */
-  }
+  position: fixed;
+  inset: 0;
+  z-index: 0;           /* dříve -1 → tím byl za bílým pozadím */
+  pointer-events: none; /* ať neblokuje kliky */
+}
+
+/* jistota, že obsah bude nad canvasem */
+.site-top, main, .site-footer{
+  position: relative;
+  z-index: 1;
+}
+
+/*** header ***/
+.site-top{
+  position:sticky; top:0;
+  z-index: 10; /* ✅ PATCH: Zvýšeno z 1, aby byla hlavička VŽDY navrchu */
+  display:flex; gap:1rem; align-items:center; justify-content:space-between;
+  padding:16px clamp(16px, 6vw, 48px);
+  backdrop-filter:saturate(120%) blur(6px);
+  background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.75) 60%, transparent);
+  border-bottom:1px solid rgba(17,24,39,.06);
+}
+.site-top .brand{display:flex; align-items:center; gap:.6rem; color:var(--text); text-decoration:none; font-weight:700}
+.ball-logo{width:22px; height:22px; border-radius:50%;
+  background:
+    radial-gradient(circle at 30% 30%, #0001 0 20%, transparent 21% 100%),
+    radial-gradient(circle at 70% 65%, #0001 0 18%, transparent 19% 100%),
+    radial-gradient(circle at 50% 50%, var(--ball) 0 70%, #d2ea3b 71% 100%);
+  box-shadow:0 0 0 2px #c7df2f22, 0 0 24px 0 #c7df2f33;
+}
+.top-links{display:flex; gap:1rem; align-items:center; flex-wrap:wrap}
+.top-links a{color:var(--muted); text-decoration:none; font-weight:600}
+.top-links a:hover{color:var(--text)}
+
+/* ✅ PATCH: Sjednocení tlačítka s admin designem (oranžová) */
+.top-links .admin-link{
+  color:#fff;
+  background:var(--accent);
+  padding:.55rem 1rem;
+  border-radius:999px;
+  box-shadow: 0 0 0 3px var(--ring); /* Použití stínu z adminu */
+  font-weight: 700;
+}
+.top-links .admin-link:hover{filter:brightness(1.05)}
+
+/*** hero ***/
+.hero{
+  padding:clamp(36px,8vw,88px) clamp(16px, 6vw, 48px) 0;
+  position:relative;
+  width: 100%; /* Jistota pro BFC */
+}
+
+/* ✅ PATCH: Nový 2-sloupcový layout pro hero sekci */
+.hero-main {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* ✅ PATCH: Změněno z space-between */
+  gap: clamp(1rem, 4vw, 2rem); /* ✅ PATCH: Výrazně zmenšena mezera */
   
-  /* jistota, že obsah bude nad canvasem */
-  .site-top, main, .site-footer{
-    position: relative;
-    z-index: 1;
+  /* Přidáme max-width, aby na velkých monitorech nebyl text moc daleko */
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: 100px;
+}
+
+/* ✅ PATCH: Levý sloupec s textem */
+.hero-content {
+  flex: 1; /* zabere dostupný prostor */
+  min-width: 300px; /* ať se moc nesmrští */
+}
+
+/* ✅ PATCH: Pravý sloupec s velkým logem */
+.hero-logo {
+  flex: 0 1 350px; /* Pevná-flexibilní báze 350px, může se zmenšit */
+  display: block; /* Zobrazit na desktopu */
+}
+
+.hero-logo img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  /* Jemný stín, ať to "plave" */
+  filter: drop-shadow(0 20px 20px rgba(0, 20, 50, 0.1));
+  /* Mírná animace "dýchání" */
+  animation: slow-bob 5s ease-in-out infinite alternate;
+}
+
+/* ✅ PATCH: Animace pro logo */
+@keyframes slow-bob {
+  from {
+    transform: translateY(-10px) scale(1);
   }
-  
-  /*** header ***/
-  .site-top{
-    position:sticky; top:0;
-    display:flex; gap:1rem; align-items:center; justify-content:space-between;
-    padding:16px clamp(16px, 6vw, 48px);
-    backdrop-filter:saturate(120%) blur(6px);
-    background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.75) 60%, transparent);
-    border-bottom:1px solid rgba(17,24,39,.06);
+  to {
+    transform: translateY(10px) scale(1.02);
   }
-  .site-top .brand{display:flex; align-items:center; gap:.6rem; color:var(--text); text-decoration:none; font-weight:700}
-  .ball-logo{width:22px; height:22px; border-radius:50%;
-    background:
-      radial-gradient(circle at 30% 30%, #0001 0 20%, transparent 21% 100%),
-      radial-gradient(circle at 70% 65%, #0001 0 18%, transparent 19% 100%),
-      radial-gradient(circle at 50% 50%, var(--ball) 0 70%, #d2ea3b 71% 100%);
-    box-shadow:0 0 0 2px #c7df2f22, 0 0 24px 0 #c7df2f35;
+}
+
+
+.chip{
+  width:max-content; padding:.45rem .7rem; border-radius:999px;
+  background:var(--glass); border:1px solid rgba(17,24,39,.10);
+  color:var(--muted); font-weight:600; letter-spacing:.2px;
+}
+h1{
+  margin:.8rem 0 .4rem;
+  font-size:clamp(36px, 5.8vw, 64px);
+  line-height:1.05;
+}
+h1 em{font-style:italic; font-weight:600; color:var(--muted)}
+.lead{max-width:720px; color:var(--muted); font-size:clamp(16px,2.1vw,18px)}
+.cta-row{display:flex; gap:.8rem; margin:1.1rem 0 2.2rem}
+.btn{display:inline-flex; align-items:center; gap:.5rem; text-decoration:none; font-weight:700; border-radius:12px; padding:.85rem 1.1rem}
+.btn.primary{background:linear-gradient(90deg,var(--accent), #ffa74a); color:#fff; box-shadow:0 10px 25px -10px var(--ring)}
+.btn.primary:hover{filter:saturate(105%) brightness(1.03)}
+.btn.ghost{border:1px solid rgba(17,24,39,.18); color:var(--text); background:var(--glass)}
+.btn.ghost:hover{border-color:rgba(17,24,39,.28)}
+
+/*** demo karta ***/
+.glass.phone{
+  margin-top:24px;
+  width:min(520px, 92vw);
+  background:var(--glass);
+  border:1px solid rgba(17,24,39,.10);
+  border-radius:20px;
+  box-shadow:0 12px 60px -25px rgba(2,6,23,.12);
+  overflow:hidden;
+}
+.phone-header{padding:14px 16px; font-weight:700; background:linear-gradient(180deg, rgba(17,24,39,.04), rgba(17,24,39,.02))}
+.list{list-style:none; margin:0; padding:8px 0}
+.list li{display:flex; gap:12px; align-items:center; padding:10px 16px; border-top:1px dashed rgba(17,24,39,.10)}
+.list li span{width:64px; color:var(--muted); font-variant-numeric:tabular-nums}
+.list li b{margin-left:auto}
+.total{padding:12px 16px; border-top:1px solid rgba(17,24,39,.12); display:flex; justify-content:flex-end; gap:8px}
+
+/*** features ***/
+.features{
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:16px;
+  padding:56px clamp(16px, 6vw, 48px) 88px;
+}
+@media (max-width:1100px){ .features{grid-template-columns:repeat(2, 1fr);} }
+
+/* ✅ PATCH: Přidána responzivita pro hero a features */
+@media (max-width:960px){
+  .hero-main {
+    flex-direction: column; /* Dáme pod sebe */
+    text-align: center;   /* Vystředíme text, když je logo pryč */
   }
-  .top-links{display:flex; gap:1rem; align-items:center; flex-wrap:wrap}
-  .top-links a{color:var(--muted); text-decoration:none; font-weight:600}
-  .top-links a:hover{color:var(--text)}
-  .top-links .cta{color:#0b1220; background:var(--ball); padding:.55rem .9rem; border-radius:999px; box-shadow:0 0 0 3px #c7df2f33 inset}
-  .top-links .cta:hover{filter:brightness(1.05)}
-  
-  /*** hero ***/
-  .hero{
-    padding:clamp(36px,8vw,88px) clamp(16px, 6vw, 48px) 0;
-    position:relative;
+  .hero-logo {
+    display: none; /* Schováme velké logo */
   }
-  .chip{
-    width:max-content; padding:.45rem .7rem; border-radius:999px;
-    background:var(--glass); border:1px solid rgba(17,24,39,.10);
-    color:var(--muted); font-weight:600; letter-spacing:.2px;
+  .hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Vystředíme obsah (chip, tlačítka) */
   }
-  h1{
-    margin:.8rem 0 .4rem;
-    font-size:clamp(36px, 5.8vw, 64px);
-    line-height:1.05;
+  .cta-row {
+    justify-content: center; /* Vystředíme tlačítka */
   }
-  h1 em{font-style:italic; font-weight:600; color:var(--muted)}
-  .lead{max-width:720px; color:var(--muted); font-size:clamp(16px,2.1vw,18px)}
-  .cta-row{display:flex; gap:.8rem; margin:1.1rem 0 2.2rem}
-  .btn{display:inline-flex; align-items:center; gap:.5rem; text-decoration:none; font-weight:700; border-radius:12px; padding:.85rem 1.1rem}
-  .btn.primary{background:linear-gradient(90deg,var(--accent), #ffa74a); color:#fff; box-shadow:0 10px 25px -10px var(--ring)}
-  .btn.primary:hover{filter:saturate(105%) brightness(1.03)}
-  .btn.ghost{border:1px solid rgba(17,24,39,.18); color:var(--text); background:var(--glass)}
-  .btn.ghost:hover{border-color:rgba(17,24,39,.28)}
-  
-  /*** demo karta ***/
-  .glass.phone{
-    margin-top:24px;
-    width:min(520px, 92vw);
-    background:var(--glass);
-    border:1px solid rgba(17,24,39,.10);
-    border-radius:20px;
-    box-shadow:0 12px 60px -25px rgba(2,6,23,.12);
-    overflow:hidden;
-  }
-  .phone-header{padding:14px 16px; font-weight:700; background:linear-gradient(180deg, rgba(17,24,39,.04), rgba(17,24,39,.02))}
-  .list{list-style:none; margin:0; padding:8px 0}
-  .list li{display:flex; gap:12px; align-items:center; padding:10px 16px; border-top:1px dashed rgba(17,24,39,.10)}
-  .list li span{width:64px; color:var(--muted); font-variant-numeric:tabular-nums}
-  .list li b{margin-left:auto}
-  .total{padding:12px 16px; border-top:1px solid rgba(17,24,39,.12); display:flex; justify-content:flex-end; gap:8px}
-  
-  /*** features ***/
-  .features{
-    display:grid; grid-template-columns:repeat(4, 1fr); gap:16px;
-    padding:56px clamp(16px, 6vw, 48px) 88px;
-  }
-  @media (max-width:1100px){ .features{grid-template-columns:repeat(2, 1fr);} }
-  @media (max-width:640px){ .features{grid-template-columns:1fr;} }
-  .card{
-    background:var(--glass);
-    border:1px solid rgba(17,24,39,.10);
-    padding:18px 18px 22px;
-    border-radius:16px;
-    box-shadow:0 10px 40px -28px rgba(2,6,23,.12);
-  }
-  .card h3{margin:.2rem 0 .4rem}
-  .card p{color:var(--muted); margin:0}
-  
-  /*** footer ***/
-  .site-footer{
-    padding:24px; color:var(--muted); text-align:center;
-    border-top:1px solid rgba(17,24,39,.06);
-    background:linear-gradient(180deg, transparent, rgba(17,24,39,.03));
-  }
-  .site-footer a{color:var(--text)}
-  
+}
+
+@media (max-width:640px){ 
+  .features{grid-template-columns:1fr;} 
+}
+
+.card{
+  background:var(--glass);
+  border:1px solid rgba(17,24,39,.10);
+  padding:18px 18px 22px;
+  border-radius:16px;
+  box-shadow:0 10px 40px -28px rgba(2,6,23,.12);
+}
+.card h3{margin:.2rem 0 .4rem}
+.card p{color:var(--muted); margin:0}
+
+/*** footer ***/
+.site-footer{
+  padding:24px; color:var(--muted); text-align:center;
+  border-top:1px solid rgba(17,24,39,.06);
+  background:linear-gradient(180deg, transparent, rgba(17,24,39,.03));
+}
+.site-footer a{color:var(--text)}
