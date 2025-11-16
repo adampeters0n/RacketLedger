@@ -1620,7 +1620,14 @@ def admin_analytika_view(request):
     trener_due_total_current = Decimal("0.00")
     trener_ids_current = list(tqs_current.values_list("trener_id", flat=True).distinct())
     for uid in trener_ids_current:
-        u = User.objects.get(pk=uid)
+        # Přeskočíme, pokud je ID None (např. u smazaného trenéra)
+        if uid is None:
+            continue
+        try:
+            u = User.objects.get(pk=uid)
+        except User.DoesNotExist:
+            continue
+            
         my_tr = tqs_current.filter(trener_id=uid)
         due = Decimal("0.00")
         for tr in my_tr:
@@ -1661,7 +1668,13 @@ def admin_analytika_view(request):
     # --- 3. Výpočty pro detailní tabulky (Dlužníci a Trenéři) ---
     trener_rows = []
     for uid in trener_ids_current:
-        u = User.objects.get(pk=uid)
+        if uid is None:
+            continue
+        try:
+            u = User.objects.get(pk=uid)
+        except User.DoesNotExist:
+            continue
+
         # Znovu vypočítáme balance...
         my_tr = tqs_current.filter(trener_id=uid)
         due = Decimal("0.00")
@@ -1691,38 +1704,41 @@ def admin_analytika_view(request):
     } for h in debtors_qs]
 
     
-    # --- 4. NOVÁ LOGIKA PRO 6M GRAF ---
+    # --- 4. OPRAVENÁ LOGIKA PRO 6M GRAF ---
     monthly_chart_data = []
     czech_months = {
         1: 'Led', 2: 'Úno', 3: 'Bře', 4: 'Dub', 5: 'Kvě', 6: 'Čer',
         7: 'Čvc', 8: 'Srp', 9: 'Zář', 10: 'Říj', 11: 'Lis', 12: 'Pro'
     }
-    current_month_start = today.replace(day=1)
+    
+    # Začneme aktuálním dnem
+    current_day_for_loop = today 
 
     for i in range(6): # 6 měsíců zpětně
-        month_start = current_month_start
-        if i > 0:
-            month_start = (month_start - timedelta(days=1)).replace(day=1)
+        # 1. Najdi první den v měsíci
+        month_start = current_day_for_loop.replace(day=1)
         
+        # 2. Najdi poslední den v měsíci
         if month_start.month == 12:
-            month_end = month_start.replace(year=month_start.year + 1, month=1, day=1) - timedelta(days=1)
+            next_month_start = month_start.replace(year=month_start.year + 1, month=1, day=1)
         else:
-            month_end = month_start.replace(month=month_start.month + 1, day=1) - timedelta(days=1)
+            next_month_start = month_start.replace(month=month_start.month + 1, day=1)
+        month_end = next_month_start - timedelta(days=1)
 
         label = f"{czech_months[month_start.month]} '{month_start.strftime('%y')}"
 
-        # Hodiny (z tréninků)
+        # Hodiny (z tréninků) - POZOR: datum tréninku je `datum`
         month_trainings = Trening.objects.filter(datum__date__gte=month_start, datum__date__lte=month_end)
         month_total_min = month_trainings.aggregate(s=Sum("delka_minut"))["s"] or 0
         month_hours = (Decimal(month_total_min) / Decimal(60)).quantize(Decimal("0.01"))
 
-        # Naúčtováno (z transakcí)
+        # Naúčtováno (z transakcí) - POZOR: datum transakce je `vytvoreno`
         month_charged = Transakce.objects.filter(
             vytvoreno__date__gte=month_start, vytvoreno__date__lte=month_end,
             typ=Transakce.Typ.NAUCTOVANO,
         ).aggregate(s=Sum("castka"))["s"] or Decimal("0")
 
-        # Platby (z transakcí)
+        # Platby (z transakcí) - POZOR: datum transakce je `vytvoreno`
         month_paid = Transakce.objects.filter(
             vytvoreno__date__gte=month_start, vytvoreno__date__lte=month_end,
             typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA],
@@ -1735,8 +1751,11 @@ def admin_analytika_view(request):
             "paid": float(month_paid),
         })
 
+        # 3. Posuň se na předchozí měsíc pro další iteraci
+        current_day_for_loop = month_start - timedelta(days=1) 
+    
     monthly_chart_data.reverse() # Seřadíme od nejstaršího po nejnovější
-    # --- KONEC NOVÉ LOGIKY PRO GRAF ---
+    # --- KONEC OPRAVENÉ LOGIKY PRO GRAF ---
 
     # --- 5. Finální kontext pro šablonu ---
     ctx = dict(
