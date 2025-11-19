@@ -1,170 +1,57 @@
 {% extends "admin/change_list.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools-items %}
+  {# --- TLAČÍTKO PŘEHLED ZŮSTATKŮ --- #}
+  <li>
+    {# Používáme třídu historylink, styly jsou definovány dole, aby ladily s globálním designem #}
+    <a href="{% url 'admin:core_transakce_prehled' %}" class="historylink">
+      Přehled zůstatků
+    </a>
+  </li>
+
+  {{ block.super }}
+{% endblock %}
 
 {% block extrastyle %}
-{{ block.super }}
-<style>
-  /* --- KARTA S PLATBAMI --- */
-  .payments-card{
-    background:#111827; border:1px solid #334155; border-radius:12px;
-    padding:12px; margin-top:12px; overflow:hidden;
-  }
-  .payments-title{ color:#e5e7eb; font-weight:600; margin:0 0 8px; }
-
-  /* === SCROLL WRAPPER uvnitř karty (aby nic nelezlo ven) === */
-  .payments-scroll{
-    display:block; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch;
-  }
-
-  /* Široké okno = 100 %, úzké = min-width + horizontální scroll */
-  .payments-scroll > table.payments{
-    width:100% !important;
-    min-width:820px !important;              /* uprav podle potřeby */
-    table-layout:auto !important;            /* žádné nucené ořezávání */
-    color:#e5e7eb;
-    border-collapse:separate; border-spacing:0;
-  }
-  .payments-scroll > table.payments thead th{
-    background:#1f2937; position:sticky; top:0; z-index:1;
-    padding:10px 8px; text-align:center; border-bottom:1px solid #334155;
-    white-space:nowrap;
-  }
-  .payments-scroll > table.payments tbody td{
-    padding:8px; border-top:1px solid #334155; text-align:center;
-  }
-  .payments-scroll > table.payments tbody td:first-child{ text-align:left; }
-  .payments-scroll > table.payments tbody tr:nth-child(even){ background:rgba(148,163,184,0.06); }
-
-  /* Sloupec „Akce“ co nejmenší */
-  .payments-scroll > table.payments th:last-child,
-  .payments-scroll > table.payments td:last-child{
-    width:1%;
-    white-space:nowrap;
-    text-align:center;
-  }
-
-  /* Tlačítko v „Akce“ */
-  a.button{
-    display:inline-block; padding:6px 10px; border:1px solid #2563eb;
-    color:#fff; background:#2563eb; border-radius:6px; text-decoration:none;
-    white-space:nowrap;
-  }
-  a.button:hover{ filter:brightness(1.05); }
-
-  .payments-muted{ font-weight:400; opacity:.75; }
-
- /* === Hledání: stejné proporce jako ostatní prvky z custom.css === */
-#changelist-search{
-  display:flex !important; align-items:center !important; gap:10px !important; flex-wrap:wrap !important;
-}
-#changelist-search #searchbar{
-  flex:0 0 280px !important;   /* nevyplňuj celou šířku */
-  width:280px !important;
-  max-width:280px !important;
-  min-height:var(--ctl-h) !important;  /* = 28px */
-  height:auto !important;
-  padding:7px 12px !important;         /* stejné jako ostatní inputy */
-  border-radius:100px !important;
-}
-@media (max-width:700px){
-  #changelist-search #searchbar{ flex:1 1 100% !important; width:100% !important; max-width:100% !important; }
-}
-
-
-
-  /* Filtr doprava – na malých šířkách pod seznam */
-  @media (max-width:1100px){
-    #changelist-filter{
-      float:none !important; width:100% !important;
-      margin:12px 0 0 0 !important;
-    }
-  }
-</style>
-{% endblock %}
-
-{% block extrahead %}
-{{ block.super }}
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const table = document.getElementById('payments-table');
-    if (!table) return;
-
-    const rows = Array.from(table.querySelectorAll('tbody tr[data-row="1"]'));
-    const emptyRow = document.getElementById('payments-no-results');
-    const title = document.querySelector('.payments-title');
-    const searchInput = document.getElementById('searchbar');
-
-    function norm(s){
-      return (s || '').toString().toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    }
-    function applyFilter(q) {
-      const terms = norm(q).split(/\s+/).filter(Boolean);
-      let visible = 0;
-
-      rows.forEach(tr => {
-        const nameCell = tr.querySelector('td[data-col="hrac"]');
-        const hay = norm(nameCell ? nameCell.innerText : '');
-        const match = terms.every(t => hay.includes(t));
-        tr.style.display = (terms.length === 0 || match) ? '' : 'none';
-        if (tr.style.display !== 'none') visible++;
-      });
-
-      if (emptyRow) emptyRow.style.display = (visible === 0) ? '' : 'none';
-
-      if (title){
-        const id = 'payments-filter-flag';
-        let flag = document.getElementById(id);
-        if (!flag){
-          flag = document.createElement('span');
-          flag.id = id; flag.className = 'payments-muted'; flag.style.marginLeft = '6px';
-          title.appendChild(flag);
-        }
-        flag.textContent = terms.length ? `(filtrováno: "${q}", nalezeno: ${visible})` : '';
-      }
+  {{ block.super }}
+  <style>
+    /* 1. Styl pro tlačítko "Přehled zůstatků" 
+       Kopíruje styl .object-tools a (tlačítko Přidat) z vašeho hlavního CSS
+    */
+    a.historylink {
+        background: var(--brand, #E67817) !important;       /* Oranžová */
+        border: 5px solid var(--brand-600, #D1640C) !important; /* Tmavší oranžový rámeček */
+        color: #fff !important;                              /* Bílý text */
+        border-radius: 100px !important;                     /* Pill shape */
+        padding: 7px 15px !important;                        /* Stejný padding */
+        text-decoration: none !important;
+        display: inline-flex;
+        align-items: center;
+        
+        /* Typografie podle vašeho CSS */
+        font-weight: 900 !important;
+        text-transform: uppercase;
+        font-size: 12px !important;
+        letter-spacing: 0.5px;
+        line-height: 1;
+        
+        margin-right: 8px; /* Odstup od tlačítka Přidat */
+        
     }
 
-    const initialQ = "{{ cl.query|default_if_none:''|escapejs }}";
-    applyFilter(initialQ);
-    if (searchInput){
-      searchInput.addEventListener('input', function(){ applyFilter(this.value || ''); });
+    /* 2. Hover efekt - žádné blikání, jen lehké zjasnění */
+    a.historylink:hover {
+        filter: brightness(1.05);        /* Standardní efekt ve vašem systému */
+        background: var(--brand, #E67817) !important;
+        color: #fff !important;
     }
-  });
-</script>
-{% endblock %}
 
-{% block result_list %}
-<div class="payments-card">
-  <h2 class="payments-title">{{ summary_title }}</h2>
-
-  <!-- scroll wrapper – tabulka už nikdy nepřeteče -->
-  <div class="payments-scroll">
-    <table class="payments" id="payments-table">
-      <thead>
-        <tr>
-          <th>Hráč</th>
-          <th>Kredit</th>
-          <th>{{ col_head_nauctovano|default:"Naúčtováno" }}</th>
-          <th>{{ col_head_hodiny|default:"Hodiny" }}</th>
-          <th>Akce</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for r in summary_rows %}
-          <tr data-row="1">
-            <td data-col="hrac">{{ r.hrac_html|safe }}</td>
-            <td>{{ r.kredit }}</td>
-            <td>{{ r.nauctovano }}</td>
-            <td>{{ r.hodiny }}</td>
-            <td>{{ r.akce_html|safe }}</td>
-          </tr>
-        {% empty %}
-          <tr data-row="1"><td colspan="5" style="text-align:center;">Žádní hráči.</td></tr>
-        {% endfor %}
-        <tr id="payments-no-results" style="display:none;">
-          <td colspan="5" style="text-align:center;">Nebyly nalezeny žádné výsledky.</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+    /* 3. Zarovnání částky v tabulce doprava + font */
+    .field-castka_display { 
+        font-family: 'Courier New', monospace; 
+        font-weight: bold; 
+        text-align: left; 
+    }
+  </style>
 {% endblock %}

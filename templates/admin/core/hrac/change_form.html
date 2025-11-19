@@ -1,11 +1,46 @@
 {% extends "admin/change_form.html" %}
 
+{# --- TOTO JE NOVÁ ČÁST: Tlačítko v horní liště vedle Historie --- #}
+{% block object-tools-items %}
+  <li>
+    <a href="{% url 'admin:core_transakce_add' %}?hrac={{ original.pk }}" class="custom-pay-link">
+      Zadat platbu
+    </a>
+  </li>
+  {{ block.super }}
+{% endblock %}
+
 {% block extrastyle %}
 {{ block.super }}
 <style>
   :root{
     --panel:#111827; --panel-2:#1f2937; --border:#334155; --text:#e5e7eb;
+    /* Definice barev pro jistotu, pokud by nebyly načtené z parenta */
+    --brand: #E67817; --brand-600: #D1640C;
   }
+
+  /* --- Styl pro nové tlačítko v horní liště (aby vypadalo jako Historie) --- */
+  .object-tools a.custom-pay-link {
+      background: var(--brand, #E67817) !important;       /* Oranžová */
+      border: 5px solid var(--brand-600, #D1640C) !important; /* Tlustý rámeček */
+      color: #fff !important;
+      border-radius: 100px !important;
+      padding: 7px 15px !important;
+      font-weight: 900 !important;
+      text-transform: uppercase;
+      font-size: 12px !important;
+      letter-spacing: 0.5px;
+      text-decoration: none !important;
+      display: inline-flex;
+      align-items: center;
+      line-height: 1;
+      transition: filter 0.2s;
+  }
+  .object-tools a.custom-pay-link:hover {
+      filter: brightness(1.05);
+  }
+
+  /* --- Zbytek vašeho CSS --- */
   .actions-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:12px 0; }
   .ledger-card{ background:var(--panel); border:0px solid var(--border); border-radius:12px; padding:12px; margin-top:16px; }
   .ledger-title{ margin:0 0 8px; color:var(--text); font-size:16px; font-weight:600; }
@@ -74,7 +109,7 @@
 {% block after_field_sets %}
   {{ block.super }}
 
-  {# --- Tlačítko vedle jména (jen při editaci existujícího hráče) --- #}
+  {# --- Tlačítko vedle jména (pouze Změna informací) --- #}
   {% if original and original.pk %}
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -101,6 +136,8 @@
       textNode.parentNode.insertBefore(wrap, textNode);
       wrap.appendChild(textNode);
 
+      // Zde zůstalo jen tlačítko Změna informací. 
+      // Tlačítko "Zadat platbu" bylo přesunuto nahoru do bloku object-tools-items.
       var link = document.createElement('a');
       link.href = "{% url 'admin:core_hrac_info' original.pk %}";
       link.className = 'button';

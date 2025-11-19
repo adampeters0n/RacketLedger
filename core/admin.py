@@ -4,6 +4,8 @@ from datetime import datetime, time, timedelta
 import logging
 import json
 
+from django.conf import settings
+from django.db import transaction
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -35,14 +37,16 @@ logger = logging.getLogger(__name__)
 
 
 # -----------------------------
-#  Hráči (beze změny)
+#  Hráči
 # -----------------------------
 @admin.register(Hrac)
 class HracAdmin(admin.ModelAdmin):
     list_display = ("jmeno", "email", "kredit_display", "rodina_link")
     search_fields = ("jmeno",)
     fields = ("jmeno", "email", "rodina")
-    actions = ["akce_vygenerovat_vyuctovani"]
+    
+    # PŘIDÁNA NOVÁ AKCE DO SEZNAMU
+    actions = ["akce_vygenerovat_vyuctovani", "akce_pridat_platbu"]
 
     change_form_template = "admin/core/hrac/change_form.html"
     change_list_template = "admin/core/hrac/change_list.html"
@@ -203,12 +207,10 @@ class HracAdmin(admin.ModelAdmin):
         return format_html('<a href="{}">{}</a>', url, nazev)
     rodina_link.short_description = "Rodina"
 
-    # === ZMĚNA: UPRAVENÁ METODA PRO HROMADNOU AKCI ===
-    # Admin akce: vygenerovat vyúčtování pro vybrané hráče
+    # === ZMĚNA: UPRAVENÁ METODA PRO HROMADNOU AKCI (VYÚČTOVÁNÍ) ===
     def akce_vygenerovat_vyuctovani(self, request, queryset):
         
-        # --- ZDE ZAČÍNÁ NOVÝ KÓD ---
-        # 1. Zkopírujeme pomocnou funkci pro parsování data (máš ji už ve vyuctovat_view)
+        # 1. Zkopírujeme pomocnou funkci pro parsování data
         def _parse_date(s: str, end: bool = False):
             s = (s or "").strip()
             if not s:
@@ -234,17 +236,14 @@ class HracAdmin(admin.ModelAdmin):
             except (InvalidOperation, ValueError):
                 override_amount = None
         
-        # === ZMĚNA: PŘEČTEME VARIANTU E-MAILU ===
         email_variant = request.POST.get("_bulk_email_variant", "1")
-        # === KONEC ZMĚNY ===
-        # --- KONEC NOVÉHO KÓDU ---
 
         count = 0
         for hrac in queryset:
             vyuct = hrac.vygeneruj_vyuctovani(
                 duvod="manual",
                 send_email=True,
-                email_variant=email_variant, # <-- PŘEDÁME VARIANTU
+                email_variant=email_variant, 
                 override_amount_due=override_amount,
                 override_period_from=vfrom,
                 override_period_to=vto,
@@ -256,7 +255,59 @@ class HracAdmin(admin.ModelAdmin):
             count += 1
         self.message_user(request, f"Vyúčtování vytvořeno pro {count} hráčů.", level=messages.SUCCESS)
     akce_vygenerovat_vyuctovani.short_description = "Vygenerovat vyúčtování (poslat e-mail)"
-    # === KONEC UPRAVENÉ METODY ===
+    
+    
+    # === NOVÁ AKCE: HROMADNÁ PLATBA ===
+    def akce_pridat_platbu(self, request, queryset):
+        # Načtení dat z JS
+        raw_amount = request.POST.get("_bulk_payment_amount")
+        raw_date = request.POST.get("_bulk_payment_date")
+        typ = request.POST.get("_bulk_payment_type")
+        note = request.POST.get("_bulk_payment_note", "")
+
+        if not raw_amount:
+            return
+
+        try:
+            castka = Decimal(raw_amount.replace(",", "."))
+            
+            # --- Zde je tvá vylepšená logika pro datum ---
+            if raw_date:
+                # Převedeme string na datum (vznikne čas 00:00:00)
+                datum_obj = datetime.strptime(raw_date, "%Y-%m-%d")
+                
+                # Získáme aktuální čas
+                now = dj_tz.now()
+                
+                # Spojíme vybrané datum s aktuálním časem (zachováme hodiny/minuty)
+                datum = datum_obj.replace(hour=now.hour, minute=now.minute, second=now.second)
+                
+                # Pokud používáte časová pásma, uděláme datum "aware"
+                if settings.USE_TZ:
+                    datum = dj_tz.make_aware(datum)
+            else:
+                # Pokud datum nebylo vybráno, použijeme "teď"
+                datum = dj_tz.now()
+            # ---------------------------------------------
+
+            count = 0
+            with transaction.atomic():
+                for hrac in queryset:
+                    Transakce.objects.create(
+                        hrac=hrac,
+                        typ=typ,
+                        castka=castka,
+                        popis=note,
+                        vytvoreno=datum
+                    )
+                    count += 1
+            
+            self.message_user(request, f"Hromadná platba: Úspěšně přidáno {castka} Kč pro {count} hráčů.", messages.SUCCESS)
+
+        except (ValueError, InvalidOperation) as e:
+            self.message_user(request, f"Chyba při zadávání platby: {e}", messages.ERROR)
+
+    akce_pridat_platbu.short_description = "Zadat platbu vybraným hráčům"
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         hrac = Hrac.objects.get(pk=object_id)
@@ -1262,7 +1313,7 @@ class TreningAdmin(admin.ModelAdmin):
 
 
 # -----------------------------
-#  PLATBY HRÁČŮ (beze změny)
+#  PLATBY HRÁČŮ (OPRAVENO)
 # -----------------------------
 class OnlyPaymentsFilter(admin.SimpleListFilter):
     title = "Typ"
@@ -1283,35 +1334,67 @@ class OnlyPaymentsFilter(admin.SimpleListFilter):
 
 @admin.register(Transakce)
 class TransakceAdmin(admin.ModelAdmin):
-    list_display = ("vytvoreno", "hrac", "typ", "castka", "popis")
-    list_filter = (OnlyPaymentsFilter, "vytvoreno")
+    # --- 1. HLAVNÍ POHLED: HISTORIE TRANSAKCÍ ---
+    list_display = ("datum_display", "hrac_link", "castka_display", "typ_display", "poznamka", "akce_smazat")
+    list_filter = (OnlyPaymentsFilter, "vytvoreno", "hrac")
     search_fields = ("hrac__jmeno", "popis")
+    actions = ["delete_selected"]
+    list_per_page = 50
+    
     change_list_template = "admin/core/transakce/change_list.html"
     
-    # Tento řádek byl přidán pro kontrolu pořadí polí ve formuláři
     fields = ('hrac', 'typ', 'castka', 'popis', 'vytvoreno')
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        return qs.filter(typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA])
+        return qs.filter(typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA]).select_related("hrac")
 
-    def get_form(self, request, obj=None, **kwargs):
-        Form = super().get_form(request, obj, **kwargs)
-        if obj is None and "typ" in Form.base_fields:
-            Form.base_fields["typ"].choices = [
-                (Transakce.Typ.PLATBA, Transakce.Typ.PLATBA.label),
-                (Transakce.Typ.VRATKA, Transakce.Typ.VRATKA.label),
-            ]
-        return Form
+    # --- SLOUPCE PRO HISTORII ---
+    @admin.display(description="Datum", ordering="vytvoreno")
+    def datum_display(self, obj):
+        if not obj.vytvoreno: return "-"
+        dt = dj_tz.localtime(obj.vytvoreno) if dj_tz.is_aware(obj.vytvoreno) else obj.vytvoreno
+        return format_html(
+            '<span style="white-space:nowrap;">{}</span> <span style="color:#888; font-size:0.9em">{}</span>',
+            dt.strftime("%d. %B %Y"), dt.strftime("%H:%M")
+        )
 
-    def get_changeform_initial_data(self, request):
-        initial = super().get_changeform_initial_data(request)
-        hrac_id = request.GET.get("hrac")
-        if hrac_id:
-            initial["hrac"] = hrac_id
-        return initial
+    @admin.display(description="Hráč", ordering="hrac__jmeno")
+    def hrac_link(self, obj):
+        if not obj.hrac: return "-"
+        url = reverse("admin:core_hrac_change", args=[obj.hrac.id])
+        return format_html('<a href="{}" style="font-weight:600;">{}</a>', url, obj.hrac.jmeno)
 
-    def changelist_view(self, request, extra_context=None):
+    @admin.display(description="Částka", ordering="castka")
+    def castka_display(self, obj):
+        color = "green" if obj.castka >= 0 else "red"
+        sign = "+" if obj.castka > 0 else ""
+        
+        # --- ZDE BYLA CHYBA, TOTO JE OPRAVA ---
+        # Číslo naformátujeme předem v Pythonu, ne uvnitř HTML stringu
+        formatted_val = f"{obj.castka:,.0f}"
+        
+        return format_html(
+            '<span style="color:{}; font-weight:bold;">{} {} Kč</span>',
+            color, sign, formatted_val
+        )
+
+    @admin.display(description="Typ", ordering="typ")
+    def typ_display(self, obj):
+        return obj.get_typ_display()
+
+    @admin.display(description="Poznámka")
+    def poznamka(self, obj):
+        return obj.popis or ""
+
+    @admin.display(description="Akce")
+    def akce_smazat(self, obj):
+        url = reverse("admin:core_transakce_delete", args=[obj.id])
+        return format_html('<a class="deletelink" href="{}"></a>', url)
+
+
+# --- 2. DRUHÝ POHLED: PŘEHLED ZŮSTATKŮ ---
+    def prehled_zustatku_view(self, request):
         rows = []
         for h in Hrac.objects.all():
             last_pay = (
@@ -1332,22 +1415,60 @@ class TransakceAdmin(admin.ModelAdmin):
             total_min = mins_qs.aggregate(s=Sum("trening__delka_minut"))["s"] or 0
             hodiny = (Decimal(total_min) / Decimal(60)).quantize(Decimal("0.01"))
 
-            add_url = reverse("admin:core_transakce_add") + f"?hrac={h.id}"
+            # URL detailu hráče (pro jméno)
+            detail_url = reverse("admin:core_hrac_change", args=[h.id])
+
+            # URL pro přidání platby
+            payment_url = reverse("admin:core_transakce_add") + f"?hrac={h.id}"
+            
+            # === ZMĚNA: Používáme jen class="button" bez inline stylů ===
+            # Tím se aktivuje váš globální CSS styl (oranžová, border, font)
+            akce_btn = format_html(
+                '<a class="button" href="{}">Zadat platbu</a>', 
+                payment_url
+            )
 
             rows.append({
-                "hrac_html": format_html('<a href="{}">{}</a>', reverse("admin:core_hrac_change", args=[h.id]), h.jmeno),
+                "hrac_html": format_html('<a href="{}">{}</a>', detail_url, h.jmeno),
                 "kredit": f"{h.kredit:.0f} Kč",
                 "nauctovano": f"{charges:.0f} Kč",
                 "hodiny": f"{hodiny:.2f} h",
-                "akce_html": format_html('<a class="button" href="{}">Zadat platbu</a>', add_url),
+                "akce_html": akce_btn, 
             })
 
-        extra_context = extra_context or {}
-        extra_context["summary_rows"] = rows
-        extra_context["summary_title"] = "Tabulka plateb"
-        extra_context["col_head_nauctovano"] = "Naúčtováno od poslední platby"
-        extra_context["col_head_hodiny"] = "Hodiny od poslední platby"
-        return super().changelist_view(request, extra_context=extra_context)
+        context = {
+            **self.admin_site.each_context(request),
+            "title": "Přehled zůstatků",
+            "summary_rows": rows,
+            "summary_title": "Stav kreditů hráčů",
+            "col_head_nauctovano": "Naúčtováno od posl. platby",
+            "col_head_hodiny": "Hodiny od posl. platby",
+            "history_url": reverse("admin:core_transakce_changelist"),
+        }
+        return TemplateResponse(request, "admin/core/transakce/prehled_plateb.html", context)
+
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path("prehled-zustatku/", self.admin_site.admin_view(self.prehled_zustatku_view), name="core_transakce_prehled"),
+        ]
+        return my_urls + urls
+
+    def get_form(self, request, obj=None, **kwargs):
+        Form = super().get_form(request, obj, **kwargs)
+        if obj is None and "typ" in Form.base_fields:
+            Form.base_fields["typ"].choices = [
+                (Transakce.Typ.PLATBA, Transakce.Typ.PLATBA.label),
+                (Transakce.Typ.VRATKA, Transakce.Typ.VRATKA.label),
+            ]
+        return Form
+
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        hrac_id = request.GET.get("hrac")
+        if hrac_id:
+            initial["hrac"] = hrac_id
+        return initial
 
 
 # -----------------------------

@@ -1,16 +1,11 @@
 {% extends "admin/change_list.html" %}
 {% load static %}
 
-{# 
-  Tento blok přidá:
-  1. CSS styly pro nové vyskakovací okno (modal).
-  2. Původní JavaScript pro živé filtrování tabulky.
-  3. Nový JavaScript pro zobrazení a odeslání modálního okna.
-#}
 {% block extrahead %}
 {{ block.super }}
 
 <style>
+  /* --- STYLY PRO MODÁLNÍ OKNA --- */
   .modal-overlay {
     display: none; /* Skryté by default */
     position: fixed;
@@ -39,10 +34,12 @@
     margin-bottom: 20px;
     border-bottom: 1px solid #eee;
     padding-bottom: 10px;
+    color: #111827;
+    font-size: 1.2rem;
   }
   .modal-fields {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 4fr;
     gap: 15px 10px;
     align-items: center;
   }
@@ -50,13 +47,18 @@
     font-weight: 600;
     text-align: right;
     padding-right: 10px;
+    color: #374151;
   }
   .modal-fields input,
   .modal-fields select {
-    padding: 8px 10px;
+    padding: 10px 12px;       /* Zvětšeno: více místa uvnitř */
+    height: 45px;             /* NOVÉ: Pevná výška, aby se text neořízl */
     border: 1px solid #ccc;
     border-radius: 6px;
     width: 100%;
+    font-size: 14px;          /* Čitelnější písmo */
+    box-sizing: border-box;   /* Aby padding nezvětšoval šířku přes okraj */
+    background-color: #fff;   /* Bílé pozadí */
   }
   .modal-actions {
     margin-top: 25px;
@@ -66,17 +68,28 @@
     justify-content: flex-end; /* Tlačítka vpravo */
     gap: 10px;
   }
-  /* Použijeme třídy z adminu, aby tlačítka vypadala stejně */
+  /* Tlačítka v modálu */
   .modal-actions .button {
     font-weight: 600;
     padding: 8px 16px;
+    cursor: pointer;
+  }
+  .button.secondary {
+    background: #fff;
+    border: 1px solid #ccc;
+    color: #333;
+  }
+  .button.default {
+    background: #E67817; /* Brand oranžová */
+    color: #fff;
+    border: none;
   }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
-  // === ČÁST 1: KÓD PRO ŽIVÉ FILTROVÁNÍ (z tvého původního souboru) ===
+  // === 1. LIVE FILTR TABULKY (Původní kód) ===
   (function() {
     const table = document.getElementById('result_list');
     if (!table) return;
@@ -90,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
       emptyRow = document.createElement('tr');
       emptyRow.id = 'players-no-results';
       const td = document.createElement('td');
-      td.colSpan = table.querySelectorAll('thead th').length || 3;
+      td.colSpan = 10; // Dostatečně velký colspan
       td.style.textAlign = 'center';
       td.textContent = 'Nebyly nalezeny žádné výsledky.';
       emptyRow.appendChild(td);
@@ -103,24 +116,16 @@ document.addEventListener('DOMContentLoaded', function() {
         .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
     }
 
-    function haystack(tr){
-      const cell =
-        tr.querySelector('th.field-jmeno') ||
-        tr.querySelector('td.field-jmeno') ||
-        tr.querySelector('th a, td a') ||
-        tr.children[1];
-      return norm(cell ? cell.innerText : '');
-    }
-
-    const cache = new WeakMap();
-    function getHay(tr){ if(!cache.has(tr)) cache.set(tr, haystack(tr)); return cache.get(tr); }
-
     function applyFilter(q){
       const terms = norm(q).split(/\s+/).filter(Boolean);
       let visible = 0;
       rows.forEach(tr => {
         if (tr.id === 'players-no-results') return;
-        const ok = terms.length === 0 || terms.every(t => getHay(tr).includes(t));
+        // Hledáme ve sloupci Jméno (obvykle field-jmeno nebo druhý sloupec)
+        const cell = tr.querySelector('th.field-jmeno') || tr.querySelector('td.field-jmeno') || tr.children[1];
+        const txt = norm(cell ? cell.innerText : '');
+        
+        const ok = terms.length === 0 || terms.every(t => txt.includes(t));
         tr.style.display = ok ? '' : 'none';
         if (ok) visible++;
       });
@@ -133,116 +138,133 @@ document.addEventListener('DOMContentLoaded', function() {
     if (searchInput){
       searchInput.addEventListener('input', () => applyFilter(searchInput.value || ''));
     }
-  })(); // Konec skriptu pro filtrování
+  })();
 
 
-  // === ČÁST 2: NOVÝ KÓD PRO HROMADNÉ VYÚČTOVÁNÍ (MODÁLNÍ OKNO) ===
+  // === 2. OVLÁDÁNÍ MODÁLNÍCH OKEN PRO AKCE ===
   (function() {
     var changelistForm = document.getElementById('changelist-form');
     var actionSelect = document.querySelector('select[name="action"]');
     if (!changelistForm || !actionSelect) return;
 
-    // Najdeme prvky modálního okna (jsou definovány níže v HTML)
-    var modal = document.getElementById('vyuctovani-modal');
-    var modalConfirmBtn = document.getElementById('modal-confirm-button');
-    var modalCancelBtn = document.getElementById('modal-cancel-button');
+    // --- MODÁL 1: VYÚČTOVÁNÍ ---
+    var modalVyuct = document.getElementById('vyuctovani-modal');
+    var btnVyuctConfirm = document.getElementById('modal-confirm-button');
+    var btnVyuctCancel = document.getElementById('modal-cancel-button');
     
-    // Najdeme pole UVNITŘ modálního okna
-    var modalFromInput = document.getElementById('id_modal_vyuct_from');
-    var modalToInput = document.getElementById('id_modal_vyuct_to');
-    var modalAmountInput = document.getElementById('id_modal_castka_k_uhrazeni');
-    var modalVariantSelect = document.getElementById('id_modal_email_variant'); // <-- NOVÉ POLE
+    // --- MODÁL 2: PLATBA ---
+    var modalPlatba = document.getElementById('platba-modal');
+    var btnPlatbaConfirm = document.getElementById('platba-confirm-button');
+    var btnPlatbaCancel = document.getElementById('platba-cancel-button');
 
-    if (!modal || !modalConfirmBtn || !modalCancelBtn || !modalFromInput || !modalVariantSelect) return;
+    function closeAllModals() {
+        if (modalVyuct) modalVyuct.style.display = 'none';
+        if (modalPlatba) modalPlatba.style.display = 'none';
+    }
 
-    // 1. Hlavní posluchač: Odchytí odeslání formuláře (kliknutí na "Provést")
+    // Hlavní posluchač: Kliknutí na "Provést" (submit formuláře)
     changelistForm.addEventListener('submit', function(e) {
-      if (actionSelect.value === 'akce_vygenerovat_vyuctovani') {
-        // ZASTAVÍME PŮVODNÍ ODESLÁNÍ
-        e.preventDefault();
-
-        // Zkontrolujeme, jestli je alespoň někdo vybrán
-        var selectedPlayers = changelistForm.querySelectorAll('input[name="_selected_action"]:checked');
-        if (selectedPlayers.length === 0) {
-          alert('Musíte vybrat alespoň jednoho hráče.');
-          return;
+      var action = actionSelect.value;
+      
+      // A) Akce: Vygenerovat vyúčtování
+      if (action === 'akce_vygenerovat_vyuctovani') {
+        if (changelistForm.querySelectorAll('input[name="_selected_action"]:checked').length === 0) {
+           alert('Musíte vybrat alespoň jednoho hráče.');
+           e.preventDefault();
+           return;
         }
-
-        // ZOBRAZÍME MODÁLNÍ OKNO
-        modal.style.display = 'block';
+        // Zastavíme odeslání a ukážeme modál
+        e.preventDefault();
+        modalVyuct.style.display = 'block';
+      }
+      
+      // B) Akce: Zadat platbu (NOVÁ)
+      else if (action === 'akce_pridat_platbu') {
+        if (changelistForm.querySelectorAll('input[name="_selected_action"]:checked').length === 0) {
+           alert('Musíte vybrat alespoň jednoho hráče.');
+           e.preventDefault();
+           return;
+        }
+        // Zastavíme odeslání a ukážeme modál
+        e.preventDefault();
+        
+        // Předvyplníme datum na dnešek, pokud je prázdné
+        var dateInput = document.getElementById('id_modal_payment_date');
+        if (dateInput && !dateInput.value) {
+            dateInput.valueAsDate = new Date();
+        }
+        modalPlatba.style.display = 'block';
       }
     });
 
-    // 2. Tlačítko "Zrušit" v modálním okně
-    modalCancelBtn.addEventListener('click', function() {
-      modal.style.display = 'none';
-    });
-    
-    // 3. Tlačítko "Vygenerovat a odeslat" v modálním okně
-    modalConfirmBtn.addEventListener('click', function() {
-      // Přečteme hodnoty z modálu
-      var fromVal = modalFromInput.value;
-      var toVal = modalToInput.value;
-      var amountVal = modalAmountInput.value;
-      var variantVal = modalVariantSelect.value; // <-- ČTEME NOVOU HODNOTU
+    // --- Logika pro Modál VYÚČTOVÁNÍ ---
+    if (btnVyuctCancel) {
+        btnVyuctCancel.addEventListener('click', closeAllModals);
+    }
+    if (btnVyuctConfirm) {
+      btnVyuctConfirm.addEventListener('click', function() {
+         // Převedeme hodnoty z modálu do skrytých polí ve formuláři
+         addHidden(changelistForm, '_bulk_vyuct_from', document.getElementById('id_modal_vyuct_from').value);
+         addHidden(changelistForm, '_bulk_vyuct_to', document.getElementById('id_modal_vyuct_to').value);
+         addHidden(changelistForm, '_bulk_castka_k_uhrazeni', document.getElementById('id_modal_castka_k_uhrazeni').value);
+         addHidden(changelistForm, '_bulk_email_variant', document.getElementById('id_modal_email_variant').value);
+         
+         closeAllModals();
+         changelistForm.submit(); // Odešleme formulář s daty
+      });
+    }
 
-      // Vytvoříme skrytá pole a přidáme je do HLAVNÍHO formuláře
-      var fromHidden = document.createElement('input');
-      fromHidden.type = 'hidden';
-      fromHidden.name = '_bulk_vyuct_from';
-      fromHidden.value = fromVal;
-      changelistForm.appendChild(fromHidden);
+    // --- Logika pro Modál PLATBA ---
+    if (btnPlatbaCancel) {
+        btnPlatbaCancel.addEventListener('click', closeAllModals);
+    }
+    if (btnPlatbaConfirm) {
+      btnPlatbaConfirm.addEventListener('click', function() {
+         var amt = document.getElementById('id_modal_payment_amount').value;
+         if (!amt) { 
+             alert("Zadejte částku."); 
+             return; 
+         }
 
-      var toHidden = document.createElement('input');
-      toHidden.type = 'hidden';
-      toHidden.name = '_bulk_vyuct_to';
-      toHidden.value = toVal;
-      changelistForm.appendChild(toHidden);
+         // Převedeme hodnoty z modálu do skrytých polí
+         addHidden(changelistForm, '_bulk_payment_amount', amt);
+         addHidden(changelistForm, '_bulk_payment_type', document.getElementById('id_modal_payment_type').value);
+         addHidden(changelistForm, '_bulk_payment_date', document.getElementById('id_modal_payment_date').value);
+         addHidden(changelistForm, '_bulk_payment_note', document.getElementById('id_modal_payment_note').value);
+         
+         closeAllModals();
+         changelistForm.submit(); // Odešleme formulář s daty
+      });
+    }
 
-      var amountHidden = document.createElement('input');
-      amountHidden.type = 'hidden';
-      amountHidden.name = '_bulk_castka_k_uhrazeni';
-      amountHidden.value = amountVal;
-      changelistForm.appendChild(amountHidden);
-      
-      var variantHidden = document.createElement('input'); // <-- PŘIDÁME DALŠÍ SKRYTÉ POLE
-      variantHidden.type = 'hidden';
-      variantHidden.name = '_bulk_email_variant';
-      variantHidden.value = variantVal;
-      changelistForm.appendChild(variantHidden);
-      
-      // Skryjeme modál a TEĎ TEPRVE ODEŠLEME HLAVNÍ FORMULÁŘ
-      modal.style.display = 'none';
-      changelistForm.submit();
-    });
+    // Pomocná funkce pro vytvoření skrytého inputu
+    function addHidden(form, name, value) {
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
+    }
 
-  })(); // Konec skriptu pro modální okno
+  })(); // Konec modálního skriptu
 
 });
 </script>
 {% endblock %}
 
 
-{# Tento blok je teď PRÁZDNÝ, protože nechceme formulář nad tabulkou #}
-{% block object-tools %}
-{{ block.super }}
-{% endblock %}
-
-
-{# 
-  Tento blok přidá tlačítko "Rodiny"
-  MEZI standardní nástroje (vedle "Hráč: Přidat")
-#}
+{# Přidání tlačítka RODINY do horní lišty #}
 {% block object-tools-items %}
   {{ block.super }}
-  <li><a href="{% url 'admin:core_rodina_changelist' %}" class="viewsitelink">Rodiny</a></li>
+  <li>
+    <a href="{% url 'admin:core_rodina_changelist' %}" class="viewsitelink" style="background:#fff; color:#333; border:1px solid #ccc;">
+      Rodiny
+    </a>
+  </li>
 {% endblock %}
 
 
-{# 
-  Tento blok vykreslí standardní obsah (tabulku, atd.)
-  a HNED ZA NÍ přidá HTML kód pro naše skryté modální okno.
-#}
+{# Obsah stránky + HTML kód modálních oken #}
 {% block content %}
   {{ block.super }}
 
@@ -252,24 +274,23 @@ document.addEventListener('DOMContentLoaded', function() {
       
       <div class="modal-fields">
         <label for="id_modal_vyuct_from">Období od:</label>
-        <input type="date" name="_modal_vyuct_from" id="id_modal_vyuct_from">
+        <input type="date" id="id_modal_vyuct_from">
         
         <label for="id_modal_vyuct_to">Období do:</label>
-        <input type="date" name="_modal_vyuct_to" id="id_modal_vyuct_to">
+        <input type="date" id="id_modal_vyuct_to">
         
         <label for="id_modal_castka_k_uhrazeni">Částka k úhradě:</label>
-        <input type="number" name="_modal_castka_k_uhrazeni" id="id_modal_castka_k_uhrazeni"
-               step="1" min="0" placeholder="např. 5000">
-        
-        <div></div> 
-        <span style="font-size: 12px; color: #666;">(nechte prázdné pro výpočet)</span>
+        <div>
+            <input type="number" id="id_modal_castka_k_uhrazeni" step="1" min="0" placeholder="např. 5000">
+            <small style="color:#666; display:block; margin-top:4px;">(nechte prázdné pro auto-výpočet)</small>
+        </div>
 
         <label for="id_modal_email_variant">Varianta e-mailu:</label>
-        <select name="_modal_email_variant" id="id_modal_email_variant">
+        <select id="id_modal_email_variant">
             <option value="1" selected>Účet 1 AJ Sport</option>
             <option value="2">Účet 2 Káťa</option>
         </select>
-        </div>
+      </div>
 
       <div class="modal-actions">
         <button type="button" id="modal-cancel-button" class="button secondary">Zrušit</button>
@@ -277,4 +298,37 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     </div>
   </div>
+
+  <div id="platba-modal" class="modal-overlay">
+    <div class="modal-content">
+      <h3>Zadat platbu vybraným hráčům</h3>
+      <p style="margin-top:-10px; margin-bottom:20px; color:#666; font-size:13px;">
+          Tato platba bude připsána všem zaškrtnutým hráčům.
+      </p>
+      
+      <div class="modal-fields">
+        <label>Částka (Kč):</label> 
+        <input type="number" id="id_modal_payment_amount" step="1" placeholder="např. 2000" style="font-weight:bold;">
+        
+        <label>Typ:</label>
+        <select id="id_modal_payment_type">
+            <option value="PLATBA" selected>Platba (Vklad)</option>
+            <option value="VRATKA">Vratka / Bonifikace</option>
+            <option value="NAUCTOVANO">Ruční stržení (Mínus)</option>
+        </select>
+
+        <label>Datum:</label> 
+        <input type="date" id="id_modal_payment_date">
+
+        <label>Poznámka:</label> 
+        <input type="text" id="id_modal_payment_note" placeholder="např. Příspěvky podzim">
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="platba-cancel-button" class="button secondary">Zrušit</button>
+        <button type="button" id="platba-confirm-button" class="button default" style="background:#10b981; border-color:#059669;">Provést platbu</button>
+      </div>
+    </div>
+  </div>
+
 {% endblock %}
