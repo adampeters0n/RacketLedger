@@ -229,6 +229,10 @@ class Hrac(models.Model):
                 events.append(("PAY", dt, tx))
             events.sort(key=lambda t: t[1])
 
+            # Zjistíme poslední datum v seznamu pro přesnější text e-mailu
+            last_event_date = events[-1][1] if events else period_to
+            display_period_to = last_event_date if override_period_to else period_to
+
             running_credit = start_credit
             sum_cena = Decimal("0")
             sum_paid = Decimal("0")
@@ -265,9 +269,9 @@ class Hrac(models.Model):
                     f"<td>{datum_str}</td>"
                     f"<td>{cas_str}</td>"
                     f"<td>{skupina}</td>"
-                    f"<td align='right'>{cena or '—'}</td>"
-                    f"<td align='right'>{zaplaceno or '—'}</td>"
-                    f"<td align='right'><strong>{kredit_str}</strong></td>"
+                    f"<td align='center'>{cena or '—'}</td>" # ZMĚNA: align='center'
+                    f"<td align='center'>{zaplaceno or '—'}</td>" # ZMĚNA: align='center'
+                    f"<td align='center'><strong>{kredit_str}</strong></td>" # ZMĚNA: align='center'
                     "</tr>"
                 )
 
@@ -277,9 +281,9 @@ class Hrac(models.Model):
             totals_html = (
                 "<tr style='background:#f9fafb'>"
                 "<td colspan='3' align='right'><strong>Součty</strong></td>"
-                f"<td align='right'><strong>{sum_cena:.0f} Kč</strong></td>"
-                f"<td align='right'><strong>{sum_paid:.0f} Kč</strong></td>"
-                f"<td align='right'><strong>{running_credit:.0f} Kč</strong></td>"
+                f"<td align='center'><strong>{sum_cena:.0f} Kč</strong></td>" # ZMĚNA: align='center'
+                f"<td align='center'><strong>{sum_paid:.0f} Kč</strong></td>" # ZMĚNA: align='center'
+                f"<td align='center'><strong>{running_credit:.0f} Kč</strong></td>" # ZMĚNA: align='center'
                 "</tr>"
             )
             rows_html = "".join(rows_html_parts) + totals_html
@@ -289,17 +293,15 @@ class Hrac(models.Model):
             
             subject = f"Přehled tréninků a vyúčtování – {self.cele_jmeno}"
             
-            # === ZMĚNA: VÝBĚR ČÍSLA ÚČTU PODLE VARIANTY ===
             if email_variant == "2":
                 cislo_uctu_text = "2108539314/2700"
                 cislo_uctu_html = "<strong>2108539314/2700</strong>"
             else:
                 cislo_uctu_text = "2102303853/2700"
                 cislo_uctu_html = "<strong>2102303853/2700</strong>"
-            # === KONEC ZMĚNY ===
 
             text_body = (
-                f"Zasílám přehled tréninků a vyúčtování za období od {period_from.strftime('%d.%m.%Y') if period_from else 'začátku'} do {period_to.strftime('%d.%m.%Y')}.\n\n"
+                f"Zasílám přehled tréninků a vyúčtování za období od {period_from.strftime('%d.%m.%Y') if period_from else 'začátku'} do {display_period_to.strftime('%d.%m.%Y')}.\n\n"
                 "Níže je přiložen podrobný rozpis všech položek.\n\n"
                 "---\n"
                 "**Přehled kreditu:**\n\n"
@@ -308,7 +310,7 @@ class Hrac(models.Model):
                 "Pro vyrovnání kreditu a jeho navýšení na další období je třeba uhradit:\n\n"
                 f"Částka k zaplacení: **{amount_due:.0f} Kč**\n\n"
                 "Platební údaje:\n"
-                f"Číslo účtu: **{cislo_uctu_text}**\n" # <-- POUŽITÍ PROMĚNNÉ
+                f"Číslo účtu: **{cislo_uctu_text}**\n"
                 "Variabilní symbol: **Jméno hráče**\n\n"
                 f"Po připsání platby bude stav kreditu: {kredit_po_uhrade:.0f} Kč\n"
                 "---\n\n"
@@ -324,7 +326,7 @@ class Hrac(models.Model):
             <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;">
               <p>Zasílám přehled tréninků a vyúčtování za období od 
                  <strong>{period_from.strftime('%d.%m.%Y') if period_from else 'začátku'}</strong>
-                 do <strong>{period_to.strftime('%d.%m.%Y')}</strong>.
+                 do <strong>{display_period_to.strftime('%d.%m.%Y')}</strong>.
               </p>
               <p>Níže je přiložen podrobný rozpis všech položek.</p>
               
@@ -363,9 +365,9 @@ class Hrac(models.Model):
                     <th align="left" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Datum</th>
                     <th align="left" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Čas</th>
                     <th align="left" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Skupina</th>
-                    <th align="right" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Cena</th>
-                    <th align="right" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Zaplaceno</th>
-                    <th align="right" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Kredit</th>
+                    <th align="center" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Cena</th>
+                    <th align="center" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Zaplaceno</th>
+                    <th align="center" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Kredit</th>
                   </tr>
                 </thead>
                 <tbody>{rows_html}</tbody>
