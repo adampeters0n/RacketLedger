@@ -115,12 +115,12 @@ class Hrac(models.Model):
         platby = qs.filter(typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA]).aggregate(Sum("castka"))["castka__sum"] or Decimal("0")
         return (Decimal(nacitano) - Decimal(platby)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
-    # --- UZÁVĚRKA / VYÚČTOVÁNÍ ---
+# --- UZÁVĚRKA / VYÚČTOVÁNÍ ---
     def vygeneruj_vyuctovani(
         self,
         duvod: str = "manual",
         send_email: bool = False,
-        email_variant: str = "1",  # <-- NOVÝ PARAMETR
+        email_variant: str = "1",
         override_amount_due: Decimal | None = None,
         override_period_from=None,   # date/datetime/None
         override_period_to=None,     # date/datetime/None
@@ -129,149 +129,128 @@ class Hrac(models.Model):
         Uzávěrka za období.
         """
         def _normalize_dt(x, is_end=False):
-            """date -> datetime (min/max), zajištění timezone-aware pokud USE_TZ."""
-            if not x:
-                return None
-            if isinstance(x, datetime):
-                dt = x
-            else:
-                dt = datetime.combine(x, time.max if is_end else time.min)
+            if not x: return None
+            if isinstance(x, datetime): dt = x
+            else: dt = datetime.combine(x, time.max if is_end else time.min)
             if dj_tz.is_naive(dt) and settings.USE_TZ:
                 dt = dj_tz.make_aware(dt, dj_tz.get_current_timezone())
             return dt
 
         now = dj_tz.now()
-
         period_from = _normalize_dt(override_period_from) if override_period_from else self.posledni_vyuctovani_at
         period_to = _normalize_dt(override_period_to, is_end=True) if override_period_to else now
 
         # Transakce v období
         tx_qs = self.transakce.filter(vytvoreno__lte=period_to)
-        if period_from:
-            tx_qs = tx_qs.filter(vytvoreno__gt=period_from)
+        if period_from: tx_qs = tx_qs.filter(vytvoreno__gt=period_from)
 
         charges = tx_qs.filter(typ=Transakce.Typ.NAUCTOVANO).aggregate(Sum("castka"))["castka__sum"] or Decimal("0")
         pays = tx_qs.filter(typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA]).aggregate(Sum("castka"))["castka__sum"] or Decimal("0")
-
         computed_amount = (Decimal(charges) - Decimal(pays)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        amount_due = (
-            Decimal(override_amount_due).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-            if override_amount_due is not None else computed_amount
-        )
+        
+        # --- Logika pro částku (0 Kč vs zadaná částka) ---
+        if override_amount_due is not None:
+            amount_due = Decimal(override_amount_due).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        elif duvod == "manual":
+            amount_due = Decimal("0.00") # Manuálně bez částky = 0 Kč
+        else:
+            amount_due = computed_amount
 
-        # Docházky v období – jen skutečně odehrané (pro statistiku)
-        sessions = self.dochazky.filter(
-            prisel=True,
-            trening__datum__lte=period_to,
-            **({"trening__datum__gt": period_from} if period_from else {})
-        ).count()
-
-        # Snapshoty kreditu
+        # Statistiky
+        sessions = self.dochazky.filter(prisel=True, trening__datum__lte=period_to, **({"trening__datum__gt": period_from} if period_from else {})).count()
         credit_end = self.kredit
         delta_credit = (Decimal(pays) - Decimal(charges)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         credit_start = (credit_end - delta_credit).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
         vyuct = Vyuctovani.objects.create(
-            hrac=self,
-            period_from=period_from,
-            period_to=period_to,
-            sessions_count=sessions,
-            charges_total=Decimal(charges).quantize(Decimal("0.01")),
-            payments_total=Decimal(pays).quantize(Decimal("0.01")),
-            amount_due=amount_due,
-            credit_start=credit_start,
-            credit_end=credit_end,
-            reason=duvod,
+            hrac=self, period_from=period_from, period_to=period_to, sessions_count=sessions,
+            charges_total=Decimal(charges).quantize(Decimal("0.01")), payments_total=Decimal(pays).quantize(Decimal("0.01")),
+            amount_due=amount_due, credit_start=credit_start, credit_end=credit_end, reason=duvod,
         )
 
-        # Posuň kurzor jen pokud se nepoužilo ruční období
         if not (override_period_from or override_period_to):
             self.posledni_vyuctovani_at = now
             self.pocet_treninku_od_vyuctovani = 0
             self.save(update_fields=["posledni_vyuctovani_at", "pocet_treninku_od_vyuctovani"])
 
-        # ===== E-mail (volitelně) – historie podobná admin tabulce =====
+        # ===== E-mail =====
         if send_email and self.email:
-            charges_qs = (
-                tx_qs.filter(typ=Transakce.Typ.NAUCTOVANO)
-                .select_related("trening")
-                .order_by("trening__datum")
-            )
-            pays_qs = (
-                tx_qs.filter(typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA])
-                .order_by("vytvoreno")
-            )
+            # Data pro tabulku
+            charges_qs = tx_qs.filter(typ=Transakce.Typ.NAUCTOVANO).select_related("trening").order_by("trening__datum")
+            pays_qs = tx_qs.filter(typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA]).order_by("vytvoreno")
 
             start_credit = Decimal("0.00")
             if period_from:
-                before_charges = (
-                    self.transakce
-                    .filter(typ=Transakce.Typ.NAUCTOVANO, vytvoreno__lt=period_from) 
-                    .aggregate(s=Sum("castka"))["s"] or 0
-                )
-                before_pays = (
-                    self.transakce
-                    .filter(typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA], vytvoreno__lt=period_from)
-                    .aggregate(s=Sum("castka"))["s"] or 0
-                )
-                start_credit = (Decimal(before_pays) - Decimal(before_charges)).quantize(Decimal("0.01"))
+                bc = self.transakce.filter(typ=Transakce.Typ.NAUCTOVANO, vytvoreno__lt=period_from).aggregate(s=Sum("castka"))["s"] or 0
+                bp = self.transakce.filter(typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA], vytvoreno__lt=period_from).aggregate(s=Sum("castka"))["s"] or 0
+                start_credit = (Decimal(bp) - Decimal(bc)).quantize(Decimal("0.01"))
 
             events = []
             for tx in charges_qs:
                 dt = tx.trening.datum if tx.trening else tx.vytvoreno
-                if dj_tz.is_aware(dt):
-                    dt = dj_tz.localtime(dt)
+                if dj_tz.is_aware(dt): dt = dj_tz.localtime(dt)
                 events.append(("CHARGE", dt, tx))
             for tx in pays_qs:
                 dt = tx.vytvoreno
-                if dj_tz.is_aware(dt):
-                    dt = dj_tz.localtime(dt)
+                if dj_tz.is_aware(dt): dt = dj_tz.localtime(dt)
                 events.append(("PAY", dt, tx))
             events.sort(key=lambda t: t[1])
 
-            # Zjistíme poslední datum v seznamu pro přesnější text e-mailu
-            last_event_date = events[-1][1] if events else period_to
-            display_period_to = last_event_date if override_period_to else period_to
+            # --- Datum "DO" pro text e-mailu ---
+            if override_period_to:
+                display_period_to = period_to
+            else:
+                # Pokud není zadáno ručně, vezmeme datum poslední akce (aby to vypadalo lépe)
+                display_period_to = events[-1][1] if events else period_to
 
             running_credit = start_credit
             sum_cena = Decimal("0")
             sum_paid = Decimal("0")
-
-            lines = ["Datum\tČas\tSkupina\tCena\tZaplaceno\tKredit"]
             rows_html_parts = []
+            lines = []
 
             for typ, dt, tx in events:
+                # Přeskočit položky mimo datum (pro jistotu)
+                if period_from and dt < period_from:
+                    amt = Decimal(tx.castka or 0)
+                    if typ == "CHARGE": running_credit -= amt
+                    else: running_credit += amt
+                    continue
+                if period_to and dt > period_to:
+                    amt = Decimal(tx.castka or 0)
+                    if typ == "CHARGE": running_credit -= amt
+                    else: running_credit += amt
+                    continue
+
                 datum_str = dt.strftime("%d.%m.%Y")
                 cas_str = dt.strftime("%H:%M")
-
                 skupina = "—"
                 cena = zaplaceno = ""
 
                 if typ == "CHARGE":
-                    if tx.trening:
-                        skupina = tx.trening.get_format_display() 
+                    if tx.trening: skupina = tx.trening.get_format_display() 
                     amt = Decimal(tx.castka or 0)
                     sum_cena += amt
                     running_credit -= amt
                     cena = f"{amt:.0f} Kč"
-                else:  # PAY
+                else:
                     amt = Decimal(tx.castka or 0)
                     sum_paid += amt
                     running_credit += amt
                     zaplaceno = f"{amt:.0f} Kč"
 
                 kredit_str = f"{running_credit:.0f} Kč"
+                lines.append(f"{datum_str}\t{cas_str}\t{skupina}\t{cena}\t{zaplaceno}\t{kredit_str}")
 
-                lines.append(f"{datum_str}\t{cas_str}\t{skupina}\t{cena or '—'}\t{zaplaceno or '—'}\t{kredit_str}")
-
+                # Zarovnání na střed (align='center')
                 rows_html_parts.append(
                     "<tr>"
                     f"<td>{datum_str}</td>"
                     f"<td>{cas_str}</td>"
                     f"<td>{skupina}</td>"
-                    f"<td align='center'>{cena or '—'}</td>" # ZMĚNA: align='center'
-                    f"<td align='center'>{zaplaceno or '—'}</td>" # ZMĚNA: align='center'
-                    f"<td align='center'><strong>{kredit_str}</strong></td>" # ZMĚNA: align='center'
+                    f"<td align='center'>{cena or '—'}</td>"
+                    f"<td align='center'>{zaplaceno or '—'}</td>"
+                    f"<td align='center'><strong>{kredit_str}</strong></td>"
                     "</tr>"
                 )
 
@@ -281,24 +260,31 @@ class Hrac(models.Model):
             totals_html = (
                 "<tr style='background:#f9fafb'>"
                 "<td colspan='3' align='right'><strong>Součty</strong></td>"
-                f"<td align='center'><strong>{sum_cena:.0f} Kč</strong></td>" # ZMĚNA: align='center'
-                f"<td align='center'><strong>{sum_paid:.0f} Kč</strong></td>" # ZMĚNA: align='center'
-                f"<td align='center'><strong>{running_credit:.0f} Kč</strong></td>" # ZMĚNA: align='center'
+                f"<td align='center'><strong>{sum_cena:.0f} Kč</strong></td>"
+                f"<td align='center'><strong>{sum_paid:.0f} Kč</strong></td>"
+                f"<td align='center'><strong>{running_credit:.0f} Kč</strong></td>"
                 "</tr>"
             )
             rows_html = "".join(rows_html_parts) + totals_html
-            table_txt = "\n".join(lines + [f"Součty\t\t\t{sum_cena:.0f} Kč\t{sum_paid:.0f} Kč\t{running_credit:.0f} Kč"])
+            table_txt = "\n".join(lines)
 
             kredit_po_uhrade = (credit_end + amount_due).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
             
-            subject = f"Přehled tréninků a vyúčtování – {self.cele_jmeno}"
-            
+            # --- Text Částky ---
+            if amount_due == 0:
+                amount_display_str = "0 Kč (pouze přehled tréninků)"
+            else:
+                amount_display_str = f"{amount_due:.0f} Kč"
+
+            # --- Číslo účtu ---
             if email_variant == "2":
                 cislo_uctu_text = "2108539314/2700"
                 cislo_uctu_html = "<strong>2108539314/2700</strong>"
             else:
                 cislo_uctu_text = "2102303853/2700"
                 cislo_uctu_html = "<strong>2102303853/2700</strong>"
+
+            subject = f"Přehled tréninků a vyúčtování – {self.cele_jmeno}"
 
             text_body = (
                 f"Zasílám přehled tréninků a vyúčtování za období od {period_from.strftime('%d.%m.%Y') if period_from else 'začátku'} do {display_period_to.strftime('%d.%m.%Y')}.\n\n"
@@ -308,7 +294,7 @@ class Hrac(models.Model):
                 f"Aktuální kredit (před platbou): {credit_end:.0f} Kč\n"
                 f"Celková cena tréninků v tomto období: {sum_cena:.0f} Kč\n\n"
                 "Pro vyrovnání kreditu a jeho navýšení na další období je třeba uhradit:\n\n"
-                f"Částka k zaplacení: **{amount_due:.0f} Kč**\n\n"
+                f"Částka k zaplacení: **{amount_display_str}**\n\n"
                 "Platební údaje:\n"
                 f"Číslo účtu: **{cislo_uctu_text}**\n"
                 "Variabilní symbol: **Jméno hráče**\n\n"
@@ -344,7 +330,7 @@ class Hrac(models.Model):
               
               <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
                 <div style="font-size: 1.1em; margin-bottom: 12px;">
-                  Částka k zaplacení: <strong style="font-size: 1.3em; color: #111827;">{amount_due:.0f} Kč</strong>
+                  Částka k zaplacení: <strong style="font-size: 1.3em; color: #111827;">{amount_display_str}</strong>
                 </div>
                 <div style="line-height: 1.7;">
                   Platební údaje:<br>
@@ -378,6 +364,15 @@ class Hrac(models.Model):
             </div>
             """
 
+            # --- DEBUG VÝPIS DO TERMINÁLU ---
+            print("\n" + "="*60)
+            print(f"ODESÍLÁM EMAIL: {self.email}")
+            print(f"PŘEDMĚT: {subject}")
+            print("-" * 20)
+            print(text_body)
+            print("="*60 + "\n")
+            # --------------------------------
+
             ok_send, ok_archive = send_and_append_to_sent(
                 subject=subject,
                 body=text_body,
@@ -389,7 +384,6 @@ class Hrac(models.Model):
                 ">>> VYUCTOVANI: email_send=%s, saved_to_sent=%s, hrac=%s, email=%s, subject=%s",
                 ok_send, ok_archive, self.cele_jmeno, self.email, subject
             )
-
 
         return vyuct
 
