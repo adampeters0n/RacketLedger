@@ -17,6 +17,7 @@ from django.utils import timezone as dj_tz
 from django.utils.html import format_html, format_html_join
 from django import forms
 from django.contrib.admin.widgets import AdminSplitDateTime
+from django.forms.models import BaseInlineFormSet
 
 from .models import (
     Hrac,
@@ -771,16 +772,17 @@ class CenikAdmin(admin.ModelAdmin):
     search_fields = ("format", "kurt")
 
 
-# -----------------------------
-#  DOCHÁZKA – inline (beze změny)
-# -----------------------------
+# ---------------------------------------------------------
+#  DOCHÁZKA – kompletní inline s ochranou proti duplicitám
+# ---------------------------------------------------------
+
 class DochazkaInlineForm(forms.ModelForm):
     class Meta:
         model = Dochazka
         fields = ["hrac"]
 
     def save(self, commit=True):
-        """Každý vyplněný řádek = hráč přišel."""
+        """Každý vyplněný řádek automaticky označí, že hráč přišel."""
         obj = super().save(commit=False)
         obj.prisel = True
         if commit:
@@ -788,9 +790,42 @@ class DochazkaInlineForm(forms.ModelForm):
         return obj
 
 
+class DochazkaFormSet(BaseInlineFormSet):
+    """
+    Tento FormSet je klíčem k opravě. Přeskočí validaci proti databázi (validate_unique),
+    ale v rámci clean() pohlídá, abys nevybral jednoho hráče 2x v jednom okně.
+    """
+    def clean(self):
+        """
+        Kontrola duplicit přímo ve formuláři na obrazovce.
+        """
+        super().clean()
+        if any(self.errors):
+            return
+
+        hraci_v_seznamu = []
+        for form in self.forms:
+            # Ignorujeme prázdné formuláře nebo ty, které uživatel označil ke smazání
+            if self._should_delete_form(form) or not form.cleaned_data.get('hrac'):
+                continue
+            
+            hrac = form.cleaned_data.get('hrac')
+            if hrac in hraci_v_seznamu:
+                # Vyhodí chybu pouze pokud je stejné jméno v seznamu vícekrát
+                raise ValidationError(f"Hráč {hrac} je v tomto tréninku vybrán vícekrát!")
+            hraci_v_seznamu.append(hrac)
+
+    def validate_unique(self):
+        """
+        Tady říkáme: 'Nekontroluj to, co je v DB'. To vyřešíme v save_formset v TreningAdminu.
+        """
+        pass
+
+
 class DochazkaInline(admin.TabularInline):
     model = Dochazka
     form = DochazkaInlineForm
+    formset = DochazkaFormSet  # Přidání FormSetu s naší logikou
     extra = 1
     autocomplete_fields = ("hrac",)
 
@@ -905,32 +940,34 @@ class TreningAdmin(admin.ModelAdmin):
     inlines = [DochazkaInline]
     actions = ["znovu_zpracovat_uctovani"]
 
-    # --- OPRAVA PRO UNIQUE_TOGETHER ---
+    # --- AGRESIVNÍ SWAP FUNKCE ---
     def save_formset(self, request, form, formset, change):
         """
-        Zajistí, že se při uložení nejprve provedou smazání (uvolnění místa v unikátním indexu)
-        a až poté se ukládají nové nebo změněné řádky.
+        Při úpravě existujícího tréninku nejdříve smaže veškerou starou docházku,
+        čímž uvolní místo pro nové (i stejné) hráče, a pak uloží ty aktuální z webu.
         """
         if formset.model == Dochazka:
-            # 1. Nejdřív uložíme smazání (pokud jsi zaškrtl 'Odstranit')
-            formset.save(commit=True)
+            if change:
+                # 1. Smažeme úplně všechnu starou docházku pro tento trénink
+                # To automaticky smaže i staré transakce díky tvému signálu post_delete
+                form.instance.dochazky.all().delete()
             
-            # 2. Pak uložíme zbytek (noví hráči nebo změny jmen)
-            # Tím se Adriana 'uvolní' z DB dřív, než se ji pokusíme uložit na jiném řádku
+            # 2. Uložíme ty hráče, které vidíš teď ve formuláři
             instances = formset.save(commit=False)
             for instance in instances:
+                # Musíme znovu přiřadit trénink, protože jsme ho v kroku 1 "vyčistili"
+                instance.trening = form.instance
                 instance.save()
             formset.save_m2m()
         else:
             super().save_formset(request, form, formset, change)
 
-    # --- OSTATNÍ LOGIKA ---
+    # --- ZBYTEK TVÉHO KÓDU ---
     def get_form(self, request, obj=None, **kwargs):
         Form = super().get_form(request, obj, **kwargs)
         if "delka_minut" in Form.base_fields:
             field = Form.base_fields["delka_minut"]
             field.label = "Délka (hodiny)"
-            
             CHOICES = [
                 (30, "30 min"),
                 (45, "45 min"),
