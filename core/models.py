@@ -8,7 +8,7 @@ from django.core.mail import EmailMultiAlternatives
 from core.utils.email_archive import send_and_append_to_sent
 from django.db import models, transaction
 from django.db.models import Q, Sum
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete 
 from django.dispatch import receiver
 from django.utils import timezone as dj_tz # Ponechávám dj_tz pro zkrácený zápis
 from django.utils import timezone           # Ponechávám timezone pro default=timezone.now
@@ -657,16 +657,16 @@ class Vyuctovani(models.Model):
         return self.kredit_k_datu(self.period_to)
 
 
-# =========================
-#  Automatické NAUČTOVÁNÍ při uložení Docházky
-# =========================
+# =========================================================
+#  INTELIGENTNÍ SYNC DOCHÁZKY A TRANSAKCÍ (VYLEPŠENO)
+# =========================================================
+
 @receiver(post_save, sender=Dochazka)
 def auto_naucet_pri_dochazce(sender, instance: "Dochazka", created: bool, **kwargs):
-# ... zbytek je v pořádku ...
     """
-    Prišel → vytvoř Transakci(NAUCTOVANO) podle ceníku a délky.
-    Nepřišel → případný charge smaž.
+    Řeší vytvoření ALE I AKTUALIZACI transakce při změně docházky.
     """
+    # 1. Pokud hráč "nepřišel", smažeme případnou existující transakci
     if not instance.prisel:
         if instance.transakce_nauc:
             instance.transakce_nauc.delete()
@@ -676,45 +676,116 @@ def auto_naucet_pri_dochazce(sender, instance: "Dochazka", created: bool, **kwar
             instance.save(update_fields=["transakce_nauc", "castka_nauc", "nauceno_kdy"])
         return
 
-    if instance.transakce_nauc:
-        return
-
+    # 2. Získáme trénink a ceník
     trening = instance.trening
     pravidlo = trening.aktualni_cenik()
+    
+    # Pokud není ceník, nemůžeme nic účtovat (nebo je zdarma)
     if not pravidlo:
         return
 
-    castka = (pravidlo.cena_za_hodinu * trening.hodiny).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    nov_castka = (pravidlo.cena_za_hodinu * trening.hodiny).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    popis_text = (
+        f"Trénink {trening.get_format_display().lower()} • "
+        f"{trening.get_kurt_display().lower()} "
+        f"{trening.datum:%Y-%m-%d} ({trening.delka_minut} min)"
+    )
 
-    exists = Transakce.objects.filter(
-        hrac=instance.hrac, trening=trening, typ=Transakce.Typ.NAUCTOVANO
-    ).exists()
-    if exists:
+    # 3. Pokud transakce už existuje -> AKTUALIZUJEME JI (To vám chybělo)
+    if instance.transakce_nauc:
+        tx = instance.transakce_nauc
+        zmena = False
+        
+        # Kontrola: Změnil se hráč? (např. v adminu jste přepsali jméno v dropdownu)
+        if tx.hrac != instance.hrac:
+            tx.hrac = instance.hrac
+            zmena = True
+        
+        # Kontrola: Změnila se cena (např. změna délky tréninku) nebo datum?
+        if tx.castka != nov_castka:
+            tx.castka = nov_castka
+            zmena = True
+            
+        if tx.vytvoreno != trening.datum:
+            tx.vytvoreno = trening.datum
+            zmena = True
+            
+        # Vždy aktualizujeme popis, kdyby se změnil formát tréninku
+        if tx.popis != popis_text:
+            tx.popis = popis_text
+            zmena = True
+
+        if zmena:
+            tx.save()
+            # Aktualizujeme i cache hodnoty v docházce
+            instance.castka_nauc = nov_castka
+            instance.save(update_fields=["castka_nauc"])
         return
 
+    # 4. Pokud transakce neexistuje -> VYTVOŘÍME JI
+    # (Nejprve kontrola, zda už neexistuje "volná" transakce pro stejný trénink a hráče, abychom nedublovali)
+    exists = Transakce.objects.filter(
+        hrac=instance.hrac, trening=trening, typ=Transakce.Typ.NAUCTOVANO
+    ).first()
+    
+    if exists:
+        # Pokud existuje, jen ji napojíme
+        instance.transakce_nauc = exists
+        instance.castka_nauc = exists.castka
+        instance.nauceno_kdy = timezone.now()
+        instance.save(update_fields=["transakce_nauc", "castka_nauc", "nauceno_kdy"])
+        return
+
+    # Vytvoření nové
     tx = Transakce.objects.create(
         hrac=instance.hrac,
         typ=Transakce.Typ.NAUCTOVANO,
-        castka=castka,
-        popis=(
-            f"Trénink {trening.get_format_display().lower()} • "
-            f"{trening.get_kurt_display().lower()} "
-            f"{trening.datum:%Y-%m-%d} ({trening.delka_minut} min)"
-        ),
+        castka=nov_castka,
+        popis=popis_text,
         trening=trening,
+        vytvoreno=trening.datum # Datum transakce = datum tréninku
     )
 
     instance.transakce_nauc = tx
-    instance.castka_nauc = castka
+    instance.castka_nauc = nov_castka
     instance.nauceno_kdy = timezone.now()
     instance.save(update_fields=["transakce_nauc", "castka_nauc", "nauceno_kdy"])
 
+    # Logika pro počítadla vyúčtování
     hrac = instance.hrac
     hrac.pocet_treninku_od_vyuctovani = (hrac.pocet_treninku_od_vyuctovani or 0) + 1
     hrac.save(update_fields=["pocet_treninku_od_vyuctovani"])
 
     if hrac.mozna_uzavrit_podle_rezimu():
         hrac.vygeneruj_vyuctovani(duvod=hrac.vyuctovani_rezim)
+
+
+# --- NOVÉ: Smazání transakce při smazání hráče z tréninku ---
+@receiver(post_delete, sender=Dochazka)
+def smaz_transakci_pri_smazani_dochazky(sender, instance, **kwargs):
+    """
+    Když v adminu kliknete na 'Odstranit' u hráče (nebo celý trénink),
+    musí zmizet i peněžní transakce.
+    """
+    if instance.transakce_nauc:
+        instance.transakce_nauc.delete()
+
+
+# --- NOVÉ: Automatická aktualizace cen při změně Tréninku ---
+@receiver(post_save, sender=Trening)
+def aktualizuj_transakce_pri_zmene_treningu(sender, instance, created, **kwargs):
+    """
+    Když změníte DATUM, DÉLKU nebo TYP tréninku, tento signál projde
+    všechny přihlášené hráče a přepočítá jim cenu/datum v transakcích.
+    """
+    if created:
+        return
+
+    # Projdeme všechny docházky tohoto tréninku
+    for dochazka in instance.dochazky.all():
+        # Zavoláme uložení docházky, což spustí funkci 'auto_naucet_pri_dochazce'
+        # a ta provede přepočet ceny a aktualizaci data.
+        dochazka.save()
 
 
 # ===== Trenér – profil (výchozí sazba) =====
