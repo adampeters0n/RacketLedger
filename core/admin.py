@@ -707,6 +707,7 @@ class RodinaAdmin(admin.ModelAdmin):
 
             display_kredit = f"{running_credit:.0f}"
 
+                # --- ZDE JE OPRAVA ---
             delete_link = ""
             if is_charge and tx.trening:
                 # Pokud je to naúčtování za trénink, odkaz směřuje na smazání tréninku
@@ -716,6 +717,7 @@ class RodinaAdmin(admin.ModelAdmin):
                 # Pokud je to platba/vratka, odkaz směřuje na smazání transakce
                 delete_url = reverse("admin:core_transakce_delete", args=[tx.id])
                 delete_link = format_html('<a href="{}" class="deletelink">Smazat</a>', delete_url)
+            # --- KONEC OPRAVY ---
 
             rows.append({
                 "datum": datum_str,
@@ -771,7 +773,7 @@ class CenikAdmin(admin.ModelAdmin):
 
 
 # ---------------------------------------------------------
-#  DOCHÁZKA – "NUCLEAR" FIX PRO NEBLOKUJÍCÍ SWAP
+#  DOCHÁZKA – Finální oprava pro unikátní chybu
 # ---------------------------------------------------------
 
 class DochazkaInlineForm(forms.ModelForm):
@@ -780,57 +782,43 @@ class DochazkaInlineForm(forms.ModelForm):
         fields = ["hrac"]
 
     def validate_unique(self):
-        """
-        Kritická úprava: Vypne kontrolu unikátnosti na úrovni řádku.
-        Ignoruje fakt, že hráč už v DB pro tento trénink existuje.
-        """
+        # Úplně vypneme kontrolu unikátnosti na úrovni řádku
         pass
-
-    def save(self, commit=True):
-        obj = super().save(commit=False)
-        obj.prisel = True
-        if commit:
-            obj.save()
-        return obj
-
 
 class DochazkaFormSet(BaseInlineFormSet):
     def validate_unique(self):
-        """
-        Kritická úprava: Vypne kontrolu unikátnosti na úrovni celé tabulky.
-        """
+        # Úplně vypneme kontrolu unikátnosti na úrovni celého seznamu
         pass
 
     def clean(self):
         """
-        Vlastní validace: Kontroluje POUZE to, jestli jsi v aktuálním formuláři 
-        nevybral stejného hráče 2x. Nekouká do databáze.
+        Vylepšená kontrola duplicit na obrazovce. 
+        Zajistí, že hláška o duplicitě se ukáže jen tehdy, když ji skutečně uděláš.
         """
-        # Nevoláme super().clean(), protože ta spouští unique_together kontrolu!
-        
+        super().clean()
         if any(self.errors):
             return
 
         hraci_v_tomto_okne = []
         for form in self.forms:
-            # Přeskočíme smazané nebo prázdné řádky
-            if self._should_delete_form(form) or not form.cleaned_data.get('hrac'):
+            # Přeskočíme prázdné a smazané řádky
+            if self._should_delete_form(form) or not form.cleaned_data:
                 continue
             
             hrac = form.cleaned_data.get('hrac')
-            if hrac in hraci_v_tomto_okne:
-                raise ValidationError(f"Hráč {hrac.jmeno} je v tomto tréninku vybrán vícekrát! Smažte jeden z řádků.")
-            hraci_v_tomto_okne.append(hrac)
+            if not hrac:
+                continue
 
+            if hrac in hraci_v_tomto_okne:
+                # Pokud je stejný hráč 2x v políčkách, hodíme chybu celému seznamu
+                raise ValidationError(f"Hráč {hrac.jmeno} je v tomto tréninku vybrán vícekrát!")
+            hraci_v_tomto_okne.append(hrac)
 
 class DochazkaInline(admin.TabularInline):
     model = Dochazka
     form = DochazkaInlineForm
     formset = DochazkaFormSet
-    
-    # ZMĚNA: Nastavíme 0, aby se neobjevovaly prázdné řádky, které hází chyby
-    extra = 0  
-    
+    extra = 1
     autocomplete_fields = ("hrac",)
     fields = ("hrac", "cena_preview", "castka_nauc_display", "nauceno_kdy_display")
     readonly_fields = ("cena_preview", "castka_nauc_display", "nauceno_kdy_display")
@@ -864,7 +852,7 @@ class DochazkaInline(admin.TabularInline):
 
 
 # -----------------------------
-#  TRÉNINK (s bezpečnostní úpravou swapování)
+#  TRÉNINK (beze změny)
 # -----------------------------
 class TimeDatalistTextInput(forms.TextInput):
     input_type = "text"
@@ -914,52 +902,54 @@ class TreningAdmin(admin.ModelAdmin):
     inlines = [DochazkaInline]
     actions = ["znovu_zpracovat_uctovani"]
 
+    # --- DEBUGGING: Výpis chyb do horní lišty zpráv ---
     def save_model(self, request, obj, form, change):
-        # Debugging: Vypíše chybu hlavního formuláře, pokud existuje
         if not form.is_valid():
-            messages.error(request, f"Chyba ve formuláři tréninku: {form.errors}")
+            messages.error(request, f"Chyba v hlavním formuláři: {form.errors}")
         super().save_model(request, obj, form, change)
 
+    # --- AGRESIVNÍ SWAP + DEBUGGING (Zabraňuje unique_together chybám) ---
     def save_formset(self, request, form, formset, change):
-        """
-        Zde proběhne SWAP. Protože jsme vypnuli validaci nahoře,
-        kód se dostane až sem, smaže staré záznamy a uloží nové.
-        """
-        # Debugging: Vypíše chybu inline formuláře
+        # Pokud seznam hráčů obsahuje chybu (např. prázdné povinné pole), vypíšeme ji
         if not formset.is_valid():
-             # Pokud je chyba, vypíšeme ji, ale pokusíme se pokračovat v mazání, pokud je to Dochazka
-             messages.warning(request, f"Upozornění validace hráčů (pokračuji v ukládání): {formset.errors}")
+            messages.error(request, f"Chyba v seznamu hráčů: {formset.errors}")
 
         if formset.model == Dochazka:
+            # Operaci provádíme v atomické transakci pro bezpečnost dat
             with transaction.atomic():
-                # 1. DELETE: Smažeme vše staré pro tento trénink
-                # Tím se uvolní 'unique_together' v databázi
-                if change and form.instance.pk:
+                if change:
+                    # Smažeme staré záznamy, aby se uvolnilo místo v DB (vyhnutí se unique_together)
                     form.instance.dochazky.all().delete()
                 
-                # 2. SAVE: Uložíme to, co přišlo z webu
+                # Uložíme nové/upravené instance z formuláře
                 instances = formset.save(commit=False)
                 for instance in instances:
-                    # Ignorujeme prázdné instance
-                    if not instance.hrac:
-                        continue
                     instance.trening = form.instance
                     instance.save()
                 formset.save_m2m()
         else:
             super().save_formset(request, form, formset, change)
 
+    # --- ÚPRAVA FORMULÁŘE (Délka a datum widget) ---
     def get_form(self, request, obj=None, **kwargs):
         Form = super().get_form(request, obj, **kwargs)
         if "delka_minut" in Form.base_fields:
             field = Form.base_fields["delka_minut"]
             field.label = "Délka (hodiny)"
+            
             CHOICES = [
-                (30, "30 min"), (45, "45 min"), (60, "1 h"), 
-                (90, "1,5 h"), (120, "2 h"), (150, "2,5 h"), (180, "3 h")
+                (30, "30 min"),
+                (45, "45 min"),
+                (60, "1 h"),
+                (90, "1,5 h"),
+                (120, "2 h"),
+                (150, "2,5 h"),
+                (180, "3 h"),
             ]
             field.widget = forms.Select(choices=CHOICES)
-            if obj is None: field.initial = 60
+            field.help_text = ""
+            if obj is None:
+                field.initial = 60
         return Form
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
@@ -967,7 +957,7 @@ class TreningAdmin(admin.ModelAdmin):
             kwargs["widget"] = AdminSplitDateTimeWithDatalist()
         return super().formfield_for_dbfield(db_field, request, **kwargs)
 
-    # --- vlastní admin URL: ROZVRH + souhrn/detail trenérů ---
+    # --- VLASTNÍ ADMIN URL ---
     def get_urls(self):
         urls = super().get_urls()
         extra = [
@@ -977,7 +967,7 @@ class TreningAdmin(admin.ModelAdmin):
         ]
         return extra + urls
 
-    # ---- sloupce v changelistu ----
+    # --- METODY PRO LIST_DISPLAY ---
     def hraci_jmena(self, obj: Trening):
         names = [d.hrac.jmeno for d in obj.dochazky.select_related("hrac").filter(prisel=True)]
         return ", ".join(names) if names else "—"
@@ -995,6 +985,515 @@ class TreningAdmin(admin.ModelAdmin):
     def castka_na_hrace_kc(self, obj: Trening):
         return f"{obj.cena_na_hrace()} Kč"
     castka_na_hrace_kc.short_description = "Částka / hráč"
+
+    # >>> ROZVRH – týdenní/denní přehled
+    def schedule_view(self, request):
+        """Týdenní/denní rozvrh tréninků s filtry + rozložení překryvů do pruhů."""
+        q = request.GET
+        CZECH_DOW = ["po", "út", "st", "čt", "pá", "so", "ne"]
+
+        def _slug(s: str) -> str:
+            s = (s or "").strip().lower()
+            repl = (("á", "a"), ("č", "c"), ("ď", "d"), ("é", "e"), ("ě", "e"), ("í", "i"),
+                    ("ň", "n"), ("ó", "o"), ("ř", "r"), ("š", "s"), ("ť", "t"), ("ú", "u"),
+                    ("ů", "u"), ("ý", "y"), ("ž", "z"))
+            for a, b in repl:
+                s = s.replace(a, b)
+            import re
+            s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+            if not s or not s[0].isalpha():
+                s = f"f-{s or 'neznamy'}"
+            return s
+
+        try:
+            base_date = datetime.strptime(q.get("date", ""), "%Y-%m-%d").date()
+        except Exception:
+            base_date = dj_tz.localdate()
+
+        mode = q.get("view", "week")
+        start_day = base_date if mode == "day" else (base_date - timedelta(days=base_date.weekday()))
+        end_day = start_day if mode == "day" else (start_day + timedelta(days=6))
+
+        start_dt = dj_tz.make_aware(datetime.combine(start_day, time.min))
+        end_dt = dj_tz.make_aware(datetime.combine(end_day, time.max))
+
+        trainer_id = q.get("trener") or ""
+        qs = (
+            Trening.objects
+            .filter(datum__range=(start_dt, end_dt))
+            .select_related("trener")
+            .prefetch_related("dochazky__hrac")
+            .order_by("datum")
+        )
+        if trainer_id:
+            qs = qs.filter(trener_id=trainer_id)
+
+        day_start_min = 6 * 60
+        hours = list(range(6, 23))
+
+        day_count = (end_day - start_day).days + 1
+        days = []
+        for i in range(day_count):
+            d = start_day + timedelta(days=i)
+            label = f"{CZECH_DOW[d.weekday()]} {d.strftime('%d.%m.')}"
+            days.append({"date": d, "label": label, "events": []})
+        idx_by_date = {(start_day + timedelta(days=i)): i for i in range(day_count)}
+
+        for t in qs:
+            local = dj_tz.localtime(t.datum) if dj_tz.is_aware(t.datum) else t.datum
+            d = local.date()
+            i = idx_by_date.get(d)
+            if i is None:
+                continue
+
+            start_min = local.hour * 60 + local.minute
+            offset = max(0, start_min - day_start_min)
+            dur = int(t.delka_minut)
+
+            fmt_label = t.get_format_display()
+            fmt_slug = _slug(fmt_label)
+
+            ev = {
+                "id": t.id,
+                "offset_min": offset,
+                "dur_min": dur,
+                "end_min": offset + dur,
+                "title": ", ".join(
+                    dch.hrac.jmeno for dch in t.dochazky.select_related("hrac").filter(prisel=True)
+                ) or "—",
+                "sub": f"{fmt_label} • {t.get_kurt_display()}",
+                "fmt": fmt_slug,
+                "fmt_label": fmt_label,
+            }
+            days[i]["events"].append(ev)
+
+        def assign_lanes(evs):
+            if not evs:
+                return
+            evs.sort(key=lambda e: (e["offset_min"], e["dur_min"]))
+
+            cluster = []
+            cluster_max_end = -1
+
+            def finalize_cluster(cluster_events):
+                lanes_end = []
+                for e in cluster_events:
+                    placed = False
+                    for idx, end in enumerate(lanes_end):
+                        if e["offset_min"] >= end:
+                            e["lane"] = idx
+                            lanes_end[idx] = e["end_min"]
+                            placed = True
+                            break
+                    if not placed:
+                        lanes_end.append(e["end_min"])
+                        e["lane"] = len(lanes_end) - 1
+                total = len(lanes_end)
+                for e in cluster_events:
+                    e["lanes"] = total
+
+            for e in evs:
+                if not cluster:
+                    cluster = [e]
+                    cluster_max_end = e["end_min"]
+                    continue
+                if e["offset_min"] < cluster_max_end:
+                    cluster.append(e)
+                    if e["end_min"] > cluster_max_end:
+                        cluster_max_end = e["end_min"]
+                else:
+                    finalize_cluster(cluster)
+                    cluster = [e]
+                    cluster_max_end = e["end_min"]
+
+            if cluster:
+                finalize_cluster(cluster)
+
+        for day in days:
+            assign_lanes(day["events"])
+
+        step = 7 if mode == "week" else 1
+        ctx = dict(self.admin_site.each_context(request))
+        ctx.update({
+            "title": "Rozvrh tréninků",
+            "active_menu": "rozvrh",
+            "view_mode": mode,
+            "trainers": User.objects.order_by("username"),
+            "selected_trainer": int(trainer_id) if trainer_id else "",
+            "date_value": base_date.strftime("%Y-%m-%d"),
+            "prev_date": (base_date - timedelta(days=step)).strftime("%Y-%m-%d"),
+            "next_date": (base_date + timedelta(days=step)).strftime("%Y-%m-%d"),
+            "hours": hours,
+            "day_start_min": day_start_min,
+            "days": days,
+        })
+        return TemplateResponse(request, "admin/core/trening/kalendar.html", ctx)
+
+    # === SOUHRN TRENÉRŮ ===
+    def treneri_summary_view(self, request):
+        def _parse(s):
+            try:
+                return datetime.strptime(s, "%Y-%m-%d").date()
+            except Exception:
+                return None
+
+        dfrom = _parse(request.GET.get("from", ""))
+        dto = _parse(request.GET.get("to", ""))
+
+        base_qs = Trening.objects.all()
+        if dfrom:
+            base_qs = base_qs.filter(datum__date__gte=dfrom)
+        if dto:
+            base_qs = base_qs.filter(datum__date__lte=dto)
+
+        trener_ids = list(base_qs.values_list("trener_id", flat=True).distinct())
+
+        rows = []
+        total_due = Decimal("0.00")
+
+        for uid in trener_ids:
+            u = User.objects.get(pk=uid)
+            tqs = base_qs.filter(trener_id=uid).order_by("datum").prefetch_related("dochazky__hrac")
+
+            total_min = 0
+            due = Decimal("0.00")
+            for t in tqs:
+                rate = sazba_trenera_k_datu(u, t.datum)
+                hours_val = (Decimal(t.delka_minut) / Decimal(60)).quantize(Decimal("0.01"))
+                due += (hours_val * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+                total_min += t.delka_minut
+
+            hodiny = (Decimal(total_min) / Decimal(60)).quantize(Decimal("0.01"))
+            total_due += due
+
+            paid_qs = TrenerPlatba.objects.filter(user=u)
+            if dfrom:
+                paid_qs = paid_qs.filter(vytvoreno__date__gte=dfrom)
+            if dto:
+                paid_qs = paid_qs.filter(vytvoreno__date__lte=dto)
+            paid = Decimal(paid_qs.aggregate(s=Sum("castka"))["s"] or 0)
+            balance = (due - paid).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+            rows.append({
+                "trener": (u.get_full_name() or u.username),
+                "trener_change_url": reverse("admin:auth_user_change", args=[u.id]),
+                "detail_url": reverse("admin:core_treneri_detail", args=[u.id]) + (
+                    f"?from={dfrom}&to={dto}" if dfrom or dto else ""
+                ),
+                "pocet": tqs.count(),
+                "hodiny": f"{hodiny:.2f}",
+                "dluzno": f"{due:.0f} Kč",
+                "zaplaceno": f"{paid:.0f} Kč",
+                "k_vyplaceni": f"{balance:.0f} Kč",
+                "vyplata_url": reverse("admin:core_trenerplatba_add") + f"?user={u.id}&amount={balance}",
+            })
+
+        total_paid_qs = TrenerPlatba.objects.all()
+        if dfrom:
+            total_paid_qs = total_paid_qs.filter(vytvoreno__date__gte=dfrom)
+        if dto:
+            total_paid_qs = total_paid_qs.filter(vytvoreno__date__lte=dto)
+        total_paid = Decimal(total_paid_qs.aggregate(s=Sum("castka"))["s"] or 0)
+        total_balance = (total_due - total_paid)
+
+        ctx = dict(
+            self.admin_site.each_context(request),
+            title="Trenéři – souhrn",
+            rows=rows,
+            total_due=f"{total_due:.0f} Kč",
+            total_paid=f"{total_paid:.0f} Kč",
+            total_balance=f"{total_balance:.0f} Kč",
+            dfrom=dfrom, dto=dto,
+            active_menu="treneri",
+        )
+        return TemplateResponse(request, "admin/core/trening/treneri_summary.html", ctx)
+
+    # === DETAIL TRENÉRA (S FORMULÁŘEM PRO SAZBU) ===
+    def trener_detail_view(self, request, user_id: int):
+        u = User.objects.get(pk=user_id)
+
+        if request.method == "POST" and "_nastavit_sazbu" in request.POST:
+            date_raw = (request.POST.get("rate_from") or "").strip()
+            amt_raw = (request.POST.get("rate_amount") or "").strip()
+
+            try:
+                eff_from = datetime.strptime(date_raw, "%Y-%m-%d").date()
+            except Exception:
+                messages.error(request, "Neplatné datum „Od“.")
+                return redirect(request.get_full_path())
+
+            try:
+                amount = Decimal(amt_raw.replace(",", "."))
+                if amount <= 0:
+                    raise ValueError()
+            except Exception:
+                messages.error(request, "Neplatná částka sazby.")
+                return redirect(request.get_full_path())
+
+            try:
+                TrenerSazba.set_rate_from(user=u, effective_from=eff_from, rate=amount)
+            except ValidationError as e:
+                messages.error(request, f"Sazbu se nepodařilo nastavit: {e}")
+            else:
+                messages.success(
+                    request,
+                    f"Sazba {amount:.0f} Kč/h nastavena od {eff_from.strftime('%d.%m.%Y')}."
+                )
+            return redirect(request.get_full_path())
+
+        def _parse(s):
+            try:
+                return datetime.strptime(s, "%Y-%m-%d").date()
+            except Exception:
+                return None
+
+        dfrom = _parse(request.GET.get("from", ""))
+        dto = _parse(request.GET.get("to", ""))
+
+        tqs = Trening.objects.filter(trener=u)
+        if dfrom:
+            tqs = tqs.filter(datum__date__gte=dfrom)
+        if dto:
+            tqs = tqs.filter(datum__date__lte=dto)
+        tqs = tqs.prefetch_related("dochazky__hrac").order_by("-datum")
+
+        rows, total_min, total_due = [], 0, Decimal("0.00")
+        for t in tqs:
+            dt = dj_tz.localtime(t.datum) if dj_tz.is_aware(t.datum) else t.datum
+            hours = (Decimal(t.delka_minut) / Decimal(60)).quantize(Decimal("0.01"))
+            rate = sazba_trenera_k_datu(u, dt)
+            castka = (hours * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            total_min += t.delka_minut
+            total_due += castka
+
+            hraci = ", ".join(
+                d.hrac.jmeno for d in t.dochazky.select_related("hrac").filter(prisel=True)
+            ) or "—"
+
+            rows.append({
+                "datum": dt.strftime("%d.%m.%Y"),
+                "cas": dt.strftime("%H:%M"),
+                "format": t.get_format_display(),
+                "kurt": t.get_kurt_display(),
+                "hraci": hraci,
+                "hodiny": f"{hours:.2f}",
+                "sazba": f"{rate:.0f} Kč/h",
+                "castka": f"{castka:.0f} Kč",
+                "trening_change_url": reverse("admin:core_trening_change", args=[t.id]),
+            })
+
+        total_hours = (Decimal(total_min) / Decimal(60)).quantize(Decimal("0.01"))
+
+        platby_qs = TrenerPlatba.objects.filter(user=u).order_by("-vytvoreno")
+        if dfrom:
+            platby_qs = platby_qs.filter(vytvoreno__date__gte=dfrom)
+        if dto:
+            platby_qs = platby_qs.filter(vytvoreno__date__lte=dto)
+
+        platby_rows = []
+        for p in platby_qs:
+            ts = dj_tz.localtime(p.vytvoreno) if dj_tz.is_aware(p.vytvoreno) else p.vytvoreno
+            platby_rows.append({
+                "datum": ts.strftime("%d.%m.%Y"),
+                "cas": ts.strftime("%H:%M"),
+                "castka": f"{Decimal(p.castka):.0f} Kč",
+                "poznamka": p.poznamka or "—",
+                "change_url": reverse("admin:core_trenerplatba_change", args=[p.id]),
+            })
+
+        paid = Decimal(platby_qs.aggregate(s=Sum("castka"))["s"] or 0)
+        balance = (total_due - paid).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+        rate_today = sazba_trenera_k_datu(u, dj_tz.now())
+        rate_today_amount = f"{rate_today:.0f}"
+        rate_today_date = dj_tz.localdate().strftime("%Y-%m-%d")
+        rate_form_initial_date = rate_today_date
+
+        sazby = (
+            TrenerSazba.objects.filter(user=u).order_by("-platnost_od")
+            .values("id", "platnost_od", "platnost_do", "sazba_za_hodinu")
+        )
+
+        ctx = dict(
+            self.admin_site.each_context(request),
+            title=f"Trenér – {u.get_full_name() or u.username}",
+            trener=u,
+            total_hours=f"{total_hours:.2f} h",
+            total_due=f"{total_due:.0f} Kč",
+            total_paid=f"{paid:.0f} Kč",
+            balance=f"{balance:.0f} Kč",
+            pay_url=reverse("admin:core_trenerplatba_add") + f"?user={u.id}&amount={balance}",
+            platby_rows=platby_rows,
+            platby_total=f"{paid:.0f} Kč",
+            rows=rows,
+            rate_today_amount=rate_today_amount,
+            rate_today_date=rate_today_date,
+            rate_form_initial_date=rate_form_initial_date,
+            sazby=sazby,
+            summary_url=reverse("admin:core_treneri_summary"),
+            dfrom=dfrom, dto=dto,
+            active_menu="treneri",
+        )
+        return TemplateResponse(request, "admin/core/trening/trener_detail.html", ctx)
+
+
+# -----------------------------
+#  PLATBY HRÁČŮ (OPRAVENO)
+# -----------------------------
+class OnlyPaymentsFilter(admin.SimpleListFilter):
+    title = "Typ"
+    parameter_name = "typ"
+
+    def lookups(self, request, model_admin):
+        return [
+            (Transakce.Typ.PLATBA, Transakce.Typ.PLATBA.label),
+            (Transakce.Typ.VRATKA, Transakce.Typ.VRATKA.label),
+        ]
+
+    def queryset(self, request, queryset):
+        val = self.value()
+        if val in (Transakce.Typ.PLATBA, Transakce.Typ.VRATKA):
+            return queryset.filter(typ=val)
+        return queryset
+
+
+@admin.register(Transakce)
+class TransakceAdmin(admin.ModelAdmin):
+    # --- 1. HLAVNÍ POHLED: HISTORIE TRANSAKCÍ ---
+    list_display = ("datum_display", "hrac_link", "castka_display", "typ_display", "poznamka", "akce_smazat")
+    list_filter = (OnlyPaymentsFilter, "vytvoreno", "hrac")
+    search_fields = ("hrac__jmeno", "popis")
+    actions = ["delete_selected"]
+    list_per_page = 50
+    
+    change_list_template = "admin/core/transakce/change_list.html"
+    
+    fields = ('hrac', 'typ', 'castka', 'popis', 'vytvoreno')
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA]).select_related("hrac")
+
+    # --- SLOUPCE PRO HISTORII ---
+    @admin.display(description="Datum", ordering="vytvoreno")
+    def datum_display(self, obj):
+        if not obj.vytvoreno: return "-"
+        dt = dj_tz.localtime(obj.vytvoreno) if dj_tz.is_aware(obj.vytvoreno) else obj.vytvoreno
+        return format_html(
+            '<span style="white-space:nowrap;">{}</span> <span style="color:#888; font-size:0.9em">{}</span>',
+            dt.strftime("%d. %B %Y"), dt.strftime("%H:%M")
+        )
+
+    @admin.display(description="Hráč", ordering="hrac__jmeno")
+    def hrac_link(self, obj):
+        if not obj.hrac: return "-"
+        url = reverse("admin:core_hrac_change", args=[obj.hrac.id])
+        return format_html('<a href="{}" style="font-weight:600;">{}</a>', url, obj.hrac.jmeno)
+
+    @admin.display(description="Částka", ordering="castka")
+    def castka_display(self, obj):
+        color = "green" if obj.castka >= 0 else "red"
+        sign = "+" if obj.castka > 0 else ""
+        
+        # --- ZDE BYLA CHYBA, TOTO JE OPRAVA ---
+        # Číslo naformátujeme předem v Pythonu, ne uvnitř HTML stringu
+        formatted_val = f"{obj.castka:,.0f}"
+        
+        return format_html(
+            '<span style="color:{}; font-weight:bold;">{} {} Kč</span>',
+            color, sign, formatted_val
+        )
+
+    @admin.display(description="Typ", ordering="typ")
+    def typ_display(self, obj):
+        return obj.get_typ_display()
+
+    @admin.display(description="Poznámka")
+    def poznamka(self, obj):
+        return obj.popis or ""
+
+    @admin.display(description="Akce")
+    def akce_smazat(self, obj):
+        url = reverse("admin:core_transakce_delete", args=[obj.id])
+        return format_html('<a class="deletelink" href="{}"></a>', url)
+
+
+# --- 2. DRUHÝ POHLED: PŘEHLED ZŮSTATKŮ ---
+    def prehled_zustatku_view(self, request):
+        rows = []
+        for h in Hrac.objects.all():
+            last_pay = (
+                Transakce.objects.filter(hrac=h, typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA])
+                .order_by("-vytvoreno")
+                .values_list("vytvoreno", flat=True)
+                .first()
+            )
+
+            charges_qs = Transakce.objects.filter(hrac=h, typ=Transakce.Typ.NAUCTOVANO)
+            if last_pay:
+                charges_qs = charges_qs.filter(vytvoreno__gt=last_pay)
+            charges = charges_qs.aggregate(s=Sum("castka"))["s"] or Decimal("0")
+
+            mins_qs = Dochazka.objects.filter(hrac=h, prisel=True, transakce_nauc__isnull=False)
+            if last_pay:
+                mins_qs = mins_qs.filter(transakce_nauc__vytvoreno__gt=last_pay)
+            total_min = mins_qs.aggregate(s=Sum("trening__delka_minut"))["s"] or 0
+            hodiny = (Decimal(total_min) / Decimal(60)).quantize(Decimal("0.01"))
+
+            # URL detailu hráče (pro jméno)
+            detail_url = reverse("admin:core_hrac_change", args=[h.id])
+
+            # URL pro přidání platby
+            payment_url = reverse("admin:core_transakce_add") + f"?hrac={h.id}"
+            
+            # === ZMĚNA: Používáme jen class="button" bez inline stylů ===
+            # Tím se aktivuje váš globální CSS styl (oranžová, border, font)
+            akce_btn = format_html(
+                '<a class="button" href="{}">Zadat platbu</a>', 
+                payment_url
+            )
+
+            rows.append({
+                "hrac_html": format_html('<a href="{}">{}</a>', detail_url, h.jmeno),
+                "kredit": f"{h.kredit:.0f} Kč",
+                "nauctovano": f"{charges:.0f} Kč",
+                "hodiny": f"{hodiny:.2f} h",
+                "akce_html": akce_btn, 
+            })
+
+        context = {
+            **self.admin_site.each_context(request),
+            "title": "Přehled zůstatků",
+            "summary_rows": rows,
+            "summary_title": "Stav kreditů hráčů",
+            "col_head_nauctovano": "Naúčtováno od posl. platby",
+            "col_head_hodiny": "Hodiny od posl. platby",
+            "history_url": reverse("admin:core_transakce_changelist"),
+        }
+        return TemplateResponse(request, "admin/core/transakce/prehled_plateb.html", context)
+
+    def get_urls(self):
+        urls = super().get_urls()
+        my_urls = [
+            path("prehled-zustatku/", self.admin_site.admin_view(self.prehled_zustatku_view), name="core_transakce_prehled"),
+        ]
+        return my_urls + urls
+
+    def get_form(self, request, obj=None, **kwargs):
+        Form = super().get_form(request, obj, **kwargs)
+        if obj is None and "typ" in Form.base_fields:
+            Form.base_fields["typ"].choices = [
+                (Transakce.Typ.PLATBA, Transakce.Typ.PLATBA.label),
+                (Transakce.Typ.VRATKA, Transakce.Typ.VRATKA.label),
+            ]
+        return Form
+
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        hrac_id = request.GET.get("hrac")
+        if hrac_id:
+            initial["hrac"] = hrac_id
+        return initial
 
 
 # -----------------------------
