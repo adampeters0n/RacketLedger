@@ -782,33 +782,37 @@ class DochazkaInlineForm(forms.ModelForm):
         fields = ["hrac"]
 
     def validate_unique(self):
-        # Vypne kontrolu proti DB na úrovni řádku
+        # Úplně vypneme kontrolu unikátnosti na úrovni řádku
         pass
-
-    def save(self, commit=True):
-        obj = super().save(commit=False)
-        obj.prisel = True
-        if commit:
-            obj.save()
-        return obj
 
 class DochazkaFormSet(BaseInlineFormSet):
     def validate_unique(self):
-        # Vypne kontrolu proti DB na úrovni celého seznamu
+        # Úplně vypneme kontrolu unikátnosti na úrovni celého seznamu
         pass
 
     def clean(self):
-        """Pohlídá, abys neměl stejného hráče 2x pod sebou v políčkách."""
+        """
+        Vylepšená kontrola duplicit na obrazovce. 
+        Zajistí, že hláška o duplicitě se ukáže jen tehdy, když ji skutečně uděláš.
+        """
         super().clean()
-        if any(self.errors): return
-        hraci = []
+        if any(self.errors):
+            return
+
+        hraci_v_tomto_okne = []
         for form in self.forms:
-            if self._should_delete_form(form) or not form.cleaned_data.get('hrac'):
+            # Přeskočíme prázdné a smazané řádky
+            if self._should_delete_form(form) or not form.cleaned_data:
                 continue
-            h = form.cleaned_data.get('hrac')
-            if h in hraci:
-                raise ValidationError(f"Hráč {h} je v tomto tréninku vybrán vícekrát!")
-            hraci.append(h)
+            
+            hrac = form.cleaned_data.get('hrac')
+            if not hrac:
+                continue
+
+            if hrac in hraci_v_tomto_okne:
+                # Pokud je stejný hráč 2x v políčkách, hodíme chybu celému seznamu
+                raise ValidationError(f"Hráč {hrac.jmeno} je v tomto tréninku vybrán vícekrát!")
+            hraci_v_tomto_okne.append(hrac)
 
 class DochazkaInline(admin.TabularInline):
     model = Dochazka
@@ -901,21 +905,21 @@ class TreningAdmin(admin.ModelAdmin):
     # --- AGRESIVNÍ SWAP FUNKCE (Zabraňuje chybě unique_together) ---
     def save_formset(self, request, form, formset, change):
         """
-        Tady se děje to kouzlo: při úpravě smaže všechnu starou docházku v DB 
-        a uloží tu novou, co vidíš na obrazovce. Tím se uvolní místo pro 'výměnu' hráčů.
+        Zabezpečený SWAP: Smaže staré a uloží nové bez pádů.
         """
         if formset.model == Dochazka:
-            if change:
-                # Smažeme všechno staré v DB pro tento trénink, aby se uvolnila unikátní pole
-                form.instance.dochazky.all().delete()
-            
-            # Uložíme ty hráče, které vidíš teď ve formuláři na webu
-            instances = formset.save(commit=False)
-            for instance in instances:
-                # Musíme znovu přiřadit trénink k instanci, protože jsme ho smazali
-                instance.trening = form.instance
-                instance.save()
-            formset.save_m2m()
+            # Tato část proběhne, jen pokud je formulář validní
+            with transaction.atomic():
+                if change:
+                    # Smažeme staré záznamy, aby se uvolnilo místo v DB indexu
+                    form.instance.dochazky.all().delete()
+                
+                # Uložíme ty, co jsou teď ve formuláři
+                instances = formset.save(commit=False)
+                for instance in instances:
+                    instance.trening = form.instance
+                    instance.save()
+                formset.save_m2m()
         else:
             super().save_formset(request, form, formset, change)
 
