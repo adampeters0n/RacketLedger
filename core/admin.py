@@ -905,16 +905,35 @@ class TreningAdmin(admin.ModelAdmin):
     inlines = [DochazkaInline]
     actions = ["znovu_zpracovat_uctovani"]
 
+    # --- OPRAVA PRO UNIQUE_TOGETHER ---
+    def save_formset(self, request, form, formset, change):
+        """
+        Zajistí, že se při uložení nejprve provedou smazání (uvolnění místa v unikátním indexu)
+        a až poté se ukládají nové nebo změněné řádky.
+        """
+        if formset.model == Dochazka:
+            # 1. Nejdřív uložíme smazání (pokud jsi zaškrtl 'Odstranit')
+            formset.save(commit=True)
+            
+            # 2. Pak uložíme zbytek (noví hráči nebo změny jmen)
+            # Tím se Adriana 'uvolní' z DB dřív, než se ji pokusíme uložit na jiném řádku
+            instances = formset.save(commit=False)
+            for instance in instances:
+                instance.save()
+            formset.save_m2m()
+        else:
+            super().save_formset(request, form, formset, change)
+
+    # --- OSTATNÍ LOGIKA ---
     def get_form(self, request, obj=None, **kwargs):
         Form = super().get_form(request, obj, **kwargs)
         if "delka_minut" in Form.base_fields:
             field = Form.base_fields["delka_minut"]
             field.label = "Délka (hodiny)"
             
-            # ZDE JE ZMĚNA: Přidán řádek pro 45 minut
             CHOICES = [
                 (30, "30 min"),
-                (45, "45 min"),  # <-- TENTO ŘÁDEK BYL PŘIDÁN
+                (45, "45 min"),
                 (60, "1 h"),
                 (90, "1,5 h"),
                 (120, "2 h"),
@@ -932,7 +951,6 @@ class TreningAdmin(admin.ModelAdmin):
             kwargs["widget"] = AdminSplitDateTimeWithDatalist()
         return super().formfield_for_dbfield(db_field, request, **kwargs)
 
-    # --- vlastní admin URL: ROZVRH + souhrn/detail trenérů ---
     def get_urls(self):
         urls = super().get_urls()
         extra = [
@@ -942,7 +960,6 @@ class TreningAdmin(admin.ModelAdmin):
         ]
         return extra + urls
 
-    # ---- sloupce v changelistu ----
     def hraci_jmena(self, obj: Trening):
         names = [d.hrac.jmeno for d in obj.dochazky.select_related("hrac").filter(prisel=True)]
         return ", ".join(names) if names else "—"
