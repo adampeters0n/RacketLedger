@@ -902,19 +902,26 @@ class TreningAdmin(admin.ModelAdmin):
     inlines = [DochazkaInline]
     actions = ["znovu_zpracovat_uctovani"]
 
-    # --- AGRESIVNÍ SWAP FUNKCE (Zabraňuje chybě unique_together) ---
+    # --- DEBUGGING: Výpis chyb do horní lišty zpráv ---
+    def save_model(self, request, obj, form, change):
+        if not form.is_valid():
+            messages.error(request, f"Chyba v hlavním formuláři: {form.errors}")
+        super().save_model(request, obj, form, change)
+
+    # --- AGRESIVNÍ SWAP + DEBUGGING (Zabraňuje unique_together chybám) ---
     def save_formset(self, request, form, formset, change):
-        """
-        Zabezpečený SWAP: Smaže staré a uloží nové bez pádů.
-        """
+        # Pokud seznam hráčů obsahuje chybu (např. prázdné povinné pole), vypíšeme ji
+        if not formset.is_valid():
+            messages.error(request, f"Chyba v seznamu hráčů: {formset.errors}")
+
         if formset.model == Dochazka:
-            # Tato část proběhne, jen pokud je formulář validní
+            # Operaci provádíme v atomické transakci pro bezpečnost dat
             with transaction.atomic():
                 if change:
-                    # Smažeme staré záznamy, aby se uvolnilo místo v DB indexu
+                    # Smažeme staré záznamy, aby se uvolnilo místo v DB (vyhnutí se unique_together)
                     form.instance.dochazky.all().delete()
                 
-                # Uložíme ty, co jsou teď ve formuláři
+                # Uložíme nové/upravené instance z formuláře
                 instances = formset.save(commit=False)
                 for instance in instances:
                     instance.trening = form.instance
@@ -923,14 +930,13 @@ class TreningAdmin(admin.ModelAdmin):
         else:
             super().save_formset(request, form, formset, change)
 
-    # --- ÚPRAVA FORMULÁŘE (Délka v hodinách a datum widget) ---
+    # --- ÚPRAVA FORMULÁŘE (Délka a datum widget) ---
     def get_form(self, request, obj=None, **kwargs):
         Form = super().get_form(request, obj, **kwargs)
         if "delka_minut" in Form.base_fields:
             field = Form.base_fields["delka_minut"]
             field.label = "Délka (hodiny)"
             
-            # Možnosti délky tréninku včetně 45 min
             CHOICES = [
                 (30, "30 min"),
                 (45, "45 min"),
@@ -951,7 +957,7 @@ class TreningAdmin(admin.ModelAdmin):
             kwargs["widget"] = AdminSplitDateTimeWithDatalist()
         return super().formfield_for_dbfield(db_field, request, **kwargs)
 
-    # --- VLASTNÍ ADMIN URL (Rozvrh a trenéři) ---
+    # --- VLASTNÍ ADMIN URL ---
     def get_urls(self):
         urls = super().get_urls()
         extra = [
