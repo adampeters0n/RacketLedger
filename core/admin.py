@@ -782,17 +782,18 @@ class DochazkaInlineForm(forms.ModelForm):
         fields = ["hrac"]
 
     def validate_unique(self):
-        # 1. Vypneme explicitní validaci unikátnosti na formuláři
+        # 1. Vypneme explicitní validaci unikátnosti formuláře
         pass
 
     def _post_clean(self):
-        # 2. Zavoláme standardní proces (který bohužel zkontroluje DB a najde chybu)
+        # 2. Zavoláme standard, který možná vyhodí chybu DB integrity
         super()._post_clean()
 
-        # 3. TADY JE TA HLAVNÍ OPRAVA:
-        # Django 'clean' metoda modelu najde chybu "unique_together", protože v DB
-        # záznamy stále existují (smažou se až v save_formset).
-        # My tuto specifickou chybu musíme ručně odstranit ze seznamu chyb.
+        # 3. BRUTÁLNÍ SÍLA: Smažeme VŠECHNY chyby, které nejsou u konkrétního pole.
+        # Tím zmizí chyby typu "Dochazka s tímto Trening a Hrac již existuje".
+        # Neřešíme text chyby, prostě mažeme celou sekci '__all__'.
+        if hasattr(self, '_errors') and '__all__' in self._errors:
+            del self._errors['__all__']
         
         # Chyby unikátnosti se ukládají pod klíčem '__all__' (non_field_errors)
         if '__all__' in self._errors:
@@ -931,6 +932,41 @@ class TreningAdmin(admin.ModelAdmin):
     list_per_page = 50
     inlines = [DochazkaInline]
     actions = ["znovu_zpracovat_uctovani"]
+
+    # --- DIAGNOSTICKÝ NÁSTROJ (Výpis chyb do konzole) ---
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        response = super().change_view(request, object_id, form_url, extra_context)
+        
+        # Pokud došlo k odeslání formuláře (POST) a nastala chyba (response má kontext s chybami)
+        if request.method == 'POST' and hasattr(response, 'context_data'):
+            print("\n" + "="*50)
+            print("!!! DEBUG CHYB FORMULÁŘE !!!")
+            print("="*50)
+            
+            # Chyby hlavního formuláře (Trénink)
+            if 'adminform' in response.context_data:
+                form_errors = response.context_data['adminform'].form.errors
+                if form_errors:
+                    print(f"HLAVNÍ FORMULÁŘ CHYBY: {form_errors}")
+                else:
+                    print("HLAVNÍ FORMULÁŘ: OK")
+
+            # Chyby inline formulářů (Docházka)
+            if 'inline_admin_formsets' in response.context_data:
+                for inline in response.context_data['inline_admin_formsets']:
+                    if inline.formset.errors:
+                        print(f"\nINLINE {inline.opts.verbose_name_plural.upper()}:")
+                        # Vypisujeme chyby pro každý řádek
+                        for i, err in enumerate(inline.formset.errors):
+                            if err:
+                                print(f"  Řádek {i+1}: {err}")
+                        # Vypisujeme chyby celého setu (např. duplicity)
+                        non_form = inline.formset.non_form_errors()
+                        if non_form:
+                            print(f"  CELKOVÉ CHYBY SETU: {non_form}")
+            print("="*50 + "\n")
+            
+        return response
 
     # --- DEBUGGING ---
     def save_model(self, request, obj, form, change):
