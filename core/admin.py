@@ -773,7 +773,7 @@ class CenikAdmin(admin.ModelAdmin):
 
 
 # ---------------------------------------------------------
-#  DOCHÁZKA – OPRAVA PRO ADMIN.PY
+#  DOCHÁZKA – FINÁLNÍ VERZE (S OPRAVOU _post_clean)
 # ---------------------------------------------------------
 
 class DochazkaInlineForm(forms.ModelForm):
@@ -782,17 +782,45 @@ class DochazkaInlineForm(forms.ModelForm):
         fields = ["hrac"]
 
     def validate_unique(self):
-        # Vypnutí kontroly unikátnosti na úrovni řádku (důležité pro swapování jmen)
+        # 1. Vypneme explicitní validaci unikátnosti na formuláři
         pass
+
+    def _post_clean(self):
+        # 2. Zavoláme standardní proces (který bohužel zkontroluje DB a najde chybu)
+        super()._post_clean()
+
+        # 3. TADY JE TA HLAVNÍ OPRAVA:
+        # Django 'clean' metoda modelu najde chybu "unique_together", protože v DB
+        # záznamy stále existují (smažou se až v save_formset).
+        # My tuto specifickou chybu musíme ručně odstranit ze seznamu chyb.
+        
+        # Chyby unikátnosti se ukládají pod klíčem '__all__' (non_field_errors)
+        if '__all__' in self._errors:
+            new_errors = []
+            for error in self._errors['__all__']:
+                # Hledáme chybu o duplicitě. Text chyby se může lišit dle lokalizace,
+                # ale obvykle obsahuje 'existuje' (CS) nebo 'exists' (EN).
+                error_str = str(error)
+                if "existuje" in error_str or "exists" in error_str:
+                    continue # Tuto chybu ignorujeme, protože ji vyřešíme smazáním starých dat
+                new_errors.append(error)
+            
+            # Pokud zbyly jiné chyby (opravdové), vrátíme je, jinak sekci '__all__' smažeme,
+            # aby se formulář tvářil jako validní.
+            if not new_errors:
+                del self._errors['__all__']
+            else:
+                self._errors['__all__'] = new_errors
 
 class DochazkaFormSet(BaseInlineFormSet):
     def validate_unique(self):
-        # Vypnutí kontroly unikátnosti na úrovni celého setu
+        # Vypnutí kontroly unikátnosti na úrovni celého setu (proti DB)
         pass
 
     def clean(self):
         """
         Kontrola duplicit pouze v rámci formuláře (UI), ne proti DB.
+        Zajistí, že si v jednom okně nevybereš omylem 2x stejného hráče.
         """
         if any(self.errors):
             # Pokud už jsou chyby v políčkách (např. nevyplněné jméno), neřeš dál
@@ -809,25 +837,24 @@ class DochazkaFormSet(BaseInlineFormSet):
                 continue
 
             if hrac in hraci_v_tomto_okne:
-                # TOTO vyhodí tu červenou hlášku, pokud dáš 2x stejné jméno
+                # TOTO vyhodí konkrétní hlášku, pokud dáš 2x stejné jméno TEĎ v prohlížeči
                 raise ValidationError(f"Hráč {hrac.jmeno} je v tomto tréninku vybrán vícekrát!")
             
             hraci_v_tomto_okne.append(hrac)
 
 class DochazkaInline(admin.TabularInline):
     model = Dochazka
-    form = DochazkaInlineForm
-    formset = DochazkaFormSet
+    form = DochazkaInlineForm    # <--- Použití upraveného formuláře
+    formset = DochazkaFormSet    # <--- Použití upraveného formsetu
     extra = 1
     autocomplete_fields = ("hrac",)
     
-    # Zobrazované pole - přisel vynecháme (default=True)
     fields = ("hrac", "cena_preview", "castka_nauc_display", "nauceno_kdy_display")
     readonly_fields = ("cena_preview", "castka_nauc_display", "nauceno_kdy_display")
     exclude = ("prisel",)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        # Zákaz "pluska" a "tužky" u výběru hráče (zrychluje načítání)
+        # Optimalizace widgetu pro výběr hráče
         field = super().formfield_for_foreignkey(db_field, request, **kwargs)
         if db_field.name == "hrac":
             w = field.widget
@@ -839,7 +866,6 @@ class DochazkaInline(admin.TabularInline):
         self.parent_obj = obj
         return super().get_formset(request, obj, **kwargs)
 
-    # ... (tvé metody cena_preview atd. zůstávají stejné) ...
     def cena_preview(self, obj):
         tr = obj.trening if getattr(obj, "trening_id", None) else getattr(self, "parent_obj", None)
         return f"{tr.cena_na_hrace():.0f} Kč" if tr else "—"
