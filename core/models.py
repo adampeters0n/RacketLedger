@@ -481,7 +481,7 @@ class Trening(models.Model):
 
     # formát a typ kurtu ovlivní ceník
     # ZMĚNA: max_length na 10, musí odpovídat Cenik.format
-    format = models.CharField(max_length=10, choices=Cenik.Format.choices)
+    format = models.CharField(max_length=15, choices=Cenik.Format.choices)
     kurt = models.CharField(max_length=8, choices=Cenik.Kurt.choices)
 
     poznamka = models.CharField(max_length=240, blank=True)

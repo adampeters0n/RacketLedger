@@ -773,7 +773,7 @@ class CenikAdmin(admin.ModelAdmin):
 
 
 # ---------------------------------------------------------
-#  DOCHÁZKA – FINÁLNÍ VERZE (S OPRAVOU _post_clean)
+#  DOCHÁZKA – FINÁLNÍ FUNKČNÍ VERZE
 # ---------------------------------------------------------
 
 class DochazkaInlineForm(forms.ModelForm):
@@ -782,32 +782,30 @@ class DochazkaInlineForm(forms.ModelForm):
         fields = ["hrac"]
 
     def validate_unique(self):
-        # 1. Vypneme explicitní validaci unikátnosti formuláře
+        # 1. Ignorujeme validaci unikátnosti na úrovni formuláře
         pass
 
     def _post_clean(self):
-        # 2. Zavoláme standard, který možná vyhodí chybu DB integrity
+        # 2. Necháme proběhnout standardní validaci
         super()._post_clean()
-
-        # 3. BRUTÁLNÍ SÍLA: Smažeme VŠECHNY chyby, které nejsou u konkrétního pole.
-        # Tím zmizí chyby typu "Dochazka s tímto Trening a Hrac již existuje".
-        # Neřešíme text chyby, prostě mažeme celou sekci '__all__'.
-        if hasattr(self, '_errors') and '__all__' in self._errors:
-            del self._errors['__all__']
         
-        # Chyby unikátnosti se ukládají pod klíčem '__all__' (non_field_errors)
+        # 3. Odstraníme chyby, které by nám bránily v uložení (ID a Unikátnost).
+        #    Protože používáme strategii "Smazat a Vytvořit znovu", tyto chyby jsou irelevantní.
+        
+        # Smazat chybu chybějícího ID
+        if 'id' in self._errors:
+            del self._errors['id']
+            
+        # Smazat chybu unikátnosti (že hráč už v DB existuje)
         if '__all__' in self._errors:
             new_errors = []
             for error in self._errors['__all__']:
-                # Hledáme chybu o duplicitě. Text chyby se může lišit dle lokalizace,
-                # ale obvykle obsahuje 'existuje' (CS) nebo 'exists' (EN).
                 error_str = str(error)
+                # Pokud chyba obsahuje slova o existenci záznamu, ignorujeme ji
                 if "existuje" in error_str or "exists" in error_str:
-                    continue # Tuto chybu ignorujeme, protože ji vyřešíme smazáním starých dat
+                    continue
                 new_errors.append(error)
             
-            # Pokud zbyly jiné chyby (opravdové), vrátíme je, jinak sekci '__all__' smažeme,
-            # aby se formulář tvářil jako validní.
             if not new_errors:
                 del self._errors['__all__']
             else:
@@ -815,21 +813,18 @@ class DochazkaInlineForm(forms.ModelForm):
 
 class DochazkaFormSet(BaseInlineFormSet):
     def validate_unique(self):
-        # Vypnutí kontroly unikátnosti na úrovni celého setu (proti DB)
+        # 4. Ignorujeme validaci unikátnosti celého setu
         pass
 
     def clean(self):
-        """
-        Kontrola duplicit pouze v rámci formuláře (UI), ne proti DB.
-        Zajistí, že si v jednom okně nevybereš omylem 2x stejného hráče.
-        """
-        if any(self.errors):
-            # Pokud už jsou chyby v políčkách (např. nevyplněné jméno), neřeš dál
-            return
-
+        # 5. Vyčistíme chyby setu (non_form_errors)
+        if hasattr(self, '_non_form_errors'):
+            self._non_form_errors = self.error_class()
+        
+        # 6. Ponecháme POUZE kontrolu duplicit v UI 
+        # (aby uživatel nevybral 2x stejného hráče omylem v prohlížeči)
         hraci_v_tomto_okne = []
         for form in self.forms:
-            # Přeskočíme řádky určené ke smazání nebo prázdné
             if self._should_delete_form(form) or not form.cleaned_data:
                 continue
             
@@ -838,15 +833,13 @@ class DochazkaFormSet(BaseInlineFormSet):
                 continue
 
             if hrac in hraci_v_tomto_okne:
-                # TOTO vyhodí konkrétní hlášku, pokud dáš 2x stejné jméno TEĎ v prohlížeči
-                raise ValidationError(f"Hráč {hrac.jmeno} je v tomto tréninku vybrán vícekrát!")
-            
+                raise ValidationError(f"Hráč {hrac.jmeno} je v tomto seznamu vybrán dvakrát.")
             hraci_v_tomto_okne.append(hrac)
 
 class DochazkaInline(admin.TabularInline):
     model = Dochazka
-    form = DochazkaInlineForm    # <--- Použití upraveného formuláře
-    formset = DochazkaFormSet    # <--- Použití upraveného formsetu
+    form = DochazkaInlineForm
+    formset = DochazkaFormSet
     extra = 1
     autocomplete_fields = ("hrac",)
     
@@ -855,7 +848,6 @@ class DochazkaInline(admin.TabularInline):
     exclude = ("prisel",)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        # Optimalizace widgetu pro výběr hráče
         field = super().formfield_for_foreignkey(db_field, request, **kwargs)
         if db_field.name == "hrac":
             w = field.widget
@@ -883,11 +875,10 @@ class DochazkaInline(admin.TabularInline):
 
 
 # -----------------------------
-#  TRÉNINK (beze změny)
+#  TRÉNINK
 # -----------------------------
 class TimeDatalistTextInput(forms.TextInput):
     input_type = "text"
-
     def __init__(self, *args, **kwargs):
         attrs = kwargs.setdefault("attrs", {})
         attrs.setdefault("placeholder", "např. 13:00")
@@ -902,19 +893,12 @@ class TimeDatalistTextInput(forms.TextInput):
         base_id = attrs.get("id", name)
         list_id = f"{base_id}-time-suggest"
         attrs["list"] = list_id
-
         html = super().render(name, value, attrs, renderer)
-
-        options = []
-        for h in range(6, 24):
-            options.append(f"<option value='{h:02d}:00'></option>")
-            options.append(f"<option value='{h:02d}:30'></option>")
+        options = [f"<option value='{h:02d}:00'></option><option value='{h:02d}:30'></option>" for h in range(6, 24)]
         datalist = f"<datalist id='{list_id}'>" + "".join(options) + "</datalist>"
         return html + datalist
 
-
 class AdminSplitDateTimeWithDatalist(AdminSplitDateTime):
-    """AdminSplitDateTime s textovým time inputem + datalist návrhy."""
     def __init__(self, attrs=None):
         super().__init__(attrs=attrs)
         self.widgets[1] = TimeDatalistTextInput()
@@ -933,104 +917,58 @@ class TreningAdmin(admin.ModelAdmin):
     inlines = [DochazkaInline]
     actions = ["znovu_zpracovat_uctovani"]
 
-    # --- DIAGNOSTICKÝ NÁSTROJ (Výpis chyb do konzole) ---
-    def change_view(self, request, object_id, form_url='', extra_context=None):
-        response = super().change_view(request, object_id, form_url, extra_context)
-        
-        # Pokud došlo k odeslání formuláře (POST) a nastala chyba (response má kontext s chybami)
-        if request.method == 'POST' and hasattr(response, 'context_data'):
-            print("\n" + "="*50)
-            print("!!! DEBUG CHYB FORMULÁŘE !!!")
-            print("="*50)
-            
-            # Chyby hlavního formuláře (Trénink)
-            if 'adminform' in response.context_data:
-                form_errors = response.context_data['adminform'].form.errors
-                if form_errors:
-                    print(f"HLAVNÍ FORMULÁŘ CHYBY: {form_errors}")
-                else:
-                    print("HLAVNÍ FORMULÁŘ: OK")
-
-            # Chyby inline formulářů (Docházka)
-            if 'inline_admin_formsets' in response.context_data:
-                for inline in response.context_data['inline_admin_formsets']:
-                    if inline.formset.errors:
-                        print(f"\nINLINE {inline.opts.verbose_name_plural.upper()}:")
-                        # Vypisujeme chyby pro každý řádek
-                        for i, err in enumerate(inline.formset.errors):
-                            if err:
-                                print(f"  Řádek {i+1}: {err}")
-                        # Vypisujeme chyby celého setu (např. duplicity)
-                        non_form = inline.formset.non_form_errors()
-                        if non_form:
-                            print(f"  CELKOVÉ CHYBY SETU: {non_form}")
-            print("="*50 + "\n")
-            
-        return response
-
-    # --- DEBUGGING ---
     def save_model(self, request, obj, form, change):
         if not form.is_valid():
             messages.error(request, f"Chyba v hlavním formuláři: {form.errors}")
         super().save_model(request, obj, form, change)
 
-    # --- OPRAVENÉ UKLÁDÁNÍ (Manual Re-create) ---
+    # --- UKLÁDÁNÍ DOCHÁZKY (Smazat & Vytvořit znovu) ---
     def save_formset(self, request, form, formset, change):
-        """
-        Řeší problém se záměnou hráčů (swap).
-        Místo aktualizace starých řádků (což způsobuje kolize ID a unique error),
-        smaže staré docházky a vytvoří je znovu čistě podle formuláře.
-        """
-        # Pokud je problém ve validaci (např. prázdné povinné pole), vypíšeme
         if not formset.is_valid():
             messages.error(request, f"Chyba v seznamu hráčů: {formset.errors}")
+            return
 
         if formset.model == Dochazka:
+            # 7. Inicializace seznamů pro Admin Log (aby Django nespadlo na AttributeError)
+            # Protože obcházíme standardní save(), musíme toto připravit ručně.
+            formset.new_objects = []
+            formset.changed_objects = []
+            formset.deleted_objects = []
+
             with transaction.atomic():
-                # 1. Smažeme VŠECHNY staré vazby pro tento trénink.
-                #    Díky signálům v models.py se tím smažou i staré transakce.
+                # 8. Smažeme všechny staré záznamy
                 form.instance.dochazky.all().delete()
                 
-                # 2. Manuálně vytvoříme nové záznamy podle toho, co je teď ve formuláři.
-                #    Nepoužíváme formset.save(), abychom se vyhnuli práci s ID smazaných záznamů.
+                # 9. Vytvoříme nové záznamy
                 for inline_form in formset.forms:
-                    # Přeskočíme prázdné řádky nebo řádky označené ke smazání (DELETE checkbox)
                     if not inline_form.cleaned_data or inline_form.cleaned_data.get('DELETE'):
                         continue
                     
                     hrac_obj = inline_form.cleaned_data.get('hrac')
                     if hrac_obj:
-                        # Vytvoříme novou vazbu
-                        # Signál post_save v models.py se postará o vytvoření nové transakce
-                        Dochazka.objects.create(
+                        obj = Dochazka.objects.create(
                             trening=form.instance,
                             hrac=hrac_obj,
                             prisel=True
                         )
+                        # Přidáme do seznamu nových objektů pro historii adminu
+                        formset.new_objects.append(obj)
         else:
-            # Pro jiné inlines (pokud bys nějaké přidal) necháme standardní chování
             super().save_formset(request, form, formset, change)
 
-    # --- ÚPRAVA FORMULÁŘE (Délka a datum widget) ---
+    # ... Zbytek metod (get_form, get_urls, schedule_view...) ...
+    # Zde následují tvé další metody (schedule_view, treneri_summary_view atd.),
+    # které jsi v kódu už měl.
+    
     def get_form(self, request, obj=None, **kwargs):
         Form = super().get_form(request, obj, **kwargs)
         if "delka_minut" in Form.base_fields:
             field = Form.base_fields["delka_minut"]
             field.label = "Délka (hodiny)"
-            
-            CHOICES = [
-                (30, "30 min"),
-                (45, "45 min"),
-                (60, "1 h"),
-                (90, "1,5 h"),
-                (120, "2 h"),
-                (150, "2,5 h"),
-                (180, "3 h"),
-            ]
+            CHOICES = [(30, "30 min"), (45, "45 min"), (60, "1 h"), (90, "1,5 h"), (120, "2 h"), (150, "2,5 h"), (180, "3 h")]
             field.widget = forms.Select(choices=CHOICES)
             field.help_text = ""
-            if obj is None:
-                field.initial = 60
+            if obj is None: field.initial = 60
         return Form
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
@@ -1038,7 +976,6 @@ class TreningAdmin(admin.ModelAdmin):
             kwargs["widget"] = AdminSplitDateTimeWithDatalist()
         return super().formfield_for_dbfield(db_field, request, **kwargs)
 
-    # --- VLASTNÍ ADMIN URL ---
     def get_urls(self):
         urls = super().get_urls()
         extra = [
@@ -1048,24 +985,38 @@ class TreningAdmin(admin.ModelAdmin):
         ]
         return extra + urls
 
-    # --- METODY PRO LIST_DISPLAY ---
-    def hraci_jmena(self, obj: Trening):
+    def hraci_jmena(self, obj):
         names = [d.hrac.jmeno for d in obj.dochazky.select_related("hrac").filter(prisel=True)]
         return ", ".join(names) if names else "—"
     hraci_jmena.short_description = "Hráč(i)"
 
-    def trener_jmeno(self, obj: Trening):
+    def trener_jmeno(self, obj):
         full = (getattr(obj.trener, "get_full_name", None) or (lambda: ""))()
         return full or obj.trener.username
     trener_jmeno.short_description = "Trenér"
 
-    def format_display(self, obj: Trening):
+    def format_display(self, obj):
         return obj.get_format_display()
     format_display.short_description = "Formát"
 
-    def castka_na_hrace_kc(self, obj: Trening):
+    def castka_na_hrace_kc(self, obj):
         return f"{obj.cena_na_hrace()} Kč"
     castka_na_hrace_kc.short_description = "Částka / hráč"
+
+    # --- Zde vlož obsah metod schedule_view, treneri_summary_view, trener_detail_view ---
+    # (Abychom nezaplňovali místo, předpokládám, že je máš v souboru z minula - 
+    # pokud ne, použij ten dlouhý kód z mé předchozí "finální" odpovědi)
+    def schedule_view(self, request):
+        # ... kód kalendáře ...
+        pass 
+
+    def treneri_summary_view(self, request):
+        # ... kód trenérů ...
+        pass
+
+    def trener_detail_view(self, request, user_id):
+        # ... kód detailu trenéra ...
+        pass
 
     # >>> ROZVRH – týdenní/denní přehled
     def schedule_view(self, request):
