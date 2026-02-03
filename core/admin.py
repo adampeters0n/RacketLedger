@@ -773,7 +773,7 @@ class CenikAdmin(admin.ModelAdmin):
 
 
 # ---------------------------------------------------------
-#  DOCHÁZKA – Finální oprava pro unikátní chybu
+#  DOCHÁZKA – OPRAVA PRO ADMIN.PY
 # ---------------------------------------------------------
 
 class DochazkaInlineForm(forms.ModelForm):
@@ -782,26 +782,25 @@ class DochazkaInlineForm(forms.ModelForm):
         fields = ["hrac"]
 
     def validate_unique(self):
-        # Úplně vypneme kontrolu unikátnosti na úrovni řádku
+        # Vypnutí kontroly unikátnosti na úrovni řádku (důležité pro swapování jmen)
         pass
 
 class DochazkaFormSet(BaseInlineFormSet):
     def validate_unique(self):
-        # Úplně vypneme kontrolu unikátnosti na úrovni celého seznamu
+        # Vypnutí kontroly unikátnosti na úrovni celého setu
         pass
 
     def clean(self):
         """
-        Vylepšená kontrola duplicit na obrazovce. 
-        Zajistí, že hláška o duplicitě se ukáže jen tehdy, když ji skutečně uděláš.
+        Kontrola duplicit pouze v rámci formuláře (UI), ne proti DB.
         """
-        super().clean()
         if any(self.errors):
+            # Pokud už jsou chyby v políčkách (např. nevyplněné jméno), neřeš dál
             return
 
         hraci_v_tomto_okne = []
         for form in self.forms:
-            # Přeskočíme prázdné a smazané řádky
+            # Přeskočíme řádky určené ke smazání nebo prázdné
             if self._should_delete_form(form) or not form.cleaned_data:
                 continue
             
@@ -810,8 +809,9 @@ class DochazkaFormSet(BaseInlineFormSet):
                 continue
 
             if hrac in hraci_v_tomto_okne:
-                # Pokud je stejný hráč 2x v políčkách, hodíme chybu celému seznamu
+                # TOTO vyhodí tu červenou hlášku, pokud dáš 2x stejné jméno
                 raise ValidationError(f"Hráč {hrac.jmeno} je v tomto tréninku vybrán vícekrát!")
+            
             hraci_v_tomto_okne.append(hrac)
 
 class DochazkaInline(admin.TabularInline):
@@ -820,11 +820,14 @@ class DochazkaInline(admin.TabularInline):
     formset = DochazkaFormSet
     extra = 1
     autocomplete_fields = ("hrac",)
+    
+    # Zobrazované pole - přisel vynecháme (default=True)
     fields = ("hrac", "cena_preview", "castka_nauc_display", "nauceno_kdy_display")
     readonly_fields = ("cena_preview", "castka_nauc_display", "nauceno_kdy_display")
     exclude = ("prisel",)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        # Zákaz "pluska" a "tužky" u výběru hráče (zrychluje načítání)
         field = super().formfield_for_foreignkey(db_field, request, **kwargs)
         if db_field.name == "hrac":
             w = field.widget
@@ -836,6 +839,7 @@ class DochazkaInline(admin.TabularInline):
         self.parent_obj = obj
         return super().get_formset(request, obj, **kwargs)
 
+    # ... (tvé metody cena_preview atd. zůstávají stejné) ...
     def cena_preview(self, obj):
         tr = obj.trening if getattr(obj, "trening_id", None) else getattr(self, "parent_obj", None)
         return f"{tr.cena_na_hrace():.0f} Kč" if tr else "—"
@@ -902,32 +906,47 @@ class TreningAdmin(admin.ModelAdmin):
     inlines = [DochazkaInline]
     actions = ["znovu_zpracovat_uctovani"]
 
-    # --- DEBUGGING: Výpis chyb do horní lišty zpráv ---
+    # --- DEBUGGING ---
     def save_model(self, request, obj, form, change):
         if not form.is_valid():
             messages.error(request, f"Chyba v hlavním formuláři: {form.errors}")
         super().save_model(request, obj, form, change)
 
-    # --- AGRESIVNÍ SWAP + DEBUGGING (Zabraňuje unique_together chybám) ---
+    # --- OPRAVENÉ UKLÁDÁNÍ (Manual Re-create) ---
     def save_formset(self, request, form, formset, change):
-        # Pokud seznam hráčů obsahuje chybu (např. prázdné povinné pole), vypíšeme ji
+        """
+        Řeší problém se záměnou hráčů (swap).
+        Místo aktualizace starých řádků (což způsobuje kolize ID a unique error),
+        smaže staré docházky a vytvoří je znovu čistě podle formuláře.
+        """
+        # Pokud je problém ve validaci (např. prázdné povinné pole), vypíšeme
         if not formset.is_valid():
             messages.error(request, f"Chyba v seznamu hráčů: {formset.errors}")
 
         if formset.model == Dochazka:
-            # Operaci provádíme v atomické transakci pro bezpečnost dat
             with transaction.atomic():
-                if change:
-                    # Smažeme staré záznamy, aby se uvolnilo místo v DB (vyhnutí se unique_together)
-                    form.instance.dochazky.all().delete()
+                # 1. Smažeme VŠECHNY staré vazby pro tento trénink.
+                #    Díky signálům v models.py se tím smažou i staré transakce.
+                form.instance.dochazky.all().delete()
                 
-                # Uložíme nové/upravené instance z formuláře
-                instances = formset.save(commit=False)
-                for instance in instances:
-                    instance.trening = form.instance
-                    instance.save()
-                formset.save_m2m()
+                # 2. Manuálně vytvoříme nové záznamy podle toho, co je teď ve formuláři.
+                #    Nepoužíváme formset.save(), abychom se vyhnuli práci s ID smazaných záznamů.
+                for inline_form in formset.forms:
+                    # Přeskočíme prázdné řádky nebo řádky označené ke smazání (DELETE checkbox)
+                    if not inline_form.cleaned_data or inline_form.cleaned_data.get('DELETE'):
+                        continue
+                    
+                    hrac_obj = inline_form.cleaned_data.get('hrac')
+                    if hrac_obj:
+                        # Vytvoříme novou vazbu
+                        # Signál post_save v models.py se postará o vytvoření nové transakce
+                        Dochazka.objects.create(
+                            trening=form.instance,
+                            hrac=hrac_obj,
+                            prisel=True
+                        )
         else:
+            # Pro jiné inlines (pokud bys nějaké přidal) necháme standardní chování
             super().save_formset(request, form, formset, change)
 
     # --- ÚPRAVA FORMULÁŘE (Délka a datum widget) ---
