@@ -3,6 +3,7 @@ from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from datetime import datetime, time, timedelta
 import logging
 import json
+import re
 
 from django.conf import settings
 from django.db import transaction
@@ -35,6 +36,19 @@ from .models import (
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
+
+
+# Pomocná funkce: "AdamPeterka" -> "Adam Peterka"
+def _pretty_username(username: str) -> str:
+    """
+    Vloží mezery před velká písmena v uživatelském jménu pro hezčí zobrazení.
+    Příklad: 'AdamPeterka' -> 'Adam Peterka'.
+    Reálné vazby zůstávají na model User, mění se pouze label v dropdownu.
+    """
+    if not username:
+        return ""
+    # Mezera před každým velkým písmenem (kromě prvního znaku)
+    return re.sub(r"(?<!^)(?=[A-Z])", " ", username)
 
 
 # -----------------------------
@@ -916,6 +930,24 @@ class TreningAdmin(admin.ModelAdmin):
     list_per_page = 50
     inlines = [DochazkaInline]
     actions = ["znovu_zpracovat_uctovani"]
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        """
+        U pole 'trener' v adminu zobrazí hezké jméno:
+        - pokud má User vyplněné first_name/last_name, použije se celé jméno
+        - jinak se zobrazí username rozdělené na základě velkých písmen (AdamPeterka -> Adam Peterka)
+        """
+        if db_field.name == "trener":
+            formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+            def label_from_instance(user):
+                full = (getattr(user, "get_full_name", None) or (lambda: ""))().strip()
+                return full or _pretty_username(user.username)
+
+            formfield.label_from_instance = label_from_instance
+            return formfield
+
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def save_model(self, request, obj, form, change):
         if not form.is_valid():
