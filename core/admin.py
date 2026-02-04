@@ -1035,6 +1035,144 @@ class TreningAdmin(admin.ModelAdmin):
         return f"{obj.cena_na_hrace()} Kč"
     castka_na_hrace_kc.short_description = "Částka / hráč"
 
+    def response_add(self, request, obj, post_url_continue=None):
+        """
+        Po uložení nového tréninku zobrazí přehledné shrnutí jednotlivých polí
+        (trenér, datum, čas, délka, formát, kurt) pod sebou, aby si trenér
+        mohl rychle zkontrolovat, co zadal.
+        """
+        # Převod času do lokální zóny + formát datum/čas
+        local_dt = dj_tz.localtime(obj.datum) if dj_tz.is_aware(obj.datum) else obj.datum
+        date_str = local_dt.strftime("%d.%m.%Y")
+        time_str = local_dt.strftime("%H:%M")
+
+        # Délka v hodinách (např. 1 h, 1,5 h)
+        hours = obj.hodiny
+        try:
+            # 1.00 -> "1", 1.50 -> "1,5"
+            if hours == hours.to_integral():
+                hours_str = f"{int(hours)} h"
+            else:
+                hours_str = f"{str(hours).replace('.', ',')} h"
+        except Exception:
+            hours_str = f"{obj.delka_minut} min"
+
+        trener_str = self.trener_jmeno(obj)
+        format_str = obj.get_format_display()
+        kurt_str = obj.get_kurt_display()
+        hraci_str = self.hraci_jmena(obj)
+        edit_url = reverse("admin:core_trening_change", args=[obj.pk])
+
+        summary_message = format_html(
+            (
+                'Položka typu <strong>Trénink</strong> byla úspěšně přidána.<br>'
+                'Zkontrolujte prosím zadané údaje:<br>'
+                '<strong>Trenér:</strong> {}<br>'
+                '<strong>Datum:</strong> {}<br>'
+                '<strong>Čas:</strong> {}<br>'
+                '<strong>Délka (hodiny):</strong> {}<br>'
+                '<strong>Formát:</strong> {}<br>'
+                '<strong>Kurt:</strong> {}<br>'
+                '<strong>Hráči:</strong> {}<br>'
+                'Níže můžete přidat další položku typu <strong>Trénink</strong>.<br>'
+                '<a href="{}" class="button" '
+                'style="display:inline-block;margin-top:14px;padding:6px 12px;'
+                'font-size:12px;line-height:1.4;">'
+                'Otevřít a upravit tento trénink'
+                '</a>'
+            ),
+            trener_str,
+            date_str,
+            time_str,
+            hours_str,
+            format_str,
+            kurt_str,
+            hraci_str,
+            edit_url,
+        )
+
+        # Nejprve necháme Django provést standardní logiku (uložení + redirect)
+        response = super().response_add(request, obj, post_url_continue)
+
+        # Získáme všechny zprávy, odfiltrujeme původní textovou hlášku o tréninku
+        storage = messages.get_messages(request)
+        kept = []
+        for m in storage:
+            text = str(m.message)
+            if "Položka typu Trénink" in text and "byla úspěšně přidána" in text and "Zkontrolujte prosím zadané údaje" not in text:
+                # Původní automatická hláška – přeskočit (schovat)
+                continue
+            kept.append(m)
+
+        # Znovu přidáme ponechané zprávy
+        for m in kept:
+            messages.add_message(request, m.level, m.message, extra_tags=m.extra_tags)
+
+        # A nakonec přidáme naši novou přehlednou hlášku s tlačítkem pro úpravu
+        messages.success(request, summary_message)
+
+        return response
+
+    def response_change(self, request, obj):
+        """
+        Po úpravě existujícího tréninku zobrazí stejnou přehlednou kontrolu
+        jako po vytvoření – a skryje původní automatickou hlášku.
+        """
+        # Nejprve necháme Django provést standardní ukládací logiku
+        response = super().response_change(request, obj)
+
+        # Připravíme texty pro shrnutí
+        local_dt = dj_tz.localtime(obj.datum) if dj_tz.is_aware(obj.datum) else obj.datum
+        date_str = local_dt.strftime("%d.%m.%Y")
+        time_str = local_dt.strftime("%H:%M")
+
+        hours = obj.hodiny
+        try:
+            if hours == hours.to_integral():
+                hours_str = f"{int(hours)} h"
+            else:
+                hours_str = f"{str(hours).replace('.', ',')} h"
+        except Exception:
+            hours_str = f"{obj.delka_minut} min"
+
+        trener_str = self.trener_jmeno(obj)
+        format_str = obj.get_format_display()
+        kurt_str = obj.get_kurt_display()
+
+        summary_message = format_html(
+            (
+                'Položka typu <strong>Trénink</strong> byla úspěšně změněna.<br>'
+                'Aktuálně uložené údaje:<br>'
+                '<strong>Trenér:</strong> {}<br>'
+                '<strong>Datum:</strong> {}<br>'
+                '<strong>Čas:</strong> {}<br>'
+                '<strong>Délka (hodiny):</strong> {}<br>'
+                '<strong>Formát:</strong> {}<br>'
+                '<strong>Kurt:</strong> {}'
+            ),
+            trener_str,
+            date_str,
+            time_str,
+            hours_str,
+            format_str,
+            kurt_str,
+        )
+
+        # Odfiltrujeme starou automatickou hlášku o změně tréninku
+        storage = messages.get_messages(request)
+        kept = []
+        for m in storage:
+            text = str(m.message)
+            if "Položka" in text and "typu Trénink" in text and "byla úspěšně změněna" in text:
+                continue
+            kept.append(m)
+
+        for m in kept:
+            messages.add_message(request, m.level, m.message, extra_tags=m.extra_tags)
+
+        messages.success(request, summary_message)
+        return response
+
     # --- Zde vlož obsah metod schedule_view, treneri_summary_view, trener_detail_view ---
     # (Abychom nezaplňovali místo, předpokládám, že je máš v souboru z minula - 
     # pokud ne, použij ten dlouhý kód z mé předchozí "finální" odpovědi)
