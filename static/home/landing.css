@@ -103,7 +103,7 @@ body{
   /* Přidáme max-width, aby na velkých monitorech nebyl text moc daleko */
   max-width: 1400px;
   margin-left: auto;
-  margin-right: 100px;
+  margin-right: auto; /* ✅ PATCH: neodsouvat obsah doprava, ať se nic neodřezává */
 }
 
 /* ✅ PATCH: Levý sloupec s textem */
@@ -160,7 +160,7 @@ h1 em{font-style:italic; font-weight:600; color:var(--muted)}
 
 /*** demo karta ***/
 .glass.phone{
-  margin-top:24px;
+  margin:24px auto 0; /* ✅ PATCH: vycentrovat demo kartu i na menších displejích */
   width:min(520px, 92vw);
   background:var(--glass);
   border:1px solid rgba(17,24,39,.10);
