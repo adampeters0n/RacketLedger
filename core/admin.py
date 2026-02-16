@@ -1514,15 +1514,40 @@ class TransakceAdmin(admin.ModelAdmin):
                 .first()
             )
 
-            charges_qs = Transakce.objects.filter(hrac=h, typ=Transakce.Typ.NAUCTOVANO)
+            # === OPRAVA: Naúčtováno podle DATUM tréninku (accrual basis) ===
+            charges = Decimal("0.00")
+            total_min = 0
             if last_pay:
-                charges_qs = charges_qs.filter(vytvoreno__gt=last_pay)
-            charges = charges_qs.aggregate(s=Sum("castka"))["s"] or Decimal("0")
-
-            mins_qs = Dochazka.objects.filter(hrac=h, prisel=True, transakce_nauc__isnull=False)
-            if last_pay:
-                mins_qs = mins_qs.filter(transakce_nauc__vytvoreno__gt=last_pay)
-            total_min = mins_qs.aggregate(s=Sum("trening__delka_minut"))["s"] or 0
+                # Najdeme tréninky, které byly odehrány po poslední platbě
+                trainings_after_pay = Trening.objects.filter(
+                    dochazky__hrac=h,
+                    dochazky__prisel=True,
+                    datum__gt=last_pay
+                ).distinct()
+            else:
+                # Pokud není žádná platba, vezmeme všechny tréninky
+                trainings_after_pay = Trening.objects.filter(
+                    dochazky__hrac=h,
+                    dochazky__prisel=True
+                ).distinct()
+            
+            for tr in trainings_after_pay:
+                # Naúčtování pro tento trénink
+                tr_charges = Transakce.objects.filter(
+                    trening=tr,
+                    hrac=h,
+                    typ=Transakce.Typ.NAUCTOVANO,
+                ).aggregate(s=Sum("castka"))["s"] or 0
+                charges += Decimal(tr_charges)
+                
+                # Hodiny pro tento trénink
+                dochazka = Dochazka.objects.filter(
+                    trening=tr,
+                    hrac=h,
+                    prisel=True
+                ).first()
+                if dochazka:
+                    total_min += tr.delka_minut or 0
             hodiny = (Decimal(total_min) / Decimal(60)).quantize(Decimal("0.01"))
 
             detail_url = reverse("admin:core_hrac_change", args=[h.id])
@@ -1726,10 +1751,14 @@ def core_app_dashboard_view(request):
     total_min_month = tqs_month.aggregate(s=Sum("delka_minut"))["s"] or 0
     hours_month = (Decimal(total_min_month) / Decimal(60)).quantize(Decimal("0.01"))
 
-    nac_month = Transakce.objects.filter(
-        vytvoreno__date__gte=m_from, vytvoreno__date__lte=m_to,
-        typ=Transakce.Typ.NAUCTOVANO,
-    ).aggregate(s=Sum("castka"))["s"] or Decimal("0")
+    # === OPRAVA: Naúčtováno podle DATUM tréninku (accrual basis) ===
+    nac_month = Decimal("0.00")
+    for tr in tqs_month:
+        tr_charges = Transakce.objects.filter(
+            trening=tr,
+            typ=Transakce.Typ.NAUCTOVANO,
+        ).aggregate(s=Sum("castka"))["s"] or 0
+        nac_month += Decimal(tr_charges)
 
     pays_month = Transakce.objects.filter(
         vytvoreno__date__gte=m_from, vytvoreno__date__lte=m_to,
@@ -1832,14 +1861,17 @@ def admin_analytika_view(request):
     hours_current = (Decimal(total_min_current) / Decimal(60)).quantize(Decimal("0.01"))
     trainings_count_current = tqs_current.count()
 
-    nac_current = Transakce.objects.filter(
-        vytvoreno__date__gte=m_from_current, vytvoreno__date__lte=m_to_current,
-        typ=Transakce.Typ.NAUCTOVANO,
-    ).aggregate(s=Sum("castka"))["s"] or Decimal("0")
-    charges_count_current = Transakce.objects.filter(
-        vytvoreno__date__gte=m_from_current, vytvoreno__date__lte=m_to_current,
-        typ=Transakce.Typ.NAUCTOVANO,
-    ).count()
+    # === OPRAVA: Naúčtováno podle DATUM tréninku (accrual basis) ===
+    nac_current = Decimal("0.00")
+    charges_count_current = 0
+    for tr in tqs_current:
+        tr_charges = Transakce.objects.filter(
+            trening=tr,
+            typ=Transakce.Typ.NAUCTOVANO,
+        )
+        charges_count_current += tr_charges.count()
+        tr_sum = tr_charges.aggregate(s=Sum("castka"))["s"] or 0
+        nac_current += Decimal(tr_sum)
 
     pays_current = Transakce.objects.filter(
         vytvoreno__date__gte=m_from_current, vytvoreno__date__lte=m_to_current,
@@ -1977,7 +2009,17 @@ def admin_analytika_view(request):
         day = today - timedelta(days=i)
         day_trainings = Trening.objects.filter(datum__date=day)
         day_hours = (Decimal(day_trainings.aggregate(s=Sum("delka_minut"))["s"] or 0) / Decimal(60)).quantize(Decimal("0.01"))
-        day_charged = Transakce.objects.filter(vytvoreno__date=day, typ=Transakce.Typ.NAUCTOVANO).aggregate(s=Sum("castka"))["s"] or Decimal("0")
+        
+        # === OPRAVA: Naúčtováno podle DATUM tréninku (accrual basis) ===
+        day_charged = Decimal("0.00")
+        for tr in day_trainings:
+            tr_charges = Transakce.objects.filter(
+                trening=tr,
+                typ=Transakce.Typ.NAUCTOVANO,
+            ).aggregate(s=Sum("castka"))["s"] or 0
+            day_charged += Decimal(tr_charges)
+        
+        # Platby zůstávají podle vytvoreno (cash basis)
         day_paid = Transakce.objects.filter(vytvoreno__date=day, typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA]).aggregate(s=Sum("castka"))["s"] or Decimal("0")
         
         activity_data.append({
@@ -2024,7 +2066,18 @@ def admin_analytika_view(request):
         month_trainings = Trening.objects.filter(datum__date__gte=month_start, datum__date__lte=month_end)
         month_total_min = month_trainings.aggregate(s=Sum("delka_minut"))["s"] or 0
         month_hours = (Decimal(month_total_min) / Decimal(60)).quantize(Decimal("0.01"))
-        month_charged = Transakce.objects.filter(vytvoreno__date__gte=month_start, vytvoreno__date__lte=month_end, typ=Transakce.Typ.NAUCTOVANO).aggregate(s=Sum("castka"))["s"] or Decimal("0")
+        
+        # === OPRAVA: Naúčtováno podle DATUM tréninku (accrual basis) ===
+        # Pro konzistenci s ostatními výpočty používáme datum tréninku, ne vytvoreno transakce
+        month_charged = Decimal("0.00")
+        for tr in month_trainings:
+            tr_charges = Transakce.objects.filter(
+                trening=tr,
+                typ=Transakce.Typ.NAUCTOVANO,
+            ).aggregate(s=Sum("castka"))["s"] or 0
+            month_charged += Decimal(tr_charges)
+        
+        # Platby zůstávají podle vytvoreno (cash basis)
         month_paid = Transakce.objects.filter(vytvoreno__date__gte=month_start, vytvoreno__date__lte=month_end, typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA]).aggregate(s=Sum("castka"))["s"] or Decimal("0")
 
         monthly_chart_data.append({
