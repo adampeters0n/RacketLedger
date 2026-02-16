@@ -2,324 +2,1188 @@
 {% load static %}
 
 {% block extrahead %}
-  {{ block.super }}
-  <link rel="stylesheet" href="{% static 'admin/custom.css' %}">
-  <style>
-    /* Styly pro KPI boxy */
-    .dash-wrap { padding:16px 20px; }
-    .kpi-grid { 
-      display:grid; 
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap:14px; 
-      margin-bottom:24px; 
-    }
-    .kpi { background:#fff; border-radius:12px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
-    .kpi .label { color:#666; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
-    .kpi .value { font-size:22px; font-weight:700; margin-top:4px; }
+{{ block.super }}
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<link rel="stylesheet" href="{% static 'admin/custom.css' %}">
+<style>
+* { box-sizing: border-box; }
+html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
 
-    /* Nové styly pro grafy a karty */
-    .chart-grid {
-      display: grid;
-      grid-template-columns: 1fr; /* 6M graf bude přes celou šířku */
-      gap: 20px;
-      margin-bottom: 24px;
-    }
-    /* Nová mřížka pro menší graf a tabulky */
-    .side-grid {
-      display: grid;
-      grid-template-columns: 1fr 2fr; /* Menší graf vlevo, tabulky vpravo */
-      gap: 20px;
-      margin-bottom: 24px;
-    }
-    
-    .chart-card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 1px 3px rgba(0,0,0,.06);
-    }
-    .chart-card h3 {
-      margin: 0 0 16px 0;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #eee;
-      font-weight: 600;
-      color: #0b1220;
-    }
-    .chart-container {
-      position: relative;
-      height: 350px; /* Zvýšeno pro 6M graf */
-    }
-    .chart-container-small {
-        position: relative;
-        height: 300px; /* Pro menší koláčový graf */
-    }
+.dash-wrap {
+ padding: 24px;
+ background: #f8f9fa;
+ min-height: 100vh;
+ width: 100%;
+ max-width: 100%;
+ box-sizing: border-box;
+ overflow-x: hidden;
+}
+.dash-wrap > * { width: 100%; max-width: 100%; box-sizing: border-box; }
 
-    /* Nové styly pro tabulky */
-    .table-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-    .card { background:#fff; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
-    .card h3 { margin:0; padding:12px 16px; border-bottom:1px solid #eee; font-weight:600; color: #0b1220; }
-    .card .inner { padding: 0; overflow: hidden; }
-    /* Wrapper pro scroll-ovací tabulky */
-    .table-wrapper {
-        max-height: 300px; /* Stejná výška jako koláčový graf */
-        overflow-y: auto;
-    }
-    
-    table.list { width:100%; border-collapse:collapse; }
-    table.list th, table.list td { padding:10px 16px; border-bottom:1px solid #f0f0f0; }
-    table.list tr:last-child td { border-bottom: none; }
-    table.list th { 
-      text-align:left; color:#666; font-size:12px; text-transform:uppercase; letter-spacing:.04em; background: #fcfcfc;
-      position: sticky; top: 0; /* Přilepená hlavička tabulky */
-    }
-    table.list td.num { text-align:right; white-space:nowrap; }
-    .muted { padding: 24px; text-align:center; color: #777; }
+/* HEADER */
+.dashboard-header { margin-bottom: 32px; }
+.dashboard-header h1 { font-size: 32px; font-weight: 700; color: #1a1a1a; margin: 0 0 8px 0; }
+.dashboard-header p { color: #6b7280; font-size: 14px; margin: 0; }
 
-    /* Responzivita */
-    @media (max-width: 1100px) {
-      .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-      .side-grid { grid-template-columns: 1fr; } /* Grafy a tabulky pod sebou */
-      .table-grid { grid-template-columns: 1fr; } /* Tabulky pod sebou */
-    }
-  </style>
+/* KPI GRID */
+.kpi-grid {
+ display: grid;
+ grid-template-columns: repeat(4, 1fr);
+ gap: 16px;
+ margin-bottom: 0;
+}
+@media (max-width: 1400px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 1024px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .kpi-grid { grid-template-columns: 1fr; gap: 16px; } }
+
+/* ═══════════════════════════════════════════
+ KPI KARTA – stejný flat design jako acc-card
+ ═══════════════════════════════════════════ */
+.kpi {
+ background: #f8fafc;
+ border: 1px solid #e2e8f0;
+ border-radius: 14px;
+ padding: 20px 22px;
+ position: relative;
+ transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.kpi:hover {
+ box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+ transform: translateY(-1px);
+ border-color: #cbd5e1;
+}
+
+
+
+.kpi-header { display: flex; flex-direction: column; margin-bottom: 16px; }
+
+.kpi .label {
+ color: #64748b; font-size: 10px; text-transform: uppercase;
+ letter-spacing: 0.09em; font-weight: 700; margin-bottom: 8px; line-height: 1.5;
+}
+.kpi .value {
+ font-size: 28px; font-weight: 800; color: #0f172a;
+ line-height: 1.2; letter-spacing: -0.02em;
+}
+.kpi.positive .value { color: #059669; }
+.kpi.negative .value { color: #e11d48; }
+.kpi.warning .value { color: #d97706; }
+
+.kpi .subtitle { font-size: 11px; color: #94a3b8; margin-top: 4px; font-weight: 500; }
+
+.kpi-details { margin-top: 16px; padding-top: 14px; border-top: 1px solid #e8eaed; }
+.kpi-detail-item {
+ display: flex; justify-content: space-between; align-items: center;
+ padding: 9px 0; font-size: 12px; border-bottom: 1px solid #f1f5f9;
+}
+.kpi-detail-item:last-child { border-bottom: none; padding-bottom: 0; }
+.kpi-detail-item:first-child { padding-top: 0; }
+.kpi-detail-label { color: #64748b; font-weight: 500; font-size: 11px; }
+.kpi-detail-value { color: #1e293b; font-weight: 600; text-align: right; font-size: 12px; }
+
+@media (max-width: 600px) {
+ .kpi { padding: 16px 18px; border-radius: 12px; }
+ .kpi .value { font-size: 24px; }
+ .kpi .label { font-size: 10px; }
+ .kpi-details { margin-top: 12px; padding-top: 12px; }
+ .kpi-detail-item { padding: 8px 0; }
+}
+
+/* SECTION ROW */
+.section-row { margin-bottom: 24px; width: 100%; }
+
+/* GRIDY */
+.grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: stretch; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+@media (max-width: 1200px) { .grid-2-1 { grid-template-columns: 1fr; } .grid-3 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } .grid-3 { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .grid-2-1 { grid-template-columns: 1fr; } }
+
+/* ═══════════════════════════════════════════
+ CHART CARD – flat, shodný styl s acc-chart-card
+ ═══════════════════════════════════════════ */
+.chart-card {
+ background: #ffffff;
+ border-radius: 14px;
+ padding: 20px 22px;
+ box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+ border: 1px solid #e5e7eb;
+ width: 100%; box-sizing: border-box;
+ transition: box-shadow 0.2s ease;
+}
+.chart-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.07); }
+.chart-card-header {
+ display: flex; justify-content: space-between; align-items: center;
+ margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid #f1f5f9;
+ flex-wrap: wrap; gap: 10px;
+}
+.chart-card h3 { margin: 0; font-weight: 600; color: #111827; font-size: 16px; letter-spacing: -0.01em; }
+.chart-card-header .view-all { font-size: 13px; color: #3b82f6; text-decoration: none; font-weight: 500; }
+.chart-container { position: relative; height: 380px; width: 100%; }
+.chart-container-medium { position: relative; height: 300px; width: 100%; }
+.chart-container-small { position: relative; height: 280px; width: 100%; }
+.chart-container canvas, .chart-container-medium canvas, .chart-container-small canvas { max-width: 100% !important; width: 100% !important; }
+@media (max-width: 768px) {
+ .chart-card { padding: 14px 16px; border-radius: 12px; }
+ .chart-card h3 { font-size: 14px; }
+ .chart-card-header { margin-bottom: 12px; padding-bottom: 10px; }
+ .chart-container { height: 260px; } .chart-container-medium { height: 240px; } .chart-container-small { height: 240px; }
+}
+@media (max-width: 480px) { .chart-container { height: 220px; } .chart-container-medium { height: 200px; } .chart-container-small { height: 200px; } }
+
+/* ═══════════════════════════════════════════
+ FINANČNÍ PŘEHLED KARTA – flat bílá, stejný styl
+ ═══════════════════════════════════════════ */
+.comparison-card {
+ background: #ffffff;
+ color: #111827;
+ border-radius: 14px;
+ padding: 22px;
+ box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+ border: 1px solid #e5e7eb;
+ width: 100%; box-sizing: border-box;
+ display: flex; flex-direction: column; justify-content: flex-start;
+ transition: box-shadow 0.2s ease;
+}
+.comparison-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.07); }
+.comparison-card h3 { color: #111827; margin: 0 0 18px 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; padding-bottom: 14px; border-bottom: 1px solid #f1f5f9; }
+
+/* Stat grid – 3 nebo 4 sloupce */
+.comparison-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; }
+.comparison-stats.cols-4 { grid-template-columns: repeat(2, 1fr); }
+.comparison-stat {
+ background: #f8fafc;
+ border: 1px solid #e2e8f0;
+ border-radius: 10px;
+ padding: 12px 14px;
+ text-align: center;
+}
+.comparison-stat-label { font-size: 10px; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; }
+.comparison-stat-value { font-size: 18px; font-weight: 800; color: #0f172a; word-break: break-word; letter-spacing: -0.01em; }
+@media (max-width: 900px) { .comparison-stats, .comparison-stats.cols-4 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) {
+ .comparison-stats, .comparison-stats.cols-4 { grid-template-columns: 1fr 1fr; gap: 8px; }
+ .comparison-card { padding: 16px; }
+ .comparison-stat-value { font-size: 15px; }
+}
+
+/* Sub-grid pro top listy (dlužníci / přeplatky) */
+.comp-sub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #f1f5f9; }
+.comp-sub-grid h4 { margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.07em; font-weight: 700; }
+.comp-sub-grid table { width: 100%; border-collapse: collapse; }
+.comp-sub-grid tr { border-bottom: 1px solid #f1f5f9; }
+.comp-sub-grid tr:last-child { border-bottom: none; }
+.comp-sub-grid td { padding: 7px 0; font-size: 12px; color: #374151; }
+.comp-sub-grid td:last-child { text-align: right; font-weight: 700; }
+@media (max-width: 600px) { .comp-sub-grid { grid-template-columns: 1fr; } }
+
+/* ═══════════════════════════════════════════
+ TABULKY – flat, shodný styl
+ ═══════════════════════════════════════════ */
+.grid-tables { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; }
+@media (max-width: 768px) { .grid-tables { grid-template-columns: 1fr; } }
+.card {
+ background: #ffffff;
+ border-radius: 14px;
+ box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+ border: 1px solid #e5e7eb;
+ overflow: hidden; width: 100%; box-sizing: border-box;
+ transition: box-shadow 0.2s ease;
+}
+.card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.07); }
+.card-header {
+ display: flex; justify-content: space-between; align-items: center;
+ padding: 14px 18px; border-bottom: 1px solid #f1f5f9;
+ background: #f8fafc; flex-wrap: wrap; gap: 10px;
+}
+.card h3 { margin: 0; font-weight: 600; color: #111827; font-size: 14px; letter-spacing: -0.01em; }
+.card .view-all { font-size: 12px; color: #3b82f6; text-decoration: none; font-weight: 500; }
+.card .inner { padding: 0; overflow: hidden; width: 100%; }
+.table-wrapper { max-height: 380px; overflow-x: auto; overflow-y: auto; width: 100%; -webkit-overflow-scrolling: touch; }
+table.list { width: 100%; border-collapse: collapse; min-width: 280px; }
+table.list th, table.list td { padding: 11px 18px; border-bottom: 1px solid #f3f4f6; text-align: left; }
+table.list tr:last-child td { border-bottom: none; }
+table.list th { color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; background: #f8fafc; position: sticky; top: 0; font-weight: 700; z-index: 10; }
+table.list td.num { text-align: right; white-space: nowrap; font-weight: 700; color: #111827; }
+table.list tbody tr { transition: background 0.12s ease; }
+table.list tbody tr:hover { background: #f8fafc; }
+table.list a { color: #3b82f6; text-decoration: none; font-weight: 500; }
+table.list a:hover { text-decoration: underline; }
+.muted { padding: 28px; text-align: center; color: #9ca3af; font-size: 13px; }
+@media (max-width: 600px) {
+ .card { border-radius: 12px; }
+ .card-header { padding: 11px 14px; }
+ .card h3 { font-size: 13px; }
+ table.list th, table.list td { padding: 9px 12px; font-size: 12px; }
+ .table-wrapper { max-height: 280px; }
+}
+
+/* =====================================================
+ ÚČETNÍ SEKCE – bílý design shodný s chart-card
+ ===================================================== */
+
+.accounting-section {
+ background: #ffffff;
+ border-radius: 16px;
+ padding: 24px;
+ box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+ border: 1px solid #e5e7eb;
+ width: 100%;
+ box-sizing: border-box;
+}
+
+/* Nadpis sekce – stejný styl jako .chart-card-header */
+.accounting-section-header {
+ display: flex;
+ align-items: center;
+ gap: 12px;
+ margin-bottom: 20px;
+ padding-bottom: 16px;
+ border-bottom: 1px solid #e5e7eb;
+ flex-wrap: wrap;
+}
+.accounting-section-header h3 {
+ margin: 0;
+ font-weight: 600;
+ color: #111827;
+ font-size: 18px;
+}
+.acc-badge {
+ font-size: 11px;
+ font-weight: 600;
+ text-transform: uppercase;
+ letter-spacing: 0.08em;
+ padding: 3px 10px;
+ border-radius: 20px;
+ background: #eff6ff;
+ color: #3b82f6;
+ border: 1px solid #bfdbfe;
+}
+.acc-period {
+ margin-left: auto;
+ font-size: 13px;
+ color: #6b7280;
+ font-weight: 500;
+}
+
+/* GRID KARET – 4 sloupce jako kpi-grid */
+.acc-grid {
+ display: grid;
+ grid-template-columns: repeat(4, 1fr);
+ gap: 16px;
+ margin-bottom: 24px;
+}
+@media (max-width: 1400px) { .acc-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 1100px) { .acc-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .acc-grid { grid-template-columns: 1fr; gap: 12px; } }
+
+/* Jednotlivé karty – světlé, BEZ barevného levého borderu */
+.acc-card {
+ background: #f8fafc;
+ border: 1px solid #e2e8f0;
+ border-radius: 14px;
+ padding: 18px 20px;
+ position: relative;
+ transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.acc-card:hover {
+ box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+ transform: translateY(-1px);
+ border-color: #cbd5e1;
+}
+
+.acc-card-top { margin-bottom: 12px; }
+.acc-label {
+ font-size: 10px;
+ font-weight: 700;
+ text-transform: uppercase;
+ letter-spacing: 0.09em;
+ color: #64748b;
+ line-height: 1.5;
+}
+
+
+/* Hodnoty – barevné, výrazné */
+.acc-value {
+ font-size: 24px;
+ font-weight: 800;
+ line-height: 1.15;
+ letter-spacing: -0.02em;
+ margin-bottom: 5px;
+ color: #0f172a;
+}
+.acc-card.teal .acc-value { color: #0d9488; }
+.acc-card.emerald .acc-value { color: #059669; }
+.acc-card.sky .acc-value { color: #0284c7; }
+.acc-card.indigo .acc-value { color: #4f46e5; }
+.acc-card.amber .acc-value { color: #d97706; }
+.acc-card.rose .acc-value { color: #e11d48; }
+.acc-card.lime .acc-value { color: #65a30d; }
+.acc-card.violet .acc-value { color: #7c3aed; }
+
+.acc-sub {
+ font-size: 11px;
+ color: #94a3b8;
+ font-weight: 500;
+ line-height: 1.4;
+}
+
+/* Trend badge */
+.acc-trend {
+ display: inline-flex;
+ align-items: center;
+ gap: 3px;
+ font-size: 10px;
+ font-weight: 600;
+ padding: 2px 8px;
+ border-radius: 20px;
+ margin-top: 8px;
+}
+.acc-trend.up { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+.acc-trend.down { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
+.acc-trend.neutral { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+
+/* 2×2 GRID GRAFŮ pod kartami */
+.acc-charts-grid {
+ display: grid;
+ grid-template-columns: repeat(2, 1fr);
+ gap: 16px;
+}
+/* Na tabletu i mobilu grafy pod sebe */
+@media (max-width: 960px) { .acc-charts-grid { grid-template-columns: 1fr; } }
+
+/* Jednotlivá karta grafu */
+.acc-chart-card {
+ background: #ffffff;
+ border: 1px solid #e5e7eb;
+ border-radius: 14px;
+ padding: 18px 20px;
+ box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+ min-width: 0; /* důležité pro flex/grid overflow */
+}
+.acc-chart-card-header {
+ display: flex;
+ align-items: center;
+ gap: 10px;
+ margin-bottom: 14px;
+ padding-bottom: 12px;
+ border-bottom: 1px solid #f1f5f9;
+ flex-wrap: wrap;
+}
+.acc-chart-card-header h4 {
+ margin: 0;
+ font-size: 14px;
+ font-weight: 600;
+ color: #374151;
+ letter-spacing: -0.01em;
+ flex: 1;
+ min-width: 0;
+}
+.acc-chart-dot {
+ width: 8px; height: 8px;
+ border-radius: 50%;
+ flex-shrink: 0;
+}
+/* Součtový badge vpravo v headeru */
+.acc-sum-badge {
+ margin-left: auto;
+ display: inline-flex;
+ align-items: center;
+ gap: 4px;
+ font-size: 13px;
+ font-weight: 700;
+ white-space: nowrap;
+ padding: 3px 10px;
+ border-radius: 20px;
+ flex-shrink: 0;
+}
+.acc-sum-badge.teal { background: #f0fdfa; color: #0d9488; border: 1px solid #99f6e4; }
+.acc-sum-badge.emerald{ background: #f0fdf4; color: #059669; border: 1px solid #86efac; }
+.acc-sum-badge.lime { background: #f7fee7; color: #65a30d; border: 1px solid #bef264; }
+.acc-sum-badge.amber { background: #fffbeb; color: #d97706; border: 1px solid #fcd34d; }
+.acc-sum-badge.negative { background: #fff1f2; color: #e11d48; border: 1px solid #fda4af; }
+.acc-sum-label {
+ font-size: 10px;
+ font-weight: 500;
+ color: #9ca3af;
+ margin-left: auto;
+ white-space: nowrap;
+}
+
+.acc-chart-wrap { position: relative; height: 220px; width: 100%; }
+
+@media (max-width: 768px) {
+ .acc-chart-card { padding: 14px 16px; }
+ .acc-chart-card-header h4 { font-size: 13px; }
+ .acc-sum-badge { font-size: 12px; padding: 2px 8px; }
+ .acc-chart-wrap { height: 200px; }
+}
+@media (max-width: 600px) {
+ .accounting-section { padding: 16px; border-radius: 12px; }
+ .acc-value { font-size: 20px; }
+ .acc-card { padding: 14px 16px; }
+ .acc-chart-wrap { height: 180px; }
+ .acc-chart-card-header { gap: 8px; }
+ .acc-sum-badge { font-size: 11px; }
+}
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="dash-wrap">
-  <h1 style="margin-bottom: 20px;">Analytika</h1>
 
-  <div class="kpi-grid">
-    <div class="kpi">
-      <div class="label">Odehrané hodiny (měsíc)</div>
-      <div class="value" id="data-hours">{{ kpis.hours }}</div>
-    </div>
-    <div class="kpi">
-      <div class="label">Naúčtováno (měsíc)</div>
-      <div class="value" id="data-nauctovano">{{ kpis.nauctovano }}</div>
-    </div>
-    <div class="kpi">
-      <div class="label">Přijaté platby (měsíc)</div>
-      <div class="value" id="data-platby">{{ kpis.platby }}</div>
-    </div>
-    <div class="kpi">
-      <div class="label">K vyplacení trenérům (měsíc)</div>
-      <div class="value" id="data-vyplaceni">{{ kpis.k_vyplaceni }}</div>
-    </div>
+ <div class="dashboard-header">
+ <h1>Analytika</h1>
+ <p>Kompletní přehled financí, plateb a aktivit tenisového systému</p>
+ </div>
 
-    <div class="kpi" style="border-top: 3px solid #EF4444;">
-      <div class="label">CELKEM DLUŽNÉ ČÁSTKY</div>
-      <div class="value" id="data-dluhy" style="color: #EF4444;">{{ kpis.total_debt }}</div>
-    </div>
-    <div class="kpi" style="border-top: 3px solid #22C55E;">
-      <div class="label">CELKEM PŘEBYTKY</div>
-      <div class="value" id="data-prebytky" style="color: #22C55E;">{{ kpis.total_surplus }}</div>
-    </div>
-    <div class="kpi" style="border-top: 3px solid #6B7280;">
-      <div class="label">CELKOVÁ FIN. ROVNOVÁHA</div>
-      <div class="value" id="data-balance" style="color: #111827;">{{ kpis.total_balance }}</div>
-    </div>
-  </div>
+ <!-- KPI GRID – obaleno v sekci jako Účetní ukazatele -->
+ <div class="section-row">
+ <div class="accounting-section">
+ <div class="accounting-section-header">
+ <h3>Základní ukazatele TS</h3>
+ <span class="acc-badge">Přehled</span>
+ <span class="acc-period">Aktuální měsíc + celkem</span>
+ </div>
+ <div class="kpi-grid">
 
-  <div class="chart-grid">
-    <div class="chart-card">
-      <h3>Přehled za 6 měsíců</h3>
-      <div class="chart-container">
-        <canvas id="financeChart"></canvas>
-      </div>
-    </div>
-  </div>
+ <!-- 1. Odehrané hodiny (měsíc) -->
+ <div class="kpi">
+ <div class="kpi-header">
+ <div class="label">Odehrané hodiny (měsíc)</div>
+ <div class="value" id="data-hours">{{ kpis.hours }}</div>
+ </div>
+ <div class="kpi-details">
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Tréninků tento měsíc:</span>
+ <span class="kpi-detail-value">{{ kpis.trainings_count_current }}</span>
+ </div>
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Celkem hodin / tréninků:</span>
+ <span class="kpi-detail-value">{{ kpis.total_all_hours }} / {{ kpis.total_trainings_count }}</span>
+ </div>
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Průměr na trénink:</span>
+ <span class="kpi-detail-value" id="avg-hours-per-training-month">-</span>
+ </div>
+ </div>
+ </div>
 
-  <div class="side-grid">
-    <div class="chart-card">
-      <h3>Celková rovnováha</h3>
-      <div class="chart-container-small">
-        <canvas id="balanceChart"></canvas>
-      </div>
-    </div>
-    
-    <div class="table-grid"> <div class="card">
-          <h3>Top dlužníci (Hráči)</h3>
-          <div class="inner table-wrapper"> <table class="list">
-              <thead><tr><th>Hráč</th><th class="num">Kredit</th></tr></thead>
-              <tbody>
-              {% for r in debtors %}
-                <tr>
-                  <td><a href="{{ r.url }}">{{ r.name }}</a></td>
-                  <td class="num">{{ r.kredit }}</td>
-                </tr>
-              {% empty %}
-                <tr><td colspan="2" class="muted">Žádní dlužníci 🎉</td></tr>
-              {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-        <div class="card">
-          <h3>K vyplacení (Trenéři)</h3>
-          <div class="inner table-wrapper"> <table class="list">
-              <thead><tr><th>Trenér</th><th class="num">Částka</th></tr></thead>
-              <tbody>
-              {% for r in treneri %}
-                <tr>
-                  <td><a href="{{ r.url }}">{{ r.name }}</a></td>
-                  <td class="num">{{ r.balance }}</td>
-                </tr>
-              {% empty %}
-                <tr><td colspan="2" class="muted">Nic k vyplacení.</td></tr>
-              {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </div>
-    </div>
-  </div>
+ <!-- 2. Naúčtováno (měsíc) -->
+ <div class="kpi positive">
+ <div class="kpi-header">
+ <div class="label">Naúčtováno (měsíc)</div>
+ <div class="value" id="data-nauctovano">{{ kpis.nauctovano }}</div>
+ </div>
+ <div class="kpi-details">
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Faktur tento měsíc:</span>
+ <span class="kpi-detail-value">{{ kpis.charges_count_current }}</span>
+ </div>
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Celkem naúčtováno / faktur:</span>
+ <span class="kpi-detail-value">{{ kpis.total_all_charged }} / {{ kpis.total_charges_count }}</span>
+ </div>
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Průměr na fakturu:</span>
+ <span class="kpi-detail-value" id="avg-charge-month">-</span>
+ </div>
+ </div>
+ </div>
 
-</div> <script>
-  const monthlyData = {{ monthly_chart_data|safe }};
-</script>
+ <!-- 3. Přijaté platby (měsíc) -->
+ <div class="kpi positive">
+ <div class="kpi-header">
+ <div class="label">Přijaté platby (měsíc)</div>
+ <div class="value" id="data-platby">{{ kpis.platby }}</div>
+ </div>
+ <div class="kpi-details">
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Plateb tento měsíc:</span>
+ <span class="kpi-detail-value">{{ kpis.payments_count_current }}</span>
+ </div>
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Celkem zaplaceno / plateb:</span>
+ <span class="kpi-detail-value">{{ kpis.total_all_paid }} / {{ kpis.total_payments_count }}</span>
+ </div>
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Průměr na platbu:</span>
+ <span class="kpi-detail-value" id="avg-payment-month">-</span>
+ </div>
+ </div>
+ </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+ <!-- 4. K vyplacení trenérům (měsíc) -->
+ <div class="kpi warning">
+ <div class="kpi-header">
+ <div class="label">K vyplacení trenérům (měsíc)</div>
+ <div class="value" id="data-vyplaceni">{{ kpis.k_vyplaceni }}</div>
+ </div>
+ <div class="kpi-details">
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Nárok tento měsíc:</span>
+ <span class="kpi-detail-value">{{ kpis.k_vyplaceni }}</span>
+ </div>
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Status:</span>
+ <span class="kpi-detail-value">K vyplacení</span>
+ </div>
+ </div>
+ </div>
 
-<script>
-  (function() {
-    // Pomocná funkce pro převedení "174 085 Kč" na číslo 174085
-    function parseVal(elementId) {
-      const el = document.getElementById(elementId);
-      if (!el) return 0;
-      // Odstraní vše, co není číslice nebo znaménko mínus
-      const cleanVal = el.textContent.replace(/[^0-9-]/g, '');
-      return parseInt(cleanVal, 10) || 0;
-    }
-    
-    // Formátovače pro osy Y
-    const kcCsvFormatter = (value) => value.toLocaleString('cs-CZ') + ' Kč';
-    const hourCsvFormatter = (value) => value.toLocaleString('cs-CZ') + ' h';
+ <!-- 5. Nezaplaceno (měsíc) -->
+ <div class="kpi negative">
+ <div class="kpi-header">
+ <div class="label">Nezaplaceno (měsíc)</div>
+ <div class="value" id="data-unpaid">{{ kpis.unpaid }}</div>
+ <div class="subtitle">Naúčtováno − Zaplaceno</div>
+ </div>
+ <div class="kpi-details">
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Naúčtováno:</span>
+ <span class="kpi-detail-value">{{ kpis.nauctovano }}</span>
+ </div>
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Zaplaceno:</span>
+ <span class="kpi-detail-value">{{ kpis.platby }}</span>
+ </div>
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Rozdíl:</span>
+ <span class="kpi-detail-value" style="color:#ef4444">{{ kpis.unpaid }}</span>
+ </div>
+ </div>
+ </div>
 
-    // 1. Sloupcový graf: 6M Finance
-    const ctxFinance = document.getElementById('financeChart');
-    if (ctxFinance && typeof monthlyData !== 'undefined') {
-      // Příprava dat z JSONu
-      const labels = monthlyData.map(d => d.label);
-      const chargedData = monthlyData.map(d => d.charged);
-      const paidData = monthlyData.map(d => d.paid);
-      const hoursData = monthlyData.map(d => d.hours);
+ <!-- 6. Celkem dluhy -->
+ <div class="kpi negative">
+ <div class="kpi-header">
+ <div class="label">Celkem dlužné částky</div>
+ <div class="value" id="data-dluhy" style="color:#ef4444">{{ kpis.total_debt }}</div>
+ </div>
+ <div class="kpi-details">
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Celkové dluhy:</span>
+ <span class="kpi-detail-value" style="color:#ef4444">{{ kpis.total_debt }}</span>
+ </div>
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Celkové přebytky:</span>
+ <span class="kpi-detail-value" style="color:#22c55e">{{ kpis.total_surplus }}</span>
+ </div>
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Finanční rovnováha:</span>
+ <span class="kpi-detail-value">{{ kpis.total_balance }}</span>
+ </div>
+ </div>
+ </div>
 
-      new Chart(ctxFinance, {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: 'Odehrané hodiny',
-              data: hoursData,
-              type: 'line', // Zobrazí se jako čára
-              borderColor: 'rgba(230, 120, 23, 0.9)', // Oranžová
-              backgroundColor: 'rgba(230, 120, 23, 0.7)',
-              borderWidth: 3,
-              tension: 0.1,
-              yAxisID: 'yHours', // Přiřadíme druhé ose Y
-              order: 1 // Vykreslí se navrchu
-            },
-            {
-              label: 'Naúčtováno',
-              data: chargedData,
-              backgroundColor: 'rgba(54, 162, 235, 0.7)', // Modrá
-              borderColor: 'rgb(54, 162, 235)',
-              borderWidth: 1,
-              yAxisID: 'yMoney', // Přiřadíme první ose Y
-              order: 2
-            },
-            {
-              label: 'Přijaté platby',
-              data: paidData,
-              backgroundColor: 'rgba(75, 192, 192, 0.7)', // Zelená
-              borderColor: 'rgb(75, 192, 192)',
-              borderWidth: 1,
-              yAxisID: 'yMoney', // Přiřadíme první ose Y
-              order: 3
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: true, position: 'bottom' },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  let label = context.dataset.label || '';
-                  let value = context.raw || 0;
-                  let suffix = context.dataset.yAxisID === 'yHours' ? ' h' : ' Kč';
-                  return label + ': ' + value.toLocaleString('cs-CZ') + suffix;
-                }
-              }
-            }
-          },
-          scales: {
-            // První osa Y (pro peníze)
-            yMoney: {
-              type: 'linear',
-              position: 'left',
-              beginAtZero: true,
-              ticks: { callback: kcCsvFormatter }
-            },
-            // Druhá osa Y (pro hodiny)
-            yHours: {
-              type: 'linear',
-              position: 'right',
-              beginAtZero: true,
-              ticks: { callback: hourCsvFormatter },
-              // Zajistí, že mřížka osy Y se kreslí jen jednou (z osy yMoney)
-              grid: { drawOnChartArea: false } 
-            }
-          }
-        }
-      });
-    }
+ <!-- 7. Celkem přebytky -->
+ <div class="kpi positive">
+ <div class="kpi-header">
+ <div class="label">Celkem přebytky</div>
+ <div class="value" id="data-prebytky" style="color:#22c55e">{{ kpis.total_surplus }}</div>
+ </div>
+ <div class="kpi-details">
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Celkové přebytky:</span>
+ <span class="kpi-detail-value" style="color:#22c55e">{{ kpis.total_surplus }}</span>
+ </div>
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Celkové dluhy:</span>
+ <span class="kpi-detail-value" style="color:#ef4444">{{ kpis.total_debt }}</span>
+ </div>
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Finanční rovnováha:</span>
+ <span class="kpi-detail-value">{{ kpis.total_balance }}</span>
+ </div>
+ </div>
+ </div>
 
-    // 2. Koláčový graf: Rovnováha
-    const ctxBalance = document.getElementById('balanceChart');
-    if (ctxBalance) {
-      new Chart(ctxBalance, {
-        type: 'doughnut',
-        data: {
-          labels: ['Celkem dluhy', 'Celkem přebytky'],
-          datasets: [{
-            label: 'Rovnováha (Kč)',
-            data: [
-              Math.abs(parseVal('data-dluhy')), 
-              parseVal('data-prebytky')
-            ],
-            backgroundColor: [
-              'rgba(239, 68, 68, 0.8)', // Červená
-              'rgba(34, 197, 94, 0.8)'  // Zelená
-            ],
-            hoverOffset: 4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  let label = context.label || '';
-                  let value = context.raw || 0;
-                  return label + ': ' + value.toLocaleString('cs-CZ') + ' Kč';
-                }
-              }
-            }
-          }
-        }
-      });
-    }
+ <!-- 8. Celková fin. rovnováha -->
+ <div class="kpi">
+ <div class="kpi-header">
+ <div class="label">Celková fin. rovnováha</div>
+ <div class="value" id="data-balance">{{ kpis.total_balance }}</div>
+ </div>
+ <div class="kpi-details">
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Dluhy:</span>
+ <span class="kpi-detail-value" style="color:#ef4444">{{ kpis.total_debt }}</span>
+ </div>
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Přebytky:</span>
+ <span class="kpi-detail-value" style="color:#22c55e">{{ kpis.total_surplus }}</span>
+ </div>
+ <div class="kpi-detail-item">
+ <span class="kpi-detail-label">Rovnováha:</span>
+ <span class="kpi-detail-value">{{ kpis.total_balance }}</span>
+ </div>
+ </div>
+ </div>
 
-  })();
-</script>
+ </div>
+ </div>
+ </div>
+
+ <!-- ŘADA 1 -->
+ <div class="section-row">
+ <div class="grid-2-1">
+ <div class="chart-card">
+ <div class="chart-card-header"><h3>Naúčtováno vs Zaplaceno (měsíc)</h3></div>
+ <div class="chart-container-medium"><canvas id="comparisonChart"></canvas></div>
+ </div>
+ <div class="comparison-card">
+ <h3>Finanční přehled (měsíc)</h3>
+ <div class="comparison-stats">
+ <div class="comparison-stat">
+ <div class="comparison-stat-label">Naúčtováno</div>
+ <div class="comparison-stat-value" id="comp-nauctovano" style="color:#059669">{{ kpis.nauctovano }}</div>
+ </div>
+ <div class="comparison-stat">
+ <div class="comparison-stat-label">Zaplaceno</div>
+ <div class="comparison-stat-value" id="comp-platby" style="color:#3b82f6">{{ kpis.platby }}</div>
+ </div>
+ <div class="comparison-stat">
+ <div class="comparison-stat-label">Nezaplaceno</div>
+ <div class="comparison-stat-value" id="comp-unpaid" style="color:#e11d48">{{ kpis.unpaid }}</div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <!-- ŘADA 2 -->
+ <div class="section-row">
+ <div class="grid-2-1">
+ <div class="chart-card">
+ <div class="chart-card-header"><h3>Naúčtováno vs Zaplaceno (celkem)</h3></div>
+ <div class="chart-container-medium"><canvas id="comparisonChartTotal"></canvas></div>
+ </div>
+ <div class="comparison-card">
+ <h3>Finanční přehled (celkem)</h3>
+ <div class="comparison-stats cols-4">
+ <div class="comparison-stat">
+ <div class="comparison-stat-label">Naúčtováno</div>
+ <div class="comparison-stat-value" id="data-total-nauctovano" style="color:#059669">{{ kpis.total_all_charged }}</div>
+ </div>
+ <div class="comparison-stat">
+ <div class="comparison-stat-label">Zaplaceno</div>
+ <div class="comparison-stat-value" id="data-total-platby" style="color:#3b82f6">{{ kpis.total_all_paid }}</div>
+ </div>
+ <div class="comparison-stat">
+ <div class="comparison-stat-label">Celkové dluhy</div>
+ <div class="comparison-stat-value" style="color:#e11d48">{{ kpis.total_debt }}</div>
+ </div>
+ <div class="comparison-stat">
+ <div class="comparison-stat-label">Přebytky</div>
+ <div class="comparison-stat-value" style="color:#059669">{{ kpis.total_surplus }}</div>
+ </div>
+ </div>
+ <div class="comp-sub-grid">
+ <div>
+ <h4 style="color:#059669">Top 5 Přeplatků</h4>
+ <table>
+ {% for p in top_surplus %}
+ <tr>
+ <td><a href="{{ p.url }}" style="color:#3b82f6;text-decoration:none;font-weight:500">{{ p.name }}</a></td>
+ <td style="color:#059669;font-weight:700">{{ p.kredit }}</td>
+ </tr>
+ {% empty %}
+ <tr><td colspan="2" style="padding:8px 0;color:#9ca3af;font-size:12px">Žádné přeplatky</td></tr>
+ {% endfor %}
+ </table>
+ </div>
+ <div>
+ <h4 style="color:#e11d48">Top 5 Dlužníků</h4>
+ <table>
+ {% for d in top_debtors %}
+ <tr>
+ <td><a href="{{ d.url }}" style="color:#3b82f6;text-decoration:none;font-weight:500">{{ d.name }}</a></td>
+ <td style="color:#e11d48;font-weight:700">{{ d.kredit }}</td>
+ </tr>
+ {% empty %}
+ <tr><td colspan="2" style="padding:8px 0;color:#9ca3af;font-size:12px">Žádní dlužníci</td></tr>
+ {% endfor %}
+ </table>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <!-- ŘADA 3: 6 měsíců -->
+ <div class="section-row">
+ <div class="chart-card">
+ <div class="chart-card-header"><h3>Přehled za 6 měsíců</h3></div>
+ <div class="chart-container"><canvas id="financeChart"></canvas></div>
+ </div>
+ </div>
+
+ <!-- ŘADA 4: 7 dní -->
+ <div class="section-row">
+ <div class="chart-card">
+ <div class="chart-card-header"><h3>Aktivita za posledních 7 dní</h3></div>
+ <div class="chart-container-medium"><canvas id="activityChart"></canvas></div>
+ </div>
+ </div>
+
+ <!-- ===================================================
+ ŘADA 5: ÚČETNÍ UKAZATELE – bílá sekce
+ ==================================================== -->
+ <div class="section-row">
+ <div class="accounting-section">
+
+ <!-- Nadpis -->
+ <div class="accounting-section-header">
+ <h3>Účetní ukazatele</h3>
+ <span class="acc-badge">Finance</span>
+ <span class="acc-period">Aktuální měsíc + celkem</span>
+ </div>
+
+ <!-- 12 karet -->
+ <div class="acc-grid">
+
+ <!-- ŘADA 1: měsíční (4 karty) -->
+ <div class="acc-card teal">
+  <div class="acc-label">Cash Flow<br>(měsíc)</div>
+ <div class="acc-value" id="acc-cashflow-month">{{ accounting.cashflow_month }}</div>
+ <div class="acc-sub">Přijaté platby − výplaty trenérům</div>
+ <div class="acc-trend neutral" id="acc-cashflow-month-trend">—</div>
+ </div>
+
+ <div class="acc-card emerald">
+  <div class="acc-label">Hrubý zisk<br>(měsíc)</div>
+ <div class="acc-value" id="acc-gross-month">{{ accounting.gross_profit_month }}</div>
+ <div class="acc-sub">Naúčtováno − náklady na trenéry</div>
+ <div class="acc-trend neutral" id="acc-gross-month-trend">—</div>
+ </div>
+
+ <div class="acc-card sky">
+  <div class="acc-label">Marže<br>(měsíc)</div>
+ <div class="acc-value">{{ accounting.margin_month }}</div>
+ <div class="acc-sub">Hrubý zisk / Naúčtováno × 100</div>
+ </div>
+
+ <div class="acc-card indigo">
+  <div class="acc-label">Výnosy / hod.<br>(měsíc)</div>
+ <div class="acc-value">{{ accounting.revenue_per_hour_month }}</div>
+ <div class="acc-sub">Naúčtováno ÷ odehrané hodiny</div>
+ </div>
+
+ <!-- ŘADA 2: celkové výplatové ukazatele (4 karty) -->
+ <div class="acc-card amber">
+  <div class="acc-label">Výplaty trenérům<br>(celkem)</div>
+ <div class="acc-value">{{ accounting.total_trener_paid }}</div>
+ <div class="acc-sub">Součet všech TrenerPlatba</div>
+ </div>
+
+ <div class="acc-card rose">
+  <div class="acc-label">Zbývá vyplatit<br>(celkem)</div>
+ <div class="acc-value">{{ accounting.total_trener_remaining }}</div>
+ <div class="acc-sub">Earned trenérů − již vyplaceno</div>
+ </div>
+
+ <div class="acc-card lime">
+  <div class="acc-label">Čistý zisk<br>(celkem)</div>
+ <div class="acc-value">{{ accounting.net_profit_total }}</div>
+ <div class="acc-sub">Všechny platby − výplaty trenérům</div>
+ </div>
+
+ <div class="acc-card violet">
+  <div class="acc-label">Ø Příjem / hráč<br>(měsíc)</div>
+ <div class="acc-value">{{ accounting.avg_revenue_per_player_month }}</div>
+ <div class="acc-sub">Naúčtováno ÷ aktivní hráči</div>
+ </div>
+
+ <!-- ŘADA 3: nové celkové ukazatele (4 karty) -->
+ <div class="acc-card emerald">
+  <div class="acc-label">Hrubý zisk<br>(celkem)</div>
+ <div class="acc-value" id="acc-gross-total">{{ accounting.gross_profit_total }}</div>
+ <div class="acc-sub">Naúčtováno celkem − earned trenérů celkem</div>
+ </div>
+
+ <div class="acc-card sky">
+  <div class="acc-label">Marže<br>(celkem)</div>
+ <div class="acc-value">{{ accounting.margin_total }}</div>
+ <div class="acc-sub">Hrubý zisk celkem / Naúčtováno celkem × 100</div>
+ </div>
+
+ <div class="acc-card indigo">
+  <div class="acc-label">Výnosy / hod.<br>(celkem)</div>
+ <div class="acc-value">{{ accounting.revenue_per_hour_total }}</div>
+ <div class="acc-sub">Naúčtováno celkem ÷ celkem hodin</div>
+ </div>
+
+ <div class="acc-card violet">
+  <div class="acc-label">Ø Příjem / hráč<br>(celkem)</div>
+ <div class="acc-value">{{ accounting.avg_revenue_per_player_total }}</div>
+ <div class="acc-sub">Naúčtováno celkem ÷ počet hráčů</div>
+ </div>
+
+ </div>
+
+ <!-- 4 grafy v 2×2 gridu -->
+ <div class="acc-charts-grid">
+
+ <!-- Cash Flow 6M -->
+ <div class="acc-chart-card">
+ <div class="acc-chart-card-header">
+ <div class="acc-chart-dot" style="background:#14b8a6"></div>
+ <h4>Cash Flow – posledních 6 měsíců</h4>
+ <span class="acc-sum-badge teal" id="sum-cashflow">—</span>
+ </div>
+ <div class="acc-chart-wrap">
+ <canvas id="accCashflowChart"></canvas>
+ </div>
+ </div>
+
+ <!-- Hrubý zisk 6M -->
+ <div class="acc-chart-card">
+ <div class="acc-chart-card-header">
+ <div class="acc-chart-dot" style="background:#10b981"></div>
+ <h4>Hrubý zisk – posledních 6 měsíců</h4>
+ <span class="acc-sum-badge emerald" id="sum-gross">—</span>
+ </div>
+ <div class="acc-chart-wrap">
+ <canvas id="accGrossChart"></canvas>
+ </div>
+ </div>
+
+ <!-- Čistý zisk 6M -->
+ <div class="acc-chart-card">
+ <div class="acc-chart-card-header">
+ <div class="acc-chart-dot" style="background:#84cc16"></div>
+ <h4>Čistý zisk – posledních 6 měsíců</h4>
+ <span class="acc-sum-badge lime" id="sum-net">—</span>
+ </div>
+ <div class="acc-chart-wrap">
+ <canvas id="accNetProfitChart"></canvas>
+ </div>
+ </div>
+
+ <!-- Výplaty trenérům 6M -->
+ <div class="acc-chart-card">
+ <div class="acc-chart-card-header">
+ <div class="acc-chart-dot" style="background:#f59e0b"></div>
+ <h4>Výplaty trenérům – posledních 6 měsíců</h4>
+ <span class="acc-sum-badge amber" id="sum-trener">—</span>
+ </div>
+ <div class="acc-chart-wrap">
+ <canvas id="accTrenerPaidChart"></canvas>
+ </div>
+ </div>
+
+ </div>
+ <!-- / acc-charts-grid -->
+
+ </div>
+ </div>
+ <!-- / ÚČETNÍ UKAZATELE -->
+
+ <!-- ŘADA 6: 3 koláčové grafy -->
+ <div class="section-row">
+ <div class="grid-3">
+ <div class="chart-card">
+ <div class="chart-card-header"><h3>Celková rovnováha</h3></div>
+ <div class="chart-container-small"><canvas id="balanceChart"></canvas></div>
+ </div>
+ <div class="chart-card">
+ <div class="chart-card-header"><h3>Top dlužníci</h3></div>
+ <div class="chart-container-small"><canvas id="debtorsChart"></canvas></div>
+ </div>
+ <div class="chart-card">
+ <div class="chart-card-header"><h3>K vyplacení trenérům</h3></div>
+ <div class="chart-container-small"><canvas id="trenerChart"></canvas></div>
+ </div>
+ </div>
+ </div>
+
+ <!-- ŘADA 7: 2 tabulky -->
+ <div class="section-row">
+ <div class="grid-tables">
+ <div class="card">
+ <div class="card-header">
+ <h3>Top dlužníci (Hráči)</h3>
+ <a href="#" class="view-all">Zobrazit všechny →</a>
+ </div>
+ <div class="inner table-wrapper">
+ <table class="list">
+ <thead><tr><th>Hráč</th><th class="num">Kredit</th></tr></thead>
+ <tbody>
+ {% for r in debtors %}
+ <tr>
+ <td><a href="{{ r.url }}">{{ r.name }}</a></td>
+ <td class="num" style="color:#e11d48">{{ r.kredit }}</td>
+ </tr>
+ {% empty %}
+ <tr><td colspan="2" class="muted">Žádní dlužníci</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ </div>
+ <div class="card">
+ <div class="card-header">
+ <h3>K vyplacení (Trenéři)</h3>
+ <a href="#" class="view-all">Zobrazit všechny →</a>
+ </div>
+ <div class="inner table-wrapper">
+ <table class="list">
+ <thead><tr><th>Trenér</th><th class="num">Částka</th></tr></thead>
+ <tbody>
+ {% for r in treneri %}
+ <tr>
+ <td><a href="{{ r.url }}">{{ r.name }}</a></td>
+ <td class="num" style="color:#059669">{{ r.balance }}</td>
+ </tr>
+ {% empty %}
+ <tr><td colspan="2" class="muted">Nic k vyplacení.</td></tr>
+ {% endfor %}
+ </tbody>
+ </table>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <!-- JSON Data -->
+ {{ monthly_chart_data|json_script:"monthly-data" }}
+ {{ debtors_chart_data|json_script:"debtors-data" }}
+ {{ trener_chart_data|json_script:"trener-data" }}
+ {{ payment_types_data|json_script:"payment-types-data" }}
+ {{ activity_data|json_script:"activity-data" }}
+ {{ accounting_monthly_data|json_script:"accounting-monthly-data" }}
+ {{ kpis.trainings_count_current|json_script:"kpi-trainings-count" }}
+ {{ kpis.charges_count_current|json_script:"kpi-charges-count" }}
+ {{ kpis.payments_count_current|json_script:"kpi-payments-count" }}
+
+ <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+ <script>
+ Chart.register(ChartDataLabels);
+ (function() {
+ function parseVal(id) {
+ const el = document.getElementById(id);
+ if (!el) return 0;
+ return parseFloat(el.textContent.replace(/[^\d.-]/g, '').replace(/\s/g, '')) || 0;
+ }
+ function safeLoadJson(id) {
+ const el = document.getElementById(id);
+ if (!el || !el.textContent.trim()) return null;
+ try { return JSON.parse(el.textContent); } catch(e) { return null; }
+ }
+
+ const kcFmt = v => v.toLocaleString('cs-CZ') + ' Kč';
+ const kcShrt = v => {
+ if (Math.abs(v) >= 1000) return (v/1000).toFixed(1).replace('.', ',') + 'k Kč';
+ return v.toLocaleString('cs-CZ') + ' Kč';
+ };
+
+ const monthlyData = safeLoadJson('monthly-data');
+ const debtorsChartData = safeLoadJson('debtors-data');
+ const trenerChartData = safeLoadJson('trener-data');
+ const activityData = safeLoadJson('activity-data');
+ const accData = safeLoadJson('accounting-monthly-data');
+ const rawTrainings = safeLoadJson('kpi-trainings-count');
+ const rawCharges = safeLoadJson('kpi-charges-count');
+ const rawPayments = safeLoadJson('kpi-payments-count');
+
+ // Průměry KPI
+ try {
+ const mH = parseVal('data-hours'), mT = rawTrainings||0;
+ const el1 = document.getElementById('avg-hours-per-training-month');
+ if (el1) el1.textContent = mT>0 ? (mH/mT).toFixed(2)+' h' : '0 h';
+ const mC = parseVal('data-nauctovano'), mCn = rawCharges||0;
+ const el2 = document.getElementById('avg-charge-month');
+ if (el2) el2.textContent = mCn>0 ? Math.round(mC/mCn).toLocaleString('cs-CZ')+' Kč' : '0 Kč';
+ const mP = parseVal('data-platby'), mPn = rawPayments||0;
+ const el3 = document.getElementById('avg-payment-month');
+ if (el3) el3.textContent = mPn>0 ? Math.round(mP/mPn).toLocaleString('cs-CZ')+' Kč' : '0 Kč';
+ } catch(e) {}
+
+ // Trend badges
+ function setTrend(id, val) {
+ const el = document.getElementById(id);
+ if (!el) return;
+ if (val > 0) { el.className='acc-trend up'; el.textContent='+ Kladný'; }
+ else if (val < 0) { el.className='acc-trend down'; el.textContent='- Záporný'; }
+ else { el.className='acc-trend neutral'; el.textContent='Nulový'; }
+ }
+ setTimeout(() => {
+ setTrend('acc-cashflow-month-trend', parseVal('acc-cashflow-month'));
+ setTrend('acc-gross-month-trend', parseVal('acc-gross-month'));
+ }, 80);
+
+ const C = { primary:'#3b82f6', success:'#22c55e', danger:'#ef4444',
+ warning:'#f59e0b', info:'#06b6d4', purple:'#8b5cf6', orange:'#f97316' };
+
+ /* ── Světlé osy pro chart-card grafy ── */
+ const lightAxis = color => ({
+ ticks: { color:'#6b7280', font:{size:11} },
+ grid: { color:'#f3f4f6' }
+ });
+
+ /* ── Sdílená optická nastavení pro acc grafy ── */
+ function accChartOptions(yCallback) {
+ return {
+ responsive: true, maintainAspectRatio: false,
+ plugins: { legend:{ display:false }, datalabels:{ display:false } },
+ scales: {
+ x: { ticks:{ color:'#9ca3af', font:{size:11} }, grid:{ color:'#f3f4f6' } },
+ y: { ticks:{ color:'#9ca3af', font:{size:10}, callback: yCallback },
+ grid:{ color:'#f3f4f6' }, beginAtZero:true }
+ }
+ };
+ }
+
+ // 1. Bar – měsíc
+ const c1 = document.getElementById('comparisonChart');
+ if (c1) {
+ const n=parseVal('data-nauctovano'), p=parseVal('data-platby'), u=Math.max(0,n-p);
+ new Chart(c1, { type:'bar',
+ data:{ labels:['Naúčtováno','Zaplaceno','Nezaplaceno'],
+ datasets:[{data:[n,p,u], backgroundColor:[C.primary,C.success,C.danger], borderWidth:0, borderRadius:6}]},
+ options:{ responsive:true, maintainAspectRatio:false,
+ plugins:{ legend:{display:false}, datalabels:{anchor:'end',align:'top',formatter:kcFmt,font:{weight:'bold'}}},
+ scales:{ y:{ beginAtZero:true, ticks:{callback:kcFmt}, ...lightAxis() }}}});
+ }
+
+ // 2. Bar – celkem
+ const c2 = document.getElementById('comparisonChartTotal');
+ if (c2) {
+ const n=parseVal('data-total-nauctovano'), p=parseVal('data-total-platby'), u=Math.max(0,n-p);
+ new Chart(c2, { type:'bar',
+ data:{ labels:['Naúčtováno (Celkem)','Zaplaceno (Celkem)','Nezaplaceno'],
+ datasets:[{data:[n,p,u], backgroundColor:[C.primary,C.success,C.danger], borderWidth:0, borderRadius:6}]},
+ options:{ responsive:true, maintainAspectRatio:false,
+ plugins:{ legend:{display:false}, datalabels:{anchor:'end',align:'top',formatter:kcFmt,font:{weight:'bold'}}},
+ scales:{ y:{ beginAtZero:true, ticks:{callback:kcFmt}, ...lightAxis() }}}});
+ }
+
+ // 3. Bar+Line – 6M
+ const c3 = document.getElementById('financeChart');
+ if (c3 && monthlyData?.length) {
+ new Chart(c3, { type:'bar',
+ data:{ labels: monthlyData.map(d=>d.label),
+ datasets:[
+ {label:'Hodiny', data:monthlyData.map(d=>d.hours), type:'line',
+ borderColor:C.orange, backgroundColor:C.orange, borderWidth:3, yAxisID:'yHours', order:0},
+ {label:'Naúčtováno', data:monthlyData.map(d=>d.charged), backgroundColor:C.primary, yAxisID:'yMoney', order:1, borderRadius:4},
+ {label:'Zaplaceno', data:monthlyData.map(d=>d.paid), backgroundColor:C.success, yAxisID:'yMoney', order:2, borderRadius:4}
+ ]},
+ options:{ responsive:true, maintainAspectRatio:false,
+ plugins:{ legend:{position:'bottom'}, datalabels:{display:false}},
+ scales:{
+ yMoney:{ type:'linear', position:'left', beginAtZero:true, ticks:{callback:kcFmt}, ...lightAxis() },
+ yHours:{ type:'linear', position:'right', beginAtZero:true, grid:{drawOnChartArea:false} }}}});
+ }
+
+ // 4. Line – 7 dní
+ const c4 = document.getElementById('activityChart');
+ if (c4 && activityData?.length) {
+ new Chart(c4, { type:'line',
+ data:{ labels: activityData.map(d=>d.day_name),
+ datasets:[
+ {label:'Hodiny', data:activityData.map(d=>d.hours), borderColor:C.orange, backgroundColor:C.orange+'20', fill:true, tension:0.4, yAxisID:'yHours'},
+ {label:'Naúčtováno', data:activityData.map(d=>d.charged), borderColor:C.primary, backgroundColor:C.primary+'20', fill:true, tension:0.4, yAxisID:'yMoney'},
+ {label:'Zaplaceno', data:activityData.map(d=>d.paid), borderColor:C.success, backgroundColor:C.success+'20', fill:true, tension:0.4, yAxisID:'yMoney'}
+ ]},
+ options:{ responsive:true, maintainAspectRatio:false,
+ plugins:{ legend:{position:'bottom'}, datalabels:{display:false}},
+ scales:{
+ yMoney:{ position:'left', beginAtZero:true, ...lightAxis() },
+ yHours:{ position:'right', beginAtZero:true, grid:{display:false} }}}});
+ }
+
+ /* ─── Účetní grafy (světlá verze) ─── */
+
+ /* Formátuj součet do badgu – pokud záporný, přidej třídu negative */
+ function setSumBadge(id, value, positiveClass) {
+ const el = document.getElementById(id);
+ if (!el) return;
+ const fmt = Math.round(value).toLocaleString('cs-CZ') + ' Kč';
+ el.textContent = (value >= 0 ? '∑ ' : '∑ −') + (value >= 0 ? fmt : Math.round(Math.abs(value)).toLocaleString('cs-CZ') + ' Kč');
+ if (value < 0) {
+ el.className = 'acc-sum-badge negative';
+ } else {
+ el.className = 'acc-sum-badge ' + positiveClass;
+ }
+ }
+
+ function barChart(canvasId, labels, data, colorFn, yFmt) {
+ const ctx = document.getElementById(canvasId);
+ if (!ctx || !labels?.length) return;
+ new Chart(ctx, { type:'bar',
+ data:{ labels, datasets:[{ data, backgroundColor: data.map(colorFn), borderRadius:6, borderWidth:0 }]},
+ options: accChartOptions(yFmt) });
+ }
+
+ const tealPos = v => v >= 0 ? 'rgba(20,184,166,0.75)' : 'rgba(244,63,94,0.75)';
+ const emerPos = v => v >= 0 ? 'rgba(16,185,129,0.75)' : 'rgba(244,63,94,0.75)';
+ const limePos = v => v >= 0 ? 'rgba(132,204,22,0.75)' : 'rgba(244,63,94,0.75)';
+ const amberClr = () => 'rgba(245,158,11,0.75)';
+
+ if (accData?.length) {
+ const labels = accData.map(d => d.label);
+
+ const cfVals = accData.map(d => d.cashflow);
+ const gpVals = accData.map(d => d.gross_profit);
+ const npVals = accData.map(d => (d.paid||0) - (d.trener_paid||0));
+ const tpVals = accData.map(d => d.trener_paid||0);
+
+ const sum = arr => arr.reduce((a, b) => a + b, 0);
+
+ // Zapsat součty do badgů
+ setSumBadge('sum-cashflow', sum(cfVals), 'teal');
+ setSumBadge('sum-gross', sum(gpVals), 'emerald');
+ setSumBadge('sum-net', sum(npVals), 'lime');
+ setSumBadge('sum-trener', sum(tpVals), 'amber');
+
+ // Vykreslit grafy
+ barChart('accCashflowChart', labels, cfVals, tealPos, v => kcShrt(v));
+ barChart('accGrossChart', labels, gpVals, emerPos, v => kcShrt(v));
+ barChart('accNetProfitChart', labels, npVals, limePos, v => kcShrt(v));
+ barChart('accTrenerPaidChart',labels, tpVals, amberClr, v => kcShrt(v));
+ }
+
+ // 6. Doughnut – rovnováha
+ const c6 = document.getElementById('balanceChart');
+ if (c6) {
+ const d=Math.abs(parseVal('data-dluhy')), p=parseVal('data-prebytky');
+ if (d>0||p>0) new Chart(c6, { type:'doughnut',
+ data:{ labels:['Dluhy','Přebytky'], datasets:[{data:[d,p], backgroundColor:[C.danger,C.success]}]},
+ options:{ responsive:true, maintainAspectRatio:false,
+ plugins:{ legend:{position:'bottom'},
+ datalabels:{ color:'#fff', font:{weight:'bold'},
+ formatter:(v,ctx)=>{ let s=ctx.dataset.data.reduce((a,b)=>a+b,0); return Math.round((v/s)*100)+'%'; }}}}});
+ }
+
+ // 7. Pie – dlužníci
+ const c7 = document.getElementById('debtorsChart');
+ if (c7 && debtorsChartData?.labels?.length) {
+ new Chart(c7, { type:'pie',
+ data:{ labels:debtorsChartData.labels,
+ datasets:[{data:debtorsChartData.values, backgroundColor:[C.danger,C.warning,C.orange,C.purple,C.info]}]},
+ options:{ responsive:true, maintainAspectRatio:false,
+ plugins:{ legend:{position:'bottom',labels:{boxWidth:12}},
+ datalabels:{ color:'#fff', font:{weight:'bold'},
+ formatter:(v,ctx)=>{ let s=ctx.dataset.data.reduce((a,b)=>a+b,0); let r=Math.round((v/s)*100); return r>5?r+'%':''; }}}}});
+ }
+
+ // 8. Pie – trenéři
+ const c8 = document.getElementById('trenerChart');
+ if (c8 && trenerChartData?.labels?.length) {
+ new Chart(c8, { type:'pie',
+ data:{ labels:trenerChartData.labels,
+ datasets:[{data:trenerChartData.values, backgroundColor:[C.success,C.info,C.primary,C.purple,C.orange]}]},
+ options:{ responsive:true, maintainAspectRatio:false,
+ plugins:{ legend:{position:'bottom',labels:{boxWidth:12}},
+ datalabels:{ color:'#fff', font:{weight:'bold'},
+ formatter:(v,ctx)=>{ let s=ctx.dataset.data.reduce((a,b)=>a+b,0); let r=Math.round((v/s)*100); return r>5?r+'%':''; }}}}});
+ }
+
+ })();
+ </script>
+
+</div>
 {% endblock %}
