@@ -1993,7 +1993,17 @@ def admin_analytika_view(request):
     # === CELKOVÉ HODNOTY ===
     total_all_minutes = Trening.objects.aggregate(s=Sum("delka_minut"))["s"] or 0
     total_all_hours = (Decimal(total_all_minutes) / Decimal(60)).quantize(Decimal("0.01"))
-    total_all_charged = Transakce.objects.filter(typ=Transakce.Typ.NAUCTOVANO).aggregate(s=Sum("castka"))["s"] or Decimal("0")
+    
+    # === OPRAVA: Naúčtováno celkem podle DATUM tréninku (accrual basis) ===
+    # Pro konzistenci s měsíčními daty používáme datum tréninku, ne vytvoreno transakce
+    total_all_charged = Decimal("0.00")
+    for tr in Trening.objects.all():
+        tr_charges = Transakce.objects.filter(
+            trening=tr,
+            typ=Transakce.Typ.NAUCTOVANO,
+        ).aggregate(s=Sum("castka"))["s"] or 0
+        total_all_charged += Decimal(tr_charges)
+    
     total_all_paid = Transakce.objects.filter(typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA]).aggregate(s=Sum("castka"))["s"] or Decimal("0")
     total_trainings_count = Trening.objects.count()
     total_charges_count = Transakce.objects.filter(typ=Transakce.Typ.NAUCTOVANO).count()
@@ -2158,7 +2168,7 @@ def admin_analytika_view(request):
 
         label_acc = f"{czech_months[month_start_acc.month]} '{month_start_acc.strftime('%y')}"
 
-        # Platby od hráčů
+        # Platby od hráčů (cash basis - podle vytvoreno)
         m_paid = Decimal(
             Transakce.objects.filter(
                 vytvoreno__date__gte=month_start_acc,
@@ -2167,16 +2177,22 @@ def admin_analytika_view(request):
             ).aggregate(s=Sum("castka"))["s"] or 0
         )
         
-        # Naúčtováno
-        m_charged = Decimal(
-            Transakce.objects.filter(
-                vytvoreno__date__gte=month_start_acc,
-                vytvoreno__date__lte=month_end_acc,
+        # === OPRAVA: Naúčtováno podle DATUM tréninku (accrual basis) ===
+        # Pro konzistenci s earned trenérů používáme datum tréninku, ne vytvoreno transakce
+        m_charged = Decimal("0.00")
+        m_tqs = Trening.objects.filter(
+            datum__date__gte=month_start_acc,
+            datum__date__lte=month_end_acc,
+        )
+        for tr in m_tqs:
+            # Najdeme všechny transakce naúčtování pro tento trénink
+            tr_charges = Transakce.objects.filter(
+                trening=tr,
                 typ=Transakce.Typ.NAUCTOVANO,
             ).aggregate(s=Sum("castka"))["s"] or 0
-        )
+            m_charged += Decimal(tr_charges)
         
-        # Výplaty trenérům v tomto měsíci (cash)
+        # Výplaty trenérům v tomto měsíci (cash basis - podle vytvoreno)
         m_trener_paid = Decimal(
             TrenerPlatba.objects.filter(
                 vytvoreno__date__gte=month_start_acc,
@@ -2184,12 +2200,8 @@ def admin_analytika_view(request):
             ).aggregate(s=Sum("castka"))["s"] or 0
         )
         
-        # === OPRAVA: Earned trenérů v tomto měsíci (accrual) ===
+        # === Earned trenérů v tomto měsíci (accrual basis - podle datum tréninku) ===
         m_trener_earned = Decimal("0.00")
-        m_tqs = Trening.objects.filter(
-            datum__date__gte=month_start_acc,
-            datum__date__lte=month_end_acc,
-        )
         
         for uid in m_tqs.values_list("trener_id", flat=True).distinct():
             if uid is None:
@@ -2205,21 +2217,24 @@ def admin_analytika_view(request):
                     Decimal("0.01"), rounding=ROUND_HALF_UP
                 )
 
-        # === OPRAVA: Grafy používají ACCRUAL ===
-        # Cash flow = paid - trener_paid (cash flow skutečný)
+        # Cash flow = paid - trener_paid (cash basis)
         m_cashflow = float((m_paid - m_trener_paid).quantize(Decimal("0.01")))
         
-        # Hrubý zisk = charged - trener_earned (accrual)
+        # Hrubý zisk = charged - trener_earned (accrual basis - obojí podle datum tréninku)
         m_gross = float((m_charged - m_trener_earned).quantize(Decimal("0.01")))
+        
+        # Čistý zisk = paid - trener_paid (cash basis - stejné jako cash flow)
+        m_net = float((m_paid - m_trener_paid).quantize(Decimal("0.01")))
 
         accounting_monthly_data.append({
             "label": label_acc,
             "cashflow": m_cashflow,
             "gross_profit": m_gross,
+            "net_profit": m_net,  # Přidáno pro JS - stejné jako cashflow
             "paid": float(m_paid),
             "charged": float(m_charged),
             "trener_paid": float(m_trener_paid),
-            "trener_earned": float(m_trener_earned),  # Přidáno pro JS
+            "trener_earned": float(m_trener_earned),
         })
 
         current_day_acc = month_start_acc - timedelta(days=1)

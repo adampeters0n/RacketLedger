@@ -1141,12 +1141,16 @@ table.list a:hover { text-decoration: underline; }
  if (accData?.length) {
  const labels = accData.map(d => d.label);
 
- const cfVals = accData.map(d => d.cashflow);
+ // Cash flow = paid - trener_paid (cash basis)
+ const cfVals = accData.map(d => d.cashflow || ((d.paid||0) - (d.trener_paid||0)));
+ 
+ // Hrubý zisk = charged - trener_earned (accrual basis)
  const gpVals = accData.map(d => d.gross_profit);
- // Čistý zisk (cash) = přijaté platby − vyplaceno trenérům. Záměrně jiná báze než Hrubý zisk.
-         // Hrubý zisk = accrual (naúčtováno - earned), Čistý zisk = cash (přijato - vyplaceno)
-         // Proto mohou být v různých měsících různé hodnoty - jde o jiné definice.
-         const npVals = accData.map(d => (d.paid||0) - (d.trener_paid||0));
+ 
+ // Čistý zisk = paid - trener_paid (cash basis) - stejné jako cash flow
+ // Použijeme net_profit pokud existuje, jinak počítáme z paid - trener_paid
+ const npVals = accData.map(d => d.net_profit !== undefined ? d.net_profit : ((d.paid||0) - (d.trener_paid||0)));
+ 
  const tpVals = accData.map(d => d.trener_paid||0);
 
  const sum = arr => arr.reduce((a, b) => a + b, 0);
