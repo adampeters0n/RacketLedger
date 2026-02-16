@@ -737,7 +737,7 @@ table.list a:hover { text-decoration: underline; }
  <div class="accounting-section-header">
  <h3>Účetní ukazatele</h3>
  <span class="acc-badge">Finance</span>
- <span class="acc-period">Aktuální měsíc + celkem</span>
+ <span class="acc-period">Aktuální měsíc + Celkem</span>
  </div>
 
  <!-- 12 karet -->
@@ -747,77 +747,77 @@ table.list a:hover { text-decoration: underline; }
  <div class="acc-card teal">
   <div class="acc-label">Cash Flow<br>(měsíc)</div>
  <div class="acc-value" id="acc-cashflow-month">{{ accounting.cashflow_month }}</div>
- <div class="acc-sub">Přijaté platby − výplaty trenérům</div>
+ <div class="acc-sub">Přijaté platby − Výplaty trenérům</div>
  <div class="acc-trend neutral" id="acc-cashflow-month-trend">—</div>
  </div>
 
  <div class="acc-card emerald">
   <div class="acc-label">Hrubý zisk<br>(měsíc)</div>
  <div class="acc-value" id="acc-gross-month">{{ accounting.gross_profit_month }}</div>
- <div class="acc-sub">Naúčtováno − náklady na trenéry</div>
+ <div class="acc-sub">Naúčtováno − Náklady na trenéry</div>
  <div class="acc-trend neutral" id="acc-gross-month-trend">—</div>
  </div>
 
  <div class="acc-card sky">
   <div class="acc-label">Marže<br>(měsíc)</div>
  <div class="acc-value">{{ accounting.margin_month }}</div>
- <div class="acc-sub">Hrubý zisk / Naúčtováno × 100</div>
+ <div class="acc-sub">Hrubý zisk ÷ Naúčtováno × 100</div>
  </div>
 
  <div class="acc-card indigo">
   <div class="acc-label">Výnosy / hod.<br>(měsíc)</div>
  <div class="acc-value">{{ accounting.revenue_per_hour_month }}</div>
- <div class="acc-sub">Naúčtováno ÷ odehrané hodiny</div>
+ <div class="acc-sub">Naúčtováno ÷ Odehrané hodiny</div>
  </div>
 
  <!-- ŘADA 2: celkové výplatové ukazatele (4 karty) -->
  <div class="acc-card amber">
   <div class="acc-label">Výplaty trenérům<br>(celkem)</div>
  <div class="acc-value">{{ accounting.total_trener_paid }}</div>
- <div class="acc-sub">Součet všech TrenerPlatba</div>
+ <div class="acc-sub">Součet všech Trener Plateb</div>
  </div>
 
  <div class="acc-card rose">
   <div class="acc-label">Zbývá vyplatit<br>(celkem)</div>
  <div class="acc-value">{{ accounting.total_trener_remaining }}</div>
- <div class="acc-sub">Earned trenérů − již vyplaceno</div>
+ <div class="acc-sub">Earned trenérů − Již vyplaceno</div>
  </div>
 
  <div class="acc-card lime">
   <div class="acc-label">Čistý zisk<br>(celkem)</div>
  <div class="acc-value">{{ accounting.net_profit_total }}</div>
- <div class="acc-sub">Všechny platby − výplaty trenérům</div>
+ <div class="acc-sub">Přijato od hráčů − Vyplaceno trenérům (cash)</div>
  </div>
 
  <div class="acc-card violet">
   <div class="acc-label">Ø Příjem / hráč<br>(měsíc)</div>
  <div class="acc-value">{{ accounting.avg_revenue_per_player_month }}</div>
- <div class="acc-sub">Naúčtováno ÷ aktivní hráči</div>
+ <div class="acc-sub">Naúčtováno ÷ Aktivní hráči</div>
  </div>
 
  <!-- ŘADA 3: nové celkové ukazatele (4 karty) -->
  <div class="acc-card emerald">
   <div class="acc-label">Hrubý zisk<br>(celkem)</div>
  <div class="acc-value" id="acc-gross-total">{{ accounting.gross_profit_total }}</div>
- <div class="acc-sub">Naúčtováno celkem − earned trenérů celkem</div>
+ <div class="acc-sub">Naúčtováno celkem − Earned trenérů celkem</div>
  </div>
 
  <div class="acc-card sky">
   <div class="acc-label">Marže<br>(celkem)</div>
  <div class="acc-value">{{ accounting.margin_total }}</div>
- <div class="acc-sub">Hrubý zisk celkem / Naúčtováno celkem × 100</div>
+ <div class="acc-sub">Hrubý zisk celkem ÷ Naúčtováno celkem × 100</div>
  </div>
 
  <div class="acc-card indigo">
   <div class="acc-label">Výnosy / hod.<br>(celkem)</div>
  <div class="acc-value">{{ accounting.revenue_per_hour_total }}</div>
- <div class="acc-sub">Naúčtováno celkem ÷ celkem hodin</div>
+ <div class="acc-sub">Naúčtováno celkem ÷ Celkem hodin</div>
  </div>
 
  <div class="acc-card violet">
   <div class="acc-label">Ø Příjem / hráč<br>(celkem)</div>
  <div class="acc-value">{{ accounting.avg_revenue_per_player_total }}</div>
- <div class="acc-sub">Naúčtováno celkem ÷ počet hráčů</div>
+ <div class="acc-sub">Naúčtováno celkem ÷ Počet hráčů</div>
  </div>
 
  </div>
@@ -841,7 +841,7 @@ table.list a:hover { text-decoration: underline; }
  <div class="acc-chart-card">
  <div class="acc-chart-card-header">
  <div class="acc-chart-dot" style="background:#10b981"></div>
- <h4>Hrubý zisk – posledních 6 měsíců</h4>
+ <h4>Hrubý zisk – Posledních 6 měsíců</h4>
  <span class="acc-sum-badge emerald" id="sum-gross">—</span>
  </div>
  <div class="acc-chart-wrap">
@@ -853,7 +853,7 @@ table.list a:hover { text-decoration: underline; }
  <div class="acc-chart-card">
  <div class="acc-chart-card-header">
  <div class="acc-chart-dot" style="background:#84cc16"></div>
- <h4>Čistý zisk – posledních 6 měsíců</h4>
+ <h4>Čistý zisk (cash) – Posledních 6 měsíců</h4>
  <span class="acc-sum-badge lime" id="sum-net">—</span>
  </div>
  <div class="acc-chart-wrap">
@@ -865,7 +865,7 @@ table.list a:hover { text-decoration: underline; }
  <div class="acc-chart-card">
  <div class="acc-chart-card-header">
  <div class="acc-chart-dot" style="background:#f59e0b"></div>
- <h4>Výplaty trenérům – posledních 6 měsíců</h4>
+ <h4>Výplaty trenérům – Posledních 6 měsíců</h4>
  <span class="acc-sum-badge amber" id="sum-trener">—</span>
  </div>
  <div class="acc-chart-wrap">
@@ -1060,22 +1060,37 @@ table.list a:hover { text-decoration: underline; }
  scales:{ y:{ beginAtZero:true, ticks:{callback:kcFmt}, ...lightAxis() }}}});
  }
 
- // 3. Bar+Line – 6M
+ // 3. Bar+Line – 6M  (opraveno: viditelné hodiny na vlastní ose)
  const c3 = document.getElementById('financeChart');
  if (c3 && monthlyData?.length) {
  new Chart(c3, { type:'bar',
  data:{ labels: monthlyData.map(d=>d.label),
  datasets:[
  {label:'Hodiny', data:monthlyData.map(d=>d.hours), type:'line',
- borderColor:C.orange, backgroundColor:C.orange, borderWidth:3, yAxisID:'yHours', order:0},
- {label:'Naúčtováno', data:monthlyData.map(d=>d.charged), backgroundColor:C.primary, yAxisID:'yMoney', order:1, borderRadius:4},
- {label:'Zaplaceno', data:monthlyData.map(d=>d.paid), backgroundColor:C.success, yAxisID:'yMoney', order:2, borderRadius:4}
+ borderColor:C.orange, backgroundColor:'rgba(249,115,22,0.12)',
+ borderWidth:3, pointRadius:5, pointBackgroundColor:C.orange,
+ fill:true, tension:0.3, yAxisID:'yHours', order:0, z:10},
+ {label:'Naúčtováno', data:monthlyData.map(d=>d.charged), backgroundColor:C.primary+'cc', yAxisID:'yMoney', order:1, borderRadius:4},
+ {label:'Zaplaceno', data:monthlyData.map(d=>d.paid), backgroundColor:C.success+'cc', yAxisID:'yMoney', order:2, borderRadius:4}
  ]},
  options:{ responsive:true, maintainAspectRatio:false,
- plugins:{ legend:{position:'bottom'}, datalabels:{display:false}},
+ plugins:{
+ legend:{position:'bottom', labels:{usePointStyle:true, pointStyleWidth:10}},
+ datalabels:{display:false},
+ tooltip:{callbacks:{label: ctx => {
+ if(ctx.dataset.yAxisID==='yHours') return ' ' + ctx.parsed.y.toFixed(1) + ' h';
+ return ' ' + ctx.parsed.y.toLocaleString('cs-CZ') + ' Kč';
+ }}}
+ },
  scales:{
- yMoney:{ type:'linear', position:'left', beginAtZero:true, ticks:{callback:kcFmt}, ...lightAxis() },
- yHours:{ type:'linear', position:'right', beginAtZero:true, grid:{drawOnChartArea:false} }}}});
+ yMoney:{ type:'linear', position:'left', beginAtZero:true,
+ ticks:{callback:v=>v>=1000?(v/1000).toFixed(0)+'k Kč':v+' Kč', color:'#6b7280', font:{size:11}},
+ grid:{color:'#f3f4f6'} },
+ yHours:{ type:'linear', position:'right', beginAtZero:true,
+ ticks:{callback:v=>v+' h', color:C.orange, font:{size:11, weight:'600'}},
+ grid:{drawOnChartArea:false},
+ title:{display:true, text:'Hodiny', color:C.orange, font:{size:11}} }
+ }}});
  }
 
  // 4. Line – 7 dní
@@ -1128,7 +1143,10 @@ table.list a:hover { text-decoration: underline; }
 
  const cfVals = accData.map(d => d.cashflow);
  const gpVals = accData.map(d => d.gross_profit);
- const npVals = accData.map(d => (d.paid||0) - (d.trener_paid||0));
+ // Čistý zisk (cash) = přijaté platby − vyplaceno trenérům. Záměrně jiná báze než Hrubý zisk.
+         // Hrubý zisk = accrual (naúčtováno - earned), Čistý zisk = cash (přijato - vyplaceno)
+         // Proto mohou být v různých měsících různé hodnoty - jde o jiné definice.
+         const npVals = accData.map(d => (d.paid||0) - (d.trener_paid||0));
  const tpVals = accData.map(d => d.trener_paid||0);
 
  const sum = arr => arr.reduce((a, b) => a + b, 0);
