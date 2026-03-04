@@ -1155,7 +1155,7 @@ class TreningAdmin(admin.ModelAdmin):
                 "title": ", ".join(
                     dch.hrac.jmeno for dch in t.dochazky.select_related("hrac").filter(prisel=True)
                 ) or "—",
-                "sub": f"{fmt_label} • {t.get_kurt_display()}",
+                "sub": "",  # pouze jména hráčů v title, bez formátu/kurtu
                 "fmt": fmt_slug,
                 "fmt_label": fmt_label,
             }

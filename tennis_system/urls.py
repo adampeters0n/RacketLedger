@@ -8,6 +8,9 @@ urlpatterns = [
     # Landing page (na logu/domů)
     path("", core_views.home, name="home"),
 
+    # Odhlášení → přesměrování na landing
+    path("logout/", core_views.logout_to_home, name="logout_to_home"),
+
     # Admin (včetně tvých custom /admin/core/treneri/ URL,
     # které injektuješ v admin.py přes admin.site.get_urls)
     path("admin/", admin.site.urls),

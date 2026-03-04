@@ -1,5 +1,6 @@
 # core/views.py
-from django.shortcuts import render
+from django.contrib.auth import logout
+from django.shortcuts import redirect, render
 from django.urls import reverse, NoReverseMatch
 from django.utils import timezone
 
@@ -39,3 +40,9 @@ def home(request):
         "now": timezone.now(),
     }
     return render(request, "home/landing.html", ctx)
+
+
+def logout_to_home(request):
+    """Odhlásí uživatele a přesměruje na landing page."""
+    logout(request)
+    return redirect("home")

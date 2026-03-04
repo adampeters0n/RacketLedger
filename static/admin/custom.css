@@ -187,8 +187,8 @@ color: white !important;
 #user-tools a:focus-visible,
 #user-tools button:focus-visible,
 #user-tools input[type=submit]:focus-visible{
-outline: 2px solid red;
-outline-offset: 2px;
+  outline: 2px solid var(--brand) !important;
+  outline-offset: 2px !important;
 }
 
 /* drobečky */
@@ -258,10 +258,36 @@ input, select, textarea{
   color:var(--text) !important;
   border-radius:8px !important;
 }
-input:focus, select:focus, textarea:focus{
-  outline:2px solid var(--brand) !important;
-  border-color:var(--brand) !important;
-  box-shadow:0 0 0 3px rgba(230,120,23,.15) !important;
+/* === Jednotný oranžový focus border (jako u Změny hesla) – platí všude === */
+input:focus,
+input:focus-visible,
+select:focus,
+select:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+button:focus,
+button:focus-visible,
+input[type=submit]:focus,
+input[type=submit]:focus-visible,
+.button:focus,
+.button:focus-visible{
+  outline: 2px solid var(--brand) !important;
+  outline-offset: 2px !important;
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 0 3px rgba(230,120,23,.15) !important;
+}
+
+/* Pole s dlouhým obsahem (readonly hash, salt, dlouhé texty) – posouvání do strany v celém adminu */
+#content .aligned .readonly,
+#content .aligned td.readonly,
+#content .form-row.readonly{
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  max-width: 100% !important;
+}
+#content .readonly p,
+#content .readonly div:not([class]){
+  min-width: min-content !important;
 }
 
 /* --- NOVÉ: jemné oddělovače řádků a černé labely ve formulářích --- */
@@ -298,6 +324,756 @@ body.change-form .aligned td{
   padding:10px 12px !important;
 }
 
+/* ======================================================================== */
+/* ZMĚNA HESLA – ŠÍŘKA BUBLIN (polí Současné heslo, Nové heslo, Potvrzení)  */
+/* ======================================================================== */
+/* Soubor: static/admin/custom.css                                         */
+/*                                                                         */
+/* Jak zúžit bubliny: změň hodnoty max-width níže (v px).                   */
+/* Platí pro: .flex-container (řádky s inputy), úvodní odstavec, tlačítko. */
+/* Bílé pole zůstává plné šířky; bubliny jsou užší a zarovnané vlevo.       */
+/* ======================================================================== */
+#content-main:has(form.password-change-form){
+  box-sizing: border-box !important;
+  padding: 28px !important;
+}
+#content form.password-change-form{
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+#content form.password-change-form > div{
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+#content form.password-change-form .module.aligned,
+#content form.password-change-form .form-row,
+#content form.password-change-form .flex-container{
+  overflow: visible !important;
+}
+#content form.password-change-form .module.aligned{
+  max-width: 100% !important;
+  min-width: 0 !important;
+  border-width: 1px !important;
+  border-color: rgba(0,0,0,.08) !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04) !important;
+  padding: 24px !important;
+}
+#content form.password-change-form .form-row{
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+/* --- ŠÍŘKA BUBLIN: změň max-width (px). Vycentrované. --- */
+#content form.password-change-form .flex-container{
+  max-width: 340px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+#content form.password-change-form > div > p{
+  max-width: 340px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box !important;
+  text-align: center !important;
+}
+#content form.password-change-form .submit-row{
+  max-width: 340px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+}
+#content form.password-change-form input[type="password"],
+#content form.password-change-form input[type="text"]{
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+/* Aby oranžový focus ring (outline + box-shadow) nebyl vlevo oříznutý */
+#content form.password-change-form .flex-container input{
+  outline-offset: 2px !important;
+}
+@media (max-width: 768px){
+  #content form.password-change-form .flex-container,
+  #content form.password-change-form > div > p,
+  #content form.password-change-form .submit-row{
+    max-width: 300px !important;
+  }
+}
+@media (max-width: 480px){
+  #content form.password-change-form .flex-container,
+  #content form.password-change-form > div > p,
+  #content form.password-change-form .submit-row{
+    max-width: 260px !important;
+  }
+}
+@media (max-width: 420px){
+  #content form.password-change-form .flex-container,
+  #content form.password-change-form > div > p,
+  #content form.password-change-form .submit-row{
+    max-width: 220px !important;
+  }
+}
+/* Bubliny (.help) – menší písmo, odsazení od okraje bílého pole */
+#content form.password-change-form .help,
+#content form.password-change-form .flex-container .help{
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  padding: 6px 16px 14px 0 !important;
+  margin: 4px 0 0 0 !important;
+  overflow: visible !important;
+  font-size: 0.84em !important;
+  line-height: 1.35 !important;
+}
+/* Seznam pravidel hesla uvnitř .help (Django tam vkládá <ul><li>…) */
+#content form.password-change-form .help ul,
+#content form.password-change-form .help ul li{
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  margin-bottom: 4px !important;
+  font-size: inherit !important;
+  line-height: 1.35 !important;
+}
+#content form.password-change-form .help ul{
+  padding: 4px 0 18px 1.2em !important;
+  margin: 0 !important;
+  list-style-position: outside !important;
+}
+/* Řádek s .help – odsazení od borderu bílého pole */
+#content form.password-change-form .form-row:has(.help){
+  padding-right: 18px !important;
+  padding-bottom: 20px !important;
+  margin-bottom: 8px !important;
+}
+@media (max-width: 768px){
+  #content form.password-change-form .help,
+  #content form.password-change-form .flex-container .help{
+    font-size: 0.78em !important;
+    line-height: 1.38 !important;
+    padding: 6px 14px 12px 0 !important;
+  }
+  #content form.password-change-form .help ul{
+    padding: 4px 0 16px 1.1em !important;
+  }
+  #content form.password-change-form .form-row:has(.help){
+    padding-right: 14px !important;
+    padding-bottom: 18px !important;
+  }
+}
+@media (max-width: 480px){
+  #content form.password-change-form .help,
+  #content form.password-change-form .flex-container .help{
+    font-size: 0.74em !important;
+    line-height: 1.4 !important;
+    padding: 6px 12px 10px 0 !important;
+  }
+  #content form.password-change-form .help ul{
+    padding: 4px 0 14px 1em !important;
+  }
+  #content form.password-change-form .form-row:has(.help){
+    padding-right: 12px !important;
+    padding-bottom: 16px !important;
+  }
+}
+
+/* === Změna hesla na mobilu: vertikální layout, bílé pole plné šířky, užší jen bubliny === */
+@media (max-width: 640px){
+  #content-main:has(form.password-change-form){
+    overflow: visible !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 20px !important;
+  }
+  #content form.password-change-form .module.aligned{
+    padding: 18px !important;
+    overflow: visible !important;
+  }
+  #content form.password-change-form{
+    max-width: 100% !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+  }
+  #content form.password-change-form .form-row,
+  #content form.password-change-form .flex-container{
+    overflow: visible !important;
+  }
+  /* Mobil (do 640px): bubliny užší – změň číslo pro jinou šířku */
+  #content form.password-change-form .flex-container,
+  #content form.password-change-form > div > p,
+  #content form.password-change-form .submit-row{
+    max-width: 260px !important;
+  }
+  #content form.password-change-form .form-row{
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-bottom: 16px !important;
+  }
+  #content form.password-change-form .flex-container{
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    max-width: 260px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    gap: 6px !important;
+  }
+  #content form.password-change-form .flex-container label{
+    display: block !important;
+    margin-bottom: 2px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  #content form.password-change-form .flex-container .help{
+    order: 1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-right: 0 !important;
+  }
+  #content form.password-change-form .flex-container input{
+    order: 2 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #content form.password-change-form .submit-row{
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-top: 16px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  #content form.password-change-form .submit-row input{
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #content form.password-change-form > div > p{
+    max-width: 260px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    text-align: center !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+}
+
+/* ======================================================================== */
+/* ÚPRAVA UŽIVATELE (/admin/auth/user/<id>/change/) – bílá pole zneviditelněna */
+/* ======================================================================== */
+body.app-auth.model-user.change-form #content,
+body.app-auth.model-user.change-form #content-main{
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
+body.app-auth.model-user.change-form #content-main{
+  padding: 28px !important;
+}
+body.app-auth.model-user.change-form #content{
+  padding-left: var(--page-pad) !important;
+  padding-right: var(--page-pad) !important;
+}
+/* Bílá pole (module, panel, card) – zrušení pozadí, borderu a stínu */
+body.app-auth.model-user.change-form .module,
+body.app-auth.model-user.change-form .panel,
+body.app-auth.model-user.change-form .card{
+  background: var(--bg) !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 24px !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+/* Nadpisy sekcí (Heslo, Osobní údaje, Oprávnění…) – bez žlutého pole */
+body.app-auth.model-user.change-form .module caption,
+body.app-auth.model-user.change-form .module h2,
+body.app-auth.model-user.change-form .panel h2,
+body.app-auth.model-user.change-form .card h2{
+  background: transparent !important;
+  border: none !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+body.app-auth.model-user.change-form #content,
+body.app-auth.model-user.change-form #content-main,
+body.app-auth.model-user.change-form .module,
+body.app-auth.model-user.change-form .form-row,
+body.app-auth.model-user.change-form .aligned,
+body.app-auth.model-user.change-form .aligned th,
+body.app-auth.model-user.change-form .aligned td,
+body.app-auth.model-user.change-form label,
+body.app-auth.model-user.change-form p,
+body.app-auth.model-user.change-form .help{
+  text-align: left !important;
+}
+body.app-auth.model-user.change-form .submit-row{
+  border-width: 0 !important;
+  box-shadow: none !important;
+  padding: 12px 0 !important;
+}
+body.app-auth.model-user.change-form .module,
+body.app-auth.model-user.change-form .panel,
+body.app-auth.model-user.change-form .card{
+  max-width: 100% !important;
+  min-width: 0 !important;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+}
+body.app-auth.model-user.change-form .aligned,
+body.app-auth.model-user.change-form .aligned table,
+body.app-auth.model-user.change-form .form-row{
+  overflow: visible !important;
+}
+body.app-auth.model-user.change-form .aligned th,
+body.app-auth.model-user.change-form .aligned td{
+  max-width: 100% !important;
+  min-width: 0 !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+/* Buňka s dlouhým readonly (heslo hash/salt) – posouvání jen uvnitř bílého pole */
+body.app-auth.model-user.change-form .aligned .readonly,
+body.app-auth.model-user.change-form .aligned td.readonly{
+  overflow-x: auto !important;
+  overflow-y: visible !important;
+  -webkit-overflow-scrolling: touch !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  font-size: 0.85em !important;
+  line-height: 1.35 !important;
+}
+body.app-auth.model-user.change-form .aligned .readonly p,
+body.app-auth.model-user.change-form .aligned .readonly div,
+body.app-auth.model-user.change-form .aligned td.readonly p,
+body.app-auth.model-user.change-form .aligned td.readonly div{
+  min-width: min-content !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+}
+body.app-auth.model-user.change-form .help,
+body.app-auth.model-user.change-form p.help,
+body.app-auth.model-user.change-form .helptext,
+body.app-auth.model-user.change-form [class*="help"]{
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+  font-size: 0.85em !important;
+  line-height: 1.3 !important;
+}
+body.app-auth.model-user.change-form label{
+  font-size: 0.9em !important;
+}
+body.app-auth.model-user.change-form .aligned input,
+body.app-auth.model-user.change-form .aligned select,
+body.app-auth.model-user.change-form .aligned textarea{
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  font-size: 0.95em !important;
+}
+body.app-auth.model-user.change-form .readonly,
+body.app-auth.model-user.change-form .form-row.readonly{
+  max-width: 100% !important;
+}
+/* U ostatního readonly textu (ne hash) zalamování */
+body.app-auth.model-user.change-form .aligned th .readonly,
+body.app-auth.model-user.change-form .readonly label{
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+}
+/* Mobil: veškerý padding je UVNITŘ bílých polí; obsah se musí vejít a nic nepřetékat */
+/* Pro 390px a méně platí i selektor podle formuláře (form[action*="auth/user"]), aby to vždy sedělo */
+@media (max-width: 768px){
+  body.app-auth.model-user.change-form #content,
+  body.app-auth.model-user.change-form #content-main,
+  #content-main:has(form[action*="auth/user"]){
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  body.app-auth.model-user.change-form #content-main,
+  #content-main:has(form[action*="auth/user"]){
+    min-width: 0 !important;
+  }
+  /* Bílá pole – větší vertikální padding, aby se obsah vejít i svisle */
+  body.app-auth.model-user.change-form .module,
+  body.app-auth.model-user.change-form .panel,
+  body.app-auth.model-user.change-form .card,
+  #content-main:has(form[action*="auth/user"]) .module,
+  #content-main:has(form[action*="auth/user"]) .panel,
+  #content-main:has(form[action*="auth/user"]) .card{
+    padding: 28px 24px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+  body.app-auth.model-user.change-form .aligned tr,
+  body.app-auth.model-user.change-form .form-row,
+  #content-main:has(form[action*="auth/user"]) .aligned tr,
+  #content-main:has(form[action*="auth/user"]) .form-row{
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+    min-width: 0 !important;
+  }
+  #content-main:has(form[action*="auth/user"]) .form-row > div,
+  body.app-auth.model-user.change-form .form-row > div{
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  body.app-auth.model-user.change-form .aligned th,
+  body.app-auth.model-user.change-form .aligned td,
+  #content-main:has(form[action*="auth/user"]) .aligned th,
+  #content-main:has(form[action*="auth/user"]) .aligned td{
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+  /* Tabulka – fixed layout, sloupce omezené, aby hash nepřetékal */
+  body.app-auth.model-user.change-form .module .aligned,
+  body.app-auth.model-user.change-form .module table,
+  body.app-auth.model-user.change-form .panel .aligned,
+  body.app-auth.model-user.change-form .card .aligned,
+  #content-main:has(form[action*="auth/user"]) .module .aligned,
+  #content-main:has(form[action*="auth/user"]) .module table,
+  #content-main:has(form[action*="auth/user"]) .aligned{
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    box-sizing: border-box !important;
+  }
+  body.app-auth.model-user.change-form .aligned th,
+  body.app-auth.model-user.change-form .aligned td,
+  #content-main:has(form[action*="auth/user"]) .aligned th,
+  #content-main:has(form[action*="auth/user"]) .aligned td{
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    padding-left: 0 !important;
+    padding-right: 16px !important;
+    overflow-x: hidden !important;
+  }
+  body.app-auth.model-user.change-form .aligned th,
+  #content-main:has(form[action*="auth/user"]) .aligned th{
+    padding-left: 0 !important;
+  }
+  body.app-auth.model-user.change-form .module h2,
+  body.app-auth.model-user.change-form .panel h2,
+  body.app-auth.model-user.change-form .card h2,
+  #content-main:has(form[action*="auth/user"]) .module h2{
+    margin-top: 0 !important;
+    margin-bottom: 16px !important;
+    padding-bottom: 8px !important;
+  }
+  /* Readonly (heslo, hash, salt) – zalamovat, nikdy nepřetékat */
+  body.app-auth.model-user.change-form .module .readonly,
+  body.app-auth.model-user.change-form .module td.readonly,
+  body.app-auth.model-user.change-form .aligned .readonly,
+  body.app-auth.model-user.change-form .aligned td.readonly,
+  #content-main:has(form[action*="auth/user"]) .readonly,
+  #content-main:has(form[action*="auth/user"]) td.readonly,
+  #content-main:has(form[action*="auth/user"]) .module .readonly,
+  #content-main:has(form[action*="auth/user"]) .aligned td.readonly{
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+  }
+  body.app-auth.model-user.change-form .module .readonly p,
+  body.app-auth.model-user.change-form .module .readonly div,
+  body.app-auth.model-user.change-form .module td.readonly p,
+  body.app-auth.model-user.change-form .module td.readonly div,
+  body.app-auth.model-user.change-form .aligned .readonly p,
+  body.app-auth.model-user.change-form .aligned .readonly div,
+  body.app-auth.model-user.change-form .aligned td.readonly p,
+  body.app-auth.model-user.change-form .aligned td.readonly div,
+  #content-main:has(form[action*="auth/user"]) .readonly p,
+  #content-main:has(form[action*="auth/user"]) .readonly div,
+  #content-main:has(form[action*="auth/user"]) td.readonly p,
+  #content-main:has(form[action*="auth/user"]) td.readonly div{
+    word-break: break-all !important;
+    overflow-wrap: anywhere !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+  body.app-auth.model-user.change-form .module .help,
+  body.app-auth.model-user.change-form .module p.help,
+  body.app-auth.model-user.change-form .aligned input,
+  body.app-auth.model-user.change-form .aligned select,
+  body.app-auth.model-user.change-form .aligned textarea,
+  #content-main:has(form[action*="auth/user"]) .help,
+  #content-main:has(form[action*="auth/user"]) .aligned input,
+  #content-main:has(form[action*="auth/user"]) .aligned select,
+  #content-main:has(form[action*="auth/user"]) .aligned textarea{
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  /* Help text („Požadováno. 150 znaků…“) – zmenšený font, zalamování, box-sizing */
+  #content-main:has(form[action*="auth/user"]) .help,
+  #content-main:has(form[action*="auth/user"]) p.help,
+  #content-main:has(form[action*="auth/user"]) .form-row .help,
+  body.app-auth.model-user.change-form .help,
+  body.app-auth.model-user.change-form p.help,
+  body.app-auth.model-user.change-form .form-row .help{
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    font-size: 0.85rem !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  /* Readonly (algoritmus, hash) – explicitní white-space pro zalamování */
+  #content-main:has(form[action*="auth/user"]) .readonly p,
+  #content-main:has(form[action*="auth/user"]) .readonly div,
+  #content-main:has(form[action*="auth/user"]) td.readonly p,
+  #content-main:has(form[action*="auth/user"]) td.readonly div,
+  body.app-auth.model-user.change-form .aligned .readonly p,
+  body.app-auth.model-user.change-form .aligned .readonly div,
+  body.app-auth.model-user.change-form .aligned td.readonly p,
+  body.app-auth.model-user.change-form .aligned td.readonly div{
+    white-space: normal !important;
+  }
+  /* Tlačítka (Resetovat heslo) – vejít se do kontejneru, padding místo fixní šířky */
+  #content-main:has(form[action*="auth/user"]) .module input[type="submit"],
+  #content-main:has(form[action*="auth/user"]) .module button,
+  #content-main:has(form[action*="auth/user"]) .module .button,
+  body.app-auth.model-user.change-form .module input[type="submit"],
+  body.app-auth.model-user.change-form .module button,
+  body.app-auth.model-user.change-form .module .button{
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* 390px a méně – tvrdé omezení, nic nesmí jít mimo bílé pole zprava */
+@media (max-width: 390px){
+  #content:has(form[action*="auth/user"]),
+  body.app-auth.model-user.change-form #content{
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+  #content-main:has(form[action*="auth/user"]),
+  body.app-auth.model-user.change-form #content-main{
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+  #content-main:has(form[action*="auth/user"]) .module,
+  #content-main:has(form[action*="auth/user"]) .panel,
+  #content-main:has(form[action*="auth/user"]) .card,
+  body.app-auth.model-user.change-form .module,
+  body.app-auth.model-user.change-form .panel,
+  body.app-auth.model-user.change-form .card{
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+    padding: 24px 20px !important;
+    box-sizing: border-box !important;
+  }
+  /* Tabulka – pevné podíly sloupců, aby data sloupec nepřetékal */
+  #content-main:has(form[action*="auth/user"]) table,
+  #content-main:has(form[action*="auth/user"]) .aligned,
+  body.app-auth.model-user.change-form .module table,
+  body.app-auth.model-user.change-form .aligned{
+    table-layout: fixed !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  #content-main:has(form[action*="auth/user"]) th,
+  body.app-auth.model-user.change-form .aligned th{
+    width: 38% !important;
+    max-width: 38% !important;
+    box-sizing: border-box !important;
+  }
+  #content-main:has(form[action*="auth/user"]) td,
+  body.app-auth.model-user.change-form .aligned td{
+    width: 62% !important;
+    max-width: 62% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+  /* Inputy a selecty – musí se vejít do buňky (přepíše Django forms.css) */
+  #content-main:has(form[action*="auth/user"]) input,
+  #content-main:has(form[action*="auth/user"]) select,
+  #content-main:has(form[action*="auth/user"]) textarea,
+  #content-main:has(form[action*="auth/user"]) .vTextField,
+  body.app-auth.model-user.change-form .aligned input,
+  body.app-auth.model-user.change-form .aligned select,
+  body.app-auth.model-user.change-form .aligned textarea{
+    max-width: 100% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+  /* Help text – menší font, zalamování, white-space (podle analýzy) */
+  #content-main:has(form[action*="auth/user"]) .help,
+  #content-main:has(form[action*="auth/user"]) p.help,
+  #content-main:has(form[action*="auth/user"]) .form-row p,
+  #content-main:has(form[action*="auth/user"]) .form-row .help,
+  body.app-auth.model-user.change-form .help,
+  body.app-auth.model-user.change-form p.help,
+  body.app-auth.model-user.change-form .form-row p,
+  body.app-auth.model-user.change-form .form-row .help{
+    max-width: 100% !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+    font-size: 0.8rem !important;
+    box-sizing: border-box !important;
+  }
+  /* Readonly (algoritmus, hash) – white-space: normal + break-all */
+  #content-main:has(form[action*="auth/user"]) .readonly p,
+  #content-main:has(form[action*="auth/user"]) .readonly div,
+  #content-main:has(form[action*="auth/user"]) td p,
+  #content-main:has(form[action*="auth/user"]) td div,
+  body.app-auth.model-user.change-form .aligned td.readonly p,
+  body.app-auth.model-user.change-form .aligned td.readonly div,
+  body.app-auth.model-user.change-form .aligned td p,
+  body.app-auth.model-user.change-form .aligned td div{
+    word-break: break-all !important;
+    overflow-wrap: anywhere !important;
+    white-space: normal !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+  /* Tlačítka (Resetovat heslo) – max-width 100%, aby nepřetékala */
+  #content-main:has(form[action*="auth/user"]) input[type="submit"],
+  #content-main:has(form[action*="auth/user"]) button,
+  #content-main:has(form[action*="auth/user"]) .button,
+  body.app-auth.model-user.change-form input[type="submit"],
+  body.app-auth.model-user.change-form button,
+  body.app-auth.model-user.change-form .button{
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+}
+@media (max-width: 640px){
+  body.app-auth.model-user.change-form .module,
+  body.app-auth.model-user.change-form .panel,
+  body.app-auth.model-user.change-form .card{
+    padding: 24px 20px !important;  /* vertikálně 24, horizontálně 20 */
+  }
+  body.app-auth.model-user.change-form .aligned th,
+  body.app-auth.model-user.change-form .aligned td{
+    padding-right: 12px !important;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+  }
+  body.app-auth.model-user.change-form .aligned tr,
+  body.app-auth.model-user.change-form .form-row{
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+  }
+  body.app-auth.model-user.change-form .module h2,
+  body.app-auth.model-user.change-form .panel h2,
+  body.app-auth.model-user.change-form .card h2{
+    margin-bottom: 18px !important;
+  }
+  body.app-auth.model-user.change-form .help,
+  body.app-auth.model-user.change-form p.help,
+  body.app-auth.model-user.change-form .helptext{
+    font-size: 0.85em !important;
+  }
+}
+/* Velmi úzké viewporty (360px, 300px) – ještě víc vertikálního místa */
+@media (max-width: 360px){
+  body.app-auth.model-user.change-form .module,
+  body.app-auth.model-user.change-form .panel,
+  body.app-auth.model-user.change-form .card{
+    padding: 26px 16px !important;
+  }
+  body.app-auth.model-user.change-form .aligned th,
+  body.app-auth.model-user.change-form .aligned td{
+    padding-top: 14px !important;
+    padding-bottom: 14px !important;
+    padding-right: 12px !important;
+  }
+  body.app-auth.model-user.change-form .aligned tr,
+  body.app-auth.model-user.change-form .form-row{
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+  body.app-auth.model-user.change-form .module h2,
+  body.app-auth.model-user.change-form .panel h2,
+  body.app-auth.model-user.change-form .card h2{
+    margin-bottom: 20px !important;
+  }
+}
+@media (max-width: 300px){
+  body.app-auth.model-user.change-form #content,
+  body.app-auth.model-user.change-form #content-main{
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  body.app-auth.model-user.change-form .module,
+  body.app-auth.model-user.change-form .panel,
+  body.app-auth.model-user.change-form .card{
+    padding: 24px 14px !important;
+  }
+  body.app-auth.model-user.change-form .aligned th,
+  body.app-auth.model-user.change-form .aligned td{
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    padding-right: 10px !important;
+  }
+  body.app-auth.model-user.change-form .aligned tr,
+  body.app-auth.model-user.change-form .form-row{
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+  }
+  body.app-auth.model-user.change-form .module h2,
+  body.app-auth.model-user.change-form .panel h2,
+  body.app-auth.model-user.change-form .card h2{
+    margin-bottom: 22px !important;
+  }
+  body.app-auth.model-user.change-form .help,
+  body.app-auth.model-user.change-form p.help,
+  body.app-auth.model-user.change-form .helptext{
+    font-size: 0.82em !important;
+  }
+}
+
+/* Filter horizontal (Skupiny, Oprávnění u uživatele) – instrukce a boxy nepřetékají */
+#content .selector{ max-width: 100% !important; min-width: 0 !important; }
+#content .selector .help,
+#content .selector p{ word-wrap: break-word !important; overflow-wrap: break-word !important; max-width: 100% !important; }
+#content .selector-available,
+#content .selector-chosen{ max-width: 100% !important; min-width: 0 !important; }
+#content .selector select{ max-width: 100% !important; min-width: 0 !important; box-sizing: border-box !important; }
+@media (max-width: 768px){
+  #content .selector{ overflow: visible !important; display: block !important; }
+  #content .selector-available,
+  #content .selector-chosen{ float: none !important; width: 100% !important; max-width: 100% !important; margin-bottom: 12px !important; }
+}
+
 
 /* tlačítka (globálně) */
 .button, input[type=submit], .submit-row input, a.button{
@@ -322,12 +1098,23 @@ a.button.secondary:hover{ background:#F7F7F7 !important; }
 /* univerzální výška ovládacích prvků (možno změnit) */
 :root{ --ctl-h: 28px; }
 
-/* toolbar se search formulářem do jedné řádky/středu */
+/* toolbar se search formulářem do jedné řádky/středu – nepřetéká z bubliny */
 .change-list #toolbar, #changelist #toolbar{
   display:flex !important;
   align-items:center !important;
   gap:.5rem !important;
   flex-wrap:wrap !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  overflow-x:hidden !important;
+  box-sizing:border-box !important;
+}
+
+/* celý formulář changelistu nesmí přesáhnout šířku bubliny */
+#changelist-form{
+  max-width:100% !important;
+  min-width:0 !important;
+  overflow-x:hidden !important;
 }
 
 /* Operace: menší text + žádné ořezávání ve selectu */
@@ -341,7 +1128,6 @@ a.button.secondary:hover{ background:#F7F7F7 !important; }
   padding: 6px 12px !important;
   height: auto !important;
   min-height: var(--ctl-h) !important;
-  width: auto !important;
   max-width: 100% !important;
 }
 
@@ -369,26 +1155,38 @@ a.button.secondary:hover{ background:#F7F7F7 !important; }
   min-height:var(--ctl-h) !important;
 }
 
-/* blok Operace/Provést – o kousek výš nad tabulkou */
+/* blok Operace/Provést – stejná flexibilita jako search: celá šířka, nikdy oříznutí */
 .change-list .actions{
   display:flex !important;
   align-items:center !important;
   gap:.5rem !important;
+  flex-wrap:wrap !important;
   position:relative;
   top:-6px;                               /* zvednutí (doladíš podle oka) */
   margin:0 0 10px 0 !important;           /* mezera pod akcemi */
+  flex:1 1 100% !important;
+  width:100% !important;
+  max-width:100% !important;
+  min-width:0 !important;
+  box-sizing:border-box !important;
 }
 
-/* stejné „pill“ proporce i pro select a Go */
+/* select Operace – pružně vyplní prostor jako search input, nikdy nepřetéká */
 .change-list .actions select{
   padding:7px 10px !important;
   border-radius:100px !important;
   min-height:var(--ctl-h) !important;
   line-height:1 !important;
+  flex:1 1 auto !important;
+  min-width:0 !important;
+  max-width:100% !important;
+  width:100% !important;
+  box-sizing:border-box !important;
 }
 .change-list .actions .button,
 .change-list .actions input[type=submit]{
   min-height:var(--ctl-h) !important;
+  flex:0 0 auto !important;
 }
 
 /* Object tools (CENÍK: PŘIDAT, HRÁČ: PŘIDAT, …) – oranžová jako Hledat */
@@ -421,8 +1219,15 @@ a.button.secondary:hover{ background:#F7F7F7 !important; }
   letter-spacing: .2px;
 }
 
-/* messages */
-ul.messagelist li{ border-radius:8px; }
+/* messages – celé vidět, nezalomí se */
+#content ul.messagelist,
+#content-main ul.messagelist{
+  max-width: 100% !important;
+  overflow: visible !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+ul.messagelist li{ border-radius:8px; max-width: 100%; word-wrap: break-word; overflow-wrap: break-word; }
 ul.messagelist li.success{ background:var(--accent-100) !important; color:var(--accent-600) !important; border:1px solid var(--accent) !important; }
 ul.messagelist li.error{ background:var(--danger-100) !important; color:var(--danger) !important; border:1px solid var(--danger) !important; }
 ul.messagelist li.warning{ background:var(--amber-100) !important; color:#6B4E00 !important; border:1px solid var(--amber) !important; }
@@ -502,6 +1307,17 @@ ul.messagelist li.warning{ background:var(--amber-100) !important; color:#6B4E00
     width:100% !important;
     max-width:100% !important;
   }
+  /* Operace: stejná flexibilita jako search – vždy celá šířka, nic se neořízne */
+  .change-list .actions{
+    flex:1 1 100% !important;
+    width:100% !important;
+    max-width:100% !important;
+  }
+  .change-list .actions select{
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+  }
 }
 
 
@@ -534,6 +1350,42 @@ ul.messagelist li.warning{ background:var(--amber-100) !important; color:#6B4E00
 /* jemnější horní linka první datové řádky */
 .tbl-treneri tbody tr:first-child td { border-top: 1px solid #eee !important; }
 
+/* Trenéři – fixní šířka tabulky a horizontální scroll (jako ostatní changelisty) */
+.treneri-table-wrapper {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  width: 100% !important;
+}
+.tbl-treneri {
+  min-width: 680px !important;
+  width: 100% !important;
+}
+
+/* Trenér detail – tabulky a box „Nová sazba od…“ */
+.trener-detail-table-wrapper{
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  width: 100% !important;
+}
+.trener-detail-table-wrapper table{
+  min-width: 680px !important;
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+.trener-rate-box{
+  max-width: 420px;
+}
+
+@media (max-width: 768px){
+  .trener-rate-box{
+    max-width: 100%;
+  }
+  .trener-rate-box .module{
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
 
 /* ===== Trenéři – souhrn: řádek se součty pod tabulkou ===== */
 .tbl-treneri tfoot tr.totals td {
@@ -742,9 +1594,10 @@ ul.messagelist li.warning{ background:var(--amber-100) !important; color:#6B4E00
 }
 .select2-container--admin-autocomplete.select2-container--focus
 .select2-selection--single{
-  border-color: #f59e0b;
-  box-shadow: 0 0 0 3px rgba(245,158,11,.20);
-  outline: 0;
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 0 3px rgba(230,120,23,.15) !important;
+  outline: 2px solid var(--brand) !important;
+  outline-offset: 2px !important;
 }
 
 /* Dropdown bublina (appenduje se do <body>) */
@@ -762,9 +1615,10 @@ ul.messagelist li.warning{ background:var(--amber-100) !important; color:#6B4E00
   padding: 6px 8px;
 }
 .select2-container--admin-autocomplete .select2-search__field:focus{
-  border-color: #f59e0b;
-  box-shadow: 0 0 0 2px rgba(245,158,11,.18);
-  outline: 0;
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 0 3px rgba(230,120,23,.15) !important;
+  outline: 2px solid var(--brand) !important;
+  outline-offset: 2px !important;
 }
 
 /* Položky v seznamu – hover */

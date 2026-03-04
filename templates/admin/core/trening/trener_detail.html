@@ -13,8 +13,8 @@
       <button type="submit" class="button">Filtrovat</button>
     </form>
 
-    <div style="display:flex; gap:16px; align-items:flex-start; padding:0 12px 12px;">
-      <!-- Levý sloupec -->
+    <div class="trener-detail-layout" style="padding:0 12px 12px;">
+      <!-- Levý sloupec (hlavní obsah) -->
       <div style="flex:1;">
 
         <!-- Souhrn + tlačítko výplaty (hned vedle textu) -->
@@ -30,7 +30,7 @@
   
 
         <!-- Výplaty trenérovi -->
-        <div class="results" style="margin-top:6px;">
+        <div class="results trener-detail-table-wrapper" style="margin-top:6px;">
           <h3 style="margin:0 0 6px 0;">Výplaty trenérovi</h3>
           <table id="result_list">
             <thead>
@@ -60,6 +60,30 @@
           </table>
         </div>
 
+        <!-- Nová sazba od… – na menších zařízeních pod výplatami -->
+        <div class="trener-rate-box" style="margin-top:10px;">
+          <form method="post" class="module" style="padding:12px;">
+            {% csrf_token %}
+            <h3 style="margin-top:0;">Nová sazba od…</h3>
+            <p>
+              <label>Od data:
+                <input type="date" name="rate_from" value="{{ rate_form_initial_date }}">
+              </label>
+            </p>
+            <p>
+              <label>Částka (Kč/h):
+                <input type="number" step="1" min="1" name="rate_amount" value="{{ rate_today_amount }}">
+              </label>
+            </p>
+            <p>
+              <button class="button" type="submit" name="_nastavit_sazbu">Nastavit sazbu</button>
+            </p>
+            <p style="margin:0; font-size:12px; color:#555;">
+              Aktuální sazba dnes: <strong>{{ rate_today_amount }} Kč/h</strong>
+            </p>
+          </form>
+        </div>
+
         <!-- Přehled účinných sazeb (hned pod výplatami) -->
         <div style="padding:12px 0;">
           <strong>Účinné sazby:</strong>
@@ -77,7 +101,7 @@
         </div>
 
         <!-- Tréninky -->
-        <div class="results" style="margin-top:6px;">
+        <div class="results trener-detail-table-wrapper" style="margin-top:6px;">
           <table id="result_list">
             <thead>
               <tr>
@@ -111,29 +135,6 @@
         </div>
       </div>
 
-      <!-- Pravý box: „Nová sazba od…“ -->
-      <div style="width:360px;">
-        <form method="post" class="module" style="padding:12px;">
-          {% csrf_token %}
-          <h3 style="margin-top:0;">Nová sazba od…</h3>
-          <p>
-            <label>Od data:
-              <input type="date" name="rate_from" value="{{ rate_form_initial_date }}">
-            </label>
-          </p>
-          <p>
-            <label>Částka (Kč/h):
-              <input type="number" step="1" min="1" name="rate_amount" value="{{ rate_today_amount }}">
-            </label>
-          </p>
-          <p>
-            <button class="button" type="submit" name="_nastavit_sazbu">Nastavit sazbu</button>
-          </p>
-          <p style="margin:0; font-size:12px; color:#555;">
-            Aktuální sazba dnes: <strong>{{ rate_today_amount }} Kč/h</strong>
-          </p>
-        </form>
-      </div>
     </div>
   </div>
 </div>
