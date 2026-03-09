@@ -288,6 +288,9 @@ input[type=submit]:focus-visible,
 #content .readonly p,
 #content .readonly div:not([class]){
   min-width: min-content !important;
+  white-space: normal !important;
+  word-break: break-all !important;
+  overflow-wrap: anywhere !important;
 }
 
 /* --- NOVÉ: jemné oddělovače řádků a černé labely ve formulářích --- */
@@ -975,6 +978,293 @@ body.app-auth.model-user.change-form .readonly label{
     box-sizing: border-box !important;
   }
 }
+
+/* ======================================================================== */
+/* HRÁČ (core/hrac) – změna – stejná kritéria jako uživatel (help, readonly, tlačítka, form-row) */
+/* Odsazení: popisky a pole víc vlevo, bílé pole nižší (menší vertikální padding) */
+/* ======================================================================== */
+body.app-core.model-hrac.change-form #content,
+body.app-core.model-hrac.change-form #content-main,
+#content-main:has(form[action*="core/hrac/"]){
+  box-sizing: border-box !important;
+}
+body.app-core.model-hrac.change-form .module,
+body.app-core.model-hrac.change-form .panel,
+body.app-core.model-hrac.change-form .card,
+#content-main:has(form[action*="core/hrac/"]) .module,
+#content-main:has(form[action*="core/hrac/"]) .panel,
+#content-main:has(form[action*="core/hrac/"]) .card{
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  padding: 14px 24px 14px 16px !important;
+}
+body.app-core.model-hrac.change-form .module.aligned .form-row > label,
+body.app-core.model-hrac.change-form .aligned th,
+#content-main:has(form[action*="core/hrac/"]) .module.aligned .form-row > label,
+#content-main:has(form[action*="core/hrac/"]) .aligned th{
+  padding: 6px 12px 6px 0 !important;
+  text-align: left !important;
+}
+body.app-core.model-hrac.change-form .aligned td,
+body.app-core.model-hrac.change-form .module.aligned .form-row > div,
+#content-main:has(form[action*="core/hrac/"]) .aligned td,
+#content-main:has(form[action*="core/hrac/"]) .module.aligned .form-row > div{
+  padding: 6px 0 6px 12px !important;
+}
+body.app-core.model-hrac.change-form .actions-row,
+#content-main:has(form[action*="core/hrac/"]) .actions-row{
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+body.app-core.model-hrac.change-form .form-row,
+#content-main:has(form[action*="core/hrac/"]) .form-row{
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+body.app-core.model-hrac.change-form .form-row > div,
+#content-main:has(form[action*="core/hrac/"]) .form-row > div{
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+body.app-core.model-hrac.change-form .help,
+body.app-core.model-hrac.change-form p.help,
+body.app-core.model-hrac.change-form .helptext,
+body.app-core.model-hrac.change-form [class*="help"],
+#content-main:has(form[action*="core/hrac/"]) .help,
+#content-main:has(form[action*="core/hrac/"]) p.help,
+#content-main:has(form[action*="core/hrac/"]) .form-row .help{
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+body.app-core.model-hrac.change-form .readonly,
+body.app-core.model-hrac.change-form .form-row.readonly,
+#content-main:has(form[action*="core/hrac/"]) .readonly,
+#content-main:has(form[action*="core/hrac/"]) .form-row.readonly{
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+body.app-core.model-hrac.change-form .aligned .readonly p,
+body.app-core.model-hrac.change-form .aligned .readonly div,
+body.app-core.model-hrac.change-form .aligned td.readonly p,
+body.app-core.model-hrac.change-form .aligned td.readonly div,
+#content-main:has(form[action*="core/hrac/"]) .readonly p,
+#content-main:has(form[action*="core/hrac/"]) .readonly div,
+#content-main:has(form[action*="core/hrac/"]) td.readonly p,
+#content-main:has(form[action*="core/hrac/"]) td.readonly div{
+  white-space: normal !important;
+  word-break: break-all !important;
+  overflow-wrap: anywhere !important;
+}
+body.app-core.model-hrac.change-form .module input[type="submit"],
+body.app-core.model-hrac.change-form .module button,
+body.app-core.model-hrac.change-form .module .button,
+body.app-core.model-hrac.change-form .actions-row input,
+body.app-core.model-hrac.change-form .actions-row button,
+body.app-core.model-hrac.change-form .actions-row .button,
+body.app-core.model-hrac.change-form .actions-row a.button,
+#content-main:has(form[action*="core/hrac/"]) .module input[type="submit"],
+#content-main:has(form[action*="core/hrac/"]) .module button,
+#content-main:has(form[action*="core/hrac/"]) .module .button,
+#content-main:has(form[action*="core/hrac/"]) .actions-row input,
+#content-main:has(form[action*="core/hrac/"]) .actions-row button,
+#content-main:has(form[action*="core/hrac/"]) .actions-row .button,
+#content-main:has(form[action*="core/hrac/"]) .actions-row a.button{
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 768px){
+  body.app-core.model-hrac.change-form #content,
+  body.app-core.model-hrac.change-form #content-main,
+  #content-main:has(form[action*="core/hrac/"]){
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  body.app-core.model-hrac.change-form .form-row,
+  #content-main:has(form[action*="core/hrac/"]) .form-row{
+    min-width: 0 !important;
+  }
+  body.app-core.model-hrac.change-form .form-row > div,
+  #content-main:has(form[action*="core/hrac/"]) .form-row > div{
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  body.app-core.model-hrac.change-form .help,
+  body.app-core.model-hrac.change-form p.help,
+  body.app-core.model-hrac.change-form .form-row .help,
+  #content-main:has(form[action*="core/hrac/"]) .help,
+  #content-main:has(form[action*="core/hrac/"]) p.help,
+  #content-main:has(form[action*="core/hrac/"]) .form-row .help{
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    font-size: 0.85rem !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+@media (max-width: 390px){
+  body.app-core.model-hrac.change-form #content,
+  body.app-core.model-hrac.change-form #content-main,
+  #content-main:has(form[action*="core/hrac/"]){
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+  body.app-core.model-hrac.change-form .help,
+  body.app-core.model-hrac.change-form p.help,
+  body.app-core.model-hrac.change-form .form-row .help,
+  body.app-core.model-hrac.change-form .form-row p,
+  #content-main:has(form[action*="core/hrac/"]) .help,
+  #content-main:has(form[action*="core/hrac/"]) p.help,
+  #content-main:has(form[action*="core/hrac/"]) .form-row .help,
+  #content-main:has(form[action*="core/hrac/"]) .form-row p{
+    max-width: 100% !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
+    font-size: 0.8rem !important;
+    box-sizing: border-box !important;
+  }
+  body.app-core.model-hrac.change-form .module input[type="submit"],
+  body.app-core.model-hrac.change-form .module button,
+  body.app-core.model-hrac.change-form .module .button,
+  body.app-core.model-hrac.change-form .actions-row input,
+  body.app-core.model-hrac.change-form .actions-row button,
+  body.app-core.model-hrac.change-form .actions-row .button,
+  body.app-core.model-hrac.change-form .actions-row a.button,
+  #content-main:has(form[action*="core/hrac/"]) .module input[type="submit"],
+  #content-main:has(form[action*="core/hrac/"]) .module button,
+  #content-main:has(form[action*="core/hrac/"]) .module .button,
+  #content-main:has(form[action*="core/hrac/"]) .actions-row input,
+  #content-main:has(form[action*="core/hrac/"]) .actions-row button,
+  #content-main:has(form[action*="core/hrac/"]) .actions-row .button,
+  #content-main:has(form[action*="core/hrac/"]) .actions-row a.button{
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* ======================================================================== */
+/* CORE – všechny formuláře (Vyúčtování, Platba, Výplata trenérovi, Ceník…)  */
+/* Stejné odsazení bublin a zarovnání jako u hráče / změny hesla            */
+/* ======================================================================== */
+body.app-core.change-form .module,
+body.app-core.change-form .panel,
+body.app-core.change-form .card,
+body.app-core.add-form .module,
+body.app-core.add-form .panel,
+body.app-core.add-form .card{
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  padding: 14px 24px 14px 16px !important;
+}
+body.app-core.change-form .module.aligned .form-row > label,
+body.app-core.change-form .aligned th,
+body.app-core.add-form .module.aligned .form-row > label,
+body.app-core.add-form .aligned th{
+  padding: 6px 12px 6px 0 !important;
+  text-align: left !important;
+}
+body.app-core.change-form .aligned td,
+body.app-core.change-form .module.aligned .form-row > div,
+body.app-core.add-form .aligned td,
+body.app-core.add-form .module.aligned .form-row > div{
+  padding: 6px 0 6px 12px !important;
+}
+body.app-core.change-form .form-row,
+body.app-core.add-form .form-row{
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+body.app-core.change-form .form-row > div,
+body.app-core.add-form .form-row > div{
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+body.app-core.change-form .module input[type="submit"],
+body.app-core.change-form .module button,
+body.app-core.change-form .module .button,
+body.app-core.add-form .module input[type="submit"],
+body.app-core.add-form .module button,
+body.app-core.add-form .module .button{
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Historie tréninků a plateb (hráč) – horizontální scroll tabulky, filtr uvnitř bloku */
+.ledger-card{
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.ledger-title,
+.ledger-card .ledger-title{
+  border: none !important;
+  box-shadow: none !important;
+}
+.ledger-wrap{
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  max-height: 480px !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.ledger-wrap table.ledger{ min-width: 600px !important; table-layout: auto !important; }
+.ledger-filter{
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  margin: 6px 0 10px !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+.ledger-filter label,
+.ledger-filter input,
+.ledger-filter .button,
+.ledger-filter a.button{
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+.ledger-filter{
+  border: none !important;
+  border-color: #fff !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+.ledger-filter input[type="date"],
+.ledger-filter input[type="text"]{
+  border: 1px solid var(--line-200, #a0a2a9) !important;
+  border-radius: 6px !important;
+}
+
 @media (max-width: 640px){
   body.app-auth.model-user.change-form .module,
   body.app-auth.model-user.change-form .panel,
@@ -1244,6 +1534,14 @@ ul.messagelist li.warning{ background:var(--amber-100) !important; color:#6B4E00
 [class*="history"], [class*="ledger"]{
   background:var(--surface) !important; border:1px solid var(--line) !important;
   border-radius:12px !important; box-shadow:0 1px 2px rgba(0,0,0,.05) !important;
+}
+/* bez borderu kolem řádku Období a kolem obalu tabulky */
+.ledger-filter,
+.ledger-wrap,
+.ledger-card .ledger-filter,
+.ledger-card .ledger-wrap{
+  border: none !important;
+  box-shadow: none !important;
 }
 #content-main .module, #content-main .panel{ background:var(--surface) !important; }
 

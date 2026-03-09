@@ -42,9 +42,13 @@
 
   /* --- Zbytek vašeho CSS --- */
   .actions-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:12px 0; }
-  .ledger-card{ background:var(--panel); border:0px solid var(--border); border-radius:12px; padding:12px; margin-top:16px; }
-  .ledger-title{ margin:0 0 8px; color:var(--text); font-size:16px; font-weight:600; }
-  .ledger-wrap{ overflow-y:auto; overflow-x:hidden; max-height:480px; }
+  .ledger-card{ background:var(--panel); border:none; border-radius:12px; padding:12px; margin-top:16px; }
+  .ledger-title{ margin:0 0 8px; color:var(--text); font-size:16px; font-weight:600; border:none; }
+  .ledger-filter{ border:none; outline:none; box-shadow:none; background:transparent; }
+  .ledger-card, .ledger-wrap{ border:none !important; box-shadow:none !important; }
+  .ledger-filter input[type="date"]{ border:1px solid var(--border); border-radius:6px; }
+  .ledger-wrap{ overflow-y:auto; overflow-x:auto; -webkit-overflow-scrolling:touch; max-height:480px; border:none; outline:none; box-shadow:none; }
+  .ledger-wrap table.ledger{ min-width:600px; table-layout:auto; }
 
   table.ledger{ width:100%; border-collapse:separate; border-spacing:0; color:var(--text); font-size:14px; table-layout:fixed; }
 
@@ -184,18 +188,17 @@
   <div class="ledger-card">
     <h2 class="ledger-title">Historie tréninků a plateb</h2>
 
-    <div class="ledger-filter" style="display:flex; gap:8px; align-items:center; margin:6px 0 10px;">
-      <label>Období:</label>
-      <input type="date" id="id_filter_from" name="from" value="{{ filter_from|date:'Y-m-d' }}">
-      <span>–</span>
-      <input type="date" id="id_filter_to"   name="to"   value="{{ filter_to|date:'Y-m-d' }}">
-      <a href="#" id="filter-button" class="button">Filtrovat</a>
-      {% if filter_from or filter_to %}
-        <a class="button" href="{{ request.path }}">Zrušit</a>
-      {% endif %}
-    </div>
-
     <div class="ledger-wrap">
+      <div class="ledger-filter" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:6px 0 10px; min-width:0; max-width:100%; box-sizing:border-box;">
+        <label>Období:</label>
+        <input type="date" id="id_filter_from" name="from" value="{{ filter_from|date:'Y-m-d' }}">
+        <span>–</span>
+        <input type="date" id="id_filter_to"   name="to"   value="{{ filter_to|date:'Y-m-d' }}">
+        <a href="#" id="filter-button" class="button">Filtrovat</a>
+        {% if filter_from or filter_to %}
+          <a class="button" href="{{ request.path }}">Zrušit</a>
+        {% endif %}
+      </div>
       <table class="ledger">
         <thead>
           <tr>
