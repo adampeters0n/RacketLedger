@@ -935,7 +935,6 @@ class TrainingSlotForm(forms.Form):
                 "type": "text",
                 "class": "vTimeField add-day-time-input",
                 "placeholder": "např. 13 nebo 13:30",
-                "inputmode": "numeric",
                 "autocomplete": "off",
             }
         ),
