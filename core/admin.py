@@ -928,7 +928,17 @@ class TrainingSlotForm(forms.Form):
     cas = forms.TimeField(
         label="Čas",
         required=False,
-        widget=forms.TimeInput(attrs={"type": "time", "class": "vTimeField", "placeholder": "např. 13:00"}),
+        # Textové pole kvůli volnému zadávání (např. "13" → 13:00).
+        # Normalizaci na HH:MM řeší JavaScript v add_form šabloně.
+        widget=forms.TimeInput(
+            attrs={
+                "type": "text",
+                "class": "vTimeField add-day-time-input",
+                "placeholder": "např. 13 nebo 13:30",
+                "inputmode": "numeric",
+                "autocomplete": "off",
+            }
+        ),
     )
     delka_minut = forms.TypedChoiceField(
         label="Délka (hodiny)",

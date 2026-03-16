@@ -581,7 +581,47 @@
     }
   });
 
+  function normalizeTimeValue(raw) {
+    if (!raw) return '';
+    var v = String(raw).trim();
+    if (!v) return '';
+    // nahradit čárku/tečku dvojtečkou
+    v = v.replace(/[.,]/g, ':');
+    // čisté HH → HH:00
+    if (/^\d{1,2}$/.test(v)) {
+      var h = parseInt(v, 10);
+      if (isNaN(h) || h < 0 || h > 23) return raw;
+      return String(h).padStart(2, '0') + ':00';
+    }
+    // HH:MM
+    var m = /^(\d{1,2}):(\d{1,2})$/.exec(v);
+    if (m) {
+      var hh = parseInt(m[1], 10);
+      var mm = parseInt(m[2], 10);
+      if (isNaN(hh) || isNaN(mm) || hh < 0 || hh > 23 || mm < 0 || mm > 59) return raw;
+      return String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+    }
+    return raw;
+  }
+
+  function wireTimeInputs() {
+    var inputs = document.querySelectorAll('input.add-day-time-input');
+    inputs.forEach(function(inp) {
+      if (inp.dataset.xTimeWired === '1') return;
+      inp.dataset.xTimeWired = '1';
+      inp.addEventListener('blur', function() {
+        inp.value = normalizeTimeValue(inp.value);
+      });
+    });
+  }
+
+  wireTimeInputs();
+
   document.getElementById('add-day-form').addEventListener('submit', function(ev) {
+    // nejdřív znormalizujeme všechny časové inputy
+    document.querySelectorAll('input.add-day-time-input').forEach(function(inp) {
+      inp.value = normalizeTimeValue(inp.value);
+    });
     /* Kontrola: v každém viditelném tréninku (slot) nesmí být stejný hráč dvakrát */
     var slotCards = document.querySelectorAll('.slot-card');
     for (var s = 0; s < slotCards.length; s++) {
@@ -618,6 +658,8 @@
           var titleText = slotCards[i].querySelector('.add-day-slot-title-text');
           if (titleText) titleText.textContent = 'Trénink ' + (i + 1);
           slotCards[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+          // po odhalení nového slotu zadrátujeme i časové pole uvnitř
+          wireTimeInputs();
           return;
         }
       }
