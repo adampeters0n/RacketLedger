@@ -93,10 +93,14 @@ ROOT_URLCONF = "tennis_system.urls"
 # =====================================
 # ŠABLONY
 # =====================================
+import django as _django
+# S FORM_RENDERER = TemplatesSetting musí loader vidět i vestavěné šablony formulářů (errorlist atd.)
+_DJANGO_FORMS_TEMPLATES = Path(_django.__file__).parent / "forms" / "templates"
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],
+        "DIRS": [BASE_DIR / "templates", _DJANGO_FORMS_TEMPLATES],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -107,6 +111,10 @@ TEMPLATES = [
         },
     },
 ]
+
+# Formulářové widgety načítají šablony přes projektové TEMPLATES (DIRS + APP_DIRS).
+# Bez tohoto by se hledalo jen v django/forms/templates a app templates, bez projektového DIRS.
+FORM_RENDERER = "django.forms.renderers.TemplatesSetting"
 
 WSGI_APPLICATION = "tennis_system.wsgi.application"
 

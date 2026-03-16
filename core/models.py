@@ -558,6 +558,7 @@ class Dochazka(models.Model):
 
     class Meta:
         unique_together = ("trening", "hrac")
+        verbose_name_plural = "Hráči"
 
     def __str__(self) -> str:
         return f"{self.hrac.jmeno} @ {self.trening}"

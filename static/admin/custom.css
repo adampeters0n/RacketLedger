@@ -26,6 +26,41 @@
 html, body{ background:var(--bg) !important; color:var(--text) !important; }
 *, *::before, *::after{ box-sizing:border-box; }
 
+/* Trénink add/change: celá šířka + spodní tlačítka jako na návrhu */
+body.app-core.model-trening.change-form{ width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; }
+body.app-core.model-trening.change-form .submit-row .deletelink{ color:#b91c1c !important; }
+body.app-core.model-trening.change-form .submit-row .deletelink:hover{ color:#dc2626 !important; }
+
+/* Trénink – mobil: bubliny širší a vycentrované (struktura: .form-row → div → .flex-container → label + input) */
+@media (max-width:768px){
+  body.app-core.model-trening.change-form #content-main{ padding-left:16px !important; padding-right:16px !important; box-sizing:border-box !important; }
+  body.app-core.model-trening.change-form .module.aligned{ padding-left:16px !important; padding-right:16px !important; box-sizing:border-box !important; }
+  body.app-core.model-trening.change-form .module.aligned .form-row{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    padding-left:16px !important;
+    padding-right:16px !important;
+    box-sizing:border-box !important;
+  }
+  body.app-core.model-trening.change-form .module.aligned .form-row > div,
+  body.app-core.model-trening.change-form .module.aligned .form-row .flex-container{
+    width:100% !important;
+    max-width:320px !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+    box-sizing:border-box !important;
+  }
+  body.app-core.model-trening.change-form .module.aligned .form-row input:not([type="submit"]):not([type="button"]),
+  body.app-core.model-trening.change-form .module.aligned .form-row select,
+  body.app-core.model-trening.change-form .module.aligned .form-row textarea{ width:100% !important; max-width:100% !important; box-sizing:border-box !important; display:block !important; }
+  body.app-core.model-trening.change-form .module.aligned .form-row input:not([type="submit"]):not([type="button"]),
+  body.app-core.model-trening.change-form .module.aligned .form-row select,
+  body.app-core.model-trening.change-form .module.aligned .form-row textarea{ padding-left:12px !important; padding-right:12px !important; }
+  body.app-core.model-trening.change-form .module.aligned .form-row select{ padding-right:14px !important; }
+  body.app-core.model-trening.change-form .form-row.field-datum input{ padding-left:12px !important; padding-right:12px !important; }
+}
+
 /* === Full-width kontejnery === */
 #container, .container, .content, .wrapper, .main, .inner,
 #content, #content-main, .colM{
@@ -217,8 +252,8 @@ div.breadcrumbs a:hover{ background:var(--amber-100); }
 #changelist-filter .filter-title, #changelist-filter .filter{ color:var(--text) !important; }
 #changelist-filter a:hover{ text-decoration:none; }
 
-/* boxy */
-.module, .panel, .card, .submit-row{
+/* boxy (submit-row má vlastní styl níže – jako Trénink change_form) */
+.module, .panel, .card{
   background:var(--surface) !important; border:10px solid var(--line) !important; border-radius:30px !important; box-shadow:0 1px 2px rgba(0,0,0,.03);
 }
 .module caption, .grp-module h2, .module h2{
@@ -1545,14 +1580,37 @@ ul.messagelist li.warning{ background:var(--amber-100) !important; color:#6B4E00
 }
 #content-main .module, #content-main .panel{ background:var(--surface) !important; }
 
-/* === Odstranit (Delete) – stejny styl jako buttons + bez ořezu === */
+/* === Řádek Uložit – všude stejný vzhled jako v Trénink change_form (bílá karta + oranžové kapsle) === */
 .submit-row{
   display:flex !important;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:.5rem;
-  padding:7px 12px !important;
+  align-items:center !important;
+  flex-wrap:wrap !important;
+  gap:.5rem !important;
+  background:#fff !important;
+  border:1px solid #e5e7eb !important;
+  border-radius:10px !important;
+  box-shadow:0 1px 2px rgba(0,0,0,.04) !important;
+  padding:16px !important;
   overflow:visible !important;
+}
+.submit-row input[type="submit"]:not([value*="Odstranit"]),
+.submit-row button[type="submit"]:not([name="_continue"]),
+.submit-row a.button{
+  background:var(--brand) !important;
+  border:2px solid #c96510 !important;
+  color:#fff !important;
+  font-weight:700 !important;
+  border-radius:999px !important;
+  padding:10px 20px !important;
+  font-family:var(--btn-font-family) !important;
+  font-size:var(--btn-font-size) !important;
+  line-height:1 !important;
+  cursor:pointer !important;
+}
+.submit-row input[type="submit"]:not([value*="Odstranit"]):hover,
+.submit-row button[type="submit"]:not([name="_continue"]):hover,
+.submit-row a.button:hover{
+  filter:brightness(1.05) !important;
 }
 .submit-row .deletelink-box{ margin-left:auto; order:2; }
 
@@ -1941,6 +1999,94 @@ ul.messagelist li.warning{ background:var(--amber-100) !important; color:#6B4E00
   background: #ffedd5;                /* světle oranžová */
   color: #92400e;
 }
+/* ===== Tlačítka „Uložit“ bez capslocku (text-transform: none) ===== */
+.submit-row input[type="submit"],
+.submit-row button[type="submit"],
+.add-day-btn-save,
+.add-day-btn-save-addanother {
+  text-transform: none !important;
+}
+
+/* ===== Tlačítko „Uložit: Přidat Další“ – stejný vzhled jako v add_form (oranžové, bílé písmo) v celém systému ===== */
+.submit-row input[name="_addanother"],
+.submit-row button[name="_addanother"],
+#toolbar input[name="_addanother"],
+#toolbar button[name="_addanother"],
+.grp-submit-row input[name="_addanother"],
+.grp-submit-row button[name="_addanother"] {
+  background: var(--brand) !important;
+  border: 3px solid var(--brand-600) !important;
+  color: #fff !important;
+  border-radius: 100px !important;
+  padding: 7px 12px !important;
+  text-decoration: none !important;
+  font-family: var(--btn-font-family) !important;
+  font-size: var(--btn-font-size) !important;
+  font-weight: var(--btn-font-weight) !important;
+  line-height: 1 !important;
+  letter-spacing: .2px !important;
+  cursor: pointer !important;
+}
+.submit-row input[name="_addanother"]:hover,
+.submit-row button[name="_addanother"]:hover,
+#toolbar input[name="_addanother"]:hover,
+#toolbar button[name="_addanother"]:hover,
+.grp-submit-row input[name="_addanother"]:hover,
+.grp-submit-row button[name="_addanother"]:hover {
+  filter: brightness(1.05) !important;
+}
+
+/* Text „Uložit: Přidat Další“ (přepsat tam, kde Django vykreslí jiný text – u button skryjeme původní a zobrazíme ::after) */
+.submit-row button[name="_addanother"]:not(.add-day-btn-save-addanother) {
+  font-size: 0 !important;
+  position: relative !important;
+}
+.submit-row button[name="_addanother"]:not(.add-day-btn-save-addanother)::after {
+  content: "Uložit: Přidat Další" !important;
+  font-size: var(--btn-font-size) !important;
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  white-space: nowrap !important;
+  pointer-events: none !important;
+  color: #fff !important;
+}
+
+/* ===== Add-form (Trénink: přidat) – řádek Uložit a tlačítka stejné jako .submit-row v custom.css ===== */
+.add-day-submit-row {
+  background: var(--surface) !important;
+  border: 10px solid var(--line) !important;
+  border-radius: 30px !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,.03) !important;
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: .5rem !important;
+  padding: 7px 12px !important;
+  margin-top: 12px !important;
+  overflow: visible !important;
+}
+.add-day-btn-save,
+.add-day-btn-save-addanother {
+  background: var(--brand) !important;
+  border: 3px solid var(--brand-600) !important;
+  color: #fff !important;
+  border-radius: 100px !important;
+  padding: 7px 12px !important;
+  text-decoration: none !important;
+  font-family: var(--btn-font-family) !important;
+  font-size: var(--btn-font-size) !important;
+  font-weight: var(--btn-font-weight) !important;
+  line-height: 1 !important;
+  letter-spacing: .2px !important;
+  cursor: pointer !important;
+}
+.add-day-btn-save:hover,
+.add-day-btn-save-addanother:hover {
+  filter: brightness(1.05) !important;
+}
+
 /* ===== HIDE: 'Uložit a pokračovat v úpravách' (name="_continue") na všech admin stránkách ===== */
 .submit-row input[name="_continue"],
 .submit-row button[name="_continue"],
@@ -2002,6 +2148,39 @@ table thead tr:hover th {
   background: #fff8e6 !important;
 }
 
+/* Ikona kalendáře u pole Datum – světle oranžová pilulka + oranžová ikona */
+.datetimeshortcuts a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #fff3df;              /* světle oranžové pozadí */
+  color: #E67817 !important;        /* text „Dnes“ oranžový */
+  text-decoration: none !important;
+}
+.datetimeshortcuts a:hover {
+  background: #ffe4bf;              /* o něco sytější při hoveru */
+}
+.datetimeshortcuts a img {
+  filter: hue-rotate(-10deg) saturate(140%) brightness(1.1); /* zabarví ikonku lehce do oranžova */
+}
+
+/* Desktop: kalendář držet v rámci viewportu (plovoucí box uprostřed) */
+@media (min-width: 1024px) {
+  .calendarbox {
+    position: fixed !important;
+    top: 96px !important;
+    left: 50% !important;
+    transform: translateX(-50%);
+    width: 640px !important;                          /* ještě širší kalendář */
+    max-width: calc(100vw - 32px) !important;
+    max-height: calc(100vh - 140px) !important;
+    overflow: auto !important;
+    margin: 0 !important;
+  }
+}
+
 /* === FINAL PATCH: světlo pro tabulky, Select2 a kalendář === */
 
 /* vynutit světlé schéma i proti auto-dark */
@@ -2037,12 +2216,73 @@ table tbody tr:hover > td{ background:#fff3df !important; color:var(--text) !imp
 .select2-results__option--highlighted:not([aria-selected]){ background:#fff7ed !important; color:#111 !important; }
 .select2-results__option--highlighted[aria-selected]{ background:#f59e0b !important; color:#fff !important; }
 
-/* DOCHÁZKA – <select> v první buňce vždy světlý */
+/* trénink – tabulka Hráči: šedý border jako u ostatních bílých polí */
+body.app-core.model-trening #dochazka_set-group,
+body.app-core.model-trening #dochazky-group,
+body.app-core.model-trening .x-dochazka-inline{
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04) !important;
+  outline: none !important;
+  border-radius: 10px !important;
+}
+body.app-core.model-trening #dochazka_set-group .module,
+body.app-core.model-trening #dochazky-group .module,
+body.app-core.model-trening #dochazka_set-group fieldset,
+body.app-core.model-trening #dochazky-group fieldset,
+body.app-core.model-trening #dochazka_set-group .inline-group,
+body.app-core.model-trening #dochazky-group .inline-group,
+body.app-core.model-trening #dochazka_set-group .tabular,
+body.app-core.model-trening #dochazky-group .tabular,
+body.app-core.model-trening .x-dochazka-inline .module,
+body.app-core.model-trening .x-dochazka-inline fieldset,
+body.app-core.model-trening .x-dochazka-inline .inline-group,
+body.app-core.model-trening .x-dochazka-inline .tabular{
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* DOCHÁZKA – <select> v první buňce světlý + menší bubliny (jako dříve) */
 #dochazka_set-group td:first-child select,
+#dochazky-group td:first-child select,
 .x-dochazka-inline td:first-child select,
 .inline-group .related-widget-wrapper select{
   background:#fff !important; color:#111 !important; -webkit-text-fill-color:#111 !important;
   border:1px solid #E5E7EB !important; border-radius:8px !important; appearance:auto !important;
+  height:36px !important; min-height:36px !important; padding:6px 10px !important; font-size:14px !important;
+}
+#dochazka_set-group td:first-child .related-widget-wrapper,
+#dochazky-group td:first-child .related-widget-wrapper,
+.x-dochazka-inline td:first-child .related-widget-wrapper{
+  min-height:36px !important;
+}
+#dochazka_set-group .select2-container .select2-selection--single,
+#dochazky-group .select2-container .select2-selection--single,
+.x-dochazka-inline .select2-container .select2-selection--single{
+  min-height:36px !important; height:36px !important;
+}
+
+/* Trénink add/change – menší bubliny (inputy, selecty) v celém formuláři */
+body.app-core.model-trening.change-form .module.aligned .form-row input:not([type="submit"]):not([type="button"]),
+body.app-core.model-trening.change-form .module.aligned .form-row select,
+body.app-core.model-trening.change-form .module.aligned .form-row textarea{
+  height:36px !important; min-height:36px !important; padding:6px 10px !important;
+}
+body.app-core.model-trening.change-form .module.aligned .form-row textarea{
+  height:64px !important; min-height:64px !important;
+}
+
+/* Trénink add/change – jednotný oranžový focus pro VŠECHNY bubliny (Datum, Čas, Poznámka, Trenér, …) */
+body.app-core.model-trening.change-form #content-main .module.aligned input:not([type="submit"]):not([type="button"]):focus,
+body.app-core.model-trening.change-form #content-main .module.aligned input:not([type="submit"]):not([type="button"]):focus-visible,
+body.app-core.model-trening.change-form #content-main .module.aligned select:focus,
+body.app-core.model-trening.change-form #content-main .module.aligned select:focus-visible,
+body.app-core.model-trening.change-form #content-main .module.aligned textarea:focus,
+body.app-core.model-trening.change-form #content-main .module.aligned textarea:focus-visible {
+  outline: 2px solid var(--brand) !important;
+  outline-offset: 2px !important;
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 0 3px rgba(230, 120, 23, 0.15) !important;
 }
 
 /* KALENDÁŘ (widget) */
@@ -2110,4 +2350,21 @@ table tbody tr:hover th {
   #user-tools {
       display: none !important;
   }
+}
+
+/* =================================================================== */
+/* === GLOBÁLNÍ: aby oranžový focus ring nebyl oříznutý ============= */
+/* =================================================================== */
+
+/* Hlavní bílé bloky a řádky formulářů nesmí ořezávat outline/box-shadow */
+#content,
+#content-main,
+.module,
+.panel,
+.card,
+.aligned,
+.aligned .form-row,
+body.change-form .aligned .form-row,
+body.add-form .aligned .form-row {
+  overflow: visible !important;
 }

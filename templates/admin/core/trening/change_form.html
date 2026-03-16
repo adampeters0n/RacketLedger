@@ -4,40 +4,162 @@
   {{ block.super }}
   <script>
     (function () {
-      function wireDochazka(ctx){
-        // Najdi inline skupinu "Docházka"
-        var group = ctx.querySelector('#dochazka_set-group') ||
-          Array.from(ctx.querySelectorAll('.inline-group')).find(function(g){
+      function wireDochazka(ctx) {
+        var group = ctx.querySelector('#dochazka_set-group') || ctx.querySelector('#dochazky-group') ||
+          Array.from(ctx.querySelectorAll('.inline-group')).find(function (g) {
             var h2 = g.querySelector('h2');
-            var t  = h2 ? (h2.textContent || '').toLowerCase() : '';
-            return /doch[aá]zk/.test(t);
+            var t = h2 ? (h2.textContent || '').toLowerCase() : '';
+            return /doch[aá]zk|hr[aá]č/.test(t);
           });
-        if (!group || group.classList.contains('x-wired')) return;
+        if (!group) return;
 
-        group.classList.add('x-wired','x-dochazka-inline');
-        if (!group.id) group.id = 'dochazka_set-group';
-
-        // Schovej H2 (nadpis karty)
-        var h2 = group.querySelector('h2');
-        if (h2) h2.style.display = 'none';
-
-        // Přejmenuj tlačítko na "Přidat Docházku"
-        var add = group.querySelector('.add-row');
-        if (add) {
-          var a = add.querySelector('a');
-          if (a) a.textContent = 'Přidat Docházku';
+        var isFirstRun = !group.classList.contains('x-wired');
+        if (isFirstRun) {
+          group.classList.add('x-wired', 'x-dochazka-inline');
+          if (!group.id) group.id = 'dochazka_set-group';
         }
 
-        // Fallback – zruš problematické Django kolonky
-        group.querySelectorAll('.inline_label, td.original, th.original')
-             .forEach(function(n){ n.remove(); });
+        if (isFirstRun) {
+          var thead = group.querySelector('thead');
+          if (thead) {
+            var ths = thead.querySelectorAll('th');
+            for (var i = 0; i < ths.length; i++) {
+              var txt = (ths[i].textContent || '').toUpperCase();
+              if (txt.indexOf('HRAC') !== -1 || txt.indexOf('HRÁČ') !== -1) {
+                ths[i].textContent = 'Hráči';
+                break;
+              }
+            }
+          }
+          var h2 = group.querySelector('h2');
+          if (h2) h2.style.display = 'none';
+          group.querySelectorAll('.inline_label, td.original, th.original').forEach(function (n) { n.remove(); });
+
+          var addRow = group.querySelector('.add-row');
+          if (addRow) {
+            var a = addRow.querySelector('a');
+            if (a) a.textContent = 'Přidat hráče';
+            addRow.style.display = '';
+            addRow.style.visibility = '';
+          }
+        }
+
+        if (isFirstRun && !group.hasAttribute('data-x-delete-wired')) {
+          group.setAttribute('data-x-delete-wired', '1');
+          group.addEventListener('click', function (ev) {
+            var target = ev.target;
+            var lastCell = target && target.closest && target.closest('tbody td:last-child');
+            if (!lastCell) return;
+            var link = target.closest('.inline-deletelink, .deletelink, .x-clear-hrac');
+            if (!link) return;
+            ev.preventDefault();
+            ev.stopPropagation();
+            var tbody = lastCell.closest('tbody');
+            var rows = tbody ? tbody.querySelectorAll('tr.form-row') : [];
+            if (rows.length <= 1) {
+              var sel = lastCell.closest('tr').querySelector('select');
+              if (sel) { sel.value = ''; if (window.jQuery && sel.id) window.jQuery(sel).trigger('change'); }
+              return;
+            }
+            var djangoDel = lastCell.querySelector('.inline-deletelink, .deletelink');
+            if (djangoDel && window.jQuery) { window.jQuery(djangoDel).trigger('click'); return; }
+            var tr = lastCell.closest('tr');
+            if (tr && link.classList.contains('x-clear-hrac')) {
+              var form = tr.closest('form');
+              tr.remove();
+              if (form) {
+                var totalInput = form.querySelector('input[name*="TOTAL_FORMS"]');
+                if (totalInput) { var n = parseInt(totalInput.value, 10) || 0; totalInput.value = Math.max(0, n - 1); }
+                form.dispatchEvent(new Event('formset:removed', { bubbles: true }));
+              }
+            }
+          }, true);
+        }
+
+        var tbody = group.querySelector('tbody');
+        if (tbody) {
+          tbody.querySelectorAll('tr.form-row').forEach(function (tr) {
+            var lastTd = tr.querySelector('td:last-child');
+            if (!lastTd) return;
+            var div = lastTd.querySelector('div');
+            if (div) {
+              [].slice.call(div.children).forEach(function (child) {
+                if (child.nodeName === 'LABEL') child.remove();
+                else if (child.nodeName === 'INPUT' && child.type === 'checkbox') child.style.cssText = 'display:none!important;position:absolute;left:-9999px;';
+                else if (child.nodeName === 'A' && child.classList && !child.classList.contains('inline-deletelink') && !child.classList.contains('x-clear-hrac')) child.remove();
+              });
+            }
+            if (lastTd.querySelector('.inline-deletelink, .deletelink')) return;
+            if (lastTd.querySelector('.x-clear-hrac')) return;
+            var a = document.createElement('a');
+            a.href = '#';
+            a.className = 'x-clear-hrac';
+            a.textContent = '×';
+            a.setAttribute('aria-label', 'Odstranit');
+            lastTd.appendChild(a);
+          });
+        }
       }
 
-      function boot(){ wireDochazka(document); }
+      function ensureCasNadBublinou() {
+        var row = document.querySelector('.form-row.field-datum');
+        if (!row) return;
+        var timeInput = row.querySelector('input.vTimeField');
+        if (timeInput) {
+          var wrap = timeInput.closest('p') || timeInput.closest('div') || timeInput.parentElement;
+          if (wrap) {
+            wrap.style.display = 'flex';
+            wrap.style.flexDirection = 'column';
+            wrap.style.gap = '6px';
+            wrap.style.margin = '0';
+          }
+          var label = row.querySelector('label[for="' + (timeInput.id || '') + '"]');
+          if (label) {
+            label.style.display = 'block';
+            label.style.fontWeight = '700';
+            label.style.color = '#111827';
+            label.style.marginBottom = '4px';
+            label.style.order = '-1';
+          }
+        }
+        var shortcuts = row.querySelectorAll('.datetimeshortcuts');
+        shortcuts.forEach(function(span) {
+          span.style.setProperty('display', 'inline-flex', 'important');
+          span.style.setProperty('justify-content', 'flex-start', 'important');
+          span.style.setProperty('text-align', 'left', 'important');
+          span.style.setProperty('margin-left', '0', 'important');
+          span.style.setProperty('margin-right', 'auto', 'important');
+          span.style.setProperty('align-self', 'flex-start', 'important');
+        });
+        var timeInput = row.querySelector('input.vTimeField');
+        if (timeInput) {
+          var timeWrap = timeInput.closest('p');
+          if (timeWrap) {
+            timeWrap.style.setProperty('margin-top', '2px', 'important');
+            timeWrap.style.setProperty('padding-top', '0', 'important');
+          }
+        }
+        var dateInput = row.querySelector('input.vDateField');
+        if (dateInput) {
+          var dateP = dateInput.closest('p');
+          var container = dateP ? dateP.parentElement : null;
+          if (container && container.nodeName === 'DIV') {
+            container.style.setProperty('display', 'flex', 'important');
+            container.style.setProperty('flex-direction', 'column', 'important');
+            container.style.setProperty('gap', '0', 'important');
+          }
+        }
+      }
+
+      function boot() {
+        wireDochazka(document);
+        ensureCasNadBublinou();
+      }
       document.addEventListener('DOMContentLoaded', boot);
       window.addEventListener('load', boot);
       document.addEventListener('formset:added', boot);
-      setTimeout(boot, 0); setTimeout(boot, 120);
+      setTimeout(boot, 0);
+      setTimeout(boot, 120);
     })();
   </script>
 {% endblock %}
@@ -46,334 +168,601 @@
   {{ block.super }}
 
   <style>
-    :root{
-      --label-w:160px; --field-w:360px; --row-gap:14px;
-      --row-min: calc(var(--label-w) + var(--field-w) + 2*var(--row-gap));
-    }
-    /* obal modulu – šířka dle obsahu a horizontální scroll na malých */
-    body.app-core.model-trening.change-form #content-main .module.aligned{
-      width:max-content; min-width:var(--row-min); max-width:none;
-      overflow-x:auto; -webkit-overflow-scrolling:touch;
-      box-sizing: border-box;
-    }
-    /* jeden řádek = karta */
-    body.app-core.model-trening.change-form .module.aligned .form-row{
-      display:grid !important; grid-template-columns:var(--label-w) var(--field-w) !important;
-      align-items:center; gap:var(--row-gap); margin-bottom:12px;
-      padding:8px 12px; background:#fff; border-radius:10px; box-shadow:0 1px 2px rgba(0,0,0,.04);
-      width:max-content;
-      border-bottom:1px solid #e5e7eb; /* jemná linka pro návaznost se zbytkem UI */
-      box-sizing: border-box;
-    }
-    /* labely */
-    body.app-core.model-trening.change-form .module.aligned .form-row > label{
-      margin:0 !important; width:var(--label-w); font-weight:700; color:#111827; white-space:nowrap; text-align:left;
-    }
-    /* vstupy */
-    body.app-core.model-trening.change-form .module.aligned .form-row input,
-    body.app-core.model-trening.change-form .module.aligned .form-row select,
-    body.app-core.model-trening.change-form .module.aligned .form-row textarea{
-      width:var(--field-w) !important; max-width:var(--field-w) !important; min-width:var(--field-w) !important;
-      box-sizing:border-box; height:36px; padding:6px 10px; border:1px solid #E5E7EB; border-radius:8px; font-size:14px; line-height:1.2;
-      background:#fff;
-    }
-    body.app-core.model-trening.change-form .module.aligned .form-row textarea{ height:64px; resize:vertical; }
-    
-    /* === ZMĚNA #1: OPRAVA VZHLEDU "DATUM" A "ČAS" NA DESKTOPU === */
-
-    /* Skryjeme hlavní popisek "Datum:", který je vlevo */
-    .form-row.field-datum > label {
-        display: none !important;
-    }
-    
-    /* Kontejner s poli Data/Času roztáhneme přes oba sloupce */
-    .form-row.field-datum > div {
-        grid-column: 1 / -1; /* Roztáhne se přes celý grid */
-    }
-    
-    /* Vnitřní widget nastylyjeme jako DVA NOVÉ ŘÁDKY */
-    .form-row.field-datum .datetime-widget {
-        display: grid;
-        /* Vytvoříme stejný grid, jako mají ostatní řádky */
-        grid-template-columns: var(--label-w) var(--field-w); 
-        align-items: center;
-        gap: var(--row-gap);
-        row-gap: 12px; /* Mezera mezi řádkem Datum a řádkem Čas */
-    }
-    
-    /* Šedé popisky "Datum:" a "Čas:" nastylyjeme jako hlavní popisky */
-    .form-row.field-datum .datetime-widget label {
-        margin: 0 !important;
-        width: var(--label-w);
-        font-weight: 700;
-        color: #111827 !important; /* Černá barva */
-        white-space: nowrap;
-        text-align: left;
-    }
-    
-    /* Tlačítka "Dnes" a kalendář přisuneme k poli Datum */
-    .form-row.field-datum .datetimeshortcuts {
-        white-space: nowrap;
-        margin: 0;
-        padding-left: 10px; /* Malá mezera od pole */
-        /* Musíme zrušit <br> tag, který je mezi nimi */
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .form-row.field-datum .datetimeshortcuts br {
-        display: none; /* Skryje zalomení řádku */
-    }
-    
-    /* Bloky s polem Data a Času zarovnáme */
-    .form-row.field-datum .datetime-widget > p {
-        display: contents; /* Zrušíme <p> tag, aby se prvky vešly do gridu */
-    }
-    
-    /* === KONEC ZMĚNY #1 === */
-    
-    
-    @media (max-width:480px){
-      :root{ --label-w:150px; --field-w:340px; --row-min: calc(var(--label-w) + var(--field-w) + 2*var(--row-gap)); }
-      body.app-core.model-trening.change-form .module.aligned .form-row input,
-      body.app-core.model-trening.change-form .module.aligned .form-row select{ height:38px; font-size:14px; }
-    }
-  </style>
-
-  <style>
-    :root{ --w-col:200px; --w-fixed:calc(var(--w-col) * 4); }
-
-    /* obal inline skupiny */
-    #dochazka_set-group, .x-dochazka-inline{
-      background:#fff; border:0 !important; border-radius:12px; box-shadow:0 1px 2px rgba(16,24,40,.06);
-      overflow:hidden; margin-top:12px;
-    }
-    /* tabulka */
-    #dochazka_set-group table, .x-dochazka-inline table{
-      width:100%; table-layout:fixed; border-collapse:separate; border-spacing:0; font-size:14px;
-      background:#fff; /* jistota – žádné tmavé pozadí */
-    }
-    /* hlavička */
-    #dochazka_set-group thead th, .x-dochazka-inline thead th{
-      background:#FFF6CC; color:#111827; text-transform:uppercase; font-weight:800; font-size:12.5px; letter-spacing:.02em;
-      padding:10px 12px; border-top:0; border-bottom:1px solid #F4E0A6; white-space:nowrap; text-align:center;
-    }
-    /* buňky těla */
-    #dochazka_set-group tbody td, .x-dochazka-inline tbody td{
-      padding:12px 12px; background:#fff; border-top:1px solid #E5E7EB; /* jemná linka */
-      vertical-align:middle; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-      font-weight:700; text-align:center; position:relative;
+    /* === Obecné: bílé karty jako na obrázku === */
+    body.app-core.model-trening.change-form {
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
     }
 
-    /* šířky sloupců – poslední 4 pevné */
-    #dochazka_set-group thead th:first-child, .x-dochazka-inline thead th:first-child{ text-align:left; }
-    #dochazka_set-group tbody td:first-child, .x-dochazka-inline tbody td:first-child{ text-align:left; width:calc(100% - var(--w-fixed)) !important; }
-    #dochazka_set-group thead th:nth-last-child(4),
-    #dochazka_set-group thead th:nth-last-child(3),
-    #dochazka_set-group thead th:nth-last-child(2),
-    #dochazka_set-group thead th:nth-last-child(1),
-    #dochazka_set-group tbody td:nth-last-child(4),
-    #dochazka_set-group tbody td:nth-last-child(3),
-    #dochazka_set-group tbody td:nth-last-child(2),
-    #dochazka_set-group tbody td:nth-last-child(1){
-      width:var(--w-col) !important; text-align:center;
-    }
-
-    /* skryj staré inline labely/original */
-    #dochazka_set-group .inline_label, #dochazka_set-group .inline_label a,
-    #dochazka_set-group td.original, #dochazka_set-group td.original a, #dochazka_set-group th.original{
-      display:none !important; width:0 !important; padding:0 !important; border:0 !important; overflow:hidden !important;
-    }
-
-    /* první buňka – výběr hráče */
-    #dochazka_set-group td:first-child .related-widget-wrapper{
-      display:inline-flex; align-items:center; gap:8px; width:clamp(360px,55vw,720px) !important; max-width:100%;
-    }
-    #dochazka_set-group td:first-child .related-widget-wrapper select{
-      width:100% !important; min-width:100% !important; max-width:none !important; height:34px; padding:6px 10px;
-      border:1px solid #E5E7EB; border-radius:10px; background:#fff;
-    }
-    #dochazka_set-group td:first-child .related-widget-wrapper a{ display:inline-flex; align-items:center; justify-content:center; }
-
-    /* poslední sloupec – akce doprostřed */
-    #dochazka_set-group thead th:last-child, #dochazka_set-group tbody td:last-child{ text-align:center !important; vertical-align:middle !important; }
-    #dochazka_set-group tbody td:last-child a,
-    #dochazka_set-group tbody td:last-child .inline-deletelink,
-    #dochazka_set-group tbody td:last-child .deletelink,
-    #dochazka_set-group tbody td:last-child input[type="checkbox"]{
-      display:inline-flex !important; align-items:center !important; justify-content:center !important; width:28px; height:28px; margin:0 auto;
-    }
-
-    /* === FIX „černé plochy“: řádek s tlačítkem add-row i případný tfoot === */
-    #dochazka_set-group tr.add-row,
-    .x-dochazka-inline tr.add-row{
-      background:#fff !important;
-    }
-    #dochazka_set-group tr.add-row > td,
-    .x-dochazka-inline tr.add-row > td{
-      background:#fff !important;
-      border-top:1px solid #E5E7EB !important; /* jemná horní linka */
-      text-align:left !important;
-      padding:12px !important;
-    }
-    #dochazka_set-group tr.add-row > td > a,
-    .x-dochazka-inline tr.add-row > td > a,
-    #dochazka_set-group .add-row a,
-    #dochazka_set-group .add-row a:link,
-    #dochazka_set-group .add-row a:visited{
-      display:inline-block !important;
-      width:auto !important; max-width:none !important; min-width:0 !important;
-      white-space:nowrap !important;
-      flex:0 0 auto !important; align-self:flex-start !important;
-
-      /* vzhled tlačítka v tvém brandu */
-      background:#E67817; border:3px solid #D16C; color:#fff;
-      padding:7px 12px; border-radius:999px; text-decoration:none;
-      font-weight:800; letter-spacing:.2px;
-    }
-    #dochazka_set-group .add-row a:hover{ filter:brightness(1.05); }
-
-    /* sjednocení případného tfoot (když by se někdy vykreslil) */
-    #dochazka_set-group tfoot,
-    .x-dochazka-inline tfoot{
-      background:#fff !important;
-      border-top:1px solid #E5E7EB !important;
-    }
-  </style>
-
-  <style>
-    /* Oprava barvy textu vybraného hráče v poli */
-    .select2-container--admin-autocomplete .select2-selection--single .select2-selection__rendered {
-      color: #111827 !important; /* Vynutí černou barvu textu */
-    }
-
-    /* Oprava pozadí a textu v samotném dropdownu */
-    .select2-container .select2-dropdown {
+    /* Horní formulář (Hala, Poznamka, …) – jedna bílá karta se šedým okrajem */
+    body.app-core.model-trening.change-form #content-main .module.aligned {
       background: #fff !important;
       border: 1px solid #e5e7eb !important;
+      border-radius: 10px !important;
+      box-shadow: 0 1px 2px rgba(0,0,0,.04) !important;
+      padding: 16px !important;
+      margin-bottom: 12px !important;
+      box-sizing: border-box !important;
+      width: 100% !important;
+      max-width: 100% !important;
     }
-    .select2-results__option {
-      background: #fff !important;
+
+    body.app-core.model-trening.change-form .module.aligned .form-row {
+      display: block !important;
+      margin-bottom: 16px !important;
+      padding: 0 !important;
+      background: transparent !important;
+      border: none !important;
+    }
+    body.app-core.model-trening.change-form .module.aligned .form-row:last-child { margin-bottom: 0 !important; }
+
+    body.app-core.model-trening.change-form .module.aligned .form-row > label {
+      display: block !important;
+      margin-bottom: 8px !important;
+      font-weight: 700 !important;
       color: #111827 !important;
+      font-size: 14px !important;
     }
 
-    /* Zvýraznění položky při najetí myší (brand oranžová) */
-    .select2-results__option--highlighted[aria-selected] {
-      background: var(--brand) !important;
+    /* Bubliny (Trener, Datum, Čas, …) – užší, neroztahují se na celé pole; border, oranžový focus */
+    body.app-core.model-trening.change-form .module.aligned .form-row input:not([type="submit"]):not([type="button"]),
+    body.app-core.model-trening.change-form .module.aligned .form-row select,
+    body.app-core.model-trening.change-form .module.aligned .form-row textarea {
+      width: 100% !important;
+      max-width: 360px !important;
+      box-sizing: border-box !important;
+      height: 36px !important;
+      min-height: 36px !important;
+      padding: 6px 10px !important;
+      background: var(--surface) !important;
+      border: 1px solid var(--line-200) !important;
+      color: var(--text) !important;
+      border-radius: 8px !important;
+      font-size: 14px !important;
+    }
+    body.app-core.model-trening.change-form .module.aligned .form-row input:focus,
+    body.app-core.model-trening.change-form .module.aligned .form-row input:focus-visible,
+    body.app-core.model-trening.change-form .module.aligned .form-row select:focus,
+    body.app-core.model-trening.change-form .module.aligned .form-row select:focus-visible,
+    body.app-core.model-trening.change-form .module.aligned .form-row textarea:focus,
+    body.app-core.model-trening.change-form .module.aligned .form-row textarea:focus-visible {
+      outline: 2px solid var(--brand) !important;
+      outline-offset: 2px !important;
+      border-color: var(--brand) !important;
+      box-shadow: 0 0 0 3px rgba(230, 120, 23, 0.15) !important;
+    }
+    body.app-core.model-trening.change-form .module.aligned .form-row textarea {
+      height: 64px !important;
+      min-height: 64px !important;
+      resize: vertical !important;
+    }
+
+    /* Datum/čas – stejné odsazení zleva pro obě bubliny (Datum i Čas), nadpisy nad bublinami */
+    body.app-core.model-trening.change-form .form-row.field-datum > label { display: none !important; }
+    /* Kontejner Datum+Čas: i v tabulce (td > div) – minimální mezera mezi řádky */
+    body.app-core.model-trening.change-form .form-row.field-datum > div,
+    body.app-core.model-trening.change-form .form-row.field-datum td > div,
+    body.app-core.model-trening.change-form .form-row.field-datum .datetime-widget {
+      grid-column: 1 / -1;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 0 !important;
+    }
+    /* Čas výš – těsně pod ikonami a bublinou Datum (vynulovat + mírně přitáhnout) */
+    body.app-core.model-trening.change-form .form-row.field-datum p:has(input.vTimeField) {
+      margin-top: 2px !important;
+      padding-top: 0 !important;
+      margin-bottom: 0 !important;
+    }
+    /* Stejné odsazení zleva pro bublinu Datum i Čas – žádné extra odsazení (i v tabulce td) */
+    body.app-core.model-trening.change-form .form-row.field-datum .datetime-widget,
+    body.app-core.model-trening.change-form .form-row.field-datum > div p,
+    body.app-core.model-trening.change-form .form-row.field-datum td > div,
+    body.app-core.model-trening.change-form .form-row.field-datum td > div > p,
+    body.app-core.model-trening.change-form .form-row.field-datum p:has(input.vDateField),
+    body.app-core.model-trening.change-form .form-row.field-datum p:has(input.vTimeField) {
+      padding-left: 0 !important;
+      margin-left: 0 !important;
+    }
+    /* Bublina Datum: stejné zarovnání jako Čas – přímo pod nadpis, žádný obal navíc */
+    body.app-core.model-trening.change-form .form-row.field-datum p:has(input.vDateField) > * {
+      padding-left: 0 !important;
+      margin-left: 0 !important;
+      max-width: 360px !important;
+      box-sizing: border-box !important;
+    }
+    /* Každý odstavec (řádek Datum i řádek Čas) – label nahoře, bublina dole – bez ohledu na vnoření */
+    body.app-core.model-trening.change-form .form-row.field-datum .datetime-widget,
+    body.app-core.model-trening.change-form .form-row.field-datum > div > p,
+    body.app-core.model-trening.change-form .form-row.field-datum > div p,
+    body.app-core.model-trening.change-form .form-row.field-datum .datetime-widget > p,
+    body.app-core.model-trening.change-form .form-row.field-datum p:has(input.vTimeField),
+    body.app-core.model-trening.change-form .form-row.field-datum p:has(input.vDateField) {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 6px !important;
+      margin: 0 !important;
+      padding-bottom: 0 !important;
+      align-items: flex-start !important;
+      text-align: left !important;
+    }
+    /* Dnes a ikona kalendáře – stejné pilulky jako add_day (#fff3df, #E67817) */
+    body.app-core.model-trening.change-form .form-row.field-datum p:has(input.vDateField) > div,
+    body.app-core.model-trening.change-form .form-row.field-datum .datetimeshortcuts {
+      justify-content: flex-start !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      text-align: left !important;
+      margin: 2px 0 0 0 !important;
+      margin-left: 0 !important;
+      margin-right: auto !important;
+      width: auto !important;
+      max-width: 100% !important;
+      align-self: flex-start !important;
+      gap: 4px !important;
+    }
+    body.app-core.model-trening.change-form .form-row.field-datum .datetimeshortcuts a {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 4px !important;
+      padding: 3px 8px !important;
+      border-radius: 999px !important;
+      background: #fff3df !important;
+      color: #E67817 !important;
+      text-decoration: none !important;
+    }
+    body.app-core.model-trening.change-form .form-row.field-datum .datetimeshortcuts a:hover {
+      background: #ffe4bf !important;
+    }
+    body.app-core.model-trening.change-form .form-row.field-datum .datetimeshortcuts a:focus {
+      outline: 2px solid #E67817 !important;
+      outline-offset: 2px !important;
+      border-radius: 6px !important;
+    }
+    body.app-core.model-trening.change-form .form-row.field-datum p:has(input.vDateField) {
+      margin-bottom: 0 !important;
+      padding-bottom: 0 !important;
+    }
+    body.app-core.model-trening.change-form .form-row.field-datum label {
+      display: block !important;
+      font-weight: 700 !important;
+      color: #111827 !important;
+      margin-bottom: 4px !important;
+      order: -1 !important;
+    }
+    /* Datum a Čas inputy – světle šedý border #a0a2a9 (jako custom.css --line-200), oranžový při focus */
+    body.app-core.model-trening.change-form .form-row.field-datum input.vDateField,
+    body.app-core.model-trening.change-form .form-row.field-datum input.vTimeField,
+    body.app-core.model-trening.change-form .form-row.field-datum input[type="text"] {
+      width: 100% !important;
+      max-width: 360px !important;
+      box-sizing: border-box !important;
+      height: 36px !important;
+      padding: 6px 10px !important;
+      background: #fff !important;
+      border: 1px solid #a0a2a9 !important;
+      color: #1f2937 !important;
+      border-radius: 8px !important;
+      font-size: 14px !important;
+    }
+    body.app-core.model-trening.change-form .form-row.field-datum input.vDateField:focus,
+    body.app-core.model-trening.change-form .form-row.field-datum input.vTimeField:focus,
+    body.app-core.model-trening.change-form .form-row.field-datum input.vDateField:focus-visible,
+    body.app-core.model-trening.change-form .form-row.field-datum input.vTimeField:focus-visible,
+    body.app-core.model-trening.change-form .form-row.field-datum input[type="text"]:focus,
+    body.app-core.model-trening.change-form .form-row.field-datum input[type="text"]:focus-visible {
+      outline: 2px solid #E67817 !important;
+      outline-offset: 2px !important;
+      border-color: #E67817 !important;
+      box-shadow: 0 0 0 3px rgba(230, 120, 23, 0.15) !important;
+    }
+    body.app-core.model-trening.change-form .form-row.field-datum input {
+      width: 100% !important;
+      max-width: 360px !important;
+    }
+    /* vDateField stejně vlevo jako vTimeField – vynulovat jakékoli odsazení od rodiče */
+    body.app-core.model-trening.change-form .form-row.field-datum input.vDateField {
+      margin-left: 0 !important;
+      align-self: flex-start !important;
+    }
+
+    /* === Sekce HRÁČI – bílá karta, žlutý pruh, řádky s dropdownem + × === */
+    #dochazka_set-group, #dochazky-group, .x-dochazka-inline {
+      background: #fff !important;
+      border: 1px solid #e5e7eb !important;
+      border-radius: 10px !important;
+      box-shadow: 0 1px 2px rgba(0,0,0,.04) !important;
+      overflow: hidden !important;
+      margin-top: 12px !important;
+      margin-bottom: 12px !important;
+      box-sizing: border-box !important;
+    }
+
+    #dochazka_set-group table, #dochazky-group table, .x-dochazka-inline table {
+      width: 100% !important;
+      border-collapse: separate !important;
+      border-spacing: 0 !important;
+      font-size: 14px !important;
+      /* barvy a zebra efekt přebírá globální tabulkový styl z custom.css */
+    }
+
+    /* Hlavička a tělo HRÁČI – jen odsazení, barvy/písmo zůstávají globální */
+    #dochazka_set-group thead th, #dochazky-group thead th, .x-dochazka-inline thead th {
+      padding: 10px 12px !important;
+      text-align: left !important;
+    }
+
+    #dochazka_set-group tbody td, #dochazky-group tbody td, .x-dochazka-inline tbody td {
+      padding: 10px 12px !important;
+      vertical-align: middle !important;
+    }
+
+    #dochazka_set-group td:first-child, #dochazky-group td:first-child, .x-dochazka-inline td:first-child {
+      text-align: left !important;
+    }
+
+    /* Výběr hráče – dropdown užší, neroztahuje se na celou buňku (desktop) */
+    #dochazka_set-group td:first-child .related-widget-wrapper,
+    #dochazky-group td:first-child .related-widget-wrapper,
+    .x-dochazka-inline td:first-child .related-widget-wrapper {
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      max-width: 320px !important;
+      width: 100% !important;
+      min-height: 44px !important;
+    }
+    #dochazka_set-group td:first-child .related-widget-wrapper select,
+    #dochazky-group td:first-child .related-widget-wrapper select,
+    .x-dochazka-inline td:first-child .related-widget-wrapper select {
+      width: 100% !important;
+      min-width: 0 !important;
+      height: 44px !important;
+      padding: 10px 12px !important;
+      border: 1px solid #e5e7eb !important;
+      border-radius: 8px !important;
+      background: #fff !important;
+      font-size: 14px !important;
+    }
+
+    /* Poslední sloupec – jen křížek ×, žádné šedé pole */
+    #dochazka_set-group tbody td:last-child input[type="checkbox"],
+    #dochazky-group tbody td:last-child input[type="checkbox"],
+    .x-dochazka-inline tbody td:last-child input[type="checkbox"] {
+      display: none !important;
+      position: absolute !important;
+      left: -9999px !important;
+    }
+    #dochazka_set-group tbody td:last-child label,
+    #dochazky-group tbody td:last-child label,
+    .x-dochazka-inline tbody td:last-child label {
+      display: none !important;
+    }
+    /* Skrýt vše v poslední buňce kromě jednoho křížku (.x-clear-hrac) – včetně druhého šedého pole / inline-deletelink */
+    #dochazka_set-group tbody td:last-child .inline-deletelink,
+    #dochazky-group tbody td:last-child .inline-deletelink,
+    .x-dochazka-inline tbody td:last-child .inline-deletelink,
+    #dochazka_set-group tbody td:last-child .deletelink,
+    #dochazky-group tbody td:last-child .deletelink,
+    .x-dochazka-inline tbody td:last-child .deletelink {
+      display: none !important;
+    }
+    #dochazka_set-group tbody td:last-child > div > *:not(a.x-clear-hrac),
+    #dochazky-group tbody td:last-child > div > *:not(a.x-clear-hrac),
+    .x-dochazka-inline tbody td:last-child > div > *:not(a.x-clear-hrac) {
+      display: none !important;
+      position: absolute !important;
+      left: -9999px !important;
+    }
+    /* Skrytí nadpisu „Odstranit“ – poslední sloupec bez textu */
+    #dochazka_set-group thead th:last-child, #dochazky-group thead th:last-child, .x-dochazka-inline thead th:last-child {
+      width: 48px !important;
+      max-width: 48px !important;
+      text-align: center !important;
+      padding: 12px 8px !important;
+      font-size: 0 !important;
+      line-height: 0 !important;
+      color: transparent !important;
+      overflow: hidden !important;
+    }
+    #dochazka_set-group tbody td:last-child, #dochazky-group tbody td:last-child, .x-dochazka-inline tbody td:last-child {
+      width: 48px !important;
+      max-width: 48px !important;
+      text-align: center !important;
+      padding: 8px !important;
+      background: #fff !important;
+    }
+    #dochazka_set-group tbody td:last-child > div,
+    #dochazky-group tbody td:last-child > div,
+    .x-dochazka-inline tbody td:last-child > div {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      min-height: 0 !important;
+      padding: 0 !important;
+      background: transparent !important;
+      border: none !important;
+    }
+    #dochazka_set-group tbody td:last-child .x-clear-hrac,
+    #dochazky-group tbody td:last-child .x-clear-hrac,
+    .x-dochazka-inline tbody td:last-child .x-clear-hrac {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 32px !important;
+      height: 32px !important;
+      min-width: 32px !important;
+      min-height: 32px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 1px solid #9ca3af !important;
+      border-radius: 8px !important;
+      background: #f9fafb !important;
+      color: #6b7280 !important;
+      font-size: 18px !important;
+      line-height: 1 !important;
+      text-decoration: none !important;
+      cursor: pointer !important;
+      box-sizing: border-box !important;
+    }
+    #dochazka_set-group tbody td:last-child .x-clear-hrac:hover,
+    #dochazky-group tbody td:last-child .x-clear-hrac:hover,
+    .x-dochazka-inline tbody td:last-child .x-clear-hrac:hover {
+      color: #b91c1c !important;
+      background: #fef2f2 !important;
+      border-color: #fecaca !important;
+    }
+
+    /* Řádek „Přidat hráče“ – oranžové tlačítko (kapsle) */
+    #dochazka_set-group tr.add-row, #dochazky-group tr.add-row, .x-dochazka-inline tr.add-row {
+      background: #fff !important;
+    }
+    #dochazka_set-group tr.add-row > td, #dochazky-group tr.add-row > td, .x-dochazka-inline tr.add-row > td {
+      padding: 12px 14px !important;
+      background: #fff !important;
+      border-top: 1px solid #e5e7eb !important;
+      text-align: left !important;
+    }
+    #dochazka_set-group .add-row a, #dochazky-group .add-row a, .x-dochazka-inline .add-row a {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 10px 20px !important;
+      background: var(--brand, #E67817) !important;
+      border: 2px solid #c96510 !important;
       color: #fff !important;
+      font-weight: 700 !important;
+      font-size: 14px !important;
+      border-radius: 999px !important;
+      text-decoration: none !important;
+    }
+    #dochazka_set-group .add-row a:hover, #dochazky-group .add-row a:hover, .x-dochazka-inline .add-row a:hover {
+      filter: brightness(1.05);
+    }
+
+    /* Skrytí prázdného řádku (empty-form) – žádné šedé pole */
+    #dochazka_set-group tbody tr.empty-form, #dochazky-group tbody tr.empty-form, .x-dochazka-inline tbody tr.empty-form,
+    #dochazka_set-group tbody tr.empty-form td, #dochazky-group tbody tr.empty-form td, .x-dochazka-inline tbody tr.empty-form td {
+      height: 0 !important; min-height: 0 !important; max-height: 0 !important;
+      padding: 0 !important; margin: 0 !important; overflow: hidden !important;
+      border: none !important; background: transparent !important; visibility: hidden !important;
+      line-height: 0 !important; font-size: 0 !important;
+    }
+
+    /* Select2 v sekci Hráči */
+    .select2-container--admin-autocomplete .select2-selection--single .select2-selection__rendered { color: #111827 !important; }
+    .select2-container .select2-dropdown { background: #fff !important; border: 1px solid #e5e7eb !important; }
+    .select2-results__option { background: #fff !important; color: #111827 !important; }
+    .select2-results__option--highlighted[aria-selected] { background: var(--brand, #E67817) !important; color: #fff !important; }
+
+    /* Spodní tlačítka – bílá karta, ULOŽIT oranžová kapsle, Odstranit červené */
+    body.app-core.model-trening.change-form #content-main .submit-row {
+      background: #fff !important;
+      border: 1px solid #e5e7eb !important;
+      border-radius: 10px !important;
+      box-shadow: 0 1px 2px rgba(0,0,0,.04) !important;
+      padding: 16px !important;
+      margin-top: 12px !important;
+    }
+    body.app-core.model-trening.change-form .submit-row input[type="submit"]:not([value*="Odstranit"]),
+    body.app-core.model-trening.change-form .submit-row a.button {
+      background: var(--brand, #E67817) !important;
+      border: 2px solid #c96510 !important;
+      color: #fff !important;
+      font-weight: 700 !important;
+      border-radius: 999px !important;
+      padding: 10px 20px !important;
+    }
+    body.app-core.model-trening.change-form .submit-row .deletelink {
+      color: #b91c1c !important;
+      font-weight: 700 !important;
+    }
+    body.app-core.model-trening.change-form .submit-row .deletelink:hover {
+      color: #dc2626 !important;
+    }
+
+    /* Mobil: souměrné odsazení – stejný padding vlevo i vpravo u bílých polí */
+    @media (max-width: 768px) {
+      body.app-core.model-trening.change-form #content-main {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+        box-sizing: border-box !important;
+      }
+      body.app-core.model-trening.change-form #content-main .module.aligned {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+        box-sizing: border-box !important;
+      }
+      body.app-core.model-trening.change-form #content-main #dochazka_set-group,
+      body.app-core.model-trening.change-form #content-main #dochazky-group,
+      body.app-core.model-trening.change-form #content-main .x-dochazka-inline {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      /* Skutečná struktura: fieldset.module.aligned → .form-row → div → .flex-container → label + input */
+      body.app-core.model-trening.change-form .module.aligned .form-row {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+        box-sizing: border-box !important;
+      }
+      body.app-core.model-trening.change-form .module.aligned .form-row > div {
+        width: 100% !important;
+        max-width: 320px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        box-sizing: border-box !important;
+      }
+      body.app-core.model-trening.change-form .module.aligned .form-row .flex-container {
+        width: 100% !important;
+        max-width: 320px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        box-sizing: border-box !important;
+      }
+      /* Bubliny širší a vycentrované – šířka kontejneru */
+      body.app-core.model-trening.change-form .module.aligned .form-row input:not([type="submit"]):not([type="button"]),
+      body.app-core.model-trening.change-form .module.aligned .form-row select,
+      body.app-core.model-trening.change-form .module.aligned .form-row textarea {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        display: block !important;
+      }
+      /* Souměrný vnitřní padding bublin – vlevo i vpravo stejně (vypadá symetricky) */
+      body.app-core.model-trening.change-form .module.aligned .form-row input:not([type="submit"]):not([type="button"]),
+      body.app-core.model-trening.change-form .module.aligned .form-row select,
+      body.app-core.model-trening.change-form .module.aligned .form-row textarea {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+      }
+      body.app-core.model-trening.change-form .module.aligned .form-row select {
+        padding-right: 14px !important;
+      }
+      body.app-core.model-trening.change-form .form-row.field-datum input.vDateField,
+      body.app-core.model-trening.change-form .form-row.field-datum input.vTimeField,
+      body.app-core.model-trening.change-form .form-row.field-datum input[type="text"] {
+        width: 100% !important;
+        max-width: 320px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+      }
+      /* Mobil: Datum a Čas – stejně širší a vycentrované (struktura divů, ne tabulka) */
+      body.app-core.model-trening.change-form .form-row.field-datum > div,
+      body.app-core.model-trening.change-form .form-row.field-datum .flex-container,
+      body.app-core.model-trening.change-form .form-row.field-datum .datetime-widget {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 0 !important;
+        align-items: stretch !important;
+        max-width: 320px !important;
+        width: 100% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+      body.app-core.model-trening.change-form .form-row.field-datum p:has(input.vTimeField) {
+        margin-top: 2px !important;
+        padding-top: 0 !important;
+      }
+      body.app-core.model-trening.change-form .form-row.field-datum p:has(input.vDateField) {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+      }
+      body.app-core.model-trening.change-form .form-row.field-datum .datetime-widget,
+      body.app-core.model-trening.change-form .form-row.field-datum > div p {
+        padding-left: 0 !important;
+        margin-left: 0 !important;
+      }
+      body.app-core.model-trening.change-form .form-row.field-datum p:has(input.vDateField) > * {
+        padding-left: 0 !important;
+        margin-left: 0 !important;
+        max-width: 320px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+      }
+      body.app-core.model-trening.change-form .form-row.field-datum input.vDateField {
+        margin-left: auto !important;
+        margin-right: auto !important;
+      }
+      body.app-core.model-trening.change-form .form-row.field-datum > div > p,
+      body.app-core.model-trening.change-form .form-row.field-datum > div p,
+      body.app-core.model-trening.change-form .form-row.field-datum .datetime-widget > p,
+      body.app-core.model-trening.change-form .form-row.field-datum .datetime-widget > div,
+      body.app-core.model-trening.change-form .form-row.field-datum p:has(input.vTimeField),
+      body.app-core.model-trening.change-form .form-row.field-datum p:has(input.vDateField) {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+        margin: 0 !important;
+        padding-bottom: 0 !important;
+        align-items: flex-start !important;
+        text-align: left !important;
+      }
+      /* Mobil: Dnes a Kalendář vlevo (ne na střed) */
+      body.app-core.model-trening.change-form .form-row.field-datum p:has(input.vDateField) > div,
+      body.app-core.model-trening.change-form .form-row.field-datum .datetimeshortcuts {
+        justify-content: flex-start !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        text-align: left !important;
+        margin: 2px 0 0 0 !important;
+        margin-left: 0 !important;
+        margin-right: auto !important;
+        width: auto !important;
+        align-self: flex-start !important;
+      }
+      body.app-core.model-trening.change-form .form-row.field-datum label {
+        display: block !important;
+        font-weight: 700 !important;
+        color: #111827 !important;
+        margin-bottom: 4px !important;
+        order: -1 !important;
+      }
+      body.app-core.model-trening.change-form .form-row.field-datum input.vDateField,
+      body.app-core.model-trening.change-form .form-row.field-datum input.vTimeField,
+      body.app-core.model-trening.change-form .form-row.field-datum input[type="text"] {
+        background: #fff !important;
+        border: 1px solid #a0a2a9 !important;
+        border-radius: 8px !important;
+      }
+      body.app-core.model-trening.change-form .form-row.field-datum input.vDateField:focus,
+      body.app-core.model-trening.change-form .form-row.field-datum input.vTimeField:focus,
+      body.app-core.model-trening.change-form .form-row.field-datum input.vDateField:focus-visible,
+      body.app-core.model-trening.change-form .form-row.field-datum input.vTimeField:focus-visible,
+      body.app-core.model-trening.change-form .form-row.field-datum input[type="text"]:focus,
+      body.app-core.model-trening.change-form .form-row.field-datum input[type="text"]:focus-visible {
+        outline: 2px solid #E67817 !important;
+        outline-offset: 2px !important;
+        border-color: #E67817 !important;
+        box-shadow: 0 0 0 3px rgba(230, 120, 23, 0.15) !important;
+      }
+      /* Výběr hráče v tabulce HRÁČI – užší na mobilu */
+      #dochazka_set-group td:first-child .related-widget-wrapper,
+      #dochazky-group td:first-child .related-widget-wrapper,
+      .x-dochazka-inline td:first-child .related-widget-wrapper {
+        max-width: 280px !important;
+        width: 100% !important;
+      }
+      /* Skrýt střední sloupce (cena, částka, naučeno) – zobrazit jen Hráč + × */
+      #dochazka_set-group thead th:nth-child(2), #dochazka_set-group thead th:nth-child(3), #dochazka_set-group thead th:nth-child(4),
+      #dochazky-group thead th:nth-child(2), #dochazky-group thead th:nth-child(3), #dochazky-group thead th:nth-child(4),
+      .x-dochazka-inline thead th:nth-child(2), .x-dochazka-inline thead th:nth-child(3), .x-dochazka-inline thead th:nth-child(4),
+      #dochazka_set-group tbody td:nth-child(2), #dochazka_set-group tbody td:nth-child(3), #dochazka_set-group tbody td:nth-child(4),
+      #dochazky-group tbody td:nth-child(2), #dochazky-group tbody td:nth-child(3), #dochazky-group tbody td:nth-child(4),
+      .x-dochazka-inline tbody td:nth-child(2), .x-dochazka-inline tbody td:nth-child(3), .x-dochazka-inline tbody td:nth-child(4) {
+        display: none !important;
+      }
     }
   </style>
-
-<style>
-    @media (max-width: 767px) {
-        
-        /*
-         * 1. Oprava horního formuláře
-         */
-        
-        /* Obal modulu: vnitřní mezera 20px */
-        body.app-core.model-trening.change-form #content-main .module.aligned {
-            width: max-content !important; 
-            min-width: 0 !important;
-            
-            /* === TADY JE TA OPRAVA === */
-            /* Změna ze 100% na 95%, aby vznikla mezera pro "ring" */
-            max-width: 100% !important; 
-            
-            overflow-x: visible !important; 
-            padding: 12px 20px !important; 
-            box-sizing: border-box !important;
-            margin-left: auto !important; 
-            margin-right: auto !important; 
-        }
-
-        /* Řádek formuláře: mezera pod 18px */
-        body.app-core.model-trening.change-form .module.aligned .form-row {
-            display: block !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            padding: 5px !important; 
-            margin-bottom: 5px !important; 
-            background: transparent !important;
-            box-shadow: none !important; 
-            border-bottom: none !important; 
-            box-sizing: border-box !important;
-        }
-
-        /* Popisek (label): beze změny */
-        body.app-core.model-trening.change-form .module.aligned .form-row > label {
-            display: block !important;
-            width: 100% !important;
-            text-align: left !important;
-            margin-bottom: 10px !important;
-            white-space: normal !important;
-        }
-
-        /* === ZMĚNA #2: VŠECHNA POLE NA 300px === */
-        body.app-core.model-trening.change-form .module.aligned .form-row input,
-        body.app-core.model-trening.change-form .module.aligned .form-row select,
-        body.app-core.model-trening.change-form .module.aligned .form-row textarea,
-        body.app-core.model-trening.change-form .module.aligned .form-row .select2-container,
-        body.app-core.model-trening.change-form .module.aligned .form-row .related-widget-wrapper,
-        /* Včetně polí pro Datum a Čas */
-        .datetime-widget input.vDateField,
-        .datetime-widget input.vTimeField {
-            
-            width: 100% !important;
-            max-width: 220px !important;
-            
-            min-width: 0 !important;
-            box-sizing: border-box !important;
-        }
-        
-        /* Tlačítka "Dnes" */
-        body.app-core.model-trening.change-form .datetimeshortcuts {
-            white-space: normal !important;
-            margin-top: 8px; /* Mezera nad "Dnes" */
-            display: block !important; /* VYNUTÍ NOVOU ŘÁDKU */
-        }
-        
-        /* Popisky "Datum:" a "Čas:" */
-        .datetime-widget label {
-            display: block !important;
-            width: 100% !important;
-            text-align: left !important;
-            margin-bottom: 6px !important; /* Mezera pod popiskem */
-            color: #000000 !important;     /* Černá barva */
-            font-weight: 700 !important;   /* Tučné */
-        }
-        
-        /* Mezera mezi "Datum" a "Čas" */
-        .datetime-widget {
-            display: flex;
-            flex-direction: column;
-            gap: 14px; /* Mezera mezi blokem "Datum" a blokem "Čas" */
-        }
-        
-        /* === ZMĚNA #2 (konec): Smazán speciální blok pro 200px === */
-        /* (Byl tady blok pro .vDateField a .vTimeField, teď je smazaný) */
-
-
-        /*
-         * 2. Oprava tabulky "Docházka" (inline)
-         */
-
-        /* Obal tabulky: povolit horizontální rolování */
-        #dochazka_set-group, .x-dochazka-inline {
-            overflow-x: auto !important;
-            -webkit-overflow-scrolling: touch !important;
-        }
-
-        /* Tabulka: nastavit minimální šířku, aby se rolování aktivovalo */
-        #dochazka_set-group table, .x-dochazka-inline table {
-            min-width: 600px !important;
-        }
-        
-        /* Oprava pro výběr hráče v tabulce na mobilu */
-        #dochazka_set-group td:first-child .related-widget-wrapper {
-            width: 100% !important;
-            min-width: 250px;
-        }
-    }
-  </style>
-  {% endblock %}
+{% endblock %}

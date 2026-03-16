@@ -1,0 +1,210 @@
+{"sessionId":"0073d7","location":"add_day.html:script-init","message":"add-day page load","data":{"pathname":"/admin/core/trening/add-day/","h1Count":2,"breadcrumbsText":"Domů › Tréninky › Přidat celý den","contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773514794703}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"0","selectedLength":0,"runId":"init"},"timestamp":1773514794704}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"5","selectedLength":0,"runId":"init"},"timestamp":1773514794706}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"1","selectedLength":0,"runId":"init"},"timestamp":1773514794705}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"6","selectedLength":0,"runId":"init"},"timestamp":1773514794706}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"2","selectedLength":0,"runId":"init"},"timestamp":1773514794705}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"3","selectedLength":0,"runId":"init"},"timestamp":1773514794705}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"4","selectedLength":0,"runId":"init"},"timestamp":1773514794706}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"7","selectedLength":0,"runId":"init"},"timestamp":1773514794706}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"8","selectedLength":0,"runId":"init"},"timestamp":1773514794706}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"9","selectedLength":0,"runId":"init"},"timestamp":1773514794706}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"10","selectedLength":0,"runId":"init"},"timestamp":1773514794707}
+{"sessionId":"0073d7","location":"base_site.html:DOMContentLoaded","message":"add-day DOMContentLoaded","data":{"h1Count":2,"contentMainDisplay":"block","bodyClass":"","runId":"init"},"timestamp":1773514794711}
+{"sessionId":"0073d7","location":"add_day.html:script-1.5s","message":"add-day after 1.5s","data":{"h1Count":2,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773514796206}
+{"sessionId":"0073d7","location":"add_day.html:script-init","message":"add-day page load","data":{"pathname":"/admin/core/trening/add-day/","h1Count":2,"breadcrumbsText":"Domů › Tréninky › Přidat celý den","contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773514801603}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"0","selectedLength":0,"runId":"init"},"timestamp":1773514801604}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"2","selectedLength":0,"runId":"init"},"timestamp":1773514801605}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"1","selectedLength":0,"runId":"init"},"timestamp":1773514801605}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"3","selectedLength":0,"runId":"init"},"timestamp":1773514801605}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"4","selectedLength":0,"runId":"init"},"timestamp":1773514801605}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"5","selectedLength":0,"runId":"init"},"timestamp":1773514801605}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"6","selectedLength":0,"runId":"init"},"timestamp":1773514801606}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"7","selectedLength":0,"runId":"init"},"timestamp":1773514801606}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"8","selectedLength":0,"runId":"init"},"timestamp":1773514801606}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"9","selectedLength":0,"runId":"init"},"timestamp":1773514801606}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"10","selectedLength":0,"runId":"init"},"timestamp":1773514801606}
+{"sessionId":"0073d7","location":"base_site.html:DOMContentLoaded","message":"add-day DOMContentLoaded","data":{"h1Count":2,"contentMainDisplay":"block","bodyClass":"","runId":"init"},"timestamp":1773514801611}
+{"sessionId":"0073d7","location":"add_day.html:script-1.5s","message":"add-day after 1.5s","data":{"h1Count":2,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773514803105}
+{"sessionId":"0073d7","location":"add_day.html:script-init","message":"add-day page load","data":{"pathname":"/admin/core/trening/add-day/","h1Count":2,"breadcrumbsText":"Domů › Tréninky › Přidat celý den","contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773514807478}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"0","selectedLength":0,"runId":"init"},"timestamp":1773514807479}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"1","selectedLength":0,"runId":"init"},"timestamp":1773514807480}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"2","selectedLength":0,"runId":"init"},"timestamp":1773514807480}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"3","selectedLength":0,"runId":"init"},"timestamp":1773514807480}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"4","selectedLength":0,"runId":"init"},"timestamp":1773514807480}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"5","selectedLength":0,"runId":"init"},"timestamp":1773514807480}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"6","selectedLength":0,"runId":"init"},"timestamp":1773514807480}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"7","selectedLength":0,"runId":"init"},"timestamp":1773514807481}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"8","selectedLength":0,"runId":"init"},"timestamp":1773514807481}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"9","selectedLength":0,"runId":"init"},"timestamp":1773514807481}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"10","selectedLength":0,"runId":"init"},"timestamp":1773514807481}
+{"sessionId":"0073d7","location":"base_site.html:DOMContentLoaded","message":"add-day DOMContentLoaded","data":{"h1Count":2,"contentMainDisplay":"block","bodyClass":"","runId":"init"},"timestamp":1773514807488}
+{"sessionId":"0073d7","location":"add_day.html:script-1.5s","message":"add-day after 1.5s","data":{"h1Count":2,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773514808981}
+{"sessionId":"0073d7","location":"add_day.html:script-init","message":"add-day page load","data":{"pathname":"/admin/core/trening/add-day/","h1Count":2,"breadcrumbsText":"Domů › Tréninky › Přidat celý den","contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773514828928}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"0","selectedLength":0,"runId":"init"},"timestamp":1773514828929}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"3","selectedLength":0,"runId":"init"},"timestamp":1773514828931}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"1","selectedLength":0,"runId":"init"},"timestamp":1773514828930}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"4","selectedLength":0,"runId":"init"},"timestamp":1773514828932}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"2","selectedLength":0,"runId":"init"},"timestamp":1773514828931}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"5","selectedLength":0,"runId":"init"},"timestamp":1773514828932}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"6","selectedLength":0,"runId":"init"},"timestamp":1773514828932}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"7","selectedLength":0,"runId":"init"},"timestamp":1773514828933}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"8","selectedLength":0,"runId":"init"},"timestamp":1773514828933}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"9","selectedLength":0,"runId":"init"},"timestamp":1773514828933}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"10","selectedLength":0,"runId":"init"},"timestamp":1773514828933}
+{"sessionId":"0073d7","location":"base_site.html:DOMContentLoaded","message":"add-day DOMContentLoaded","data":{"h1Count":2,"contentMainDisplay":"block","bodyClass":"","runId":"init"},"timestamp":1773514828938}
+{"sessionId":"0073d7","location":"add_day.html:script-1.5s","message":"add-day after 1.5s","data":{"h1Count":2,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773514830431}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"0","selectedLength":0,"runId":"init"},"timestamp":1773514870484}
+{"sessionId":"0073d7","location":"add_day.html:script-init","message":"add-day page load","data":{"pathname":"/admin/core/trening/add-day/","h1Count":2,"breadcrumbsText":"Domů › Tréninky › Přidat celý den","contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773514870483}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"3","selectedLength":0,"runId":"init"},"timestamp":1773514870484}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"1","selectedLength":0,"runId":"init"},"timestamp":1773514870484}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"4","selectedLength":0,"runId":"init"},"timestamp":1773514870484}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"2","selectedLength":0,"runId":"init"},"timestamp":1773514870484}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"5","selectedLength":0,"runId":"init"},"timestamp":1773514870485}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"6","selectedLength":0,"runId":"init"},"timestamp":1773514870485}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"7","selectedLength":0,"runId":"init"},"timestamp":1773514870485}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"8","selectedLength":0,"runId":"init"},"timestamp":1773514870485}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"9","selectedLength":0,"runId":"init"},"timestamp":1773514870485}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"10","selectedLength":0,"runId":"init"},"timestamp":1773514870485}
+{"sessionId":"0073d7","location":"base_site.html:DOMContentLoaded","message":"add-day DOMContentLoaded","data":{"h1Count":2,"contentMainDisplay":"block","bodyClass":"","runId":"init"},"timestamp":1773514870490}
+{"sessionId":"0073d7","location":"add_day.html:script-1.5s","message":"add-day after 1.5s","data":{"h1Count":2,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773514871986}
+{"sessionId":"0073d7","location":"add_day.html:script-init","message":"add-day page load","data":{"pathname":"/admin/core/trening/add-day/","h1Count":2,"breadcrumbsText":null,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515001643}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"1","selectedLength":0,"runId":"init"},"timestamp":1773515001646}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"0","selectedLength":0,"runId":"init"},"timestamp":1773515001645}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"4","selectedLength":0,"runId":"init"},"timestamp":1773515001647}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"2","selectedLength":0,"runId":"init"},"timestamp":1773515001646}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"5","selectedLength":0,"runId":"init"},"timestamp":1773515001647}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"3","selectedLength":0,"runId":"init"},"timestamp":1773515001647}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"6","selectedLength":0,"runId":"init"},"timestamp":1773515001648}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"7","selectedLength":0,"runId":"init"},"timestamp":1773515001648}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"8","selectedLength":0,"runId":"init"},"timestamp":1773515001648}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"9","selectedLength":0,"runId":"init"},"timestamp":1773515001649}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"10","selectedLength":0,"runId":"init"},"timestamp":1773515001649}
+{"sessionId":"0073d7","location":"base_site.html:DOMContentLoaded","message":"add-day DOMContentLoaded","data":{"h1Count":2,"contentMainDisplay":"block","bodyClass":"","runId":"init"},"timestamp":1773515001659}
+{"sessionId":"0073d7","location":"add_day.html:script-1.5s","message":"add-day after 1.5s","data":{"h1Count":2,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515003146}
+{"sessionId":"0073d7","location":"add_day.html:script-init","message":"add-day page load","data":{"pathname":"/admin/core/trening/add-day/","h1Count":2,"breadcrumbsText":null,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515008393}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"0","selectedLength":0,"runId":"init"},"timestamp":1773515008395}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"1","selectedLength":0,"runId":"init"},"timestamp":1773515008395}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"3","selectedLength":0,"runId":"init"},"timestamp":1773515008396}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"2","selectedLength":0,"runId":"init"},"timestamp":1773515008396}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"4","selectedLength":0,"runId":"init"},"timestamp":1773515008396}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"5","selectedLength":0,"runId":"init"},"timestamp":1773515008397}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"6","selectedLength":0,"runId":"init"},"timestamp":1773515008397}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"7","selectedLength":0,"runId":"init"},"timestamp":1773515008398}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"8","selectedLength":0,"runId":"init"},"timestamp":1773515008398}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"9","selectedLength":0,"runId":"init"},"timestamp":1773515008398}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"10","selectedLength":0,"runId":"init"},"timestamp":1773515008399}
+{"sessionId":"0073d7","location":"base_site.html:DOMContentLoaded","message":"add-day DOMContentLoaded","data":{"h1Count":2,"contentMainDisplay":"block","bodyClass":"","runId":"init"},"timestamp":1773515008404}
+{"sessionId":"0073d7","location":"add_day.html:script-1.5s","message":"add-day after 1.5s","data":{"h1Count":2,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515009895}
+{"sessionId":"0073d7","location":"add_day.html:script-init","message":"add-day page load","data":{"pathname":"/admin/core/trening/add-day/","h1Count":2,"breadcrumbsText":null,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515022016}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"2","selectedLength":0,"runId":"init"},"timestamp":1773515022018}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"0","selectedLength":0,"runId":"init"},"timestamp":1773515022017}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"1","selectedLength":0,"runId":"init"},"timestamp":1773515022018}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"3","selectedLength":0,"runId":"init"},"timestamp":1773515022018}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"4","selectedLength":0,"runId":"init"},"timestamp":1773515022019}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"5","selectedLength":0,"runId":"init"},"timestamp":1773515022019}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"6","selectedLength":0,"runId":"init"},"timestamp":1773515022019}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"7","selectedLength":0,"runId":"init"},"timestamp":1773515022019}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"8","selectedLength":0,"runId":"init"},"timestamp":1773515022019}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"9","selectedLength":0,"runId":"init"},"timestamp":1773515022020}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"10","selectedLength":0,"runId":"init"},"timestamp":1773515022020}
+{"sessionId":"0073d7","location":"base_site.html:DOMContentLoaded","message":"add-day DOMContentLoaded","data":{"h1Count":2,"contentMainDisplay":"block","bodyClass":"","runId":"init"},"timestamp":1773515022024}
+{"sessionId":"0073d7","location":"add_day.html:script-1.5s","message":"add-day after 1.5s","data":{"h1Count":2,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515023519}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"0","selectedLength":0,"runId":"init"},"timestamp":1773515034100}
+{"sessionId":"0073d7","location":"add_day.html:script-init","message":"add-day page load","data":{"pathname":"/admin/core/trening/add-day/","h1Count":2,"breadcrumbsText":null,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515034099}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"4","selectedLength":0,"runId":"init"},"timestamp":1773515034101}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"1","selectedLength":0,"runId":"init"},"timestamp":1773515034100}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"2","selectedLength":0,"runId":"init"},"timestamp":1773515034100}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"5","selectedLength":0,"runId":"init"},"timestamp":1773515034101}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"3","selectedLength":0,"runId":"init"},"timestamp":1773515034101}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"6","selectedLength":0,"runId":"init"},"timestamp":1773515034101}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"7","selectedLength":0,"runId":"init"},"timestamp":1773515034101}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"8","selectedLength":0,"runId":"init"},"timestamp":1773515034101}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"9","selectedLength":0,"runId":"init"},"timestamp":1773515034101}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"10","selectedLength":0,"runId":"init"},"timestamp":1773515034102}
+{"sessionId":"0073d7","location":"base_site.html:DOMContentLoaded","message":"add-day DOMContentLoaded","data":{"h1Count":2,"contentMainDisplay":"block","bodyClass":"","runId":"init"},"timestamp":1773515034109}
+{"sessionId":"0073d7","location":"add_day.html:script-1.5s","message":"add-day after 1.5s","data":{"h1Count":2,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515035602}
+{"sessionId":"0073d7","location":"add_day.html:script-init","message":"add-day page load","data":{"pathname":"/admin/core/trening/add-day/","h1Count":2,"breadcrumbsText":null,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515136561}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"0","selectedLength":0,"runId":"init"},"timestamp":1773515136562}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"2","selectedLength":0,"runId":"init"},"timestamp":1773515136563}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"1","selectedLength":0,"runId":"init"},"timestamp":1773515136563}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"3","selectedLength":0,"runId":"init"},"timestamp":1773515136564}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"4","selectedLength":0,"runId":"init"},"timestamp":1773515136564}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"5","selectedLength":0,"runId":"init"},"timestamp":1773515136564}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"6","selectedLength":0,"runId":"init"},"timestamp":1773515136564}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"7","selectedLength":0,"runId":"init"},"timestamp":1773515136564}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"8","selectedLength":0,"runId":"init"},"timestamp":1773515136565}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"9","selectedLength":0,"runId":"init"},"timestamp":1773515136565}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"10","selectedLength":0,"runId":"init"},"timestamp":1773515136565}
+{"sessionId":"0073d7","location":"base_site.html:DOMContentLoaded","message":"add-day DOMContentLoaded","data":{"h1Count":2,"contentMainDisplay":"block","bodyClass":"","runId":"init"},"timestamp":1773515136571}
+{"sessionId":"0073d7","location":"add_day.html:script-1.5s","message":"add-day after 1.5s","data":{"h1Count":2,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515138064}
+{"sessionId":"0073d7","location":"add_day.html:script-init","message":"add-day page load","data":{"pathname":"/admin/core/trening/add-day/","h1Count":2,"breadcrumbsText":null,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515344866}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"0","selectedLength":0,"runId":"init"},"timestamp":1773515344867}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"1","selectedLength":0,"runId":"init"},"timestamp":1773515344867}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"5","selectedLength":0,"runId":"init"},"timestamp":1773515344868}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"2","selectedLength":0,"runId":"init"},"timestamp":1773515344868}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"3","selectedLength":0,"runId":"init"},"timestamp":1773515344868}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"4","selectedLength":0,"runId":"init"},"timestamp":1773515344868}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"6","selectedLength":0,"runId":"init"},"timestamp":1773515344868}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"7","selectedLength":0,"runId":"init"},"timestamp":1773515344868}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"8","selectedLength":0,"runId":"init"},"timestamp":1773515344869}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"9","selectedLength":0,"runId":"init"},"timestamp":1773515344869}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"10","selectedLength":0,"runId":"init"},"timestamp":1773515344869}
+{"sessionId":"0073d7","location":"base_site.html:DOMContentLoaded","message":"add-day DOMContentLoaded","data":{"h1Count":2,"contentMainDisplay":"block","bodyClass":"","runId":"init"},"timestamp":1773515345458}
+{"sessionId":"0073d7","location":"add_day.html:script-1.5s","message":"add-day after 1.5s","data":{"h1Count":2,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515346368}
+{"sessionId":"0073d7","location":"add_day.html:script-init","message":"add-day page load","data":{"pathname":"/admin/core/trening/add-day/","h1Count":2,"breadcrumbsText":null,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515353490}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"3","selectedLength":0,"runId":"init"},"timestamp":1773515353491}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"0","selectedLength":0,"runId":"init"},"timestamp":1773515353491}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"4","selectedLength":0,"runId":"init"},"timestamp":1773515353492}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"1","selectedLength":0,"runId":"init"},"timestamp":1773515353491}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"2","selectedLength":0,"runId":"init"},"timestamp":1773515353491}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"5","selectedLength":0,"runId":"init"},"timestamp":1773515353492}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"6","selectedLength":0,"runId":"init"},"timestamp":1773515353492}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"7","selectedLength":0,"runId":"init"},"timestamp":1773515353492}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"8","selectedLength":0,"runId":"init"},"timestamp":1773515353492}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"9","selectedLength":0,"runId":"init"},"timestamp":1773515353492}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"10","selectedLength":0,"runId":"init"},"timestamp":1773515353493}
+{"sessionId":"0073d7","location":"base_site.html:DOMContentLoaded","message":"add-day DOMContentLoaded","data":{"h1Count":2,"contentMainDisplay":"block","bodyClass":"","runId":"init"},"timestamp":1773515353497}
+{"sessionId":"0073d7","location":"add_day.html:script-1.5s","message":"add-day after 1.5s","data":{"h1Count":2,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515354992}
+{"sessionId":"0073d7","location":"add_day.html:script-init","message":"add-day page load","data":{"pathname":"/admin/core/trening/add-day/","h1Count":2,"breadcrumbsText":null,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515360382}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"0","selectedLength":0,"runId":"init"},"timestamp":1773515360383}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"2","selectedLength":0,"runId":"init"},"timestamp":1773515360385}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"1","selectedLength":0,"runId":"init"},"timestamp":1773515360384}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"3","selectedLength":0,"runId":"init"},"timestamp":1773515360385}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"4","selectedLength":0,"runId":"init"},"timestamp":1773515360385}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"5","selectedLength":0,"runId":"init"},"timestamp":1773515360386}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"6","selectedLength":0,"runId":"init"},"timestamp":1773515360386}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"7","selectedLength":0,"runId":"init"},"timestamp":1773515360386}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"8","selectedLength":0,"runId":"init"},"timestamp":1773515360387}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"9","selectedLength":0,"runId":"init"},"timestamp":1773515360387}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"10","selectedLength":0,"runId":"init"},"timestamp":1773515360387}
+{"sessionId":"0073d7","location":"base_site.html:DOMContentLoaded","message":"add-day DOMContentLoaded","data":{"h1Count":2,"contentMainDisplay":"block","bodyClass":"","runId":"init"},"timestamp":1773515360392}
+{"sessionId":"0073d7","location":"add_day.html:script-1.5s","message":"add-day after 1.5s","data":{"h1Count":2,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515361885}
+{"sessionId":"0073d7","location":"add_day.html:script-init","message":"add-day page load","data":{"pathname":"/admin/core/trening/add-day/","h1Count":2,"breadcrumbsText":null,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515366498}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"0","selectedLength":0,"runId":"init"},"timestamp":1773515366499}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"2","selectedLength":0,"runId":"init"},"timestamp":1773515366499}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"1","selectedLength":0,"runId":"init"},"timestamp":1773515366499}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"3","selectedLength":0,"runId":"init"},"timestamp":1773515366500}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"4","selectedLength":0,"runId":"init"},"timestamp":1773515366500}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"5","selectedLength":0,"runId":"init"},"timestamp":1773515366500}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"6","selectedLength":0,"runId":"init"},"timestamp":1773515366500}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"7","selectedLength":0,"runId":"init"},"timestamp":1773515366500}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"8","selectedLength":0,"runId":"init"},"timestamp":1773515366500}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"9","selectedLength":0,"runId":"init"},"timestamp":1773515366501}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"10","selectedLength":0,"runId":"init"},"timestamp":1773515366501}
+{"sessionId":"0073d7","location":"base_site.html:DOMContentLoaded","message":"add-day DOMContentLoaded","data":{"h1Count":2,"contentMainDisplay":"block","bodyClass":"","runId":"init"},"timestamp":1773515366505}
+{"sessionId":"0073d7","location":"add_day.html:script-1.5s","message":"add-day after 1.5s","data":{"h1Count":2,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515368000}
+{"sessionId":"0073d7","location":"add_day.html:script-init","message":"add-day page load","data":{"pathname":"/admin/core/trening/add-day/","h1Count":2,"breadcrumbsText":null,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515373339}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"0","selectedLength":0,"runId":"init"},"timestamp":1773515373341}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"2","selectedLength":0,"runId":"init"},"timestamp":1773515373342}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"1","selectedLength":0,"runId":"init"},"timestamp":1773515373342}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"3","selectedLength":0,"runId":"init"},"timestamp":1773515373343}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"4","selectedLength":0,"runId":"init"},"timestamp":1773515373343}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"5","selectedLength":0,"runId":"init"},"timestamp":1773515373343}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"6","selectedLength":0,"runId":"init"},"timestamp":1773515373343}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"7","selectedLength":0,"runId":"init"},"timestamp":1773515373344}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"8","selectedLength":0,"runId":"init"},"timestamp":1773515373344}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"9","selectedLength":0,"runId":"init"},"timestamp":1773515373345}
+{"sessionId":"0073d7","location":"add_day.html:before-hraci-rows","message":"before rewriting hraci-rows","data":{"slot":"10","selectedLength":0,"runId":"init"},"timestamp":1773515373345}
+{"sessionId":"0073d7","location":"base_site.html:DOMContentLoaded","message":"add-day DOMContentLoaded","data":{"h1Count":2,"contentMainDisplay":"block","bodyClass":"","runId":"init"},"timestamp":1773515373350}
+{"sessionId":"0073d7","location":"add_day.html:script-1.5s","message":"add-day after 1.5s","data":{"h1Count":2,"contentMainDisplay":"block","contentMainVisibility":"visible","runId":"init"},"timestamp":1773515374843}

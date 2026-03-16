@@ -11,14 +11,17 @@ from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db.models import Sum, Case, When, F, Value, DecimalField, Q
+from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone as dj_tz
-from django.utils.html import format_html, format_html_join
+from django.utils.html import format_html, format_html_join, escape
+from django.utils.safestring import mark_safe
 from django import forms
 from django.contrib.admin.widgets import AdminSplitDateTime
 from django.forms.models import BaseInlineFormSet
+from django.forms import formset_factory
 
 from .models import (
     Hrac,
@@ -807,14 +810,28 @@ class DochazkaInline(admin.TabularInline):
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         field = super().formfield_for_foreignkey(db_field, request, **kwargs)
         if db_field.name == "hrac":
-            w = field.widget
-            for attr in ("can_add_related", "can_change_related", "can_view_related", "can_delete_related"):
-                if hasattr(w, attr): setattr(w, attr, False)
+            # Na stránce Přidat trénink (add_form) obyčejný Select, aby JS mohl nastavit hodnotu a odeslat ji
+            if request.path.rstrip("/").endswith("/add"):
+                field.widget = forms.Select(attrs={"class": "add-day-hrac-select"})
+            else:
+                w = field.widget
+                for attr in ("can_add_related", "can_change_related", "can_view_related", "can_delete_related"):
+                    if hasattr(w, attr): setattr(w, attr, False)
         return field
+
+    def get_extra(self, request, obj=None, **kwargs):
+        """Při přidávání tréninku (add_form) jeden řádek – další přidá uživatel tlačítkem jako v add_day."""
+        if obj is None:
+            return 1
+        return self.extra
 
     def get_formset(self, request, obj=None, **kwargs):
         self.parent_obj = obj
-        return super().get_formset(request, obj, **kwargs)
+        formset = super().get_formset(request, obj, **kwargs)
+        form = formset.form
+        if "hrac" in form.base_fields:
+            form.base_fields["hrac"].label = "Hráči"
+        return formset
 
     def cena_preview(self, obj):
         tr = obj.trening if getattr(obj, "trening_id", None) else getattr(self, "parent_obj", None)
@@ -836,6 +853,7 @@ class DochazkaInline(admin.TabularInline):
 # -----------------------------
 class TimeDatalistTextInput(forms.TextInput):
     input_type = "text"
+
     def __init__(self, *args, **kwargs):
         attrs = kwargs.setdefault("attrs", {})
         attrs.setdefault("placeholder", "např. 13:00")
@@ -850,6 +868,9 @@ class TimeDatalistTextInput(forms.TextInput):
         base_id = attrs.get("id", name)
         list_id = f"{base_id}-time-suggest"
         attrs["list"] = list_id
+        existing_class = (attrs.get("class") or "").strip()
+        if "vTimeField" not in existing_class.split():
+            attrs["class"] = f"{existing_class} vTimeField".strip()
         html = super().render(name, value, attrs, renderer)
         options = [f"<option value='{h:02d}:00'></option><option value='{h:02d}:30'></option>" for h in range(6, 24)]
         datalist = f"<datalist id='{list_id}'>" + "".join(options) + "</datalist>"
@@ -861,9 +882,132 @@ class AdminSplitDateTimeWithDatalist(AdminSplitDateTime):
         self.widgets[1] = TimeDatalistTextInput()
 
 
+# -----------------------------
+#  Přidat celý den (multi-trénink)
+# -----------------------------
+def _trener_label(user):
+    """Jméno trenéra s mezerou mezi jménem a příjmením (get_full_name nebo rozdělení username)."""
+    full = (getattr(user, "get_full_name", lambda: "")() or "").strip()
+    if full:
+        return full
+    username = getattr(user, "username", "") or ""
+    if not username:
+        return username
+    # Username bez mezery (např. AdamPeterka) → vložit mezeru před velká písmena
+    parts = []
+    for i, c in enumerate(username):
+        if i and c.isupper() and c.isalpha():
+            parts.append(" ")
+        parts.append(c)
+    return "".join(parts)
+
+
+class TrenerModelChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return _trener_label(obj)
+
+
+class AddDayForm(forms.Form):
+    """Společný trenér + datum dne pro všechny tréninky."""
+
+    trener = TrenerModelChoiceField(
+        queryset=User.objects.order_by("username"),
+        label="Trenér",
+        required=True,
+        empty_label="------",
+    )
+
+    datum = forms.DateField(
+        label="Datum dne",
+        widget=forms.DateInput(attrs={"type": "date", "class": "add-day-datum-input"}),
+    )
+
+
+class TrainingSlotForm(forms.Form):
+    """Jeden „slot“ tréninku: čas, délka, formát, kurt, hráči."""
+    cas = forms.TimeField(
+        label="Čas",
+        required=False,
+        widget=forms.TimeInput(attrs={"type": "time", "class": "vTimeField", "placeholder": "např. 13:00"}),
+    )
+    delka_minut = forms.TypedChoiceField(
+        label="Délka (hodiny)",
+        coerce=int,
+        # 1 h jako výchozí – proto je první v seznamu
+        choices=[
+            (60, "1 h"),
+            (30, "30 min"),
+            (45, "45 min"),
+            (90, "1,5 h"),
+            (120, "2 h"),
+            (150, "2,5 h"),
+            (180, "3 h"),
+        ],
+        initial=60,
+    )
+    format = forms.ChoiceField(
+        label="Formát",
+        choices=[("", "------")] + list(Cenik.Format.choices),
+        required=False,
+    )
+    kurt = forms.ChoiceField(
+        label="Kurt",
+        choices=[("", "------")] + list(Cenik.Kurt.choices),
+        required=False,
+    )
+    poznamka = forms.CharField(
+        label="Poznámka",
+        required=False,
+        widget=forms.TextInput(attrs={"class": "vTextField", "placeholder": "", "maxlength": 240}),
+    )
+    hraci = forms.ModelMultipleChoiceField(
+        queryset=Hrac.objects.order_by("jmeno"),
+        label="Hráči",
+        required=False,
+        widget=forms.SelectMultiple(
+            attrs={
+                "size": 6,
+                "class": "vMultipleSelect add-day-hraci-hidden-select",
+                # Inline skrytí, aby se select nikdy ani na okamžik neukázal
+                "style": "position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;opacity:0;",
+            }
+        ),
+    )
+
+
+class TrainingSlotFormSetBase(forms.BaseFormSet):
+    """Kontrola: v každém slotu (tréninku) nesmí být stejný hráč vybrán dvakrát."""
+
+    def clean(self):
+        super().clean()
+        for i, form in enumerate(self.forms):
+            if self._should_delete_form(form) or not form.cleaned_data:
+                continue
+            hraci = form.cleaned_data.get("hraci") or []
+            seen = set()
+            for hrac in hraci:
+                if hrac in seen:
+                    raise ValidationError(
+                        f"V tréninku {i + 1} je hráč {getattr(hrac, 'jmeno', '')} vybrán více než jednou. "
+                        "Každého hráče vyberte pouze jednou."
+                    )
+                seen.add(hrac)
+
+
+TrainingSlotFormSet = formset_factory(
+    TrainingSlotForm,
+    formset=TrainingSlotFormSetBase,
+    extra=10,
+    max_num=20,
+    min_num=1,
+    validate_min=True,
+)
+
+
 @admin.register(Trening)
 class TreningAdmin(admin.ModelAdmin):
     change_form_template = "admin/core/trening/change_form.html"
+    add_form_template = "admin/core/trening/add_form.html"
     list_display = ("datum", "hraci_jmena", "trener_jmeno", "format_display", "castka_na_hrace_kc")
     list_filter = ("trener", "format", "kurt", "datum")
     search_fields = (
@@ -893,6 +1037,28 @@ class TreningAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
     def save_formset(self, request, form, formset, change):
+        if formset.model == Dochazka and not change:
+            # Přidání tréninku (add): hráči přicházejí z multiselectu add_form_hraci (jako v add_day)
+            hrac_ids = request.POST.getlist("add_form_hraci")
+            formset.new_objects = []
+            formset.changed_objects = []
+            formset.deleted_objects = []
+            with transaction.atomic():
+                for hrac_id in hrac_ids:
+                    if not hrac_id:
+                        continue
+                    try:
+                        hrac_obj = Hrac.objects.get(pk=hrac_id)
+                    except (Hrac.DoesNotExist, ValueError):
+                        continue
+                    obj = Dochazka.objects.create(
+                        trening=form.instance,
+                        hrac=hrac_obj,
+                        prisel=True,
+                    )
+                    formset.new_objects.append(obj)
+            return
+
         if not formset.is_valid():
             messages.error(request, f"Chyba v seznamu hráčů: {formset.errors}")
             return
@@ -904,11 +1070,11 @@ class TreningAdmin(admin.ModelAdmin):
 
             with transaction.atomic():
                 form.instance.dochazky.all().delete()
-                
+
                 for inline_form in formset.forms:
                     if not inline_form.cleaned_data or inline_form.cleaned_data.get('DELETE'):
                         continue
-                    
+
                     hrac_obj = inline_form.cleaned_data.get('hrac')
                     if hrac_obj:
                         obj = Dochazka.objects.create(
@@ -933,8 +1099,109 @@ class TreningAdmin(admin.ModelAdmin):
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "datum":
-            kwargs["widget"] = AdminSplitDateTimeWithDatalist()
+            # Na stránce Přidat trénink funkčně stejné buňky jako add-day: type=date + type=time (nativní pickery)
+            if request.path.rstrip("/").endswith("/add"):
+                w = forms.SplitDateTimeWidget(
+                    date_attrs={"type": "date", "class": "add-day-datum-input vDateField"},
+                    time_attrs={"type": "time", "class": "vTimeField", "placeholder": "např. 13:00"},
+                )
+            else:
+                w = AdminSplitDateTimeWithDatalist()
+            kwargs["widget"] = w
         return super().formfield_for_dbfield(db_field, request, **kwargs)
+
+    def add_view(self, request, form_url="", extra_context=None):
+        """Na /add/ zobrazit formulář den + sloty + Přidat Trénink; POST zpracovat zde."""
+        AddDayFormClass = AddDayForm
+        FormSetClass = TrainingSlotFormSet
+        is_add_form = request.path.rstrip("/").endswith("/add") and self.add_form_template
+
+        if is_add_form and request.method == "POST" and ("day-datum" in request.POST or "slots-TOTAL_FORMS" in request.POST):
+            day_form = AddDayFormClass(request.POST, prefix="day")
+            formset = FormSetClass(request.POST, prefix="slots")
+            if day_form.is_valid() and formset.is_valid():
+                day_trener = day_form.cleaned_data.get("trener")
+                if not day_trener:
+                    messages.error(request, "Vyberte trenéra pro celý den.")
+                else:
+                    datum_den = day_form.cleaned_data["datum"]
+                    created = 0
+                    created_items = []
+                    with transaction.atomic():
+                        for form in formset:
+                            cd = form.cleaned_data
+                            if not cd.get("cas"):
+                                continue
+                            dt = datetime.combine(datum_den, cd["cas"])
+                            if settings.USE_TZ:
+                                dt = dj_tz.make_aware(dt, dj_tz.get_current_timezone())
+                            trening = Trening.objects.create(
+                                trener=day_trener,
+                                datum=dt,
+                                delka_minut=cd["delka_minut"],
+                                format=cd["format"] or Cenik.Format.DVOJICE_C,
+                                kurt=cd["kurt"] or Cenik.Kurt.HALA,
+                                poznamka=(cd.get("poznamka") or "")[:240],
+                            )
+                            hraci = cd.get("hraci") or []
+                            for hrac in hraci:
+                                Dochazka.objects.create(trening=trening, hrac=hrac, prisel=True)
+                            cas_str = cd["cas"].strftime("%H:%M")
+                            jmena = [getattr(h, "jmeno", str(h)) for h in hraci]
+                            created_items.append((cas_str, ", ".join(jmena) if jmena else "—", trening.pk))
+                            created += 1
+                    if created:
+                        trener_str = (getattr(day_trener, "get_full_name", lambda: "")() or getattr(day_trener, "username", ""))
+                        datum_str = datum_den.strftime("%d.%m.%Y")
+                        parts = [
+                            format_html("<strong>Trenér:</strong> {}", escape(trener_str)),
+                            format_html("<strong>Datum:</strong> {}", escape(datum_str)),
+                            format_html("Bylo uloženo {} tréninků:", created),
+                        ]
+                        for cas_str, hraci_str, trening_pk in created_items:
+                            change_url = reverse("admin:core_trening_change", args=[trening_pk])
+                            parts.append(format_html(
+                                '  • <a href="{}"><strong>{}</strong></a> – {}',
+                                change_url, escape(cas_str), escape(hraci_str),
+                            ))
+                        msg_html = mark_safe("<br>".join(str(p) for p in parts))
+                        messages.success(request, msg_html)
+                        if request.POST.get("_addanother"):
+                            add_url = reverse("admin:core_trening_add")
+                            return HttpResponseRedirect(f"{add_url}?date={datum_den.isoformat()}")
+                        return HttpResponseRedirect(reverse("admin:core_trening_changelist"))
+                    else:
+                        messages.error(
+                            request,
+                            "Vyplňte alespoň jeden trénink (čas).",
+                        )
+            context = {
+                **self.admin_site.each_context(request),
+                "title": "Trénink: přidat",
+                "opts": self.model._meta,
+                "day_form": day_form,
+                "formset": formset,
+            }
+            return TemplateResponse(request, self.add_form_template, context)
+
+        if is_add_form and request.method == "GET":
+            day_form = AddDayFormClass(prefix="day")
+            if request.GET.get("date"):
+                try:
+                    from datetime import datetime as dt_parse
+                    day_form.initial["datum"] = dt_parse.strptime(request.GET["date"], "%Y-%m-%d").date()
+                except Exception:
+                    pass
+            formset = FormSetClass(prefix="slots")
+            context = {
+                **self.admin_site.each_context(request),
+                "title": "Trénink: přidat",
+                "opts": self.model._meta,
+                "day_form": day_form,
+                "formset": formset,
+            }
+            return TemplateResponse(request, self.add_form_template, context)
+        return super().add_view(request, form_url=form_url, extra_context=extra_context)
 
     def get_urls(self):
         urls = super().get_urls()

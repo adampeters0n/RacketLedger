@@ -186,8 +186,8 @@
 <link rel="stylesheet" href="{% static 'admin/custom.css' %}">
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    /* Aktivní záložka */
     const path = window.location.pathname.replace(/\/+$/, '');
+    /* Aktivní záložka */
     const tests = [
       ['nav-treneri',    /^\/admin\/core\/(?:treneri(?:\/|$)|trening\/treneri(?:\/|$))/],
       ['nav-treningy',   /^\/admin\/core\/trening(?!\/treneri)(\/|$)/],
