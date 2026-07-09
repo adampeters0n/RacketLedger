@@ -3,6 +3,7 @@ Django settings for tennis_system project.
 """
 
 from pathlib import Path
+import json
 import os
 from dotenv import load_dotenv
 
@@ -38,20 +39,20 @@ DEBUG = _get_bool("DEBUG", True)
 _default_hosts = ["127.0.0.1", "localhost"]
 ALLOWED_HOSTS = [h for h in os.getenv("ALLOWED_HOSTS", ",".join(_default_hosts)).split(",") if h]
 
-# ✅ PATCH: Přidání vaší vlastní domény
-# Přidáme domény, ať už jsou v env nebo ne.
+# Produkční domény (doplňuje ALLOWED_HOSTS z env)
 ALLOWED_HOSTS.extend([
-    "tscimice.cz",
-    "www.tscimice.cz",
+    h for h in os.getenv("EXTRA_ALLOWED_HOSTS", "tscimice.cz,www.tscimice.cz").split(",") if h
 ])
 
 # CSRF důvěryhodné originy (z env, čárkami oddělené; musí mít https:// prefixy)
 CSRF_TRUSTED_ORIGINS = [o for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if o]
 
-# ✅ PATCH: Přidání vlastní domény pro CSRF (nutné pro přihlášení v adminu)
+# Produkční CSRF originy (doplňuje CSRF_TRUSTED_ORIGINS z env)
 CSRF_TRUSTED_ORIGINS.extend([
-    "https://tscimice.cz",
-    "https://www.tscimice.cz",
+    o for o in os.getenv(
+        "EXTRA_CSRF_TRUSTED_ORIGINS",
+        "https://tscimice.cz,https://www.tscimice.cz",
+    ).split(",") if o
 ])
 
 # =====================================
@@ -65,12 +66,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
 
-    # 3rd-party
-    "rest_framework",
-
     # Lokální appky
     "core",
-    "web",
 ]
 
 # =====================================
@@ -166,7 +163,6 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"          # kam se sbírá produkční statika
 STATICFILES_DIRS = [BASE_DIR / "static"]        # tvé zdrojové statické soubory (pokud složka existuje)
 
-# ✅ PATCH: cesty pro budoucí uploady médií
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
@@ -180,14 +176,6 @@ if not DEBUG:
     }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# =====================================
-# REST FRAMEWORK (můžeš doplnit dle potřeby)
-# =====================================
-REST_FRAMEWORK = {
-    # "DEFAULT_AUTHENTICATION_CLASSES": [...],
-    # "DEFAULT_PERMISSION_CLASSES": [...],
-}
 
 # =====================================
 # E-MAIL (SMTP volny.cz) – výchozí 465/SSL
@@ -226,7 +214,6 @@ else:
 # =====================================
 # PRODUKČNÍ BEZPEČNOST (když DEBUG=False)
 # =====================================
-# ✅ PATCH: za reverzní proxy používej host z X-Forwarded-Host
 USE_X_FORWARDED_HOST = True
 
 if not DEBUG:
@@ -244,6 +231,33 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "31536000"))  # 1 rok
     SECURE_HSTS_INCLUDE_SUBDOMAINS = _get_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", True)
     SECURE_HSTS_PRELOAD = _get_bool("SECURE_HSTS_PRELOAD", True)
+
+# =====================================
+# LANDING PAGE – registr škol na platformě
+# =====================================
+PRODUCT_NAME = os.getenv("PRODUCT_NAME", "TenisSystém")
+
+_DEFAULT_TENNIS_SCHOOLS = [
+    {
+        "slug": "cimice",
+        "name": "Tenisová škola Čimice",
+        "city": "Praha 8",
+        "region": "Praha",
+        "admin_url": "/admin/",
+        "active": True,
+    },
+]
+
+
+def _get_tennis_schools():
+    raw = os.getenv("TENNIS_SCHOOLS", "").strip()
+    if raw:
+        return json.loads(raw)
+    return _DEFAULT_TENNIS_SCHOOLS
+
+
+TENNIS_SCHOOLS = _get_tennis_schools()
+CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "info@tenissystem.cz")
 
 # =====================================
 # LOGGING (stručný základ, ať vidíš chyby v produkci)

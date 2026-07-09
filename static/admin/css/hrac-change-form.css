@@ -1,0 +1,98 @@
+:root{
+    --panel:#111827; --panel-2:#1f2937; --border:#334155; --text:#e5e7eb;
+    /* Definice barev pro jistotu, pokud by nebyly načtené z parenta */
+    --brand: #E67817; --brand-600: #D1640C;
+  }
+
+  /* --- Tlačítka Zadat platbu + Historie – stejná typografie --- */
+  body.app-core.model-hrac.change-form .object-tools a.custom-pay-link,
+  body.app-core.model-hrac.change-form .object-tools a.historylink {
+      background: var(--brand, #E67817) !important;
+      border: 5px solid var(--brand-600, #D1640C) !important;
+      color: #fff !important;
+      border-radius: 100px !important;
+      padding: 7px 12px !important;
+      font-family: var(--btn-font-family, inherit) !important;
+      font-size: 12px !important;
+      font-weight: 800 !important;
+      line-height: 1 !important;
+      letter-spacing: 0.2px !important;
+      text-transform: uppercase !important;
+      text-decoration: none !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+  }
+
+  body.app-core.model-hrac.change-form .object-tools a.custom-pay-link:hover,
+  body.app-core.model-hrac.change-form .object-tools a.historylink:hover {
+      filter: brightness(1.05);
+  }
+
+  /* --- Zbytek vašeho CSS --- */
+  .actions-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:12px 0; }
+  .ledger-card{ background:var(--panel); border:none; border-radius:12px; padding:12px; margin-top:16px; }
+  .ledger-title{ margin:0 0 8px; color:var(--text); font-size:16px; font-weight:600; border:none; }
+  .ledger-filter{ border:none; outline:none; box-shadow:none; background:transparent; }
+  .ledger-card, .ledger-wrap{ border:none !important; box-shadow:none !important; }
+  .ledger-filter input[type="date"]{ border:1px solid var(--border); border-radius:6px; }
+  .ledger-wrap{ overflow-y:auto; overflow-x:auto; -webkit-overflow-scrolling:touch; max-height:480px; border:none; outline:none; box-shadow:none; }
+  .ledger-wrap table.ledger{ min-width:600px; table-layout:auto; }
+
+  table.ledger{ width:100%; border-collapse:separate; border-spacing:0; color:var(--text); font-size:14px; table-layout:fixed; }
+
+  table.ledger thead th{
+    position:sticky; top:0; background:var(--panel-2); color:var(--text);
+    padding:10px 8px; border-bottom:1px solid var(--border); white-space:nowrap; text-align:center; z-index:1;
+  }
+
+  table.ledger thead th:nth-child(1){ width:12%; }
+  table.ledger thead th:nth-child(2){ width:8%;  }
+  table.ledger thead th:nth-child(3){ width:7%;  }
+  table.ledger thead th:nth-child(4){ width:20%; }
+  table.ledger thead th:nth-child(5){ width:9%;  }
+  table.ledger thead th:nth-child(6){ width:11%; }
+  table.ledger thead th:nth-child(7){ width:11%; }
+  table.ledger thead th:nth-child(8){ width:12%; }
+  table.ledger thead th:nth-child(9){ width:10%; }
+
+  table.ledger tbody td{
+    padding:8px; border-top:1px solid var(--border); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  table.ledger tbody tr:nth-child(even){ background:rgba(148,163,184,0.06); }
+  table.ledger tbody tr:hover{ background:rgba(148,163,184,0.12); }
+
+  tr.typ-nauctovano { background:rgba(239,68,68,0.12); }
+  tr.typ-platba, tr.typ-vratka { background:rgba(34,197,94,0.12); }
+
+  table.ledger tbody td:nth-child(2),
+  table.ledger tbody td:nth-child(3),
+  table.ledger tbody td:nth-child(4),
+  table.ledger tbody td:nth-child(5),
+  table.ledger tbody td:nth-child(6),
+  table.ledger tbody td:nth-child(7),
+  table.ledger tbody td:nth-child(8),
+  table.ledger tbody td:nth-child(9){ text-align:center; }
+
+  table.ledger tbody td:nth-child(8){ font-weight:700; }
+
+  table.ledger tbody td:nth-child(9){ white-space:nowrap; overflow:visible; text-overflow:clip; }
+  table.ledger a.deletelink{ color:#f87171; text-decoration:none; font-weight:600; font-size:13px; }
+  table.ledger a.deletelink:hover{ text-decoration:underline; }
+
+  .player-summary{ margin:12px 0 8px; display:flex; gap:12px; flex-wrap:wrap;
+    background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; }
+  .player-summary .ps-item{ display:flex; gap:6px; align-items:baseline; }
+  .player-summary .ps-label{ color:#374151; font-weight:600; }
+  .player-summary .ps-value{ color:#111827; font-weight:700; }
+
+  table.ledger tfoot tr.totals td,
+  table.ledger tfoot tr.totals th{
+    background:#fffced;
+    border-top:4px solid #111827;
+    padding:8px;
+    color:#111827;
+  }
+  table.ledger tfoot td.totals-label{ text-align:left !important; font-size:15px; font-weight:800; letter-spacing:.2px; }
+  table.ledger tfoot td.totals-value{ font-size:15px; font-weight:800; text-align:center !important; }
+  table.ledger tfoot td.tot-hodiny{ text-align:center !important; }

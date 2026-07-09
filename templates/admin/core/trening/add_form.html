@@ -1,7 +1,7 @@
 {% extends "admin/base_site.html" %}
 {% load i18n static %}
 
-{% block bodyclass %}{{ block.super }} app-core model-trening add-form{% endblock %}
+{% block bodyclass %}{{ block.super }} app-core model-trening add-form{% if copy_loaded %} add-form-copy-loaded{% endif %}{% endblock %}
 
 {% block breadcrumbs %}
 {# Stejně jako add_day – bez breadcrumbs #}
@@ -15,183 +15,58 @@
 
 {% block extrastyle %}
 {{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/add-day.css' %}">
 <link rel="stylesheet" href="{% static 'admin/custom.css' %}">
-<style>
-  /* Přepsat výchozí Django admin – vzhled jako add_day (vše s !important) */
-  body #content-main.add-day-page {
-    max-width: 100% !important;
-    padding: 0 !important;
-    background: transparent !important;
-    border: none !important;
-  }
-  body #content-main.add-day-page .add-day-card input:not([type="submit"]):not([type="button"]),
-  body #content-main.add-day-page .add-day-card select,
-  body #content-main.add-day-page .add-day-card textarea {
-    width: 100% !important;
-    max-width: 360px !important;
-    height: 36px !important;
-    min-height: 36px !important;
-    padding: 6px 10px !important;
-    border: 1px solid #a0a2a9 !important;
-    border-radius: 8px !important;
-    font-size: 14px !important;
-    background: #fff !important;
-    color: #1f2937 !important;
-    box-sizing: border-box !important;
-  }
-  body #content-main.add-day-page .add-day-card select {
-    appearance: auto !important;
-    -webkit-appearance: menulist !important;
-  }
-  body #content-main.add-day-page .add-day-card input:focus,
-  body #content-main.add-day-page .add-day-card select:focus,
-  body #content-main.add-day-page .add-day-card textarea:focus {
-    outline: 2px solid #E67817 !important;
-    outline-offset: 2px !important;
-    border-color: #E67817 !important;
-    box-shadow: 0 0 0 3px rgba(230, 120, 23, 0.15) !important;
-  }
-  /* Stejné styly jako add_day – skrýt obsah do připravenosti, ikona kalendáře, pilulky Datum */
-  .add-day-page .add-day-hraci-hidden,
-  .add-day-page .add-day-hraci-hidden select {
-    position: absolute !important;
-    left: -9999px !important;
-    top: -9999px !important;
-    width: 1px !important;
-    height: 1px !important;
-    overflow: hidden !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-    pointer-events: none !important;
-    clip: rect(0,0,0,0) !important;
-  }
-  #content-main.add-day-page { opacity: 0; visibility: hidden; }
-  .add-day-ready #content-main.add-day-page { opacity: 1; visibility: visible; }
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-row img[src*="calendar"],
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-row img[src*="icon-calendar"] { display: none !important; }
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-row .add-day-datum-shortcuts a#add-day-calendar img {
-    display: block !important;
-    width: 16px !important;
-    height: 16px !important;
-    flex-shrink: 0 !important;
-  }
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-row .add-day-datum-shortcuts a#add-day-calendar {
-    display: inline-flex !important;
-    align-items: center !important;
-    min-width: 16px !important;
-    flex-shrink: 0 !important;
-  }
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts {
-    justify-content: flex-start !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    text-align: left !important;
-    margin: 2px 0 0 0 !important;
-    margin-left: 0 !important;
-    margin-right: auto !important;
-    width: auto !important;
-    max-width: 100% !important;
-    align-self: flex-start !important;
-    gap: 4px !important;
-  }
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts a {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    padding: 3px 8px !important;
-    border-radius: 999px !important;
-    background: #fff3df !important;
-    color: #111827 !important;
-    text-decoration: none !important;
-  }
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts a:hover { background: #ffe4bf !important; color: #111827 !important; }
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts a:focus {
-    outline: 2px solid #E67817 !important; outline-offset: 2px !important; border-radius: 6px !important;
-  }
-  /* Ikona kalendáře: původní barva (bez filtru), text „Dnes“ zůstává černý díky color na <a> */
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts a img {
-    filter: none;
-  }
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-row label.add-day-label-inline {
-    display: block !important;
-    font-weight: 700 !important;
-    color: #111827 !important;
-    margin-bottom: 4px !important;
-    order: -1 !important;
-  }
-  /* Pole Datum – stejná buňka jako add-day: type=date nebo .add-day-datum-input, šedý border, oranžový focus */
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="date"],
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input.add-day-datum-input,
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="text"].vDateField {
-    width: 100% !important;
-    max-width: 360px !important;
-    box-sizing: border-box !important;
-    height: 36px !important;
-    padding: 6px 10px !important;
-    background: #fff !important;
-    border: 1px solid #a0a2a9 !important;
-    color: #1f2937 !important;
-    border-radius: 8px !important;
-    font-size: 14px !important;
-  }
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="date"]:focus,
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="date"]:focus-visible,
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input.add-day-datum-input:focus,
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input.vDateField:focus {
-    outline: 2px solid #E67817 !important;
-    outline-offset: 2px !important;
-    border-color: #E67817 !important;
-    box-shadow: 0 0 0 3px rgba(230, 120, 23, 0.15) !important;
-  }
-  /* Skrýt nativní ikonu kalendáře v prohlížeči – jako add_day */
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="date"]::-webkit-calendar-picker-indicator {
-    opacity: 0 !important;
-    position: absolute !important;
-    width: 0 !important;
-    height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    pointer-events: none !important;
-  }
-  /* Datum: skrýt .datetimeshortcuts a vnitřní labely z widgetu */
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap .datetimeshortcuts,
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap > p > label { display: none !important; }
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap > p { margin: 0 !important; }
-  /* Čas v Trénink: stejná buňka jako add_day – řádek label + input */
-  body #content-main.add-day-page .add-day-fields .add-day-row > p.time,
-  body #content-main.add-day-page .add-day-fields .add-day-row > p.date { margin: 0 !important; }
-  /* Čas – funkčně stejné jako add-day: type="time" (nativní time picker), stejná buňka */
-  body #content-main.add-day-page .add-day-fields .add-day-row input[type="time"],
-  body #content-main.add-day-page .add-day-fields .add-day-row input.vTimeField {
-    width: 100% !important;
-    max-width: 360px !important;
-    box-sizing: border-box !important;
-    height: 36px !important;
-    min-height: 36px !important;
-    padding: 6px 10px !important;
-    border: 1px solid #a0a2a9 !important;
-    border-radius: 8px !important;
-    font-size: 14px !important;
-    background: #fff !important;
-    color: #1f2937 !important;
-  }
-  body #content-main.add-day-page .add-day-fields .add-day-row input[type="time"]:focus,
-  body #content-main.add-day-page .add-day-fields .add-day-row input.vTimeField:focus {
-    outline: 2px solid #E67817 !important;
-    outline-offset: 2px !important;
-    border-color: #E67817 !important;
-    box-shadow: 0 0 0 3px rgba(230, 120, 23, 0.15) !important;
-  }
-</style>
 {% endblock %}
 
 {% block content %}
 <div id="content-main" class="add-day-page body-app-core-model-trening">
   <h1>{{ title }}</h1>
 
-  <form method="post" id="add-day-form" action="{% url 'admin:core_trening_add' %}">
-    {% csrf_token %}
+  <div class="add-day-card add-day-copy-card">
+    <h2 class="add-day-card-title">Kopírovat z jiného dne / týdne</h2>
+    <p class="add-day-copy-help">Načtěte tréninky ze zvoleného dne nebo týdne, upravte je a uložte jako nové.</p>
+    <form method="get" action="{% url 'admin:core_trening_add' %}" class="add-day-copy-form" id="copy-trainings-form">
+      <input type="hidden" name="copy" value="1">
+      <div class="add-day-copy-fields">
+        <p class="add-day-row">
+          <label for="{{ copy_form.source_date.id_for_label }}">Kopírovat z</label>
+          {{ copy_form.source_date }}
+        </p>
+        <p class="add-day-row">
+          <label for="{{ copy_form.target_date.id_for_label }}">Přidat do</label>
+          {{ copy_form.target_date }}
+        </p>
+        <p class="add-day-row">
+          <label for="{{ copy_form.scope.id_for_label }}">Rozsah</label>
+          {{ copy_form.scope }}
+        </p>
+        <p class="add-day-row">
+          <label for="{{ copy_form.trener.id_for_label }}">Trenér</label>
+          {{ copy_form.trener }}
+        </p>
+      </div>
+      <div class="add-day-copy-actions">
+        <button type="submit" class="add-day-btn-save add-day-btn-copy-load">Načíst tréninky</button>
+        {% if copy_loaded %}
+        <span class="add-day-copy-status">Načteno {{ copy_slot_count }} tréninků – zkontrolujte a uložte níže.</span>
+        {% endif %}
+      </div>
+    </form>
+  </div>
 
+  <form method="post" id="add-day-form" action="{% url 'admin:core_trening_add' %}" class="{% if copy_loaded %}add-day-form-copy-loaded{% endif %}">
+    {% csrf_token %}
+    {% if copy_loaded %}
+    <input type="hidden" name="copy_loaded" value="1">
+    <input type="hidden" name="copy_scope" value="{{ copy_scope }}">
+    <input type="hidden" name="copy_slot_count" value="{{ copy_slot_count }}">
+    {% endif %}
+
+    {% if copy_loaded %}
+    <input type="hidden" name="day-trener" id="id_day-trener" value="{{ copy_hidden_trener_id }}">
+    <input type="hidden" name="day-datum" id="id_day-datum" value="{{ copy_hidden_day_datum }}">
+    {% else %}
     <div class="add-day-card add-day-datum-card">
       <h2 class="add-day-card-title">Vyplňte položky</h2>
       <p class="add-day-row">
@@ -202,6 +77,7 @@
       <p class="add-day-row add-day-datum-row">
         <span class="add-day-datum-shortcuts">
           <a href="#" id="add-day-dnes">Dnes</a>
+          <a href="#" id="add-day-minuly-tyden" title="Předchozí týden">−7 dní</a>
           <a href="#" id="add-day-calendar" title="Kalendář" aria-label="Otevřít kalendář">
             <img src="{% static 'admin/img/icon-calendar-single.svg' %}" alt="">
           </a>
@@ -213,49 +89,86 @@
       </p>
       {% if day_form.datum.errors %}<ul class="errorlist">{{ day_form.datum.errors }}</ul>{% endif %}
     </div>
+    {% endif %}
 
     {{ formset.management_form }}
 
     <div id="slot-cards">
-      {% for form in formset %}
-      <div class="add-day-card slot-card" data-slot-index="{{ forloop.counter0 }}" {% if not forloop.first %}style="display:none;"{% endif %}>
+      {% for slot in slots_render %}
+      {% with form=slot.form %}
+      <div class="slot-card add-day-card" data-slot-index="{{ slot.index }}" {% if slot.hidden %}style="display:none;"{% endif %}>
         <h2 class="add-day-card-title add-day-slot-title-row">
-          <span class="add-day-slot-title-text">Trénink {{ forloop.counter }}</span>
-          {% if not forloop.first %}
+          <span class="add-day-slot-title-text">Trénink {{ slot.index|add:1 }}</span>
+          {% if copy_loaded or slot.index > 0 %}
           <button type="button" class="add-day-slot-close" title="Smazat tento trénink" aria-label="Smazat tento trénink">×</button>
           {% endif %}
         </h2>
 
         <div class="add-day-fields">
+          {% if copy_loaded and copy_scope == 'week' %}
+          <p class="add-day-row add-day-slot-datum-row">
+            <label for="id_slots-{{ slot.index }}-slot_datum">Datum</label>
+            {{ form.slot_datum }}
+          </p>
+          {% else %}
+          {{ form.slot_datum.as_hidden }}
+          {% endif %}
+
+          {% if copy_loaded %}
           <p class="add-day-row">
-            <label for="id_slots-{{ forloop.counter0 }}-cas">Čas</label>
+            <label for="id_slots-{{ slot.index }}-trener">Trenér</label>
+            {{ form.trener }}
+          </p>
+          {% else %}
+          {{ form.trener.as_hidden }}
+          {% endif %}
+
+          <p class="add-day-row">
+            <label for="id_slots-{{ slot.index }}-cas">Čas</label>
             {{ form.cas }}
           </p>
           {% if form.cas.errors %}<ul class="errorlist">{{ form.cas.errors }}</ul>{% endif %}
 
           <p class="add-day-row">
-            <label for="id_slots-{{ forloop.counter0 }}-delka_minut">Délka (hodiny)</label>
+            <label for="id_slots-{{ slot.index }}-delka_minut">Délka (hodiny)</label>
             {{ form.delka_minut }}
           </p>
           {% if form.delka_minut.errors %}<ul class="errorlist">{{ form.delka_minut.errors }}</ul>{% endif %}
 
           <p class="add-day-row">
-            <label for="id_slots-{{ forloop.counter0 }}-format">Formát</label>
+            <label for="id_slots-{{ slot.index }}-format">Formát</label>
             {{ form.format }}
           </p>
           {% if form.format.errors %}<ul class="errorlist">{{ form.format.errors }}</ul>{% endif %}
 
           <p class="add-day-row">
-            <label for="id_slots-{{ forloop.counter0 }}-kurt">Kurt</label>
+            <label for="id_slots-{{ slot.index }}-kurt">Kurt</label>
             {{ form.kurt }}
           </p>
           {% if form.kurt.errors %}<ul class="errorlist">{{ form.kurt.errors }}</ul>{% endif %}
+
+          <p class="add-day-row">
+            <label for="id_slots-{{ slot.index }}-poznamka">Poznámka</label>
+            {{ form.poznamka }}
+          </p>
+          {% if form.poznamka.errors %}<ul class="errorlist">{{ form.poznamka.errors }}</ul>{% endif %}
         </div>
 
         <div class="add-day-hraci-wrap">
           <h3 class="add-day-hraci-title">HRÁČI</h3>
           <div class="add-day-hraci-table">
-            <div class="add-day-hraci-rows" data-slot="{{ forloop.counter0 }}" data-multiselect-id="id_slots-{{ forloop.counter0 }}-hraci">
+            <div class="add-day-hraci-rows" data-slot="{{ slot.index }}" data-multiselect-id="id_slots-{{ slot.index }}-hraci">
+              {% if copy_loaded and slot.hraci_initial %}
+                {% for h in slot.hraci_initial %}
+                <div class="add-day-hraci-row" data-id="{{ h.pk }}" data-jmeno="{{ h.jmeno }}">
+                  <div class="add-day-hraci-search-wrap">
+                    <input type="text" class="add-day-hraci-search" value="{{ h.jmeno }}" placeholder="Vyhledat hráče…" autocomplete="off" aria-label="Vyhledat hráče">
+                    <ul class="add-day-hraci-dropdown" role="listbox" aria-hidden="true"></ul>
+                  </div>
+                  <button type="button" class="btn-remove" aria-label="Odstranit">×</button>
+                </div>
+                {% endfor %}
+              {% else %}
               <div class="add-day-hraci-row">
                 <div class="add-day-hraci-search-wrap">
                   <input type="text" class="add-day-hraci-search" placeholder="Vyhledat hráče…" autocomplete="off" aria-label="Vyhledat hráče">
@@ -263,23 +176,28 @@
                 </div>
                 <button type="button" class="btn-remove" aria-label="Odstranit">×</button>
               </div>
+              {% endif %}
             </div>
             <div class="add-day-hraci-add-row">
-              <button type="button" class="add-day-btn-pridat-hrace" data-slot="{{ forloop.counter0 }}">Přidat Hráče</button>
+              <button type="button" class="add-day-btn-pridat-hrace" data-slot="{{ slot.index }}">Přidat Hráče</button>
             </div>
           </div>
-          <script type="application/json" class="add-day-players-json" data-slot="{{ forloop.counter0 }}">[{% for h in form.fields.hraci.queryset %}{"id":"{{ h.pk }}","jmeno":"{{ h.jmeno|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
+          <script type="application/json" class="add-day-players-json" data-slot="{{ slot.index }}">[{% for h in form.fields.hraci.queryset %}{"id":"{{ h.pk }}","jmeno":"{{ h.jmeno|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
+          {% if slot.players_json %}
+          <script type="application/json" class="add-day-initial-hraci" data-slot="{{ slot.index }}">{{ slot.players_json|safe }}</script>
+          {% endif %}
           <div class="add-day-hraci-hidden">
             <select
               multiple="multiple"
-              name="slots-{{ forloop.counter0 }}-hraci"
-              id="id_slots-{{ forloop.counter0 }}-hraci"
+              name="slots-{{ slot.index }}-hraci"
+              id="id_slots-{{ slot.index }}-hraci"
               style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;"
-            ></select>
+            >{% if slot.hraci_initial %}{% for h in slot.hraci_initial %}<option value="{{ h.pk }}" selected>{{ h.jmeno }}</option>{% endfor %}{% endif %}</select>
           </div>
           {% if form.hraci.errors %}<ul class="errorlist">{{ form.hraci.errors }}</ul>{% endif %}
         </div>
       </div>
+      {% endwith %}
       {% endfor %}
     </div>
 
@@ -299,372 +217,6 @@
   </form>
 </div>
 
-<style>
-  /* Stejný layout jako add_day – přepisuje výchozí Django (body prefix pro specifitu) */
-  body #content-main.add-day-page { max-width: 100% !important; box-sizing: border-box !important; padding: 0 0 24px !important; min-width: 0 !important; }
-  body #content-main.add-day-page * { box-sizing: border-box !important; }
-  body #content-main.add-day-page form { max-width: 100% !important; min-width: 0 !important; }
-  body #content-main.add-day-page h1 { margin-bottom: 20px !important; font-size: 1.5rem !important; color: #111827 !important; border-bottom: 3px solid var(--brand, #E67817) !important; padding-bottom: 8px !important; }
-  body #content-main.add-day-page .add-day-card {
-    background: #fff !important;
-    border: 1px solid #e5e7eb !important;
-    border-radius: 10px !important;
-    box-shadow: 0 1px 2px rgba(0,0,0,.04) !important;
-    padding: 16px !important;
-    margin-bottom: 12px !important;
-    box-sizing: border-box !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-  }
-  body #content-main.add-day-page .add-day-card-title { margin: 0 0 14px !important; font-size: 1rem !important; font-weight: 700 !important; color: #111827 !important; }
-  body #content-main.add-day-page .add-day-slot-title-row { display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 12px !important; }
-  body #content-main.add-day-page .add-day-slot-title-text { flex: 1 !important; min-width: 0 !important; }
-  body #content-main.add-day-page .add-day-row { margin: 0 0 16px !important; }
-  body #content-main.add-day-page .add-day-row:last-of-type { margin-bottom: 0 !important; }
-  body #content-main.add-day-page .add-day-row label { display: block !important; margin-bottom: 8px !important; font-weight: 700 !important; color: #111827 !important; font-size: 14px !important; }
-  body #content-main.add-day-page .add-day-row input:not([type="submit"]):not([type="button"]),
-  body #content-main.add-day-page .add-day-row select:not(.add-day-hraci-picker),
-  body #content-main.add-day-page .add-day-row textarea {
-    width: 100% !important;
-    max-width: 360px !important;
-    box-sizing: border-box !important;
-    height: 36px !important;
-    min-height: 36px !important;
-    padding: 6px 10px !important;
-    border: 1px solid #a0a2a9 !important;
-    border-radius: 8px !important;
-    font-size: 14px !important;
-    background: #fff !important;
-    color: #1f2937 !important;
-  }
-  body #content-main.add-day-page .add-day-row textarea { height: 64px !important; min-height: 64px !important; resize: vertical !important; }
-  body #content-main.add-day-page .add-day-row input:focus,
-  body #content-main.add-day-page .add-day-row select:focus,
-  body #content-main.add-day-page .add-day-row textarea:focus {
-    outline: 2px solid #E67817 !important;
-    outline-offset: 2px !important;
-    border-color: #E67817 !important;
-    box-shadow: 0 0 0 3px rgba(230, 120, 23, 0.15) !important;
-  }
-  body #content-main.add-day-page .add-day-datum-row { display: flex !important; flex-direction: column !important; gap: 6px !important; align-items: flex-start !important; max-width: 100% !important; min-width: 0 !important; }
-  body #content-main.add-day-page .add-day-datum-input-wrap { display: inline-flex !important; flex-direction: column !important; align-items: flex-start !important; max-width: 100% !important; gap: 6px !important; }
-  body #content-main.add-day-page .add-day-datum-input-wrap input { margin: 0 !important; }
-  body #content-main.add-day-page .add-day-label-inline { order: -1 !important; }
-  body #content-main.add-day-page .add-day-hraci-wrap { margin-top: 16px !important; padding-top: 16px !important; border-top: 1px solid #e5e7eb !important; overflow: visible !important; border-radius: 0 0 10px 10px !important; }
-  body #content-main.add-day-page .add-day-hraci-title { margin: 0 !important; padding: 12px 14px !important; background: var(--amber-100, #FFF7D6) !important; color: #111827 !important; font-size: 13px !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: .02em !important; border-bottom: 1px solid var(--amber, #080704) !important; }
-  body #content-main.add-day-page .add-day-hraci-table { position: relative !important; padding: 12px 14px !important; background: #fff !important; overflow: visible !important; }
-  body #content-main.add-day-page .add-day-hraci-rows { margin-bottom: 12px !important; }
-  body #content-main.add-day-page .add-day-hraci-row { position: relative !important; display: flex !important; align-items: center !important; gap: 10px !important; margin-bottom: 10px !important; }
-  body #content-main.add-day-page .add-day-hraci-row:last-child { margin-bottom: 0 !important; }
-  body #content-main.add-day-page .add-day-hraci-search-wrap { position: relative !important; width: 100% !important; max-width: 360px !important; overflow: visible !important; }
-  body #content-main.add-day-page .add-day-hraci-search { width: 100% !important; box-sizing: border-box !important; height: 44px !important; padding: 10px 12px !important; border: 1px solid #a0a2a9 !important; border-radius: 8px !important; background: #fff !important; font-size: 14px !important; color: #1f2937 !important; }
-  body #content-main.add-day-page .add-day-hraci-search:focus { outline: 2px solid #E67817 !important; outline-offset: 2px !important; border-color: #E67817 !important; }
-  body #content-main.add-day-page .add-day-hraci-dropdown { position: absolute !important; top: 100% !important; left: 0 !important; right: 0 !important; margin: 4px 0 0 0 !important; padding: 0 !important; list-style: none !important; background: #fff !important; border: 1px solid #e5e7eb !important; border-radius: 8px !important; box-shadow: 0 4px 16px rgba(0,0,0,.15) !important; max-height: 8em !important; overflow-y: auto !important; z-index: 1000 !important; display: none !important; min-height: 2px !important; }
-  /* max 3 viditelní hráči, zbytek se scrolluje */
-  body #content-main.add-day-page .add-day-hraci-dropdown.is-open { display: block !important; }
-  body #content-main.add-day-page .add-day-hraci-dropdown li { padding: 10px 12px !important; cursor: pointer !important; font-size: 14px !important; color: #111827 !important; border-bottom: 1px solid #f3f4f6 !important; }
-  body #content-main.add-day-page .add-day-hraci-dropdown li:last-child { border-bottom: none !important; }
-  body #content-main.add-day-page .add-day-hraci-dropdown li:hover,
-  body #content-main.add-day-page .add-day-hraci-dropdown li.is-active { background: #fff7ed !important; color: #c96510 !important; }
-  body #content-main.add-day-page .add-day-hraci-add-row { margin-top: 12px !important; }
-  body #content-main.add-day-page .add-day-btn-pridat-hrace { display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 10px 20px !important; background: var(--brand, #E67817) !important; border: 2px solid #c96510 !important; color: #fff !important; font-weight: 700 !important; font-size: 14px !important; border-radius: 999px !important; cursor: pointer !important; }
-  body #content-main.add-day-page .add-day-btn-pridat-hrace:hover { filter: brightness(1.05) !important; }
-  body #content-main.add-day-page .add-day-hraci-row .add-day-hraci-search-wrap { flex: 1 !important; min-width: 0 !important; padding-right: 26px !important; }
-  body #content-main.add-day-page .add-day-hraci-row .btn-remove { position: absolute !important; top: -2px !important; right: 0 !important; width: 18px !important; height: 18px !important; min-width: 18px !important; min-height: 18px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; border: 1px solid #9ca3af !important; border-radius: 4px !important; background: #f9fafb !important; color: #6b7280 !important; font-size: 12px !important; line-height: 1 !important; cursor: pointer !important; }
-  body #content-main.add-day-page .add-day-hraci-row .btn-remove:hover { color: #b91c1c !important; background: #fef2f2 !important; border-color: #fecaca !important; }
-  body #content-main.add-day-page .add-day-hrac-field-hidden { position: absolute !important; left: -9999px !important; width: 1px !important; height: 1px !important; overflow: hidden !important; }
-  body #content-main.add-day-page .add-day-hrac-field-hidden select { position: absolute !important; left: -9999px !important; }
-  /* Řádek Uložit a tlačítka – styly jsou v static/admin/custom.css (stejné jako .submit-row) */
-  body #content-main.add-day-page .errorlist { margin: 4px 0 0 !important; color: #b91c1c !important; font-size: 13px !important; padding-left: 20px !important; }
-  body #content-main.add-day-page .add-day-add-slot-card { margin-top: 4px !important; }
-  body #content-main.add-day-page .add-day-add-slot-inner { display: flex !important; align-items: center !important; justify-content: center !important; }
-  body #content-main.add-day-page .add-day-btn-add-slot {
-    display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 8px !important;
-    padding: 10px 20px !important; border-radius: 999px !important; border: 2px solid #c96510 !important;
-    background: var(--brand, #E67817) !important; color: #fff !important; font-weight: 700 !important; font-size: 14px !important; cursor: pointer !important;
-  }
-  body #content-main.add-day-page .add-day-btn-add-slot:hover { filter: brightness(1.05) !important; }
-  body #content-main.add-day-page .add-day-btn-add-icon {
-    display: inline-flex !important; align-items: center !important; justify-content: center !important;
-    width: 24px !important; height: 24px !important; border-radius: 999px !important; border: 2px solid #fff !important; font-size: 16px !important; line-height: 1 !important;
-  }
-  body #content-main.add-day-page .add-day-slot-close {
-    flex-shrink: 0 !important; width: 32px !important; height: 32px !important; border-radius: 8px !important; border: 1px solid #d1d5db !important;
-    background: #fff !important; color: #6b7280 !important; font-size: 20px !important; line-height: 1 !important;
-    display: inline-flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; padding: 0 !important;
-  }
-  body #content-main.add-day-page .add-day-slot-close:hover { background: #fef2f2 !important; border-color: #fecaca !important; color: #b91c1c !important; }
-  @media (max-width: 768px) {
-    body #content-main.add-day-page { padding-left: 16px !important; padding-right: 16px !important; }
-    body #content-main.add-day-page .add-day-card { padding-left: 16px !important; padding-right: 16px !important; }
-    body #content-main.add-day-page .add-day-row input:not([type="submit"]):not([type="button"]),
-    body #content-main.add-day-page .add-day-row select:not(.add-day-hraci-picker),
-    body #content-main.add-day-page .add-day-row textarea { max-width: 100% !important; }
-    body #content-main.add-day-page .add-day-hraci-search-wrap { max-width: 100% !important; }
-  }
-</style>
 
-<script>
-(function() {
-  document.documentElement.classList.add('add-day-ready');
-
-  var today = new Date();
-  var todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-  var dnesLink = document.getElementById('add-day-dnes');
-  var datumInput = document.getElementById('id_day-datum');
-  if (dnesLink && datumInput) {
-    dnesLink.addEventListener('click', function(e) {
-      e.preventDefault();
-      datumInput.value = todayStr;
-    });
-  }
-  function openDatePicker() {
-    if (!datumInput) return;
-    datumInput.focus();
-    if (typeof datumInput.showPicker === 'function') datumInput.showPicker();
-  }
-  var calendarBtn = document.getElementById('add-day-calendar');
-  if (calendarBtn) calendarBtn.addEventListener('click', function(e) { e.preventDefault(); openDatePicker(); });
-
-  function getPlayersForSlot(slotIndex) {
-    var script = document.querySelector('.add-day-players-json[data-slot="' + slotIndex + '"]');
-    if (!script || !script.textContent) return [];
-    try { return JSON.parse(script.textContent); } catch (err) { return []; }
-  }
-  function getSelectedIds(container, excludeRow) {
-    var ids = [];
-    container.querySelectorAll('.add-day-hraci-row[data-id]').forEach(function(r) {
-      if (r !== excludeRow) ids.push(r.getAttribute('data-id'));
-    });
-    return ids;
-  }
-  function syncHraciRowsToMultiselect(container) {
-    var multiselectId = container.getAttribute('data-multiselect-id');
-    var multiselect = document.getElementById(multiselectId);
-    if (!multiselect) return;
-    var selected = [];
-    container.querySelectorAll('.add-day-hraci-row[data-id]').forEach(function(row) {
-      selected.push({ id: row.getAttribute('data-id'), jmeno: row.getAttribute('data-jmeno') || '' });
-    });
-    multiselect.innerHTML = '';
-    selected.forEach(function(p) {
-      var opt = document.createElement('option');
-      opt.value = p.id;
-      opt.textContent = p.jmeno;
-      opt.selected = true;
-      multiselect.appendChild(opt);
-    });
-  }
-  function wirePlayerRow(row, card) {
-    var container = row.closest('.add-day-hraci-rows');
-    var slot = container && container.getAttribute('data-slot');
-    var multiselectId = container && container.getAttribute('data-multiselect-id');
-    var multiselect = multiselectId ? document.getElementById(multiselectId) : null;
-    var players = slot !== null ? getPlayersForSlot(slot) : [];
-    var searchInput = row.querySelector('.add-day-hraci-search');
-    var dropdown = row.querySelector('.add-day-hraci-dropdown');
-    if (!searchInput || !dropdown || !container || !multiselect) return;
-
-    function showDropdown(filter) {
-      var q = (filter || '').trim().toLowerCase();
-      var used = getSelectedIds(container, row);
-      var list = (q ? players.filter(function(p) { return (p.jmeno || '').toLowerCase().indexOf(q) !== -1; }) : players)
-        .filter(function(p) { return used.indexOf(String(p.id)) === -1; });
-      dropdown.innerHTML = '';
-      list.slice(0, 50).forEach(function(p) {
-        var li = document.createElement('li');
-        li.setAttribute('data-id', p.id);
-        li.setAttribute('data-jmeno', p.jmeno || '');
-        li.setAttribute('role', 'option');
-        li.textContent = p.jmeno || '';
-        dropdown.appendChild(li);
-      });
-      dropdown.classList.toggle('is-open', list.length > 0);
-    }
-    function hideDropdown() { dropdown.classList.remove('is-open'); }
-    function setRowPlayer(id, jmeno) {
-      row.setAttribute('data-id', id);
-      searchInput.value = jmeno || '';
-      syncHraciRowsToMultiselect(container);
-    }
-
-    searchInput.value = row.getAttribute('data-id') ? (row.getAttribute('data-jmeno') || '') : '';
-    searchInput.addEventListener('focus', function() { showDropdown(searchInput.value); });
-    searchInput.addEventListener('input', function() { showDropdown(searchInput.value); });
-    searchInput.addEventListener('blur', function() { setTimeout(hideDropdown, 180); });
-    searchInput.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') { hideDropdown(); searchInput.blur(); return; }
-      var items = dropdown.querySelectorAll('li');
-      if (e.key === 'Enter' && items.length) {
-        e.preventDefault();
-        var first = items[0];
-        setRowPlayer(first.getAttribute('data-id'), first.getAttribute('data-jmeno'));
-        hideDropdown();
-      }
-    });
-    dropdown.addEventListener('click', function(e) {
-      var li = e.target.closest('li[data-id]');
-      if (!li) return;
-      setRowPlayer(li.getAttribute('data-id'), li.getAttribute('data-jmeno'));
-      hideDropdown();
-    });
-    var btnRemove = row.querySelector('.btn-remove');
-    if (btnRemove) {
-      btnRemove.onclick = function(ev) {
-        ev.preventDefault();
-        row.remove();
-        syncHraciRowsToMultiselect(container);
-        if (container.children.length === 0) {
-          var empty = createEmptyPlayerRow(card);
-          if (empty) { container.appendChild(empty); wirePlayerRow(empty, card); }
-        }
-      };
-    }
-  }
-  function createEmptyPlayerRow(card) {
-    var container = card.querySelector('.add-day-hraci-rows');
-    var first = container && container.querySelector('.add-day-hraci-row');
-    if (!first) return null;
-    var clone = first.cloneNode(true);
-    clone.removeAttribute('data-id');
-    clone.removeAttribute('data-jmeno');
-    var inp = clone.querySelector('.add-day-hraci-search');
-    var ul = clone.querySelector('.add-day-hraci-dropdown');
-    if (inp) inp.value = '';
-    if (ul) ul.innerHTML = '';
-    return clone;
-  }
-
-  document.querySelectorAll('.slot-card').forEach(function(card) {
-    var container = card.querySelector('.add-day-hraci-rows');
-    if (!container) return;
-    container.querySelectorAll('.add-day-hraci-row').forEach(function(row) {
-      wirePlayerRow(row, card);
-    });
-  });
-
-  document.getElementById('add-day-form').addEventListener('click', function(e) {
-    var closeBtn = e.target.closest('.add-day-slot-close');
-    if (!closeBtn) return;
-    e.preventDefault();
-    var card = closeBtn.closest('.slot-card');
-    if (!card) return;
-    card.querySelectorAll('input, select, textarea').forEach(function(el) {
-      var type = (el.type || '').toLowerCase();
-      if (type === 'checkbox' || type === 'radio') { el.checked = false; }
-      else if (el.tagName === 'SELECT') { el.selectedIndex = 0; }
-      else if (el.name && el.name.indexOf('TOTAL_FORMS') === -1 && el.name.indexOf('INITIAL_FORMS') === -1) { el.value = ''; }
-    });
-    var hraciContainer = card.querySelector('.add-day-hraci-rows');
-    if (hraciContainer) {
-      var emptyRow = createEmptyPlayerRow(card);
-      hraciContainer.innerHTML = '';
-      if (emptyRow) { hraciContainer.appendChild(emptyRow); wirePlayerRow(emptyRow, card); }
-      syncHraciRowsToMultiselect(hraciContainer);
-    }
-    card.style.display = 'none';
-  });
-
-  document.getElementById('add-day-form').addEventListener('click', function(e) {
-    var btn = e.target.closest('.add-day-btn-pridat-hrace');
-    if (!btn) return;
-    e.preventDefault();
-    var card = btn.closest('.slot-card');
-    var container = card && card.querySelector('.add-day-hraci-rows');
-    if (!container) return;
-    var newRow = createEmptyPlayerRow(card);
-    if (newRow) {
-      container.appendChild(newRow);
-      wirePlayerRow(newRow, card);
-      var inp = newRow.querySelector('.add-day-hraci-search');
-      if (inp) inp.focus();
-    }
-  });
-
-  function normalizeTimeValue(raw) {
-    if (!raw) return '';
-    var v = String(raw).trim();
-    if (!v) return '';
-    // nahradit čárku/tečku dvojtečkou
-    v = v.replace(/[.,]/g, ':');
-    // čisté HH → HH:00
-    if (/^\d{1,2}$/.test(v)) {
-      var h = parseInt(v, 10);
-      if (isNaN(h) || h < 0 || h > 23) return raw;
-      return String(h).padStart(2, '0') + ':00';
-    }
-    // HH:MM
-    var m = /^(\d{1,2}):(\d{1,2})$/.exec(v);
-    if (m) {
-      var hh = parseInt(m[1], 10);
-      var mm = parseInt(m[2], 10);
-      if (isNaN(hh) || isNaN(mm) || hh < 0 || hh > 23 || mm < 0 || mm > 59) return raw;
-      return String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
-    }
-    return raw;
-  }
-
-  function wireTimeInputs() {
-    var inputs = document.querySelectorAll('input.add-day-time-input');
-    inputs.forEach(function(inp) {
-      if (inp.dataset.xTimeWired === '1') return;
-      inp.dataset.xTimeWired = '1';
-      inp.addEventListener('blur', function() {
-        inp.value = normalizeTimeValue(inp.value);
-      });
-    });
-  }
-
-  wireTimeInputs();
-
-  document.getElementById('add-day-form').addEventListener('submit', function(ev) {
-    // nejdřív znormalizujeme všechny časové inputy
-    document.querySelectorAll('input.add-day-time-input').forEach(function(inp) {
-      inp.value = normalizeTimeValue(inp.value);
-    });
-    /* Kontrola: v každém viditelném tréninku (slot) nesmí být stejný hráč dvakrát */
-    var slotCards = document.querySelectorAll('.slot-card');
-    for (var s = 0; s < slotCards.length; s++) {
-      var card = slotCards[s];
-      if (card.style.display === 'none') continue;
-      var container = card && card.querySelector('.add-day-hraci-rows');
-      if (!container) continue;
-      var ids = [];
-      container.querySelectorAll('.add-day-hraci-row[data-id]').forEach(function(row) {
-        ids.push(row.getAttribute('data-id'));
-      });
-      var seen = {};
-      for (var i = 0; i < ids.length; i++) {
-        if (seen[ids[i]]) {
-          ev.preventDefault();
-          var titleEl = card.querySelector('.add-day-slot-title-text');
-          var slotName = titleEl ? titleEl.textContent : 'Trénink';
-          alert('V ' + slotName + ' je stejný hráč vybrán více než jednou. Každého hráče vyberte pouze jednou.');
-          return;
-        }
-        seen[ids[i]] = true;
-      }
-    }
-    document.querySelectorAll('.add-day-hraci-rows').forEach(syncHraciRowsToMultiselect);
-  });
-
-  var slotCards = document.querySelectorAll('.slot-card');
-  var btnAdd = document.getElementById('btn-add-slot');
-  if (btnAdd) {
-    btnAdd.addEventListener('click', function() {
-      for (var i = 0; i < slotCards.length; i++) {
-        if (slotCards[i].style.display === 'none') {
-          slotCards[i].style.display = 'block';
-          var titleText = slotCards[i].querySelector('.add-day-slot-title-text');
-          if (titleText) titleText.textContent = 'Trénink ' + (i + 1);
-          slotCards[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
-          // po odhalení nového slotu zadrátujeme i časové pole uvnitř
-          wireTimeInputs();
-          return;
-        }
-      }
-    });
-  }
-})();
-</script>
+<script src="{% static 'admin/js/add-day.js' %}"></script>
 {% endblock %}

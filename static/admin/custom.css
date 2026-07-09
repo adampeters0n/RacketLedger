@@ -1,11 +1,11 @@
 /* === Paleta + layout proměnné === */
 :root{
   --bg:#F7F7F4; --surface:#FFFFFF; --text:#1F2937; --text-strong:#111111;
-  --muted:#475569; --line:#f6f7fa;
+  --muted:#475569; --line:#e2e5ea;
   --brand:#E67817; --brand-600:#D1640C; --brand-100:#FFF1DE;
   --accent:#14833B; --accent-600:#0F6B2E; --accent-100:#E9F7EE;
   --amber:#080704; --amber-100:#FFF7D6; --amber-200:#FFE9A6;
-  --danger:#D92D20; --danger-100:#FFE5E1; --line-200:#a0a2a9;
+  --danger:#D92D20; --danger-100:#FFE5E1; --line-200:#929aa4;
 
   --page-pad:18px;   /* vnitřní odsazení stránky */
   --filter-w:0px;    /* šířka pravého panelu (0 = žádný sloupec) */
@@ -18,6 +18,12 @@
 
   --btn-font-size: 12px;     /* uprav dle chuti */
   --btn-font-weight: 800;    /* 700–900 = tučnější */
+  --field-radius: 8px;       /* zaoblená pole uvnitř boxů */
+  --box-radius: 0;           /* hranaté vnější boxy (module, toolbar, actions) */
+  --btn-radius: 100px;       /* kulatá tlačítka */
+  --admin-action-btn-min-width: 5.25rem;
+  --admin-action-btn-padding: 7px 12px;
+  --admin-actions-select-width: 300px;
 
   color-scheme: light;
 }
@@ -28,8 +34,6 @@ html, body{ background:var(--bg) !important; color:var(--text) !important; }
 
 /* Trénink add/change: celá šířka + spodní tlačítka jako na návrhu */
 body.app-core.model-trening.change-form{ width:100% !important; max-width:100% !important; min-width:0 !important; box-sizing:border-box !important; }
-body.app-core.model-trening.change-form .submit-row .deletelink{ color:#b91c1c !important; }
-body.app-core.model-trening.change-form .submit-row .deletelink:hover{ color:#dc2626 !important; }
 
 /* Trénink – mobil: bubliny širší a vycentrované (struktura: .form-row → div → .flex-container → label + input) */
 @media (max-width:768px){
@@ -113,6 +117,50 @@ body.change-list #content{
   overflow:visible !important;
 }
 
+/* Desktop: logo | navigace uprostřed | kalendář + odhlášení v jednom řádku */
+@media (min-width: 1201px){
+  #header{
+    display:grid !important;
+    grid-template-columns:auto minmax(0, 1fr) auto;
+    grid-template-rows:auto;
+    align-items:center !important;
+    gap:8px 20px;
+    padding:6px var(--page-pad) !important;
+  }
+  #branding{
+    grid-column:1;
+    grid-row:1;
+    width:auto !important;
+    max-width:none !important;
+    margin:0 !important;
+    padding:0 !important;
+  }
+  .brand-wrap{
+    width:auto !important;
+    padding:4px 0 !important;
+    margin:0 !important;
+  }
+  #user-tools{
+    grid-column:3;
+    grid-row:1;
+    position:static !important;
+    right:auto !important;
+    top:auto !important;
+    justify-self:end;
+    flex-shrink:0;
+  }
+  .ts-topnav, .topnav{
+    grid-column:2;
+    grid-row:1;
+    justify-content:center !important;
+    width:100%;
+    min-width:0;
+    padding:0 !important;
+    margin:0 !important;
+    transform:translateX(32px);
+  }
+}
+
 
 /* === Brand: velikost loga + text v jedné rovině (NOVÉ) === */
 #branding .brand{
@@ -142,17 +190,17 @@ body.change-list #content{
   }
 }
 
-/* TOP NAV: menu vlevo; prostor vpravo pro utility odkazy */
+/* TOP NAV */
 .ts-topnav, .topnav{
   position:relative;
   background:var(--surface) !important;
-  display:flex; align-items:center; gap:2px;
+  display:flex; align-items:center; gap:8px;
   justify-content:flex-start !important;
   padding:0 var(--page-pad) !important;
-  padding-right:calc(var(--page-pad) + 890px) !important; /* rezerva vpravo */
-  overflow-x:auto !important; overflow-y:visible !important;
-  flex-wrap:nowrap !important;      /* posun při nedostatku místa */
-  scrollbar-width:thin;
+  overflow:visible !important;
+  flex-wrap:nowrap !important;
+  box-sizing:border-box;
+  width:100%;
 }
 .ts-topnav a, .topnav a{
   flex:0 0 auto;                       /* nepřetékají, drží šířku */
@@ -181,10 +229,11 @@ body.change-list #content{
   position:absolute !important;
   right:calc(var(--page-pad) - 8px) !important; /* víc vpravo k okraji */
   top:0 !important;                       /* zarovnání na horní lištu */
-  height:100%;
+  height:auto !important;
   display:flex !important;
-  align-items:center; gap:2px;             /* menší mezera mezi odkazy */
-  padding:0 !important; margin:0 !important;
+  align-items:center !important;
+  gap:2px;             /* menší mezera mezi odkazy */
+  padding:8px 0 7px !important; margin:0 !important;
   background:transparent !important; border:0 !important;
   font-size:0 !important;                  /* skryje případný text „VÍTEJTE…“ */
   z-index:5;
@@ -207,15 +256,20 @@ body.change-list #content{
   background:transparent !important;     /* ať nevypadá jako tlačítko */
   white-space:nowrap;
 }
-/* HOVER: pouze tlačítka zčervenají (přepiš tvůj původní HOVER blok tímto) */
+/* HOVER: odhlášení + submit tlačítka zčervenají */
+#user-tools a.ts-logout-link:hover,
 #user-tools button:hover,
 #user-tools input[type=submit]:hover,
 #user-tools a.button:hover{
-background: red !important;
-border-color: red !important;
-/* případně i text:
-color: white !important;
-*/
+  background:var(--danger) !important;
+  border-color:var(--danger) !important;
+  color:#fff !important;
+}
+
+.ts-drawer-footer a.ts-logout-link:hover{
+  background:var(--danger) !important;
+  border-color:var(--danger) !important;
+  color:#fff !important;
 }
 
 /* FOCUS (klávesnice) – můžeš nechat jak máš */
@@ -224,6 +278,32 @@ color: white !important;
 #user-tools input[type=submit]:focus-visible{
   outline: 2px solid var(--brand) !important;
   outline-offset: 2px !important;
+}
+
+#user-tools .schedule-icon{
+  box-sizing:border-box !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  width:34px !important;
+  height:34px !important;
+  padding:6px !important;
+  margin:0 !important;
+  background:#fff !important;
+  border:2px solid #f59e0b !important;
+  border-radius:8px !important;
+  flex-shrink:0 !important;
+  text-decoration:none !important;
+}
+#user-tools .schedule-icon:hover{
+  background:#ffedd5 !important;
+  border-color:#E67817 !important;
+}
+#user-tools .schedule-icon svg{
+  color:#f59e0b !important;
+  width:18px !important;
+  height:18px !important;
+  display:block !important;
 }
 
 /* drobečky */
@@ -246,7 +326,7 @@ div.breadcrumbs a:hover{ background:var(--amber-100); }
 #nav-sidebar, .toggle-nav-sidebar, #content-related, .colMS{ display:none !important; }
 
 #changelist-filter, .filters{
-  background:var(--surface) !important; border:0px solid var(--line) !important; border-radius:10px !important; color:var(--text) !important;
+  background:var(--surface) !important; border:0px solid var(--line) !important; border-radius:var(--box-radius) !important; color:var(--text) !important;
 }
 #changelist-filter h2, #changelist-filter a, #changelist-filter li,
 #changelist-filter .filter-title, #changelist-filter .filter{ color:var(--text) !important; }
@@ -254,7 +334,7 @@ div.breadcrumbs a:hover{ background:var(--amber-100); }
 
 /* boxy (submit-row má vlastní styl níže – jako Trénink change_form) */
 .module, .panel, .card{
-  background:var(--surface) !important; border:10px solid var(--line) !important; border-radius:30px !important; box-shadow:0 1px 2px rgba(0,0,0,.03);
+  background:var(--surface) !important; border:1px solid var(--line) !important; border-radius:var(--box-radius) !important; box-shadow:0 1px 2px rgba(0,0,0,.03);
 }
 .module caption, .grp-module h2, .module h2{
   background:var(--amber-100) !important; color:var(--text) !important; border-bottom:0px solid var(--line) !important;
@@ -268,7 +348,7 @@ div.breadcrumbs a:hover{ background:var(--amber-100); }
 /* horní pásy/akce */
 #changelist, .change-list{ background:transparent !important; }
 .change-list #toolbar, #changelist #toolbar, #toolbar, #changelist .actions{
-  background:var(--surface) !important; color:var(--text) !important; border:0px solid var(--line) !important; border-radius:30px !important;
+  background:var(--surface) !important; color:var(--text) !important; border:0px solid var(--line) !important; border-radius:var(--box-radius) !important;
 }
 
 /* paginator */
@@ -291,7 +371,7 @@ input, select, textarea{
   background:var(--surface) !important;
   border:1px solid var(--line-200) !important;  /* tvá standardní šedá */
   color:var(--text) !important;
-  border-radius:8px !important;
+  border-radius:var(--field-radius) !important;
 }
 /* === Jednotný oranžový focus border (jako u Změny hesla) – platí všude === */
 input:focus,
@@ -306,10 +386,10 @@ input[type=submit]:focus,
 input[type=submit]:focus-visible,
 .button:focus,
 .button:focus-visible{
-  outline: 2px solid var(--brand) !important;
-  outline-offset: 2px !important;
+  outline: 1px solid var(--brand) !important;
+  outline-offset: 1px !important;
   border-color: var(--brand) !important;
-  box-shadow: 0 0 0 3px rgba(230,120,23,.15) !important;
+  box-shadow: 0 0 0 2px rgba(230,120,23,.12) !important;
 }
 
 /* Pole s dlouhým obsahem (readonly hash, salt, dlouhé texty) – posouvání do strany v celém adminu */
@@ -1296,8 +1376,8 @@ body.app-core.add-form .module .button{
 }
 .ledger-filter input[type="date"],
 .ledger-filter input[type="text"]{
-  border: 1px solid var(--line-200, #a0a2a9) !important;
-  border-radius: 6px !important;
+  border: 1px solid var(--line-200, #929aa4) !important;
+  border-radius: var(--field-radius) !important;
 }
 
 @media (max-width: 640px){
@@ -1403,7 +1483,7 @@ body.app-core.add-form .module .button{
 /* tlačítka (globálně) */
 .button, input[type=submit], .submit-row input, a.button{
   background:var(--brand) !important; border:3px solid var(--brand-600) !important; color:#fff !important;
-  border-radius:100px !important; padding:7px 12px !important; text-decoration:none !important;
+  border-radius:var(--btn-radius) !important; padding:7px 12px !important; text-decoration:none !important;
 
   /* typografie přidaná */
   font-family: var(--btn-font-family) !important;
@@ -1442,18 +1522,31 @@ a.button.secondary:hover{ background:#F7F7F7 !important; }
   overflow-x:hidden !important;
 }
 
-/* Operace: menší text + žádné ořezávání ve selectu */
+/* Operace: label + select + Provést + počítadlo v jedné řádce */
 .change-list .actions label {
   font-size: 14px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  margin: 0 !important;
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  white-space: nowrap !important;
 }
 
-.change-list .actions select{
-  font-size: 14px !important;
-  line-height: 1.2 !important;
-  padding: 6px 12px !important;
+.change-list .actions select,
+#changelist .actions select{
+  font-size: 12px !important;
+  line-height: 1.15 !important;
+  padding: 6px 28px 6px 10px !important;
   height: auto !important;
   min-height: var(--ctl-h) !important;
-  max-width: 100% !important;
+  width: var(--admin-actions-select-width) !important;
+  min-width: var(--admin-actions-select-width) !important;
+  max-width: var(--admin-actions-select-width) !important;
+  flex: 0 0 auto !important;
+  border-radius: 100px !important;
+  box-sizing: border-box !important;
 }
 
 
@@ -1480,38 +1573,43 @@ a.button.secondary:hover{ background:#F7F7F7 !important; }
   min-height:var(--ctl-h) !important;
 }
 
-/* blok Operace/Provést – stejná flexibilita jako search: celá šířka, nikdy oříznutí */
+/* blok Operace/Provést – jedna řádka vedle sebe */
 .change-list .actions{
   display:flex !important;
   align-items:center !important;
   gap:.5rem !important;
   flex-wrap:wrap !important;
   position:relative;
-  top:-6px;                               /* zvednutí (doladíš podle oka) */
-  margin:0 0 10px 0 !important;           /* mezera pod akcemi */
-  flex:1 1 100% !important;
+  margin:0 0 10px 0 !important;
   width:100% !important;
   max-width:100% !important;
   min-width:0 !important;
   box-sizing:border-box !important;
 }
 
-/* select Operace – pružně vyplní prostor jako search input, nikdy nepřetéká */
-.change-list .actions select{
-  padding:7px 10px !important;
-  border-radius:100px !important;
-  min-height:var(--ctl-h) !important;
-  line-height:1 !important;
-  flex:1 1 auto !important;
-  min-width:0 !important;
-  max-width:100% !important;
-  width:100% !important;
-  box-sizing:border-box !important;
-}
 .change-list .actions .button,
 .change-list .actions input[type=submit]{
   min-height:var(--ctl-h) !important;
   flex:0 0 auto !important;
+  align-self:center !important;
+}
+
+.change-list .actions .button,
+#changelist .actions .button{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  line-height:1 !important;
+  box-sizing:border-box !important;
+}
+
+.change-list .actions .action-counter,
+.change-list .actions span.action-counter {
+  margin: 0 !important;
+  flex: 0 0 auto !important;
+  align-self: center !important;
+  white-space: nowrap !important;
+  font-size: 14px !important;
 }
 
 /* Object tools (CENÍK: PŘIDAT, HRÁČ: PŘIDAT, …) – oranžová jako Hledat */
@@ -1520,7 +1618,7 @@ a.button.secondary:hover{ background:#F7F7F7 !important; }
   background:var(--brand) !important;
   border:5px solid var(--brand-600) !important;
   color:#fff !important;
-  border-radius:100px !important;
+  border-radius:var(--btn-radius) !important;
   padding:7px 12px !important;
   text-decoration:none !important;
   display:inline-flex; align-items:center; gap:.4rem;
@@ -1535,14 +1633,87 @@ a.button.secondary:hover{ background:#F7F7F7 !important; }
 .object-tools a:hover, .object-tools li a:hover{ filter:brightness(1.05); }
 .object-tools a::before, .object-tools li a::before{ filter:invert(1) brightness(2); }
 
-/* aby i „Odstranit“ měl stejnou typografii (pokud ho používáš) */
-.submit-row a.deletelink{
-  font-family: var(--btn-font-family) !important;
+/* Spodní akční tlačítka – stejná velikost (Uložit i Odstranit) */
+.submit-row input[type="submit"][name="_save"],
+.submit-row input[type="submit"][name="_addanother"],
+.submit-row input[type="submit"].default:not([name="_continue"]):not([value*="Odstranit"]),
+.submit-row button[type="submit"][name="_addanother"],
+.add-day-btn-save,
+.add-day-btn-save-addanother,
+.submit-row a.deletelink,
+.delete-confirmation .delete-confirm-submit,
+.delete-confirmation input[type="submit"].delete-confirm-submit {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: var(--admin-action-btn-min-width) !important;
+  min-height: 2rem !important;
+  padding: var(--admin-action-btn-padding) !important;
+  border-radius: var(--btn-radius) !important;
+  font-family: var(--btn-font-family, inherit) !important;
   font-size: var(--btn-font-size) !important;
   font-weight: var(--btn-font-weight) !important;
   line-height: 1 !important;
-  letter-spacing: .2px;
+  letter-spacing: .2px !important;
+  text-transform: none !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
 }
+
+.submit-row input[type="submit"][name="_save"],
+.submit-row a.deletelink {
+  width: var(--admin-action-btn-min-width) !important;
+}
+
+.submit-row input[type="submit"][name="_save"],
+.submit-row input[type="submit"][name="_addanother"],
+.submit-row input[type="submit"].default:not([name="_continue"]):not([value*="Odstranit"]),
+.submit-row button[type="submit"][name="_addanother"],
+.add-day-btn-save,
+.add-day-btn-save-addanother {
+  background: var(--brand) !important;
+  border: 3px solid var(--brand-600) !important;
+  color: #fff !important;
+}
+
+.submit-row input[type="submit"][name="_save"]:hover,
+.submit-row input[type="submit"][name="_addanother"]:hover,
+.submit-row input[type="submit"].default:not([name="_continue"]):not([value*="Odstranit"]):hover,
+.submit-row button[type="submit"][name="_addanother"]:hover,
+.add-day-btn-save:hover,
+.add-day-btn-save-addanother:hover {
+  filter: brightness(1.05) !important;
+}
+
+.submit-row a.deletelink {
+  float: none !important;
+  margin-left: auto;
+  background: var(--danger) !important;
+  background-image: none !important;
+  border: 3px solid #b91c1c !important;
+  color: #fff !important;
+}
+
+.delete-confirmation .delete-confirm-submit,
+.delete-confirmation input[type="submit"].delete-confirm-submit {
+  background: var(--danger) !important;
+  background-image: none !important;
+  border: 3px solid #b91c1c !important;
+  color: #fff !important;
+}
+
+.submit-row a.deletelink:hover,
+.delete-confirmation .delete-confirm-submit:hover,
+.delete-confirmation input[type="submit"].delete-confirm-submit:hover {
+  filter: brightness(1.05) !important;
+  text-decoration: none !important;
+}
+
+.submit-row .deletelink-box{ margin-left:auto; order:2; }
 
 /* messages – celé vidět, nezalomí se */
 #content ul.messagelist,
@@ -1580,54 +1751,23 @@ ul.messagelist li.warning{ background:var(--amber-100) !important; color:#6B4E00
 }
 #content-main .module, #content-main .panel{ background:var(--surface) !important; }
 
-/* === Řádek Uložit – všude stejný vzhled jako v Trénink change_form (bílá karta + oranžové kapsle) === */
-.submit-row{
-  display:flex !important;
-  align-items:center !important;
-  flex-wrap:wrap !important;
-  gap:.5rem !important;
-  background:#fff !important;
-  border:1px solid #e5e7eb !important;
-  border-radius:10px !important;
-  box-shadow:0 1px 2px rgba(0,0,0,.04) !important;
-  padding:16px !important;
-  overflow:visible !important;
+/* === Řádek Uložit – všude stejný vzhled jako Trénink add_form === */
+.submit-row,
+.add-day-submit-row {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  gap: .5rem !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--box-radius) !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,.03) !important;
+  padding: 7px 12px !important;
+  margin-top: 12px !important;
+  overflow: visible !important;
 }
-.submit-row input[type="submit"]:not([value*="Odstranit"]),
-.submit-row button[type="submit"]:not([name="_continue"]),
-.submit-row a.button{
-  background:var(--brand) !important;
-  border:2px solid #c96510 !important;
-  color:#fff !important;
-  font-weight:700 !important;
-  border-radius:999px !important;
-  padding:10px 20px !important;
-  font-family:var(--btn-font-family) !important;
-  font-size:var(--btn-font-size) !important;
-  line-height:1 !important;
-  cursor:pointer !important;
-}
-.submit-row input[type="submit"]:not([value*="Odstranit"]):hover,
-.submit-row button[type="submit"]:not([name="_continue"]):hover,
-.submit-row a.button:hover{
-  filter:brightness(1.05) !important;
-}
-.submit-row .deletelink-box{ margin-left:auto; order:2; }
 
-.submit-row a.deletelink{
-  float:none !important;
-  margin-left:auto;
-  display:inline-flex !important;
-  align-items:center;
-  gap:.4rem;
-  padding:10px 12px !important;
-  border-radius:100px !important;
-  background:var(--danger) !important;
-  border:5px solid var(--danger) !important;
-  color:#fff !important;
-  text-decoration:none !important;
-}
-.submit-row a.deletelink:hover{ filter:brightness(1.05); }
+/* Potvrzení smazání – styly výše u .delete-confirm-submit */
 
 /* === Jednotný searchbar na všech changelist stránkách (jako v Platbách) === */
 :root{ --searchbar-w: 280px; }  /* šířka pole; když chceš, změň číslo */
@@ -1656,114 +1796,142 @@ ul.messagelist li.warning{ background:var(--amber-100) !important; color:#6B4E00
   min-height:var(--ctl-h) !important;
 }
 
-@media (max-width:700px){
-  #changelist-search #searchbar,
-  #changelist-search input[type="text"]{
-    flex:1 1 100% !important;
-    width:100% !important;
+@media (max-width:1024px){
+  #changelist .changelist-form-container,
+  #changelist.module{
     max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+    overflow-x:hidden !important;
   }
-  /* Operace: stejná flexibilita jako search – vždy celá šířka, nic se neořízne */
-  .change-list .actions{
-    flex:1 1 100% !important;
-    width:100% !important;
-    max-width:100% !important;
-  }
-  .change-list .actions select{
+
+  .change-list #toolbar,
+  #changelist #toolbar,
+  #toolbar{
     width:100% !important;
     max-width:100% !important;
     min-width:0 !important;
+    box-sizing:border-box !important;
+    overflow:hidden !important;
+    padding:10px 12px !important;
+  }
+
+  #changelist-search{
+    display:block !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+  }
+
+  #changelist-search > div{
+    display:flex !important;
+    flex-wrap:nowrap !important;
+    align-items:center !important;
+    gap:0.5rem !important;
+    width:100% !important;
+    max-width:100% !important;
+    min-width:0 !important;
+    box-sizing:border-box !important;
+  }
+
+  #changelist-search label{
+    flex:0 0 auto !important;
+    margin:0 !important;
+    line-height:0 !important;
+  }
+
+  #changelist-search label img{
+    display:block !important;
+    width:16px !important;
+    height:16px !important;
+  }
+
+  #changelist-search #searchbar,
+  #changelist-search input[type="text"]{
+    flex:1 1 0 !important;
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+  }
+
+  #changelist-search input[type="submit"]{
+    flex:0 0 auto !important;
+    white-space:nowrap !important;
+    margin:0 !important;
+  }
+
+  #changelist-search .quiet,
+  #changelist-search .small{
+    display:none !important;
+  }
+
+  /*
+   * Operace – mobil/tablet layout (jako referenční screenshot):
+   * řádek 1: [Operace: + select] | [Provést]
+   * řádek 2: Vybraných je X položek…
+   */
+  .change-list .actions,
+  #changelist .actions{
+    display:grid !important;
+    grid-template-columns:minmax(0, 1fr) auto !important;
+    grid-template-rows:auto auto !important;
+    column-gap:0.5rem !important;
+    row-gap:0.35rem !important;
+    align-items:center !important;
+    width:100% !important;
+    max-width:100% !important;
+    padding:10px 12px !important;
+  }
+
+  .change-list .actions label,
+  #changelist .actions label{
+    grid-column:1 !important;
+    grid-row:1 !important;
+    display:flex !important;
+    align-items:center !important;
+    gap:0.5rem !important;
+    min-width:0 !important;
+    margin:0 !important;
+    white-space:nowrap !important;
+  }
+
+  .change-list .actions select,
+  #changelist .actions select{
+    flex:1 1 auto !important;
+    min-width:0 !important;
+    width:100% !important;
+    max-width:100% !important;
+  }
+  .change-list .actions .button,
+  .change-list .actions input[type=submit],
+  #changelist .actions .button,
+  #changelist .actions input[type=submit]{
+    grid-column:2 !important;
+    grid-row:1 !important;
+    margin:0 !important;
+    align-self:center !important;
+    justify-self:end !important;
+  }
+
+  .change-list .actions .action-counter,
+  .change-list .actions span.action-counter,
+  #changelist .actions .action-counter,
+  #changelist .actions span.action-counter{
+    grid-column:1 / -1 !important;
+    grid-row:2 !important;
+    margin:0 !important;
+    padding-top:2px !important;
+    white-space:normal !important;
+    font-size:13px !important;
+    line-height:1.35 !important;
+    color:#475569 !important;
   }
 }
 
 
 
-
-/* === Trenéři – souhrn ==================================== */
-
-/* šířky sloupců (trochu víc místa) */
-.tbl-treneri col.col-trener     { width: 26%; }
-.tbl-treneri col.col-pocet      { width: 12%; }
-.tbl-treneri col.col-hodiny     { width: 12%; }
-.tbl-treneri col.col-dluzno     { width: 14%; }
-.tbl-treneri col.col-zaplaceno  { width: 14%; }
-.tbl-treneri col.col-kvyplaceni { width: 14%; }
-.tbl-treneri col.col-akce       { width: 8%;  }
-
-/* čísla na střed jen v této tabulce */
-.tbl-treneri th.center,
-.tbl-treneri td.center { text-align: center; }
-
-/* první sloupec bez přehnaného odsazení, zarovnání na střed řádků */
-.tbl-treneri th, .tbl-treneri td { vertical-align: middle; }
-.tbl-treneri th:first-child,
-.tbl-treneri td:first-child { padding-left: 14px !important; }
-
-/* akční sloupec – tlačítko nezalamovat a zarovnat doprava */
-.tbl-treneri td.akce { text-align: right; }
-.tbl-treneri .btn-pay { white-space: nowrap; display: inline-block; }
-
-/* jemnější horní linka první datové řádky */
-.tbl-treneri tbody tr:first-child td { border-top: 1px solid #eee !important; }
-
-/* Trenéři – fixní šířka tabulky a horizontální scroll (jako ostatní changelisty) */
-.treneri-table-wrapper {
-  overflow-x: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  width: 100% !important;
-}
-.tbl-treneri {
-  min-width: 680px !important;
-  width: 100% !important;
-}
-
-/* Trenér detail – tabulky a box „Nová sazba od…“ */
-.trener-detail-table-wrapper{
-  overflow-x: auto !important;
-  -webkit-overflow-scrolling: touch !important;
-  width: 100% !important;
-}
-.trener-detail-table-wrapper table{
-  min-width: 680px !important;
-  width: 100% !important;
-  table-layout: fixed !important;
-}
-
-.trener-rate-box{
-  max-width: 420px;
-}
-
-@media (max-width: 768px){
-  .trener-rate-box{
-    max-width: 100%;
-  }
-  .trener-rate-box .module{
-    width: 100%;
-    box-sizing: border-box;
-  }
-}
-
-/* ===== Trenéři – souhrn: řádek se součty pod tabulkou ===== */
-.tbl-treneri tfoot tr.totals td {
-  font-weight: 700;              /* výraznější písmo */
-  font-size: 1.05rem;            /* o něco větší než zbytek tabulky */
-  background: #ffffff;           /* jemné zvýraznění řádku */
-  border-top: 2px solid #daba72 !important;  /* silná oddělovací čára */
-  padding-top: 12px;
-  padding-bottom: 12px;
-}
-
-/* text "Součty:" doprava, aby to působilo jako popisek řádku */
-.tbl-treneri tfoot tr.totals td.label {
-  text-align: right;
-  color: #333;
-}
-
-/* čísla v součtovém řádku zarovnaná na střed, stejně jako ve sloupcích */
-.tbl-treneri tfoot tr.totals td.center,
-.tbl-treneri tfoot tr.totals td.num { 
-  text-align: center;
-}
 
 /* ===== Souhrn hráče (pod tabulkou) ===== */
 .player-summary{
@@ -1999,92 +2167,33 @@ ul.messagelist li.warning{ background:var(--amber-100) !important; color:#6B4E00
   background: #ffedd5;                /* světle oranžová */
   color: #92400e;
 }
-/* ===== Tlačítka „Uložit“ bez capslocku (text-transform: none) ===== */
-.submit-row input[type="submit"],
-.submit-row button[type="submit"],
-.add-day-btn-save,
-.add-day-btn-save-addanother {
+.add-day-copy-card .add-day-btn-copy-load {
   text-transform: none !important;
 }
 
-/* ===== Tlačítko „Uložit: Přidat Další“ – stejný vzhled jako v add_form (oranžové, bílé písmo) v celém systému ===== */
-.submit-row input[name="_addanother"],
-.submit-row button[name="_addanother"],
-#toolbar input[name="_addanother"],
-#toolbar button[name="_addanother"],
-.grp-submit-row input[name="_addanother"],
-.grp-submit-row button[name="_addanother"] {
-  background: var(--brand) !important;
-  border: 3px solid var(--brand-600) !important;
-  color: #fff !important;
-  border-radius: 100px !important;
-  padding: 7px 12px !important;
-  text-decoration: none !important;
-  font-family: var(--btn-font-family) !important;
-  font-size: var(--btn-font-size) !important;
-  font-weight: var(--btn-font-weight) !important;
-  line-height: 1 !important;
-  letter-spacing: .2px !important;
-  cursor: pointer !important;
-}
-.submit-row input[name="_addanother"]:hover,
-.submit-row button[name="_addanother"]:hover,
-#toolbar input[name="_addanother"]:hover,
-#toolbar button[name="_addanother"]:hover,
-.grp-submit-row input[name="_addanother"]:hover,
-.grp-submit-row button[name="_addanother"]:hover {
-  filter: brightness(1.05) !important;
+/* Potvrzení smazání – jedno tlačítko „Ano, odstranit“ */
+.delete-confirmation .delete-confirm-actions {
+  margin-top: 16px;
 }
 
-/* Text „Uložit: Přidat Další“ (přepsat tam, kde Django vykreslí jiný text – u button skryjeme původní a zobrazíme ::after) */
-.submit-row button[name="_addanother"]:not(.add-day-btn-save-addanother) {
-  font-size: 0 !important;
-  position: relative !important;
-}
-.submit-row button[name="_addanother"]:not(.add-day-btn-save-addanother)::after {
-  content: "Uložit: Přidat Další" !important;
-  font-size: var(--btn-font-size) !important;
-  position: absolute !important;
-  left: 50% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  white-space: nowrap !important;
-  pointer-events: none !important;
-  color: #fff !important;
+.logout-confirmation .logout-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 16px;
 }
 
-/* ===== Add-form (Trénink: přidat) – řádek Uložit a tlačítka stejné jako .submit-row v custom.css ===== */
-.add-day-submit-row {
-  background: var(--surface) !important;
-  border: 10px solid var(--line) !important;
-  border-radius: 30px !important;
-  box-shadow: 0 1px 2px rgba(0,0,0,.03) !important;
-  display: flex !important;
+.logout-confirmation .logout-confirm-actions .button.secondary {
+  display: inline-flex !important;
   align-items: center !important;
-  flex-wrap: wrap !important;
-  gap: .5rem !important;
-  padding: 7px 12px !important;
-  margin-top: 12px !important;
-  overflow: visible !important;
-}
-.add-day-btn-save,
-.add-day-btn-save-addanother {
-  background: var(--brand) !important;
-  border: 3px solid var(--brand-600) !important;
-  color: #fff !important;
-  border-radius: 100px !important;
-  padding: 7px 12px !important;
-  text-decoration: none !important;
-  font-family: var(--btn-font-family) !important;
+  justify-content: center !important;
+  min-height: 2rem !important;
+  padding: var(--admin-action-btn-padding) !important;
+  border-radius: var(--btn-radius) !important;
   font-size: var(--btn-font-size) !important;
   font-weight: var(--btn-font-weight) !important;
-  line-height: 1 !important;
-  letter-spacing: .2px !important;
-  cursor: pointer !important;
-}
-.add-day-btn-save:hover,
-.add-day-btn-save-addanother:hover {
-  filter: brightness(1.05) !important;
+  text-decoration: none !important;
 }
 
 /* ===== HIDE: 'Uložit a pokračovat v úpravách' (name="_continue") na všech admin stránkách ===== */
@@ -2203,14 +2312,14 @@ table tbody tr:hover > td{ background:#fff3df !important; color:var(--text) !imp
 
 /* SELECT2 (dropdown, vyhledávací input, položky) */
 .select2-container--admin-autocomplete .select2-selection--single{
-  background:#fff !important; color:#111 !important; border:1px solid #E5E7EB !important; border-radius:8px !important;
+  background:#fff !important; color:#111 !important; border:1px solid #E5E7EB !important; border-radius:var(--field-radius) !important;
 }
 .select2-container .select2-dropdown{
   background:#fff !important; color:#111 !important; border:1px solid #e5e7eb !important;
 }
 .select2-search--dropdown .select2-search__field{
   background:#fff !important; color:#111 !important; -webkit-text-fill-color:#111 !important;
-  border:1px solid #e5e7eb !important; border-radius:8px !important;
+  border:1px solid #e5e7eb !important; border-radius:var(--field-radius) !important;
 }
 .select2-results__option{ background:#fff !important; color:#111 !important; }
 .select2-results__option--highlighted:not([aria-selected]){ background:#fff7ed !important; color:#111 !important; }
@@ -2248,7 +2357,7 @@ body.app-core.model-trening .x-dochazka-inline .tabular{
 .x-dochazka-inline td:first-child select,
 .inline-group .related-widget-wrapper select{
   background:#fff !important; color:#111 !important; -webkit-text-fill-color:#111 !important;
-  border:1px solid #E5E7EB !important; border-radius:8px !important; appearance:auto !important;
+  border:1px solid #E5E7EB !important; border-radius:var(--field-radius) !important; appearance:auto !important;
   height:36px !important; min-height:36px !important; padding:6px 10px !important; font-size:14px !important;
 }
 #dochazka_set-group td:first-child .related-widget-wrapper,

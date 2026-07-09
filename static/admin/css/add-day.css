@@ -1,0 +1,309 @@
+/* Přepsat výchozí Django admin – vzhled jako add_day (vše s !important) */
+  body #content-main.add-day-page {
+    max-width: 100% !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+  }
+  body #content-main.add-day-page .add-day-card input:not([type="submit"]):not([type="button"]),
+  body #content-main.add-day-page .add-day-card select,
+  body #content-main.add-day-page .add-day-card textarea {
+    width: 100% !important;
+    max-width: 360px !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 6px 10px !important;
+    border: 1px solid var(--line-200) !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    background: #fff !important;
+    color: #1f2937 !important;
+    box-sizing: border-box !important;
+  }
+  body #content-main.add-day-page .add-day-card select {
+    appearance: auto !important;
+    -webkit-appearance: menulist !important;
+  }
+  body #content-main.add-day-page .add-day-card input:focus,
+  body #content-main.add-day-page .add-day-card select:focus,
+  body #content-main.add-day-page .add-day-card textarea:focus {
+    outline: 2px solid #E67817 !important;
+    outline-offset: 2px !important;
+    border-color: #E67817 !important;
+    box-shadow: 0 0 0 3px rgba(230, 120, 23, 0.15) !important;
+  }
+  /* Stejné styly jako add_day – skrýt obsah do připravenosti, ikona kalendáře, pilulky Datum */
+  .add-day-page .add-day-hraci-hidden,
+  .add-day-page .add-day-hraci-hidden select {
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    clip: rect(0,0,0,0) !important;
+  }
+  #content-main.add-day-page { opacity: 0; visibility: hidden; }
+  .add-day-ready #content-main.add-day-page { opacity: 1; visibility: visible; }
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-row img[src*="calendar"],
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-row img[src*="icon-calendar"] { display: none !important; }
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-row .add-day-datum-shortcuts a#add-day-calendar img {
+    display: block !important;
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+  }
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-row .add-day-datum-shortcuts a#add-day-calendar {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-width: 16px !important;
+    flex-shrink: 0 !important;
+  }
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts {
+    justify-content: flex-start !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    text-align: left !important;
+    margin: 2px 0 0 0 !important;
+    margin-left: 0 !important;
+    margin-right: auto !important;
+    width: auto !important;
+    max-width: 100% !important;
+    align-self: flex-start !important;
+    gap: 4px !important;
+  }
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts a {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    padding: 3px 8px !important;
+    border-radius: 999px !important;
+    background: #fff3df !important;
+    color: #111827 !important;
+    text-decoration: none !important;
+  }
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts a:hover { background: #ffe4bf !important; color: #111827 !important; }
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts a:focus {
+    outline: 2px solid #E67817 !important; outline-offset: 2px !important; border-radius: 6px !important;
+  }
+  /* Ikona kalendáře: původní barva (bez filtru), text „Dnes“ zůstává černý díky color na <a> */
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts a img {
+    filter: none;
+  }
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-row label.add-day-label-inline {
+    display: block !important;
+    font-weight: 700 !important;
+    color: #111827 !important;
+    margin-bottom: 4px !important;
+    order: -1 !important;
+  }
+  /* Pole Datum – stejná buňka jako add-day: type=date nebo .add-day-datum-input, šedý border, oranžový focus */
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="date"],
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input.add-day-datum-input,
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="text"].vDateField {
+    width: 100% !important;
+    max-width: 360px !important;
+    box-sizing: border-box !important;
+    height: 36px !important;
+    padding: 6px 10px !important;
+    background: #fff !important;
+    border: 1px solid var(--line-200) !important;
+    color: #1f2937 !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+  }
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="date"]:focus,
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="date"]:focus-visible,
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input.add-day-datum-input:focus,
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input.vDateField:focus {
+    outline: 2px solid #E67817 !important;
+    outline-offset: 2px !important;
+    border-color: #E67817 !important;
+    box-shadow: 0 0 0 3px rgba(230, 120, 23, 0.15) !important;
+  }
+  /* Skrýt nativní ikonu kalendáře v prohlížeči – jako add_day */
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0 !important;
+    position: absolute !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    pointer-events: none !important;
+  }
+  /* Datum: skrýt .datetimeshortcuts a vnitřní labely z widgetu */
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap .datetimeshortcuts,
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap > p > label { display: none !important; }
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap > p { margin: 0 !important; }
+  /* Čas v Trénink: stejná buňka jako add_day – řádek label + input */
+  body #content-main.add-day-page .add-day-fields .add-day-row > p.time,
+  body #content-main.add-day-page .add-day-fields .add-day-row > p.date { margin: 0 !important; }
+  /* Čas – funkčně stejné jako add-day: type="time" (nativní time picker), stejná buňka */
+  body #content-main.add-day-page .add-day-fields .add-day-row input[type="time"],
+  body #content-main.add-day-page .add-day-fields .add-day-row input.vTimeField {
+    width: 100% !important;
+    max-width: 360px !important;
+    box-sizing: border-box !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 6px 10px !important;
+    border: 1px solid var(--line-200) !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    background: #fff !important;
+    color: #1f2937 !important;
+  }
+  body #content-main.add-day-page .add-day-fields .add-day-row input[type="time"]:focus,
+  body #content-main.add-day-page .add-day-fields .add-day-row input.vTimeField:focus {
+    outline: 2px solid #E67817 !important;
+    outline-offset: 2px !important;
+    border-color: #E67817 !important;
+    box-shadow: 0 0 0 3px rgba(230, 120, 23, 0.15) !important;
+  }
+
+/* Stejný layout jako add_day – přepisuje výchozí Django (body prefix pro specifitu) */
+  body #content-main.add-day-page { max-width: 100% !important; box-sizing: border-box !important; padding: 0 0 24px !important; min-width: 0 !important; }
+  body #content-main.add-day-page * { box-sizing: border-box !important; }
+  body #content-main.add-day-page form { max-width: 100% !important; min-width: 0 !important; }
+  body #content-main.add-day-page h1 { margin-bottom: 20px !important; font-size: 1.5rem !important; color: #111827 !important; border-bottom: 3px solid var(--brand, #E67817) !important; padding-bottom: 8px !important; }
+  body #content-main.add-day-page .add-day-card {
+    background: #fff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 10px !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04) !important;
+    padding: 16px !important;
+    margin-bottom: 12px !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+  body #content-main.add-day-page .add-day-card-title { margin: 0 0 14px !important; font-size: 1rem !important; font-weight: 700 !important; color: #111827 !important; }
+  body #content-main.add-day-page .add-day-slot-title-row { display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 12px !important; }
+  body #content-main.add-day-page .add-day-slot-title-text { flex: 1 !important; min-width: 0 !important; }
+  body #content-main.add-day-page .add-day-row { margin: 0 0 16px !important; }
+  body #content-main.add-day-page .add-day-row:last-of-type { margin-bottom: 0 !important; }
+  body #content-main.add-day-page .add-day-row label { display: block !important; margin-bottom: 8px !important; font-weight: 700 !important; color: #111827 !important; font-size: 14px !important; }
+  body #content-main.add-day-page .add-day-row input:not([type="submit"]):not([type="button"]),
+  body #content-main.add-day-page .add-day-row select:not(.add-day-hraci-picker),
+  body #content-main.add-day-page .add-day-row textarea {
+    width: 100% !important;
+    max-width: 360px !important;
+    box-sizing: border-box !important;
+    height: 36px !important;
+    min-height: 36px !important;
+    padding: 6px 10px !important;
+    border: 1px solid var(--line-200) !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    background: #fff !important;
+    color: #1f2937 !important;
+  }
+  body #content-main.add-day-page .add-day-row textarea { height: 64px !important; min-height: 64px !important; resize: vertical !important; }
+  body #content-main.add-day-page .add-day-row input:focus,
+  body #content-main.add-day-page .add-day-row select:focus,
+  body #content-main.add-day-page .add-day-row textarea:focus {
+    outline: 2px solid #E67817 !important;
+    outline-offset: 2px !important;
+    border-color: #E67817 !important;
+    box-shadow: 0 0 0 3px rgba(230, 120, 23, 0.15) !important;
+  }
+  body #content-main.add-day-page .add-day-datum-row { display: flex !important; flex-direction: column !important; gap: 6px !important; align-items: flex-start !important; max-width: 100% !important; min-width: 0 !important; }
+  body #content-main.add-day-page .add-day-datum-input-wrap { display: inline-flex !important; flex-direction: column !important; align-items: flex-start !important; max-width: 100% !important; gap: 6px !important; }
+  body #content-main.add-day-page .add-day-datum-input-wrap input { margin: 0 !important; }
+  body #content-main.add-day-page .add-day-label-inline { order: -1 !important; }
+  body #content-main.add-day-page .add-day-hraci-wrap { margin-top: 16px !important; padding-top: 16px !important; border-top: 1px solid #e5e7eb !important; overflow: visible !important; border-radius: 0 0 10px 10px !important; }
+  body #content-main.add-day-page .add-day-hraci-title { margin: 0 !important; padding: 12px 14px !important; background: var(--amber-100, #FFF7D6) !important; color: #111827 !important; font-size: 13px !important; font-weight: 700 !important; text-transform: uppercase !important; letter-spacing: .02em !important; border-bottom: 1px solid var(--amber, #080704) !important; }
+  body #content-main.add-day-page .add-day-hraci-table { position: relative !important; padding: 12px 14px !important; background: #fff !important; overflow: visible !important; }
+  body #content-main.add-day-page .add-day-hraci-rows { margin-bottom: 12px !important; }
+  body #content-main.add-day-page .add-day-hraci-row { position: relative !important; display: flex !important; align-items: center !important; gap: 10px !important; margin-bottom: 10px !important; }
+  body #content-main.add-day-page .add-day-hraci-row:last-child { margin-bottom: 0 !important; }
+  body #content-main.add-day-page .add-day-hraci-search-wrap { position: relative !important; width: 100% !important; max-width: 360px !important; overflow: visible !important; }
+  body #content-main.add-day-page .add-day-hraci-search { width: 100% !important; box-sizing: border-box !important; height: 44px !important; padding: 10px 12px !important; border: 1px solid var(--line-200) !important; border-radius: 8px !important; background: #fff !important; font-size: 14px !important; color: #1f2937 !important; }
+  body #content-main.add-day-page .add-day-hraci-search:focus { outline: 2px solid #E67817 !important; outline-offset: 2px !important; border-color: #E67817 !important; }
+  body #content-main.add-day-page .add-day-hraci-dropdown { position: absolute !important; top: 100% !important; left: 0 !important; right: 0 !important; margin: 4px 0 0 0 !important; padding: 0 !important; list-style: none !important; background: #fff !important; border: 1px solid #e5e7eb !important; border-radius: 8px !important; box-shadow: 0 4px 16px rgba(0,0,0,.15) !important; max-height: 8em !important; overflow-y: auto !important; z-index: 1000 !important; display: none !important; min-height: 2px !important; }
+  /* max 3 viditelní hráči, zbytek se scrolluje */
+  body #content-main.add-day-page .add-day-hraci-dropdown.is-open { display: block !important; }
+  body #content-main.add-day-page .add-day-hraci-dropdown li { padding: 10px 12px !important; cursor: pointer !important; font-size: 14px !important; color: #111827 !important; border-bottom: 1px solid #f3f4f6 !important; }
+  body #content-main.add-day-page .add-day-hraci-dropdown li:last-child { border-bottom: none !important; }
+  body #content-main.add-day-page .add-day-hraci-dropdown li:hover,
+  body #content-main.add-day-page .add-day-hraci-dropdown li.is-active { background: #fff7ed !important; color: #c96510 !important; }
+  body #content-main.add-day-page .add-day-hraci-add-row { margin-top: 12px !important; }
+  body #content-main.add-day-page .add-day-btn-pridat-hrace { display: inline-flex !important; align-items: center !important; justify-content: center !important; padding: 10px 20px !important; background: var(--brand, #E67817) !important; border: 2px solid #c96510 !important; color: #fff !important; font-weight: 700 !important; font-size: 14px !important; border-radius: 999px !important; cursor: pointer !important; }
+  body #content-main.add-day-page .add-day-btn-pridat-hrace:hover { filter: brightness(1.05) !important; }
+  body #content-main.add-day-page .add-day-hraci-row .add-day-hraci-search-wrap { flex: 1 !important; min-width: 0 !important; padding-right: 26px !important; }
+  body #content-main.add-day-page .add-day-hraci-row .btn-remove { position: absolute !important; top: -2px !important; right: 0 !important; width: 18px !important; height: 18px !important; min-width: 18px !important; min-height: 18px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; border: 1px solid #9ca3af !important; border-radius: 4px !important; background: #f9fafb !important; color: #6b7280 !important; font-size: 12px !important; line-height: 1 !important; cursor: pointer !important; }
+  body #content-main.add-day-page .add-day-hraci-row .btn-remove:hover { color: #b91c1c !important; background: #fef2f2 !important; border-color: #fecaca !important; }
+  body #content-main.add-day-page .add-day-hrac-field-hidden { position: absolute !important; left: -9999px !important; width: 1px !important; height: 1px !important; overflow: hidden !important; }
+  body #content-main.add-day-page .add-day-hrac-field-hidden select { position: absolute !important; left: -9999px !important; }
+  /* Řádek Uložit a tlačítka – styly jsou v static/admin/custom.css (stejné jako .submit-row) */
+  body #content-main.add-day-page .errorlist { margin: 4px 0 0 !important; color: #b91c1c !important; font-size: 13px !important; padding-left: 20px !important; }
+  body #content-main.add-day-page .add-day-add-slot-card { margin-top: 4px !important; }
+  body #content-main.add-day-page .add-day-add-slot-inner { display: flex !important; align-items: center !important; justify-content: center !important; }
+  body #content-main.add-day-page .add-day-btn-add-slot {
+    display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 8px !important;
+    padding: 10px 20px !important; border-radius: 999px !important; border: 2px solid #c96510 !important;
+    background: var(--brand, #E67817) !important; color: #fff !important; font-weight: 700 !important; font-size: 14px !important; cursor: pointer !important;
+  }
+  body #content-main.add-day-page .add-day-btn-add-slot:hover { filter: brightness(1.05) !important; }
+  body #content-main.add-day-page .add-day-btn-add-icon {
+    display: inline-flex !important; align-items: center !important; justify-content: center !important;
+    width: 24px !important; height: 24px !important; border-radius: 999px !important; border: 2px solid #fff !important; font-size: 16px !important; line-height: 1 !important;
+  }
+  body #content-main.add-day-page .add-day-slot-close {
+    flex-shrink: 0 !important; width: 32px !important; height: 32px !important; border-radius: 8px !important; border: 1px solid #d1d5db !important;
+    background: #fff !important; color: #6b7280 !important; font-size: 20px !important; line-height: 1 !important;
+    display: inline-flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; padding: 0 !important;
+  }
+  body #content-main.add-day-page .add-day-slot-close:hover { background: #fef2f2 !important; border-color: #fecaca !important; color: #b91c1c !important; }
+  @media (max-width: 768px) {
+    body #content-main.add-day-page { padding-left: 16px !important; padding-right: 16px !important; }
+    body #content-main.add-day-page .add-day-card { padding-left: 16px !important; padding-right: 16px !important; }
+    body #content-main.add-day-page .add-day-row input:not([type="submit"]):not([type="button"]),
+    body #content-main.add-day-page .add-day-row select:not(.add-day-hraci-picker),
+    body #content-main.add-day-page .add-day-row textarea { max-width: 100% !important; }
+    body #content-main.add-day-page .add-day-hraci-search-wrap { max-width: 100% !important; }
+  }
+
+  body #content-main.add-day-page .add-day-copy-card {
+    margin-bottom: 28px !important;
+    border: 1px dashed #E67817 !important;
+    background: #fffaf5 !important;
+  }
+  body #content-main.add-day-page .add-day-copy-help {
+    margin: 0 0 12px 0 !important;
+    color: #6b7280 !important;
+    font-size: 14px !important;
+  }
+  body #content-main.add-day-page .add-day-copy-fields {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+    gap: 8px 16px !important;
+  }
+  body #content-main.add-day-page .add-day-copy-actions {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 12px !important;
+    margin-top: 36px !important;
+    padding-top: 8px !important;
+    padding-bottom: 6px !important;
+    border-top: 1px solid #fde8d4 !important;
+  }
+  body #content-main.add-day-page #add-day-form.add-day-form-copy-loaded {
+    margin-top: 12px !important;
+  }
+  body #content-main.add-day-page #add-day-form.add-day-form-copy-loaded #slot-cards .slot-card:first-child {
+    margin-top: 4px !important;
+  }
+  body.add-form-copy-loaded #id_day-trener:not([type="hidden"]),
+  body.add-form-copy-loaded #id_day-datum:not([type="hidden"]) {
+    display: none !important;
+  }
+  body #content-main.add-day-page .add-day-copy-status {
+    color: #166534 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+  }

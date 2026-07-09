@@ -342,10 +342,9 @@ class CoachRateTests(TestCase):
     def setUp(self):
         """Set up test data."""
         self.user = User.objects.create_user(username="testcoach", password="test")
-        TrenerProfil.objects.create(
-            user=self.user,
-            sazba_za_hodinu=Decimal("500.00")
-        )
+        # Signal _ensure_trener_profil vytvoří profil automaticky – jen upravíme sazbu.
+        self.user.trener_profil.sazba_za_hodinu = Decimal("500.00")
+        self.user.trener_profil.save()
 
     def test_default_coach_rate(self):
         """Test default coach rate from profile."""

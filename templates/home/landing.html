@@ -1,90 +1,171 @@
 {% load static %}
+{% static 'home/tennisballimage.png' as stage_photo %}
 <!doctype html>
 <html lang="cs">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Správa tenisové školy – tréninky, platby, vyúčtování trenérů." />
 
-  <title>Systém pro Tenisovou školu Čimice</title>
+  <title>{{ product_name }} – Správa tenisové školy</title>
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'home/landing.css' %}">
 </head>
 <body>
-  <canvas id="bg" data-ball-src="{% static 'home/tennisball.png' %}" aria-hidden="true"></canvas>
-
-
-  <header class="site-top">
-    <a class="brand" href="{% url 'home' %}">
-        <img src="{% static 'admin/tenis_logo.png' %}" alt="Tenis systém Čimice" class="brand-logo">
-        <span>Tenis systém Čimice</span>
+  <div class="page">
+    <header class="nav">
+      <a class="nav__brand" href="{% url 'home' %}">
+        <span class="nav__dot" aria-hidden="true"></span>
+        {{ product_name }}
       </a>
-      
+      <nav class="nav__links">
+        <a class="nav__pill" href="#skoly">Školy</a>
+        <a href="#funkce">Co umí</a>
+        <a href="mailto:{{ contact_email }}">Kontakt</a>
+      </nav>
+    </header>
 
-    <nav class="top-links">
-      <a href="{{ pricing_url }}">Ceník</a>
-      <a href="{{ players_url }}">Hráči</a>
-      <a href="{{ payments_url }}">Platby</a>
-      <a href="{{ coaches_url }}">Trenéři</a>
-      <a class="admin-link" href="{{ admin_index_url }}">Přejít do administrace</a>
-    </nav>
-  </header>
+    <section class="stage">
+      <div class="stage__bg" aria-hidden="true">
+        <div class="stage__photo" style="--stage-photo: url('{{ stage_photo }}')"></div>
+        <div class="stage__overlay"></div>
+        <div class="stage__grain"></div>
+      </div>
 
-  <main>
-    <section class="hero">
+      <div class="stage__copy">
+        <p class="stage__eyebrow">Pro trenéry a tenisové akademie</p>
+        <h1>Méně tabulek,<br>víc času na <em>kurtu</em></h1>
+        <p class="stage__lead">
+          Kdo trénuje zítra, kdo má kredit a kolik patří trenérovi za měsíc — bez dalšího souboru v počítači.
+        </p>
+        <a class="stage__cta" href="#skoly">Vybrat školu</a>
+      </div>
 
-      <div class="hero-main">
-        <div class="hero-content">
-
-          <p class="chip">🎾 Vítejte v systému Tenisové školy Čimice</p>
-          
-          <h1>Portál pro trenéry<br><em>a správu klubu</em></h1>
-
-          <p class="lead">
-            Přihlaste se pro plánování tréninků, správu docházky, účtování a vyúčtování trenérů.
-            Vše pro TŠ Čimice na jednom místě.
-          </p>
-
-          <div class="cta-row">
-            <a class="btn primary" href="{{ admin_index_url }}">Přejít do administrace</a>
-            <a class="btn ghost" href="{{ new_training_url }}">➕ Nový trénink</a>
+      <div class="showcase" aria-hidden="true">
+        <div class="showcase__frame">
+          <div class="showcase__chrome">
+            <span></span><span></span><span></span>
           </div>
-        </div> <div class="hero-logo" aria-hidden="true">
-          <img src="{% static 'admin/tenis_logo.png' %}" alt="">
+          <div class="showcase__app">
+            <aside class="showcase__rail">
+              <div class="rail-item rail-item--on"></div>
+              <div class="rail-item"></div>
+              <div class="rail-item"></div>
+              <div class="rail-item"></div>
+            </aside>
+            <div class="showcase__content">
+              <header class="showcase__top">
+                <div>
+                  <small>Dnešní přehled</small>
+                  <strong>pondělí 7. 7.</strong>
+                </div>
+                <span class="status-pill"><i></i> Aktivní</span>
+              </header>
+              <div class="showcase__stats">
+                <div class="stat-card stat-card--accent">
+                  <span>Tréninky dnes</span>
+                  <b>6</b>
+                </div>
+                <div class="stat-card">
+                  <span>Aktivní hráči</span>
+                  <b>84</b>
+                </div>
+                <div class="stat-card">
+                  <span>K vyúčtování</span>
+                  <b>12 400 Kč</b>
+                </div>
+              </div>
+              <div class="showcase__schedule">
+                <div class="sched-row"><time>08:00</time><span>Solo · venku</span></div>
+                <div class="sched-row"><time>13:00</time><span>Dvojice · venku</span></div>
+                <div class="sched-row"><time>18:00</time><span>Skupina · hala</span></div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div> <div class="glass phone">
-        <div class="phone-header">Dnešní trénink</div>
-        <ul class="list">
-          <li><span>08:00</span> Solo • Venku <b>1.0 h</b></li>
-          <li><span>13:00</span> Dvojice • Venku <b>1.0 h</b></li>
-          <li><span>18:00</span> Solo • Hala <b>1.5 h</b></li>
-        </ul>
-        <div class="total">K vyúčtování: <b>3 250 Kč</b></div>
       </div>
     </section>
 
-    <section class="features">
-      <article class="card">
-        <h3>Plánování &amp; docházka</h3>
-        <p>Solo, dvojice i skupiny, venek/ hala, délka v minutách – vše na jedné obrazovce.</p>
-      </article>
-      <article class="card">
-        <h3>Sazby podle období</h3>
-        <p>Nastav „od data“ (a volitelně „do data“). Minulé tréninky zůstanou správně oceněné.</p>
-      </article>
-      <article class="card">
-        <h3>Vyúčtování trenérů</h3>
-        <p>Souhrn hodin, zaplaceno, k vyplacení. Tlačítko <em>Zadat výplatu</em> přímo ze stránky.</p>
-      </article>
-      <article class="card">
-        <h3>Platby hráčů</h3>
-        <p>Naúčtováno vs. platby/vratky. Kredit vždy přehledně.</p>
-      </article>
-    </section>
-  </main>
+    <section class="panel" id="skoly">
+      <div class="panel__inner">
+        <header class="panel__head">
+          <h2>Přihlášení do školy</h2>
+          <p>Vyberte školu, ke které patříte.</p>
+        </header>
 
-  <footer class="site-footer">
-    © {{ now|default:2025 }} Tenis systém Čimice · <a href="{{ admin_index_url }}">Admin</a>
-  </footer>
+        {% if schools|length > 1 %}
+        <div class="search">
+          <label class="sr-only" for="school-search">Hledat školu</label>
+          <input
+            type="search"
+            id="school-search"
+            class="search__input"
+            placeholder="Název nebo město…"
+            autocomplete="off"
+          >
+        </div>
+        {% endif %}
+
+        <ul class="school-list" id="school-grid">
+          {% for school in active_schools %}
+          <li
+            class="school-item"
+            data-search="{{ school.name|lower }} {{ school.city|lower }} {{ school.region|default:''|lower }}"
+          >
+            <div class="school-item__info">
+              <strong>{{ school.name }}</strong>
+              <span>{{ school.city }}{% if school.region %}, {{ school.region }}{% endif %}</span>
+            </div>
+            <a class="btn" href="{{ school.admin_url }}">Přihlásit se</a>
+          </li>
+          {% endfor %}
+
+          {% for school in upcoming_schools %}
+          <li
+            class="school-item school-item--off"
+            data-search="{{ school.name|lower }} {{ school.city|lower }} {{ school.region|default:''|lower }}"
+          >
+            <div class="school-item__info">
+              <strong>{{ school.name }}</strong>
+              <span>{{ school.city }}{% if school.region %}, {{ school.region }}{% endif %} · brzy</span>
+            </div>
+            <span class="btn btn--ghost btn--off">Připravujeme</span>
+          </li>
+          {% endfor %}
+        </ul>
+
+        <p class="school-empty" id="school-empty" hidden>Žádná škola neodpovídá hledání.</p>
+      </div>
+    </section>
+
+    <section class="features" id="funkce">
+      <div class="features__inner">
+        <article>
+          <span class="features__num">01</span>
+          <h3>Kalendář tréninků</h3>
+          <p>Solo, dvojice i skupiny — venek i hala na jedné obrazovce.</p>
+        </article>
+        <article>
+          <span class="features__num">02</span>
+          <h3>Platby rodin</h3>
+          <p>Kredity, platby a vratky vždy aktuální.</p>
+        </article>
+        <article>
+          <span class="features__num">03</span>
+          <h3>Vyúčtování trenérů</h3>
+          <p>Hodiny, zálohy i výplata na jedno kliknutí.</p>
+        </article>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <span>© {{ now|date:"Y" }} {{ product_name }}</span>
+      <p>Chcete připojit školu? <a href="mailto:{{ contact_email }}">{{ contact_email }}</a></p>
+    </footer>
+  </div>
 
   <script src="{% static 'home/landing.js' %}"></script>
 </body>

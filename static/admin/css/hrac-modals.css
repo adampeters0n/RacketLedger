@@ -1,0 +1,79 @@
+/* --- STYLY PRO MODÁLNÍ OKNA --- */
+  .modal-overlay {
+    display: none; /* Skryté by default */
+    position: fixed;
+    z-index: 10050; /* Nad vším ostatním */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.6); /* Tmavé pozadí */
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+  }
+  .modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px 25px 25px;
+    border: 1px solid #888;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+  }
+  .modal-content h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    color: #111827;
+    font-size: 1.2rem;
+  }
+  .modal-fields {
+    display: grid;
+    grid-template-columns: 1fr 4fr;
+    gap: 15px 10px;
+    align-items: center;
+  }
+  .modal-fields label {
+    font-weight: 600;
+    text-align: right;
+    padding-right: 10px;
+    color: #374151;
+  }
+  .modal-fields input,
+  .modal-fields select {
+    padding: 10px 12px;       /* Zvětšeno: více místa uvnitř */
+    height: 45px;             /* NOVÉ: Pevná výška, aby se text neořízl */
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    width: 100%;
+    font-size: 14px;          /* Čitelnější písmo */
+    box-sizing: border-box;   /* Aby padding nezvětšoval šířku přes okraj */
+    background-color: #fff;   /* Bílé pozadí */
+  }
+  .modal-actions {
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end; /* Tlačítka vpravo */
+    gap: 10px;
+  }
+  /* Tlačítka v modálu */
+  .modal-actions .button {
+    font-weight: 600;
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+  .button.secondary {
+    background: #fff;
+    border: 1px solid #ccc;
+    color: #333;
+  }
+  .button.default {
+    background: #E67817; /* Brand oranžová */
+    color: #fff;
+    border: none;
+  }

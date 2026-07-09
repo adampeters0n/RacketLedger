@@ -1,0 +1,421 @@
+* { box-sizing: border-box; }
+html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
+
+.dash-wrap {
+ padding: 24px;
+ background: #f8f9fa;
+ min-height: 100vh;
+ width: 100%;
+ max-width: 100%;
+ box-sizing: border-box;
+ overflow-x: hidden;
+}
+.dash-wrap > * { width: 100%; max-width: 100%; box-sizing: border-box; }
+
+/* HEADER */
+.dashboard-header { margin-bottom: 32px; }
+.dashboard-header h1 { font-size: 32px; font-weight: 700; color: #1a1a1a; margin: 0 0 8px 0; }
+.dashboard-header p { color: #6b7280; font-size: 14px; margin: 0; }
+
+/* KPI GRID */
+.kpi-grid {
+ display: grid;
+ grid-template-columns: repeat(4, 1fr);
+ gap: 16px;
+ margin-bottom: 0;
+}
+@media (max-width: 1400px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 1024px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .kpi-grid { grid-template-columns: 1fr; gap: 16px; } }
+
+/* ═══════════════════════════════════════════
+ KPI KARTA – stejný flat design jako acc-card
+ ═══════════════════════════════════════════ */
+.kpi {
+ background: #f8fafc;
+ border: 1px solid #e2e8f0;
+ border-radius: 14px;
+ padding: 20px 22px;
+ position: relative;
+ transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.kpi:hover {
+ box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+ transform: translateY(-1px);
+ border-color: #cbd5e1;
+}
+
+
+
+.kpi-header { display: flex; flex-direction: column; margin-bottom: 16px; }
+
+.kpi .label {
+ color: #64748b; font-size: 10px; text-transform: uppercase;
+ letter-spacing: 0.09em; font-weight: 700; margin-bottom: 8px; line-height: 1.5;
+}
+.kpi .value {
+ font-size: 28px; font-weight: 800; color: #0f172a;
+ line-height: 1.2; letter-spacing: -0.02em;
+}
+.kpi.positive .value { color: #059669; }
+.kpi.negative .value { color: #e11d48; }
+.kpi.warning .value { color: #d97706; }
+
+.kpi .subtitle { font-size: 11px; color: #94a3b8; margin-top: 4px; font-weight: 500; }
+
+.kpi-details { margin-top: 16px; padding-top: 14px; border-top: 1px solid #e8eaed; }
+.kpi-detail-item {
+ display: flex; justify-content: space-between; align-items: center;
+ padding: 9px 0; font-size: 12px; border-bottom: 1px solid #f1f5f9;
+}
+.kpi-detail-item:last-child { border-bottom: none; padding-bottom: 0; }
+.kpi-detail-item:first-child { padding-top: 0; }
+.kpi-detail-label { color: #64748b; font-weight: 500; font-size: 11px; }
+.kpi-detail-value { color: #1e293b; font-weight: 600; text-align: right; font-size: 12px; }
+
+@media (max-width: 600px) {
+ .kpi { padding: 16px 18px; border-radius: 12px; }
+ .kpi .value { font-size: 24px; }
+ .kpi .label { font-size: 10px; }
+ .kpi-details { margin-top: 12px; padding-top: 12px; }
+ .kpi-detail-item { padding: 8px 0; }
+}
+
+/* SECTION ROW */
+.section-row { margin-bottom: 24px; width: 100%; }
+
+/* GRIDY */
+.grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: stretch; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+@media (max-width: 1200px) { .grid-2-1 { grid-template-columns: 1fr; } .grid-3 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } .grid-3 { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .grid-2-1 { grid-template-columns: 1fr; } }
+
+/* ═══════════════════════════════════════════
+ CHART CARD – flat, shodný styl s acc-chart-card
+ ═══════════════════════════════════════════ */
+.chart-card {
+ background: #ffffff;
+ border-radius: 14px;
+ padding: 20px 22px;
+ box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+ border: 1px solid #e5e7eb;
+ width: 100%; box-sizing: border-box;
+ transition: box-shadow 0.2s ease;
+}
+.chart-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.07); }
+.chart-card-header {
+ display: flex; justify-content: space-between; align-items: center;
+ margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid #f1f5f9;
+ flex-wrap: wrap; gap: 10px;
+}
+.chart-card h3 { margin: 0; font-weight: 600; color: #111827; font-size: 16px; letter-spacing: -0.01em; }
+.chart-card-header .view-all { font-size: 13px; color: #3b82f6; text-decoration: none; font-weight: 500; }
+.chart-container { position: relative; height: 380px; width: 100%; }
+.chart-container-medium { position: relative; height: 300px; width: 100%; }
+.chart-container-small { position: relative; height: 280px; width: 100%; }
+.chart-container canvas, .chart-container-medium canvas, .chart-container-small canvas { max-width: 100% !important; width: 100% !important; }
+@media (max-width: 768px) {
+ .chart-card { padding: 14px 16px; border-radius: 12px; }
+ .chart-card h3 { font-size: 14px; }
+ .chart-card-header { margin-bottom: 12px; padding-bottom: 10px; }
+ .chart-container { height: 260px; } .chart-container-medium { height: 240px; } .chart-container-small { height: 240px; }
+}
+@media (max-width: 480px) { .chart-container { height: 220px; } .chart-container-medium { height: 200px; } .chart-container-small { height: 200px; } }
+
+/* ═══════════════════════════════════════════
+ FINANČNÍ PŘEHLED KARTA – flat bílá, stejný styl
+ ═══════════════════════════════════════════ */
+.comparison-card {
+ background: #ffffff;
+ color: #111827;
+ border-radius: 14px;
+ padding: 22px;
+ box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+ border: 1px solid #e5e7eb;
+ width: 100%; box-sizing: border-box;
+ display: flex; flex-direction: column; justify-content: flex-start;
+ transition: box-shadow 0.2s ease;
+}
+.comparison-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.07); }
+.comparison-card h3 { color: #111827; margin: 0 0 18px 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; padding-bottom: 14px; border-bottom: 1px solid #f1f5f9; }
+
+/* Stat grid – 3 nebo 4 sloupce */
+.comparison-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%; }
+.comparison-stats.cols-4 { grid-template-columns: repeat(2, 1fr); }
+.comparison-stat {
+ background: #f8fafc;
+ border: 1px solid #e2e8f0;
+ border-radius: 10px;
+ padding: 12px 14px;
+ text-align: center;
+}
+.comparison-stat-label { font-size: 10px; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; }
+.comparison-stat-value { font-size: 18px; font-weight: 800; color: #0f172a; word-break: break-word; letter-spacing: -0.01em; }
+@media (max-width: 900px) { .comparison-stats, .comparison-stats.cols-4 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 480px) {
+ .comparison-stats, .comparison-stats.cols-4 { grid-template-columns: 1fr 1fr; gap: 8px; }
+ .comparison-card { padding: 16px; }
+ .comparison-stat-value { font-size: 15px; }
+}
+
+/* Sub-grid pro top listy (dlužníci / přeplatky) */
+.comp-sub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #f1f5f9; }
+.comp-sub-grid h4 { margin: 0 0 10px 0; font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 0.07em; font-weight: 700; }
+.comp-sub-grid table { width: 100%; border-collapse: collapse; }
+.comp-sub-grid tr { border-bottom: 1px solid #f1f5f9; }
+.comp-sub-grid tr:last-child { border-bottom: none; }
+.comp-sub-grid td { padding: 7px 0; font-size: 12px; color: #374151; }
+.comp-sub-grid td:last-child { text-align: right; font-weight: 700; }
+@media (max-width: 600px) { .comp-sub-grid { grid-template-columns: 1fr; } }
+
+/* ═══════════════════════════════════════════
+ TABULKY – flat, shodný styl
+ ═══════════════════════════════════════════ */
+.grid-tables { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; }
+@media (max-width: 768px) { .grid-tables { grid-template-columns: 1fr; } }
+.card {
+ background: #ffffff;
+ border-radius: 14px;
+ box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+ border: 1px solid #e5e7eb;
+ overflow: hidden; width: 100%; box-sizing: border-box;
+ transition: box-shadow 0.2s ease;
+}
+.card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.07); }
+.card-header {
+ display: flex; justify-content: space-between; align-items: center;
+ padding: 14px 18px; border-bottom: 1px solid #f1f5f9;
+ background: #f8fafc; flex-wrap: wrap; gap: 10px;
+}
+.card h3 { margin: 0; font-weight: 600; color: #111827; font-size: 14px; letter-spacing: -0.01em; }
+.card .view-all { font-size: 12px; color: #3b82f6; text-decoration: none; font-weight: 500; }
+.card .inner { padding: 0; overflow: hidden; width: 100%; }
+.table-wrapper { max-height: 380px; overflow-x: auto; overflow-y: auto; width: 100%; -webkit-overflow-scrolling: touch; }
+table.list { width: 100%; border-collapse: collapse; min-width: 280px; }
+table.list th, table.list td { padding: 11px 18px; border-bottom: 1px solid #f3f4f6; text-align: left; }
+table.list tr:last-child td { border-bottom: none; }
+table.list th { color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; background: #f8fafc; position: sticky; top: 0; font-weight: 700; z-index: 10; }
+table.list td.num { text-align: right; white-space: nowrap; font-weight: 700; color: #111827; }
+table.list tbody tr { transition: background 0.12s ease; }
+table.list tbody tr:hover { background: #f8fafc; }
+table.list a { color: #3b82f6; text-decoration: none; font-weight: 500; }
+table.list a:hover { text-decoration: underline; }
+.muted { padding: 28px; text-align: center; color: #9ca3af; font-size: 13px; }
+@media (max-width: 600px) {
+ .card { border-radius: 12px; }
+ .card-header { padding: 11px 14px; }
+ .card h3 { font-size: 13px; }
+ table.list th, table.list td { padding: 9px 12px; font-size: 12px; }
+ .table-wrapper { max-height: 280px; }
+}
+
+/* =====================================================
+ ÚČETNÍ SEKCE – bílý design shodný s chart-card
+ ===================================================== */
+
+.accounting-section {
+ background: #ffffff;
+ border-radius: 16px;
+ padding: 24px;
+ box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+ border: 1px solid #e5e7eb;
+ width: 100%;
+ box-sizing: border-box;
+}
+
+/* Nadpis sekce – stejný styl jako .chart-card-header */
+.accounting-section-header {
+ display: flex;
+ align-items: center;
+ gap: 12px;
+ margin-bottom: 20px;
+ padding-bottom: 16px;
+ border-bottom: 1px solid #e5e7eb;
+ flex-wrap: wrap;
+}
+.accounting-section-header h3 {
+ margin: 0;
+ font-weight: 600;
+ color: #111827;
+ font-size: 18px;
+}
+.acc-badge {
+ font-size: 11px;
+ font-weight: 600;
+ text-transform: uppercase;
+ letter-spacing: 0.08em;
+ padding: 3px 10px;
+ border-radius: 20px;
+ background: #eff6ff;
+ color: #3b82f6;
+ border: 1px solid #bfdbfe;
+}
+.acc-period {
+ margin-left: auto;
+ font-size: 13px;
+ color: #6b7280;
+ font-weight: 500;
+}
+
+/* GRID KARET – 4 sloupce jako kpi-grid */
+.acc-grid {
+ display: grid;
+ grid-template-columns: repeat(4, 1fr);
+ gap: 16px;
+ margin-bottom: 24px;
+}
+@media (max-width: 1400px) { .acc-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 1100px) { .acc-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 600px) { .acc-grid { grid-template-columns: 1fr; gap: 12px; } }
+
+/* Jednotlivé karty – světlé, BEZ barevného levého borderu */
+.acc-card {
+ background: #f8fafc;
+ border: 1px solid #e2e8f0;
+ border-radius: 14px;
+ padding: 18px 20px;
+ position: relative;
+ transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+.acc-card:hover {
+ box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+ transform: translateY(-1px);
+ border-color: #cbd5e1;
+}
+
+.acc-card-top { margin-bottom: 12px; }
+.acc-label {
+ font-size: 10px;
+ font-weight: 700;
+ text-transform: uppercase;
+ letter-spacing: 0.09em;
+ color: #64748b;
+ line-height: 1.5;
+}
+
+
+/* Hodnoty – barevné, výrazné */
+.acc-value {
+ font-size: 24px;
+ font-weight: 800;
+ line-height: 1.15;
+ letter-spacing: -0.02em;
+ margin-bottom: 5px;
+ color: #0f172a;
+}
+.acc-card.teal .acc-value { color: #0d9488; }
+.acc-card.emerald .acc-value { color: #059669; }
+.acc-card.sky .acc-value { color: #0284c7; }
+.acc-card.indigo .acc-value { color: #4f46e5; }
+.acc-card.amber .acc-value { color: #d97706; }
+.acc-card.rose .acc-value { color: #e11d48; }
+.acc-card.lime .acc-value { color: #65a30d; }
+.acc-card.violet .acc-value { color: #7c3aed; }
+
+.acc-sub {
+ font-size: 11px;
+ color: #94a3b8;
+ font-weight: 500;
+ line-height: 1.4;
+}
+
+/* Trend badge */
+.acc-trend {
+ display: inline-flex;
+ align-items: center;
+ gap: 3px;
+ font-size: 10px;
+ font-weight: 600;
+ padding: 2px 8px;
+ border-radius: 20px;
+ margin-top: 8px;
+}
+.acc-trend.up { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+.acc-trend.down { background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; }
+.acc-trend.neutral { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+
+/* 2×2 GRID GRAFŮ pod kartami */
+.acc-charts-grid {
+ display: grid;
+ grid-template-columns: repeat(2, 1fr);
+ gap: 16px;
+}
+/* Na tabletu i mobilu grafy pod sebe */
+@media (max-width: 960px) { .acc-charts-grid { grid-template-columns: 1fr; } }
+
+/* Jednotlivá karta grafu */
+.acc-chart-card {
+ background: #ffffff;
+ border: 1px solid #e5e7eb;
+ border-radius: 14px;
+ padding: 18px 20px;
+ box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+ min-width: 0; /* důležité pro flex/grid overflow */
+}
+.acc-chart-card-header {
+ display: flex;
+ align-items: center;
+ gap: 10px;
+ margin-bottom: 14px;
+ padding-bottom: 12px;
+ border-bottom: 1px solid #f1f5f9;
+ flex-wrap: wrap;
+}
+.acc-chart-card-header h4 {
+ margin: 0;
+ font-size: 14px;
+ font-weight: 600;
+ color: #374151;
+ letter-spacing: -0.01em;
+ flex: 1;
+ min-width: 0;
+}
+.acc-chart-dot {
+ width: 8px; height: 8px;
+ border-radius: 50%;
+ flex-shrink: 0;
+}
+/* Součtový badge vpravo v headeru */
+.acc-sum-badge {
+ margin-left: auto;
+ display: inline-flex;
+ align-items: center;
+ gap: 4px;
+ font-size: 13px;
+ font-weight: 700;
+ white-space: nowrap;
+ padding: 3px 10px;
+ border-radius: 20px;
+ flex-shrink: 0;
+}
+.acc-sum-badge.teal { background: #f0fdfa; color: #0d9488; border: 1px solid #99f6e4; }
+.acc-sum-badge.emerald{ background: #f0fdf4; color: #059669; border: 1px solid #86efac; }
+.acc-sum-badge.lime { background: #f7fee7; color: #65a30d; border: 1px solid #bef264; }
+.acc-sum-badge.amber { background: #fffbeb; color: #d97706; border: 1px solid #fcd34d; }
+.acc-sum-badge.negative { background: #fff1f2; color: #e11d48; border: 1px solid #fda4af; }
+.acc-sum-label {
+ font-size: 10px;
+ font-weight: 500;
+ color: #9ca3af;
+ margin-left: auto;
+ white-space: nowrap;
+}
+
+.acc-chart-wrap { position: relative; height: 220px; width: 100%; }
+
+@media (max-width: 768px) {
+ .acc-chart-card { padding: 14px 16px; }
+ .acc-chart-card-header h4 { font-size: 13px; }
+ .acc-sum-badge { font-size: 12px; padding: 2px 8px; }
+ .acc-chart-wrap { height: 200px; }
+}
+@media (max-width: 600px) {
+ .accounting-section { padding: 16px; border-radius: 12px; }
+ .acc-value { font-size: 20px; }
+ .acc-card { padding: 14px 16px; }
+ .acc-chart-wrap { height: 180px; }
+ .acc-chart-card-header { gap: 8px; }
+ .acc-sum-badge { font-size: 11px; }
+}

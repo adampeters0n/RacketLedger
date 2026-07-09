@@ -406,19 +406,19 @@ class Cenik(models.Model):
         DVOJICE_C = "DVOJICE_C", "Dvojice (2 hráči) - Člen"
         TROJICE_C = "TROJICE_C", "Trojice (3 hráči) - Člen"
         CTVRICE_C = "CTVRICE_C", "Čtveřice (4 hráči) - Člen"
-        PETICE = "PETICE", "Pětice (5 a více hráčů)"
+        PETICE = "PETICE", "Pětice (5 a více hráčů) - Člen"
         
-        SOLO_NC = "SOLO_NC", "Solo Nečlen (1 hráč)"
-        DVOJICE_NC = "DVOJICE_NC", "Dvojice Nečlen (2 hráči)"
-        TROJICE_NC = "TROJICE_NC", "Trojice Nečlen (3 hráči)"
-        CTVRICE_NC = "CTVRICE_NC", "Čtveřice Nečlen (4 hráči)"
+        SOLO_NC = "SOLO_NC", "Solo (1 hráč) - Nečlen"
+        DVOJICE_NC = "DVOJICE_NC", "Dvojice (2 hráči) - Nečlen"
+        TROJICE_NC = "TROJICE_NC", "Trojice (3 hráči) - Nečlen"
+        CTVRICE_NC = "CTVRICE_NC", "Čtveřice (4 hráči) - Nečlen"
         
-        SOBOTA_TRE = "SOBOTA_TRE", "Sobota Trénink"
-        KURT_TRE = "KURT_TRE", "Kurt Hodina"
+        SOBOTA_TRE = "SOBOTA_TRE", "Trénink - Sobota"
+        KURT_TRE = "KURT_TRE", "Kurt - Rezervace"
 
-        VYPLET_STAND = "V_STAND", "Výplet (400 Kč) - Standard"
-        VYPLET_EXCEL = "V_EXCEL", "Výplet excel (530 Kč)"
-        VYPLET_VLASTNI = "V_VLAST", "Výplet vlastní (250 Kč)"
+        VYPLET_STAND = "V_STAND", "Výplet - Standard"
+        VYPLET_EXCEL = "V_EXCEL", "Výplet - Express"
+        VYPLET_VLASTNI = "V_VLAST", "Výplet - Vlastní"
 
     class Kurt(models.TextChoices):
         VENEK = "VENEK", "Venku"

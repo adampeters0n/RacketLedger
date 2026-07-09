@@ -1,0 +1,43 @@
+    /* Zarovnání částky v tabulce doprava + font */
+    .field-castka_display { 
+        font-family: 'Courier New', monospace; 
+        font-weight: bold; 
+        text-align: left; 
+    }
+
+    .transakce-day-trainings-card {
+        margin-top: 20px;
+        padding: 16px 18px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        box-shadow: 0 1px 2px rgba(0,0,0,.03);
+    }
+    .transakce-day-trainings-card h2 {
+        margin: 0 0 12px 0;
+        font-size: 18px;
+        color: #111827;
+    }
+    .transakce-day-trainings-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .transakce-day-trainings-table th,
+    .transakce-day-trainings-table td {
+        padding: 8px 10px;
+        border-bottom: 1px solid #f1f5f9;
+        text-align: left;
+        font-size: 14px;
+    }
+    .transakce-day-trainings-table th {
+        color: #6b7280;
+        font-weight: 600;
+    }
+    .transakce-day-trainings-empty {
+        margin: 0;
+        color: #6b7280;
+        font-size: 14px;
+    }
+    .tx-datum {
+        white-space: nowrap;
+    }

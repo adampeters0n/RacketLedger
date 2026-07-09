@@ -1,4 +1,5 @@
 # core/views.py
+from django.conf import settings
 from django.contrib.auth import logout
 from django.shortcuts import redirect, render
 from django.urls import reverse, NoReverseMatch
@@ -13,36 +14,38 @@ def _admin_url(name: str) -> str:
         return "/admin/"
 
 
-def _first_existing_admin_url(*names: str) -> str:
-    """Vrať první existující admin URL z předaných jmen, jinak /admin/."""
-    for n in names:
-        try:
-            return reverse(f"admin:{n}")
-        except NoReverseMatch:
-            continue
-    return "/admin/"
-
-
 def home(request):
+    schools = []
+    for school in settings.TENNIS_SCHOOLS:
+        admin_url = school.get("admin_url") or _admin_url("index")
+        schools.append({**school, "admin_url": admin_url})
+
+    active_schools = [s for s in schools if s.get("active", True)]
+    upcoming_schools = [s for s in schools if not s.get("active", True)]
+
     ctx = {
-        "pricing_url":     _admin_url("core_cenik_changelist"),
-        "players_url":     _admin_url("core_hrac_changelist"),
-        "payments_url":    _admin_url("core_transakce_changelist"),
-        "trainings_url":   _admin_url("core_trening_changelist"),
-        "admin_index_url": _admin_url("index"),
-        "new_training_url": _admin_url("core_trening_add"),
-        "coaches_url": _first_existing_admin_url(
-            # nové jméno (top-level /admin/core/treneri/)
-            "core_treneri_summary",
-            # starší jméno (pokud by někde ještě bylo)
-            "core_trening_treneri_summary",
-        ),
+        "product_name": settings.PRODUCT_NAME,
+        "schools": schools,
+        "active_schools": active_schools,
+        "upcoming_schools": upcoming_schools,
+        "contact_email": settings.CONTACT_EMAIL,
         "now": timezone.now(),
     }
     return render(request, "home/landing.html", ctx)
 
 
 def logout_to_home(request):
-    """Odhlásí uživatele a přesměruje na landing page."""
-    logout(request)
-    return redirect("home")
+    """Potvrzení odhlášení (GET), po odsouhlasení odhlásí a přesměruje na úvod."""
+    if not request.user.is_authenticated:
+        return redirect("home")
+
+    if request.method == "POST":
+        logout(request)
+        return redirect("home")
+
+    cancel_url = request.META.get("HTTP_REFERER", "")
+    site_root = request.build_absolute_uri("/")[:-1]
+    if not cancel_url.startswith(site_root):
+        cancel_url = _admin_url("index")
+
+    return render(request, "admin/logout_confirm.html", {"cancel_url": cancel_url})

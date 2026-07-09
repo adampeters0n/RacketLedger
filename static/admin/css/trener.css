@@ -1,0 +1,211 @@
+/* === Trenéři – souhrn a detail ==================================== */
+
+.trener-filter-form {
+  padding: 10px 12px;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.trener-detail-layout {
+  padding: 0 12px 12px;
+}
+
+.trener-detail-main {
+  flex: 1;
+}
+
+.trener-summary-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  flex-wrap: wrap;
+}
+
+.trener-kpi-bar {
+  gap: 16px;
+  padding: 14px 12px;
+  background: #fffdf6;
+  border-bottom: 1px solid #eee;
+}
+
+.trener-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 160px;
+}
+
+.trener-kpi-label {
+  font-size: 0.82rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.trener-kpi-value {
+  font-size: 1.25rem;
+  color: #222;
+}
+
+.trener-kpi-debt .trener-kpi-value {
+  color: #b45309;
+}
+
+.trener-filter-summary {
+  padding: 8px 12px 0;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.trener-section {
+  margin-top: 6px;
+}
+
+.trener-section-heading {
+  margin: 0 0 6px 0;
+}
+
+.trener-total-label {
+  text-align: right;
+}
+
+.trener-rate-box-spaced {
+  margin-top: 10px;
+}
+
+.trener-rate-form {
+  padding: 12px;
+}
+
+.trener-rate-heading {
+  margin-top: 0;
+}
+
+.trener-rate-hint {
+  margin: 0;
+  font-size: 12px;
+  color: #555;
+}
+
+.trener-sazby-section {
+  padding: 12px 0;
+}
+
+.trener-sazby-list {
+  margin: 0.5rem 0 0 1rem;
+}
+
+/* šířky sloupců */
+.tbl-treneri col.col-trener  { width: 34%; }
+.tbl-treneri col.col-pocet   { width: 18%; }
+.tbl-treneri col.col-hodiny  { width: 18%; }
+.tbl-treneri col.col-castka  { width: 30%; }
+
+/* čísla na střed jen v této tabulce */
+.tbl-treneri th.center,
+.tbl-treneri td.center { text-align: center; }
+
+/* první sloupec bez přehnaného odsazení, zarovnání na střed řádků */
+.tbl-treneri th, .tbl-treneri td { vertical-align: middle; }
+.tbl-treneri th:first-child,
+.tbl-treneri td:first-child { padding-left: 14px !important; }
+
+.tbl-treneri tbody tr.trener-main-row td {
+  border-bottom: none !important;
+}
+
+.tbl-treneri tbody tr.trener-monthly-row td {
+  padding-top: 0 !important;
+  padding-bottom: 16px !important;
+  background: #fafafa;
+  border-top: none !important;
+}
+
+.trener-monthly-table {
+  width: 100%;
+  margin: 4px 0 0 0;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.trener-monthly-table th,
+.trener-monthly-table td {
+  padding: 6px 10px;
+  border-top: 1px solid #eee;
+}
+
+.trener-monthly-table thead th {
+  color: #666;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-top: none;
+}
+
+.trener-monthly-table tbody tr:last-child td {
+  border-bottom: 1px solid #eee;
+}
+
+/* jemnější horní linka první datové řádky */
+.tbl-treneri tbody tr:first-child td { border-top: 1px solid #eee !important; }
+
+/* Trenéři – fixní šířka tabulky a horizontální scroll (jako ostatní changelisty) */
+.treneri-table-wrapper {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  width: 100% !important;
+}
+.tbl-treneri {
+  min-width: 520px !important;
+  width: 100% !important;
+}
+
+/* Trenér detail – tabulky a box „Nová sazba od…“ */
+.trener-detail-table-wrapper {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  width: 100% !important;
+}
+.trener-detail-table-wrapper table {
+  min-width: 680px !important;
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+.trener-rate-box {
+  max-width: 420px;
+}
+
+@media (max-width: 768px) {
+  .trener-rate-box {
+    max-width: 100%;
+  }
+  .trener-rate-box .module {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
+/* ===== Trenéři – souhrn: řádek se součty pod tabulkou ===== */
+.tbl-treneri tfoot tr.totals td {
+  font-weight: 700;
+  font-size: 1.05rem;
+  background: #ffffff;
+  border-top: 2px solid var(--amber) !important;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.tbl-treneri tfoot tr.totals td.label {
+  text-align: right;
+  color: #333;
+}
+
+.tbl-treneri tfoot tr.totals td.center,
+.tbl-treneri tfoot tr.totals td.num {
+  text-align: center;
+}

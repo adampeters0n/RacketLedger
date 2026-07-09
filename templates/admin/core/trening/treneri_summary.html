@@ -1,10 +1,17 @@
 {% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/trener.css' %}">
+{% endblock %}
+
 {% block content %}
   <div id="content-main">
     <div class="module">
       <h2>Trenéři – souhrn</h2>
 
-      <form method="get" style="padding:10px 12px; display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+      <form method="get" class="trener-filter-form">
         <label>Od: <input type="date" name="from" value="{{ dfrom|date:'Y-m-d' }}"></label>
         <label>Do: <input type="date" name="to" value="{{ dto|date:'Y-m-d' }}"></label>
         <button type="submit" class="button">Filtrovat</button>
@@ -16,20 +23,14 @@
             <col class="col-trener">
             <col class="col-pocet">
             <col class="col-hodiny">
-            <col class="col-dluzno">
-            <col class="col-zaplaceno">
-            <col class="col-kvyplaceni">
-            <col class="col-akce">
+            <col class="col-castka">
           </colgroup>
           <thead>
             <tr>
               <th>Trenér</th>
               <th class="center">Počet tréninků</th>
               <th class="center">Hodiny</th>
-              <th class="center">Dlužná mzda</th>
-              <th class="center">Zaplaceno</th>
-              <th class="center">K vyplacení</th>
-              <th>Akce</th>
+              <th class="center">Částka</th>
             </tr>
           </thead>
           <tbody>
@@ -40,24 +41,18 @@
                 </td>
                 <td class="center">{{ r.pocet }}</td>
                 <td class="center">{{ r.hodiny }}</td>
-                <td class="center nowrap">{{ r.dluzno }}</td>
-                <td class="center nowrap">{{ r.zaplaceno }}</td>
-                <td class="center nowrap"><strong>{{ r.k_vyplaceni }}</strong></td>
-                <td class="akce">
-                  <a class="button btn-pay" href="{{ r.vyplata_url }}">Zadat výplatu</a>
-                </td>
+                <td class="center nowrap"><strong>{{ r.castka }}</strong></td>
               </tr>
             {% empty %}
-              <tr><td colspan="7">Žádná data.</td></tr>
+              <tr><td colspan="4">Žádná data.</td></tr>
             {% endfor %}
           </tbody>
           <tfoot>
             <tr class="totals">
-              <td class="label" colspan="3">Součty:</td>
-              <td class="center nowrap">{{ total_due }}</td>
-              <td class="center nowrap">{{ total_paid }}</td>
-              <td class="center nowrap"><strong>{{ total_balance }}</strong></td>
-              <td></td>
+              <td class="label">Součty:</td>
+              <td class="center">{{ total_pocet }}</td>
+              <td class="center">{{ total_hodiny }}</td>
+              <td class="center nowrap"><strong>{{ total_castka }}</strong></td>
             </tr>
           </tfoot>
         </table>

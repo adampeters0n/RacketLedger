@@ -1,57 +1,23 @@
 {% extends "admin/change_list.html" %}
-{% load i18n admin_urls %}
+{% load i18n admin_urls static %}
 
-{% block object-tools-items %}
-  {# --- TLAČÍTKO PŘEHLED ZŮSTATKŮ --- #}
-  <li>
-    {# Používáme třídu historylink, styly jsou definovány dole, aby ladily s globálním designem #}
-    <a href="{% url 'admin:core_transakce_prehled' %}" class="historylink">
-      Přehled zůstatků
-    </a>
-  </li>
-
+{% block extrastyle %}
+<link rel="stylesheet" href="{% static 'admin/css/transakce-change-list.css' %}">
   {{ block.super }}
 {% endblock %}
 
-{% block extrastyle %}
-  {{ block.super }}
-  <style>
-    /* 1. Styl pro tlačítko "Přehled zůstatků" 
-       Kopíruje styl .object-tools a (tlačítko Přidat) z vašeho hlavního CSS
-    */
-    a.historylink {
-        background: var(--brand, #E67817) !important;       /* Oranžová */
-        border: 5px solid var(--brand-600, #D1640C) !important; /* Tmavší oranžový rámeček */
-        color: #fff !important;                              /* Bílý text */
-        border-radius: 100px !important;                     /* Pill shape */
-        padding: 7px 15px !important;                        /* Stejný padding */
-        text-decoration: none !important;
-        display: inline-flex;
-        align-items: center;
-        
-        /* Typografie podle vašeho CSS */
-        font-weight: 900 !important;
-        text-transform: uppercase;
-        font-size: 12px !important;
-        letter-spacing: 0.5px;
-        line-height: 1;
-        
-        margin-right: 8px; /* Odstup od tlačítka Přidat */
-        
-    }
+{% block extrahead %}
+{{ block.super }}
+<div id="transakce-changelist-config"
+     data-trainings-url="{% url 'admin:core_transakce_trainings_for_day' %}"
+     hidden></div>
+<script src="{% static 'admin/js/transakce-change-list.js' %}" defer></script>
+{% endblock %}
 
-    /* 2. Hover efekt - žádné blikání, jen lehké zjasnění */
-    a.historylink:hover {
-        filter: brightness(1.05);        /* Standardní efekt ve vašem systému */
-        background: var(--brand, #E67817) !important;
-        color: #fff !important;
-    }
-
-    /* 3. Zarovnání částky v tabulce doprava + font */
-    .field-castka_display { 
-        font-family: 'Courier New', monospace; 
-        font-weight: bold; 
-        text-align: left; 
-    }
-  </style>
+{% block content %}
+{{ block.super }}
+<div id="transakce-day-trainings" class="transakce-day-trainings-card" style="display:none;">
+  <h2 id="transakce-day-trainings-title">Tréninky</h2>
+  <div id="transakce-day-trainings-body"></div>
+</div>
 {% endblock %}

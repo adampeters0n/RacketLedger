@@ -1,0 +1,21 @@
+/* Styly POUZE pro dashboard (KPI boxy jsou pryč) */
+    .dash-wrap { padding:16px 20px; }
+    .cols { display:grid; grid-template-columns: 2fr 1fr; gap:18px; }
+    .card { background:#fff; border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.06); }
+    
+    /* Nadpis karet je tmavý */
+    .card h3 { margin:0; padding:12px 16px; border-bottom:1px solid #eee; font-weight:600; color: #0b1220; }
+
+    .card .inner { padding:10px 12px; }
+
+    .quick { display:flex; flex-wrap:wrap; gap:8px; padding:10px 12px; }
+    .quick a.button { padding:8px 12px; border-radius:10px; font-weight:600; }
+
+    table.list { width:100%; border-collapse:collapse; }
+    table.list th, table.list td { padding:8px 10px; border-bottom:1px solid #f0f0f0; }
+    table.list th { text-align:left; color:#666; font-size:12px; text-transform:uppercase; letter-spacing:.04em; }
+    table.list td.num { text-align:right; white-space:nowrap; }
+    .muted { color:#777; }
+    @media (max-width: 1100px) {
+      .cols { grid-template-columns: 1fr; }
+    }

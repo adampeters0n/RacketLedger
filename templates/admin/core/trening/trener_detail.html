@@ -1,70 +1,80 @@
 {% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/trener.css' %}">
+{% endblock %}
+
 {% block content %}
 <div id="content-main">
   <div class="module">
     <h2>Trenér – {{ trener.get_full_name|default:trener.username }}</h2>
 
-    <!-- Filtry (bez tlačítka výplaty) -->
-    <form method="get"
-          style="padding:10px 12px; display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;">
+    <form method="get" class="trener-filter-form">
       <a class="button secondary" href="{{ summary_url }}">← Zpět na souhrn</a>
       <label>Od: <input type="date" name="from" value="{{ dfrom|date:'Y-m-d' }}"></label>
       <label>Do: <input type="date" name="to" value="{{ dto|date:'Y-m-d' }}"></label>
       <button type="submit" class="button">Filtrovat</button>
     </form>
 
-    <div class="trener-detail-layout" style="padding:0 12px 12px;">
-      <!-- Levý sloupec (hlavní obsah) -->
-      <div style="flex:1;">
+    <div class="trener-detail-layout">
+      <div class="trener-detail-main">
 
-        <!-- Souhrn + tlačítko výplaty (hned vedle textu) -->
-    <div style="display:flex; gap:8px; align-items:center; padding:8px 12px; flex-wrap:wrap;">
-    <div>
-      Odehraných hodin: <strong>{{ total_hours }}</strong> |
-      Dlužná mzda: <strong>{{ total_due }}</strong> |
-      Zaplaceno: <strong>{{ total_paid }}</strong> |
-      <span>K vyplacení / kredit:</span> <strong>{{ balance }}</strong>
-    </div>
-     <a class="button" href="{{ pay_url }}">Zadat výplatu</a>
-    </div>
-  
+        <div class="trener-summary-bar trener-kpi-bar">
+          <div class="trener-kpi">
+            <span class="trener-kpi-label">Celková odehraná částka</span>
+            <strong class="trener-kpi-value">{{ celkova_castka }}</strong>
+          </div>
+          <div class="trener-kpi">
+            <span class="trener-kpi-label">Aktuální měsíc ({{ mesic_label }})</span>
+            <strong class="trener-kpi-value">{{ mesic_castka }}</strong>
+          </div>
+          <div class="trener-kpi trener-kpi-debt">
+            <span class="trener-kpi-label">Dlužná částka</span>
+            <strong class="trener-kpi-value">{{ dluzna_castka }}</strong>
+          </div>
+        </div>
 
-        <!-- Výplaty trenérovi -->
-        <div class="results trener-detail-table-wrapper" style="margin-top:6px;">
-          <h3 style="margin:0 0 6px 0;">Výplaty trenérovi</h3>
-          <table id="result_list">
+        {% if dfrom or dto %}
+        <div class="trener-filter-summary">
+          Ve vybraném období:
+          Počet tréninků <strong>{{ pocet }}</strong> |
+          Hodiny <strong>{{ total_hours }}</strong> |
+          Částka <strong>{{ total_castka }}</strong>
+        </div>
+        {% endif %}
+
+        {% if mesice %}
+        <div class="results trener-detail-table-wrapper trener-section">
+          <h3 class="trener-section-heading">Částka k vyplacení po měsících</h3>
+          <table class="trener-monthly-table">
             <thead>
               <tr>
-                <th>Datum</th>
-                <th>Čas</th>
-                <th>Částka</th>
-                <th>Poznámka</th>
+                <th>Měsíc</th>
+                <th class="center">Tréninky</th>
+                <th class="center">Hodiny</th>
+                <th class="center">Částka k vyplacení</th>
               </tr>
             </thead>
             <tbody>
-              {% for p in platby_rows %}
+              {% for m in mesice %}
                 <tr>
-                  <td><a href="{{ p.change_url }}">{{ p.datum }}</a></td>
-                  <td>{{ p.cas }}</td>
-                  <td>{{ p.castka }}</td>
-                  <td>{{ p.poznamka }}</td>
+                  <td>{{ m.label }}</td>
+                  <td class="center">{{ m.pocet }}</td>
+                  <td class="center">{{ m.hodiny }}</td>
+                  <td class="center nowrap"><strong>{{ m.castka }}</strong></td>
                 </tr>
-              {% empty %}
-                <tr><td colspan="4">Žádné výplaty.</td></tr>
               {% endfor %}
-              <tr>
-                <td colspan="2" style="text-align:right;"><strong>Celkem zaplaceno:</strong></td>
-                <td colspan="2"><strong>{{ platby_total }}</strong></td>
-              </tr>
             </tbody>
           </table>
         </div>
+        {% endif %}
 
-        <!-- Nová sazba od… – na menších zařízeních pod výplatami -->
-        <div class="trener-rate-box" style="margin-top:10px;">
-          <form method="post" class="module" style="padding:12px;">
+        <div class="trener-rate-box trener-rate-box-spaced">
+          <form method="post" class="module trener-rate-form">
             {% csrf_token %}
-            <h3 style="margin-top:0;">Nová sazba od…</h3>
+            <h3 class="trener-rate-heading">Nová sazba od…</h3>
             <p>
               <label>Od data:
                 <input type="date" name="rate_from" value="{{ rate_form_initial_date }}">
@@ -78,16 +88,15 @@
             <p>
               <button class="button" type="submit" name="_nastavit_sazbu">Nastavit sazbu</button>
             </p>
-            <p style="margin:0; font-size:12px; color:#555;">
+            <p class="trener-rate-hint">
               Aktuální sazba dnes: <strong>{{ rate_today_amount }} Kč/h</strong>
             </p>
           </form>
         </div>
 
-        <!-- Přehled účinných sazeb (hned pod výplatami) -->
-        <div style="padding:12px 0;">
+        <div class="trener-sazby-section">
           <strong>Účinné sazby:</strong>
-          <ul style="margin:.5rem 0 0 1rem;">
+          <ul class="trener-sazby-list">
             {% for s in sazby %}
               <li>
                 {{ s.platnost_od|date:"d.m.Y" }} – {{ s.platnost_do|default:"—"|date:"d.m.Y" }}:
@@ -100,8 +109,8 @@
           </ul>
         </div>
 
-        <!-- Tréninky -->
-        <div class="results trener-detail-table-wrapper" style="margin-top:6px;">
+        <div class="results trener-detail-table-wrapper trener-section">
+          <h3 class="trener-section-heading">Odehrané tréninky</h3>
           <table id="result_list">
             <thead>
               <tr>
@@ -134,7 +143,6 @@
           </table>
         </div>
       </div>
-
     </div>
   </div>
 </div>

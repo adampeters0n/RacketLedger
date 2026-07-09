@@ -2,6 +2,7 @@
 .env
 *.env
 *.env.*
+!.env.example
 
 # --- Python / Django ---
 __pycache__/
@@ -31,4 +32,5 @@ venv/
 .DS_Store
 .vscode/
 .idea/
+.cursor/
 *.swp
