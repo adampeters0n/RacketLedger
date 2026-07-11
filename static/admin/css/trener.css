@@ -150,6 +150,88 @@
   border-bottom: 1px solid #eee;
 }
 
+/* Odehrané tréninky – rozbalovací měsíce */
+.trener-trainings-month {
+  border: 1px solid #e8e4d8;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.trener-trainings-month__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+  color: #333;
+  background: #fffdf6;
+  border-bottom: 1px solid transparent;
+}
+
+.trener-trainings-month__summary::-webkit-details-marker {
+  display: none;
+}
+
+.trener-trainings-month__summary::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 8px;
+  color: #a68b00;
+  transition: transform 0.15s ease;
+}
+
+.trener-trainings-month[open] .trener-trainings-month__summary {
+  border-bottom-color: #eee;
+}
+
+.trener-trainings-month[open] .trener-trainings-month__summary::before {
+  transform: rotate(90deg);
+}
+
+.trener-trainings-month__meta {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #777;
+}
+
+.trener-trainings-month__body {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.trener-trainings-table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.trener-trainings-table th,
+.trener-trainings-table td {
+  padding: 8px 10px;
+  border-top: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.trener-trainings-table thead th {
+  font-size: 0.82rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  background: #fafafa;
+}
+
+.trener-trainings-empty {
+  margin: 0;
+  padding: 12px 2px;
+  color: #777;
+}
+
 /* jemnější horní linka první datové řádky */
 .tbl-treneri tbody tr:first-child td { border-top: 1px solid #eee !important; }
 

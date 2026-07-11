@@ -111,36 +111,49 @@
 
         <div class="results trener-detail-table-wrapper trener-section">
           <h3 class="trener-section-heading">Odehrané tréninky</h3>
-          <table id="result_list">
-            <thead>
-              <tr>
-                <th>Datum</th>
-                <th>Čas</th>
-                <th>Formát</th>
-                <th>Kurt</th>
-                <th>Hráči</th>
-                <th>Hodiny</th>
-                <th>Sazba</th>
-                <th>Částka</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for r in rows %}
-                <tr>
-                  <td><a href="{{ r.trening_change_url }}">{{ r.datum }}</a></td>
-                  <td>{{ r.cas }}</td>
-                  <td>{{ r.format }}</td>
-                  <td>{{ r.kurt }}</td>
-                  <td>{{ r.hraci }}</td>
-                  <td>{{ r.hodiny }}</td>
-                  <td>{{ r.sazba }}</td>
-                  <td>{{ r.castka }}</td>
-                </tr>
-              {% empty %}
-                <tr><td colspan="8">Žádné tréninky.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
+
+          {% if training_months %}
+            {% for month in training_months %}
+              <details class="trener-trainings-month"{% if month.is_open %} open{% endif %}>
+                <summary class="trener-trainings-month__summary">
+                  <span class="trener-trainings-month__label">{{ month.label }}</span>
+                  <span class="trener-trainings-month__meta">{{ month.pocet }} tréninků</span>
+                </summary>
+                <div class="trener-trainings-month__body">
+                  <table class="trener-trainings-table">
+                    <thead>
+                      <tr>
+                        <th>Datum</th>
+                        <th>Čas</th>
+                        <th>Formát</th>
+                        <th>Kurt</th>
+                        <th>Hráči</th>
+                        <th>Hodiny</th>
+                        <th>Sazba</th>
+                        <th>Částka</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for r in month.rows %}
+                        <tr>
+                          <td><a href="{{ r.trening_change_url }}">{{ r.datum }}</a></td>
+                          <td>{{ r.cas }}</td>
+                          <td>{{ r.format }}</td>
+                          <td>{{ r.kurt }}</td>
+                          <td>{{ r.hraci }}</td>
+                          <td>{{ r.hodiny }}</td>
+                          <td>{{ r.sazba }}</td>
+                          <td>{{ r.castka }}</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            {% endfor %}
+          {% else %}
+            <p class="trener-trainings-empty">Žádné tréninky.</p>
+          {% endif %}
         </div>
       </div>
     </div>

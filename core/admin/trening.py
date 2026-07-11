@@ -21,7 +21,7 @@ from django.utils.safestring import mark_safe
 from django import forms
 from django.forms import formset_factory
 
-from ..admin_utils import CZECH_MONTHS_NOMINATIVE, format_czech_datetime, parse_czech_date_parts, pretty_username, trener_label
+from ..admin_utils import CZECH_MONTHS_NOMINATIVE, format_czech_datetime, month_range, parse_czech_date_parts, pretty_username, trener_label
 from ..forms import (
     AddDayForm,
     AdminSplitDateTimeWithDatalist,
@@ -40,6 +40,72 @@ def _parse_admin_date(s):
         return datetime.strptime(s, "%Y-%m-%d").date()
     except Exception:
         return None
+
+
+def _period_from_request(request):
+    """Bez GET parametrů from/to vrátí aktuální měsíc; prázdné hodnoty = bez filtru."""
+    if "from" not in request.GET and "to" not in request.GET:
+        return month_range(dj_tz.localdate())
+
+    dfrom = _parse_admin_date(request.GET.get("from", ""))
+    dto = _parse_admin_date(request.GET.get("to", ""))
+    return dfrom, dto
+
+
+def _training_row_dict(user, training):
+    dt = dj_tz.localtime(training.datum) if dj_tz.is_aware(training.datum) else training.datum
+    hours = (Decimal(training.delka_minut) / Decimal(60)).quantize(Decimal("0.01"))
+    rate = sazba_trenera_k_datu(user, dt)
+    castka = (hours * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    hraci = ", ".join(
+        d.hrac.jmeno
+        for d in training.dochazky.select_related("hrac").filter(prisel=True)
+    ) or "—"
+    return {
+        "datum": dt.strftime("%d.%m.%Y"),
+        "cas": dt.strftime("%H:%M"),
+        "format": training.get_format_display(),
+        "kurt": training.get_kurt_display(),
+        "hraci": hraci,
+        "hodiny": f"{hours:.2f}",
+        "sazba": f"{rate:.0f} Kč/h",
+        "castka": f"{castka:.0f} Kč",
+        "trening_change_url": reverse("admin:core_trening_change", args=[training.id]),
+        "month_key": (dt.year, dt.month),
+    }
+
+
+def _group_trainings_by_month(user, trainings):
+    """Seskupí tréninky po měsících; aktuální měsíc (nebo nejnovější) je rozbalený."""
+    groups = defaultdict(list)
+    for t in trainings:
+        row = _training_row_dict(user, t)
+        groups[row["month_key"]].append(row)
+
+    today = dj_tz.localdate()
+    current_key = (today.year, today.month)
+    sorted_keys = sorted(groups.keys(), reverse=True)
+    open_key = current_key if current_key in groups else (sorted_keys[0] if sorted_keys else None)
+
+    months = []
+    for key in sorted_keys:
+        year, month = key
+        rows = groups[key]
+        months.append({
+            "label": f"{CZECH_MONTHS_NOMINATIVE[month]} {year}",
+            "rows": rows,
+            "pocet": len(rows),
+            "is_open": key == open_key,
+        })
+    return months
+
+
+def _all_trener_ids():
+    """Všichni trenéři v systému (historie tréninků + nastavené sazby)."""
+    ids = set(Trening.objects.values_list("trener_id", flat=True))
+    ids.update(TrenerSazba.objects.values_list("user_id", flat=True))
+    ids.discard(None)
+    return ids
 
 
 def _aggregate_trener_trainings(user, trainings):
@@ -918,8 +984,7 @@ class TreningAdmin(admin.ModelAdmin):
         return TemplateResponse(request, "admin/core/trening/kalendar.html", ctx)
 
     def treneri_summary_view(self, request):
-        dfrom = _parse_admin_date(request.GET.get("from", ""))
-        dto = _parse_admin_date(request.GET.get("to", ""))
+        dfrom, dto = _period_from_request(request)
 
         base_qs = Trening.objects.all()
         if dfrom:
@@ -927,17 +992,17 @@ class TreningAdmin(admin.ModelAdmin):
         if dto:
             base_qs = base_qs.filter(datum__date__lte=dto)
 
-        trener_ids = list(base_qs.values_list("trener_id", flat=True).distinct())
+        users = {
+            u.id: u
+            for u in User.objects.filter(pk__in=_all_trener_ids()).order_by(
+                "last_name", "first_name", "username"
+            )
+        }
 
         rows = []
         total_pocet = 0
         total_hodiny = Decimal("0.00")
         total_castka = Decimal("0.00")
-
-        users = {
-            u.id: u
-            for u in User.objects.filter(pk__in=trener_ids).order_by("last_name", "first_name", "username")
-        }
 
         for uid in sorted(users.keys(), key=lambda i: (users[i].get_full_name() or users[i].username).lower()):
             u = users[uid]
@@ -1019,29 +1084,7 @@ class TreningAdmin(admin.ModelAdmin):
         tqs = list(tqs.prefetch_related("dochazky__hrac").order_by("-datum"))
 
         stats = _aggregate_trener_trainings(u, tqs)
-
-        rows = []
-        for t in tqs:
-            dt = dj_tz.localtime(t.datum) if dj_tz.is_aware(t.datum) else t.datum
-            hours = (Decimal(t.delka_minut) / Decimal(60)).quantize(Decimal("0.01"))
-            rate = sazba_trenera_k_datu(u, dt)
-            castka = (hours * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
-            hraci = ", ".join(
-                d.hrac.jmeno for d in t.dochazky.select_related("hrac").filter(prisel=True)
-            ) or "—"
-
-            rows.append({
-                "datum": dt.strftime("%d.%m.%Y"),
-                "cas": dt.strftime("%H:%M"),
-                "format": t.get_format_display(),
-                "kurt": t.get_kurt_display(),
-                "hraci": hraci,
-                "hodiny": f"{hours:.2f}",
-                "sazba": f"{rate:.0f} Kč/h",
-                "castka": f"{castka:.0f} Kč",
-                "trening_change_url": reverse("admin:core_trening_change", args=[t.id]),
-            })
+        training_months = _group_trainings_by_month(u, tqs)
 
         rate_today = sazba_trenera_k_datu(u, dj_tz.now())
         rate_today_amount = f"{rate_today:.0f}"
@@ -1066,7 +1109,7 @@ class TreningAdmin(admin.ModelAdmin):
             mesic_castka=finance["mesic_castka"],
             dluzna_castka=finance["dluzna_castka"],
             mesice=stats["mesice"],
-            rows=rows,
+            training_months=training_months,
             rate_today_amount=rate_today_amount,
             rate_today_date=rate_today_date,
             rate_form_initial_date=rate_form_initial_date,

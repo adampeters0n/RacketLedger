@@ -29,6 +29,24 @@
   var calendarBtn = document.getElementById('add-day-calendar');
   if (calendarBtn) calendarBtn.addEventListener('click', function(e) { e.preventDefault(); openDatePicker(); });
 
+  function bindCopyDatePicker(input) {
+    if (!input || input.type !== 'date') return;
+    function openPicker() {
+      input.focus();
+      if (typeof input.showPicker === 'function') {
+        try { input.showPicker(); } catch (err) { /* prohlížeč může odmítnout mimo uživatelský gesture */ }
+      }
+    }
+    input.addEventListener('click', openPicker);
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openPicker();
+      }
+    });
+  }
+  document.querySelectorAll('.add-day-copy-card input[type="date"]').forEach(bindCopyDatePicker);
+
   function getPlayersForSlot(slotIndex) {
     var script = document.querySelector('.add-day-players-json[data-slot="' + slotIndex + '"]');
     if (!script || !script.textContent) return [];

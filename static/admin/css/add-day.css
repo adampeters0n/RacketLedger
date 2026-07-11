@@ -265,6 +265,16 @@
     body #content-main.add-day-page .add-day-row select:not(.add-day-hraci-picker),
     body #content-main.add-day-page .add-day-row textarea { max-width: 100% !important; }
     body #content-main.add-day-page .add-day-hraci-search-wrap { max-width: 100% !important; }
+    body #content-main.add-day-page .add-day-copy-fields {
+      grid-template-columns: 1fr !important;
+      gap: 0 !important;
+    }
+    body #content-main.add-day-page .add-day-copy-card input[type="date"],
+    body #content-main.add-day-page .add-day-copy-card .add-day-datum-input,
+    body #content-main.add-day-page .add-day-copy-card select {
+      max-width: 100% !important;
+      width: 100% !important;
+    }
   }
 
   body #content-main.add-day-page .add-day-copy-card {
@@ -281,6 +291,49 @@
     display: grid !important;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
     gap: 8px 16px !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  body #content-main.add-day-page .add-day-copy-fields .add-day-row {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  body #content-main.add-day-page .add-day-copy-card .add-day-datum-input-wrap {
+    display: flex !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    position: relative !important;
+  }
+  body #content-main.add-day-page .add-day-copy-card .add-day-datum-input-wrap input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 1 !important;
+    position: relative !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin: 0 2px 0 6px !important;
+    padding: 0 !important;
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+  }
+  body #content-main.add-day-page .add-day-copy-card input[type="date"],
+  body #content-main.add-day-page .add-day-copy-card .add-day-datum-input {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    cursor: pointer !important;
+  }
+  body #content-main.add-day-page .add-day-copy-card input[type="date"]::-webkit-date-and-time-value {
+    text-align: left !important;
+    min-width: 0 !important;
+  }
+  body #content-main.add-day-page .add-day-copy-card select {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
   }
   body #content-main.add-day-page .add-day-copy-actions {
     display: flex !important;

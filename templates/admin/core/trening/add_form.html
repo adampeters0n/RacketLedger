@@ -31,11 +31,15 @@
       <div class="add-day-copy-fields">
         <p class="add-day-row">
           <label for="{{ copy_form.source_date.id_for_label }}">Kopírovat z</label>
-          {{ copy_form.source_date }}
+          <span class="add-day-datum-input-wrap">
+            {{ copy_form.source_date }}
+          </span>
         </p>
         <p class="add-day-row">
           <label for="{{ copy_form.target_date.id_for_label }}">Přidat do</label>
-          {{ copy_form.target_date }}
+          <span class="add-day-datum-input-wrap">
+            {{ copy_form.target_date }}
+          </span>
         </p>
         <p class="add-day-row">
           <label for="{{ copy_form.scope.id_for_label }}">Rozsah</label>
