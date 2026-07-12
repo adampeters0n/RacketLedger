@@ -23,55 +23,6 @@ VYCHOZI_KODY = {
 KOD_TO_NAZEV = {kod: nazev for nazev, (kod, _poradi) in VYCHOZI_KODY.items()}
 
 
-def _table_columns(schema_editor, table):
-    with schema_editor.connection.cursor() as cursor:
-        return {
-            col.name
-            for col in schema_editor.connection.introspection.get_table_description(cursor, table)
-        }
-
-
-def ensure_cenikformat_table(apps, schema_editor):
-    """Vytvoří tabulku CenikFormat – portable (SQLite i PostgreSQL)."""
-    CenikFormat = apps.get_model("core", "CenikFormat")
-    table = CenikFormat._meta.db_table
-    connection = schema_editor.connection
-    tables = connection.introspection.table_names()
-
-    if table not in tables:
-        schema_editor.create_model(CenikFormat)
-        return
-
-    columns = _table_columns(schema_editor, table)
-    if "kod" in columns:
-        return
-
-    # Starší lokální schéma bez sloupce kod – přestavět tabulku přes Django ORM.
-    with connection.cursor() as cursor:
-        cursor.execute(f'SELECT "id", "nazev", "poradi" FROM "{table}"')
-        rows = list(cursor.fetchall())
-
-    schema_editor.delete_model(CenikFormat)
-    schema_editor.create_model(CenikFormat)
-
-    CenikFormat = apps.get_model("core", "CenikFormat")
-    for row_id, nazev, poradi in rows:
-        CenikFormat.objects.create(
-            id=row_id,
-            kod=nazev,
-            nazev=nazev,
-            poradi=poradi or 0,
-        )
-
-    if rows and connection.vendor == "postgresql":
-        with connection.cursor() as cursor:
-            cursor.execute(
-                "SELECT setval(pg_get_serial_sequence(%s, 'id'), "
-                "(SELECT MAX(id) FROM core_cenikformat))",
-                [table],
-            )
-
-
 def seed_formats(apps, schema_editor):
     CenikFormat = apps.get_model("core", "CenikFormat")
     Cenik = apps.get_model("core", "Cenik")
@@ -128,36 +79,29 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.SeparateDatabaseAndState(
-            state_operations=[
-                migrations.CreateModel(
-                    name="CenikFormat",
-                    fields=[
-                        ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
-                        ("kod", models.CharField(max_length=15, unique=True, verbose_name="Kód")),
-                        ("nazev", models.CharField(max_length=120, unique=True, verbose_name="Název formátu")),
-                        ("poradi", models.PositiveSmallIntegerField(default=0, verbose_name="Pořadí")),
-                    ],
-                    options={
-                        "verbose_name": "Formát ceníku",
-                        "verbose_name_plural": "Formáty ceníku",
-                        "ordering": ("poradi", "nazev"),
-                    },
-                ),
-                migrations.AlterField(
-                    model_name="cenik",
-                    name="format",
-                    field=models.CharField(max_length=15, verbose_name="Formát"),
-                ),
-                migrations.AlterField(
-                    model_name="trening",
-                    name="format",
-                    field=models.CharField(max_length=15, verbose_name="Formát"),
-                ),
+        migrations.CreateModel(
+            name="CenikFormat",
+            fields=[
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("kod", models.CharField(max_length=15, unique=True, verbose_name="Kód")),
+                ("nazev", models.CharField(max_length=120, unique=True, verbose_name="Název formátu")),
+                ("poradi", models.PositiveSmallIntegerField(default=0, verbose_name="Pořadí")),
             ],
-            database_operations=[
-                migrations.RunPython(ensure_cenikformat_table, noop),
-            ],
+            options={
+                "verbose_name": "Formát ceníku",
+                "verbose_name_plural": "Formáty ceníku",
+                "ordering": ("poradi", "nazev"),
+            },
+        ),
+        migrations.AlterField(
+            model_name="cenik",
+            name="format",
+            field=models.CharField(max_length=15, verbose_name="Formát"),
+        ),
+        migrations.AlterField(
+            model_name="trening",
+            name="format",
+            field=models.CharField(max_length=15, verbose_name="Formát"),
         ),
         migrations.RunPython(seed_formats, noop),
     ]
