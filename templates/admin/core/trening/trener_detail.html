@@ -16,6 +16,7 @@
       <label>Od: <input type="date" name="from" value="{{ dfrom|date:'Y-m-d' }}"></label>
       <label>Do: <input type="date" name="to" value="{{ dto|date:'Y-m-d' }}"></label>
       <button type="submit" class="button">Filtrovat</button>
+      <a class="button trener-btn-platba" href="{{ platba_add_url }}">Zadat výplatu</a>
     </form>
 
     <div class="trener-detail-layout">
@@ -55,6 +56,7 @@
                 <th class="center">Tréninky</th>
                 <th class="center">Hodiny</th>
                 <th class="center">Částka k vyplacení</th>
+                <th class="center">Vyplaceno</th>
               </tr>
             </thead>
             <tbody>
@@ -64,6 +66,15 @@
                   <td class="center">{{ m.pocet }}</td>
                   <td class="center">{{ m.hodiny }}</td>
                   <td class="center nowrap"><strong>{{ m.castka }}</strong></td>
+                  <td class="center trener-vyplaceno-cell">
+                    {% if m.vyplaty %}
+                      {% for p in m.vyplaty %}
+                        <a href="{{ p.url }}" class="trener-vyplata-link">{{ p.datum }}: <strong>{{ p.castka }}</strong></a>{% if not forloop.last %}<br>{% endif %}
+                      {% endfor %}
+                    {% else %}
+                      <span class="trener-vyplaceno-empty">—</span>
+                    {% endif %}
+                  </td>
                 </tr>
               {% endfor %}
             </tbody>

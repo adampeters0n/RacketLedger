@@ -28,7 +28,7 @@ class BillingLogicTests(TestCase):
     def setUp(self):
         """Set up test data."""
         self.user = User.objects.create_user(username="testcoach", password="test")
-        self.hrac = Hrac.objects.create(jmeno="Test Player", email="test@example.com")
+        self.hrac = Hrac.objects.create(jmeno="Test", prijmeni="Player", email="test@example.com")
         self.rodina = Rodina.objects.create(nazev="Test Family")
         self.hrac.rodina = self.rodina
         self.hrac.save()
@@ -175,7 +175,7 @@ class PricingTests(TestCase):
     def setUp(self):
         """Set up test data."""
         self.user = User.objects.create_user(username="testcoach", password="test")
-        self.hrac = Hrac.objects.create(jmeno="Test Player")
+        self.hrac = Hrac.objects.create(jmeno="Test", prijmeni="Player")
         self.cenik = Cenik.objects.create(
             format=Cenik.Format.SOLO_C,
             kurt=Cenik.Kurt.VENEK,
@@ -242,7 +242,8 @@ class AutomaticBillingTests(TestCase):
         """Set up test data."""
         self.user = User.objects.create_user(username="testcoach", password="test")
         self.hrac = Hrac.objects.create(
-            jmeno="Test Player",
+            jmeno="Test",
+            prijmeni="Player",
             vyuctovani_rezim=Hrac.RezimVyuctovani.N_TRENINGU,
             vyuctovani_n=3
         )
@@ -253,6 +254,10 @@ class AutomaticBillingTests(TestCase):
             platnost_od=date.today() - timedelta(days=30),
             platnost_do=None
         )
+
+    def _create_dochazka(self, **kwargs):
+        with self.captureOnCommitCallbacks(execute=True):
+            return Dochazka.objects.create(**kwargs)
 
     def test_automatic_charge_on_attendance(self):
         """Test that attendance automatically creates charge."""
@@ -265,7 +270,7 @@ class AutomaticBillingTests(TestCase):
         )
 
         # Create attendance
-        dochazka = Dochazka.objects.create(
+        dochazka = self._create_dochazka(
             trening=trening,
             hrac=self.hrac,
             prisel=True
@@ -310,12 +315,13 @@ class AutomaticBillingTests(TestCase):
 
     def test_automatic_billing_after_n_trainings(self):
         """Test automatic billing after N trainings."""
-        # Set up player for billing after 3 trainings
-        self.hrac.vyuctovani_rezim = Hrac.RezimVyuctovani.N_TRENINGU
-        self.hrac.vyuctovani_n = 3
-        self.hrac.save()
+        from core.models import VyuctovaniNastaveni
 
-        # Create 3 trainings with attendance
+        nast = VyuctovaniNastaveni.load()
+        nast.auto_rezim = Hrac.RezimVyuctovani.N_TRENINGU
+        nast.auto_pocet_treninku = 3
+        nast.save()
+
         for i in range(3):
             trening = Trening.objects.create(
                 trener=self.user,
@@ -324,7 +330,7 @@ class AutomaticBillingTests(TestCase):
                 format=Cenik.Format.SOLO_C,
                 kurt=Cenik.Kurt.VENEK
             )
-            Dochazka.objects.create(
+            self._create_dochazka(
                 trening=trening,
                 hrac=self.hrac,
                 prisel=True
@@ -334,6 +340,289 @@ class AutomaticBillingTests(TestCase):
         vyuct = Vyuctovani.objects.filter(hrac=self.hrac).first()
         self.assertIsNotNone(vyuct)
         self.assertEqual(vyuct.reason, Hrac.RezimVyuctovani.N_TRENINGU)
+
+    def test_automatic_billing_at_credit_limit(self):
+        """Test automatic billing when total credit hits global limit."""
+        from core.models import VyuctovaniNastaveni
+
+        nast = VyuctovaniNastaveni.load()
+        nast.auto_rezim = Hrac.RezimVyuctovani.CASTKA
+        nast.auto_limit = Decimal("5000.00")
+        nast.save()
+
+        self.hrac.email = "test@example.com"
+        self.hrac.save()
+
+        for i in range(10):
+            trening = Trening.objects.create(
+                trener=self.user,
+                datum=timezone.now() + timedelta(days=i),
+                delka_minut=60,
+                format=Cenik.Format.SOLO_C,
+                kurt=Cenik.Kurt.VENEK,
+            )
+            self._create_dochazka(
+                trening=trening,
+                hrac=self.hrac,
+                prisel=True,
+            )
+
+        self.hrac.refresh_from_db()
+        self.assertEqual(self.hrac.kredit, Decimal("-5000.00"))
+
+        vyuct = Vyuctovani.objects.filter(hrac=self.hrac).order_by("-created_at").first()
+        self.assertIsNotNone(vyuct)
+        self.assertEqual(vyuct.reason, Hrac.RezimVyuctovani.CASTKA)
+        self.assertEqual(vyuct.amount_due, Decimal("5000.00"))
+        self.assertEqual(vyuct.credit_end, Decimal("-5000.00"))
+
+    def test_automatic_billing_credit_limit_no_duplicate(self):
+        """No second auto billing while credit stays below limit."""
+        from core.models import VyuctovaniNastaveni
+
+        nast = VyuctovaniNastaveni.load()
+        nast.auto_rezim = Hrac.RezimVyuctovani.CASTKA
+        nast.auto_limit = Decimal("5000.00")
+        nast.save()
+
+        for i in range(10):
+            trening = Trening.objects.create(
+                trener=self.user,
+                datum=timezone.now() + timedelta(days=i),
+                delka_minut=60,
+                format=Cenik.Format.SOLO_C,
+                kurt=Cenik.Kurt.VENEK,
+            )
+            self._create_dochazka(trening=trening, hrac=self.hrac, prisel=True)
+
+        self.assertEqual(Vyuctovani.objects.filter(hrac=self.hrac).count(), 1)
+
+        trening11 = Trening.objects.create(
+            trener=self.user,
+            datum=timezone.now() + timedelta(days=11),
+            delka_minut=60,
+            format=Cenik.Format.SOLO_C,
+            kurt=Cenik.Kurt.VENEK,
+        )
+        self._create_dochazka(trening=trening11, hrac=self.hrac, prisel=True)
+
+        self.assertEqual(Vyuctovani.objects.filter(hrac=self.hrac).count(), 1)
+        self.assertEqual(self.hrac.kredit, Decimal("-5500.00"))
+
+    def test_automatic_billing_credit_limit_after_recovery(self):
+        """Re-trigger after payment brings credit above limit and it drops again."""
+        from core.models import VyuctovaniNastaveni
+
+        nast = VyuctovaniNastaveni.load()
+        nast.auto_rezim = Hrac.RezimVyuctovani.CASTKA
+        nast.auto_limit = Decimal("5000.00")
+        nast.save()
+
+        for i in range(10):
+            trening = Trening.objects.create(
+                trener=self.user,
+                datum=timezone.now() + timedelta(days=i),
+                delka_minut=60,
+                format=Cenik.Format.SOLO_C,
+                kurt=Cenik.Kurt.VENEK,
+            )
+            self._create_dochazka(trening=trening, hrac=self.hrac, prisel=True)
+
+        Transakce.objects.create(
+            hrac=self.hrac,
+            typ=Transakce.Typ.PLATBA,
+            castka=Decimal("5000.00"),
+            popis="Platba",
+        )
+        self.hrac.refresh_from_db()
+        self.assertEqual(self.hrac.kredit, Decimal("0.00"))
+
+        for i in range(10, 20):
+            trening = Trening.objects.create(
+                trener=self.user,
+                datum=timezone.now() + timedelta(days=i),
+                delka_minut=60,
+                format=Cenik.Format.SOLO_C,
+                kurt=Cenik.Kurt.VENEK,
+            )
+            self._create_dochazka(trening=trening, hrac=self.hrac, prisel=True)
+
+        self.assertEqual(Vyuctovani.objects.filter(hrac=self.hrac).count(), 2)
+
+    def test_automatic_billing_custom_email_amount(self):
+        """Configured email amount overrides computed period total."""
+        from core.models import VyuctovaniNastaveni
+
+        nast = VyuctovaniNastaveni.load()
+        nast.auto_rezim = Hrac.RezimVyuctovani.CASTKA
+        nast.auto_limit = Decimal("5000.00")
+        nast.auto_castka_k_uhrade = Decimal("3000.00")
+        nast.save()
+
+        for i in range(10):
+            trening = Trening.objects.create(
+                trener=self.user,
+                datum=timezone.now() + timedelta(days=i),
+                delka_minut=60,
+                format=Cenik.Format.SOLO_C,
+                kurt=Cenik.Kurt.VENEK,
+            )
+            self._create_dochazka(trening=trening, hrac=self.hrac, prisel=True)
+
+        vyuct = Vyuctovani.objects.filter(hrac=self.hrac).first()
+        self.assertIsNotNone(vyuct)
+        self.assertEqual(vyuct.amount_due, Decimal("3000.00"))
+
+    def test_automatic_billing_single_email_on_bulk_trainings(self):
+        """Bulk training import in one transaction sends only one email."""
+        from django.db import transaction
+        from core.models import VyuctovaniNastaveni
+
+        nast = VyuctovaniNastaveni.load()
+        nast.auto_rezim = Hrac.RezimVyuctovani.CASTKA
+        nast.auto_limit = Decimal("5000.00")
+        nast.save()
+
+        self.hrac.email = "test@example.com"
+        self.hrac.save()
+
+        with self.captureOnCommitCallbacks(execute=True):
+            with transaction.atomic():
+                for i in range(12):
+                    trening = Trening.objects.create(
+                        trener=self.user,
+                        datum=timezone.now() + timedelta(days=i),
+                        delka_minut=60,
+                        format=Cenik.Format.SOLO_C,
+                        kurt=Cenik.Kurt.VENEK,
+                    )
+                    Dochazka.objects.create(trening=trening, hrac=self.hrac, prisel=True)
+
+        self.assertEqual(Vyuctovani.objects.filter(hrac=self.hrac).count(), 1)
+
+    def test_automatic_billing_manual_mode_disabled(self):
+        """Manual mode never triggers automatic billing."""
+        from core.models import VyuctovaniNastaveni
+
+        nast = VyuctovaniNastaveni.load()
+        nast.auto_rezim = VyuctovaniNastaveni.AutoRezim.MANUAL
+        nast.save()
+
+        for i in range(12):
+            trening = Trening.objects.create(
+                trener=self.user,
+                datum=timezone.now() + timedelta(days=i),
+                delka_minut=60,
+                format=Cenik.Format.SOLO_C,
+                kurt=Cenik.Kurt.VENEK,
+            )
+            self._create_dochazka(trening=trening, hrac=self.hrac, prisel=True)
+
+        self.assertEqual(Vyuctovani.objects.filter(hrac=self.hrac).count(), 0)
+
+    def test_automatic_billing_period_covers_three_months(self):
+        """Auto billing uses rolling 3-month period, not just since last closure."""
+        from core.models import VyuctovaniNastaveni, _zacatek_obdobi_pro_auto_vyuctovani
+
+        nast = VyuctovaniNastaveni.load()
+        nast.auto_rezim = Hrac.RezimVyuctovani.CASTKA
+        nast.auto_limit = Decimal("5000.00")
+        nast.auto_castka_k_uhrade = Decimal("0")
+        nast.save()
+
+        self.hrac.posledni_vyuctovani_at = timezone.now() - timedelta(hours=2)
+        self.hrac.save()
+
+        old_charge = timezone.now() - timedelta(days=45)
+        Transakce.objects.create(
+            hrac=self.hrac,
+            typ=Transakce.Typ.NAUCTOVANO,
+            castka=Decimal("6500.00"),
+            popis="Starší trénink",
+            vytvoreno=old_charge,
+        )
+
+        self.hrac.spustit_auto_vyuctovani()
+
+        vyuct = Vyuctovani.objects.filter(hrac=self.hrac).order_by("-created_at").first()
+        self.assertIsNotNone(vyuct)
+        expected_from = _zacatek_obdobi_pro_auto_vyuctovani()
+        self.assertEqual(
+            timezone.localtime(vyuct.period_from).date(),
+            timezone.localtime(expected_from).date(),
+        )
+        self.assertEqual(vyuct.charges_total, Decimal("6500.00"))
+
+
+class VyuctovaniNastaveniFormTests(TestCase):
+    def test_form_saves_mesicne_without_castka_fields_in_post(self):
+        from core.forms import VyuctovaniNastaveniForm
+        from core.models import VyuctovaniNastaveni
+
+        nast = VyuctovaniNastaveni.load()
+        nast.auto_rezim = VyuctovaniNastaveni.AutoRezim.CASTKA
+        nast.auto_limit = Decimal("5000")
+        nast.save()
+
+        data = {
+            "auto_rezim": VyuctovaniNastaveni.AutoRezim.MESICNE,
+            "mesicni_den": "5",
+            "auto_posilat_email": "on",
+            "email_variant": nast.email_variant,
+            "ucet_varianta_1": nast.ucet_varianta_1,
+            "ucet_varianta_2": nast.ucet_varianta_2,
+        }
+        form = VyuctovaniNastaveniForm(data, instance=nast)
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+        nast.refresh_from_db()
+        self.assertEqual(nast.auto_rezim, VyuctovaniNastaveni.AutoRezim.MESICNE)
+        self.assertEqual(nast.mesicni_den, 5)
+        self.assertEqual(nast.auto_limit, Decimal("5000.00"))
+
+
+class VyuctovaniDeleteSyncTests(TestCase):
+    def setUp(self):
+        self.hrac = Hrac.objects.create(jmeno="Anna", prijmeni="Šubrtová")
+
+    def test_delete_last_vyuctovani_clears_hrac_closure_state(self):
+        vyuct = Vyuctovani.objects.create(
+            hrac=self.hrac,
+            period_to=timezone.now(),
+            amount_due=Decimal("5000.00"),
+            credit_end=Decimal("-5000.00"),
+            reason="CASTKA",
+        )
+        self.hrac.posledni_vyuctovani_at = vyuct.created_at
+        self.hrac.pocet_treninku_od_vyuctovani = 0
+        self.hrac.save()
+
+        vyuct.delete()
+
+        self.hrac.refresh_from_db()
+        self.assertIsNone(self.hrac.posledni_vyuctovani_at)
+
+    def test_delete_vyuctovani_restores_previous_closure(self):
+        older = Vyuctovani.objects.create(
+            hrac=self.hrac,
+            period_to=timezone.now() - timedelta(days=30),
+            amount_due=Decimal("3000.00"),
+            credit_end=Decimal("-3000.00"),
+            reason="CASTKA",
+        )
+        newer = Vyuctovani.objects.create(
+            hrac=self.hrac,
+            period_to=timezone.now(),
+            amount_due=Decimal("5000.00"),
+            credit_end=Decimal("-5000.00"),
+            reason="CASTKA",
+        )
+        self.hrac.prepocitat_stav_uzaverky()
+
+        newer.delete()
+
+        self.hrac.refresh_from_db()
+        self.assertEqual(self.hrac.posledni_vyuctovani_at, older.created_at)
 
 
 class CoachRateTests(TestCase):
@@ -402,7 +691,7 @@ class CreditCalculationTests(TestCase):
 
     def setUp(self):
         """Set up test data."""
-        self.hrac = Hrac.objects.create(jmeno="Test Player")
+        self.hrac = Hrac.objects.create(jmeno="Test", prijmeni="Player")
 
     def test_credit_with_multiple_transactions(self):
         """Test credit calculation with multiple transactions."""

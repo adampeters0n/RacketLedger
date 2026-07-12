@@ -7,7 +7,7 @@ from django.forms import formset_factory
 from django.forms.models import BaseInlineFormSet
 
 from .admin_utils import trener_label
-from .models import Cenik, Dochazka, Hrac
+from .models import Cenik, CenikFormat, Dochazka, Hrac, TrenerPlatba, VyuctovaniNastaveni
 
 User = get_user_model()
 
@@ -15,9 +15,10 @@ User = get_user_model()
 class HracInfoForm(forms.ModelForm):
     class Meta:
         model = Hrac
-        fields = ["jmeno", "email", "rodina"]
+        fields = ["jmeno", "prijmeni", "email", "rodina"]
         widgets = {
             "jmeno": forms.TextInput(attrs={"class": "vTextField"}),
+            "prijmeni": forms.TextInput(attrs={"class": "vTextField"}),
             "email": forms.EmailInput(attrs={"class": "vTextField"}),
         }
 
@@ -67,7 +68,7 @@ class DochazkaFormSet(BaseInlineFormSet):
                 continue
 
             if hrac in hraci_v_tomto_okne:
-                raise ValidationError(f"Hráč {hrac.jmeno} je v tomto seznamu vybrán dvakrát.")
+                raise ValidationError(f"Hráč {hrac.cele_jmeno} je v tomto seznamu vybrán dvakrát.")
             hraci_v_tomto_okne.append(hrac)
 class TimeDatalistTextInput(forms.TextInput):
     input_type = "text"
@@ -183,9 +184,10 @@ class TrainingSlotForm(forms.Form):
         initial=60,
     )
     format = forms.ChoiceField(
-        label="Formát",
-        choices=[("", "------")] + list(Cenik.Format.choices),
+        label="Typ tréninku",
+        choices=[("", "------")],
         required=False,
+        widget=forms.Select(attrs={"class": "vTextField"}),
     )
     kurt = forms.ChoiceField(
         label="Kurt",
@@ -213,7 +215,7 @@ class TrainingSlotForm(forms.Form):
         empty_label="—— stejný jako nahoře ——",
     )
     hraci = forms.ModelMultipleChoiceField(
-        queryset=Hrac.objects.order_by("jmeno"),
+        queryset=Hrac.objects.order_by("prijmeni", "jmeno"),
         label="Hráči",
         required=False,
         widget=forms.SelectMultiple(
@@ -225,6 +227,10 @@ class TrainingSlotForm(forms.Form):
             }
         ),
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["format"].choices = [("", "------")] + CenikFormat.choices()
 
 
 class TrainingSlotFormSetBase(forms.BaseFormSet):
@@ -240,7 +246,7 @@ class TrainingSlotFormSetBase(forms.BaseFormSet):
             for hrac in hraci:
                 if hrac in seen:
                     raise ValidationError(
-                        f"V tréninku {i + 1} je hráč {getattr(hrac, 'jmeno', '')} vybrán více než jednou. "
+                        f"V tréninku {i + 1} je hráč {getattr(hrac, 'cele_jmeno', '')} vybrán více než jednou. "
                         "Každého hráče vyberte pouze jednou."
                     )
                 seen.add(hrac)
@@ -254,3 +260,93 @@ TrainingSlotFormSet = formset_factory(
     min_num=1,
     validate_min=True,
 )
+
+
+class TrenerPlatbaForm(forms.ModelForm):
+    user = TrenerModelChoiceField(
+        queryset=User.objects.order_by("username"),
+        label="Trenér",
+        empty_label="------",
+    )
+
+    class Meta:
+        model = TrenerPlatba
+        fields = ("user", "castka", "poznamka", "vytvoreno")
+        labels = {
+            "castka": "Částka",
+            "poznamka": "Poznámka",
+            "vytvoreno": "Datum",
+        }
+        widgets = {
+            "castka": forms.NumberInput(attrs={"class": "vTextField", "step": "0.01"}),
+            "poznamka": forms.TextInput(attrs={"class": "vTextField"}),
+        }
+
+
+class VyuctovaniNastaveniForm(forms.ModelForm):
+    aplikovat_na_vsechny = forms.BooleanField(
+        required=False,
+        label="Synchronizovat režim u všech stávajících hráčů",
+        help_text="Přepíše u všech hráčů režim, počet tréninků a limit kreditu podle nastavení výše.",
+    )
+
+    class Meta:
+        model = VyuctovaniNastaveni
+        fields = [
+            "auto_rezim",
+            "auto_limit",
+            "auto_castka_k_uhrade",
+            "auto_pocet_treninku",
+            "mesicni_den",
+            "auto_posilat_email",
+            "email_variant",
+            "ucet_varianta_1",
+            "ucet_varianta_2",
+        ]
+        widgets = {
+            "auto_rezim": forms.RadioSelect,
+            "auto_limit": forms.NumberInput(attrs={"class": "vTextField", "step": "1", "min": "0"}),
+            "auto_castka_k_uhrade": forms.NumberInput(attrs={"class": "vTextField", "step": "1", "min": "0"}),
+            "auto_pocet_treninku": forms.NumberInput(attrs={"class": "vTextField", "min": "1"}),
+            "mesicni_den": forms.NumberInput(attrs={"class": "vTextField", "min": "1", "max": "28"}),
+            "email_variant": forms.Select(attrs={"class": "vTextField"}),
+            "ucet_varianta_1": forms.TextInput(attrs={"class": "vTextField"}),
+            "ucet_varianta_2": forms.TextInput(attrs={"class": "vTextField"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["auto_rezim"].label = "Způsob vyúčtování"
+        for name in ("auto_limit", "auto_castka_k_uhrade", "auto_pocet_treninku", "mesicni_den"):
+            self.fields[name].required = False
+
+    def _preserve_hidden_fields(self, cleaned):
+        """Skrytá pole nejsou v POST – ponechat stávající hodnoty z DB."""
+        if not self.instance.pk:
+            return cleaned
+        for name in ("auto_limit", "auto_castka_k_uhrade", "auto_pocet_treninku", "mesicni_den"):
+            if name not in self.data:
+                cleaned[name] = getattr(self.instance, name)
+        return cleaned
+
+    def clean_mesicni_den(self):
+        den = self.cleaned_data.get("mesicni_den")
+        if den is not None and not (1 <= den <= 28):
+            raise ValidationError("Zadejte den v rozmezí 1–28.")
+        return den
+
+    def clean(self):
+        cleaned = super().clean()
+        cleaned = self._preserve_hidden_fields(cleaned)
+        rezim = cleaned.get("auto_rezim")
+        if rezim == VyuctovaniNastaveni.AutoRezim.MANUAL:
+            return cleaned
+        if rezim == VyuctovaniNastaveni.AutoRezim.CASTKA:
+            limit = cleaned.get("auto_limit")
+            if limit is None or limit <= 0:
+                self.add_error("auto_limit", "Zadejte kladný limit kreditu (částka bez mínusu, např. 5000).")
+        if rezim == VyuctovaniNastaveni.AutoRezim.N_TRENINGU:
+            pocet = cleaned.get("auto_pocet_treninku")
+            if not pocet or pocet < 1:
+                self.add_error("auto_pocet_treninku", "Zadejte počet tréninků alespoň 1.")
+        return cleaned

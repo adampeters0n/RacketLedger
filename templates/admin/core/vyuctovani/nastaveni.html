@@ -1,0 +1,179 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/vyuctovani-nastaveni.css' %}">
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="{% static 'admin/js/vyuctovani-nastaveni.js' %}" defer></script>
+{% endblock %}
+
+{% block content %}
+<div id="content-main" class="vyuct-set dash-wrap">
+  <div class="vyuct-set-header">
+    <div>
+      <h1>Nastavení vyúčtování</h1>
+      <p class="vyuct-set-lead">
+        Zvolte, kdy má systém automaticky vytvořit vyúčtování a poslat e-mail,
+        nebo vypněte automatiku a vyúčtovávejte jen ručně z profilu hráče.
+        Aktuálně: <strong>{{ aktualni_rezim }}</strong> — {{ aktualni_popis }}.
+      </p>
+    </div>
+    <a href="{{ changelist_url }}" class="button">← Zpět na vyúčtování</a>
+  </div>
+
+  <form method="post" novalidate class="vyuct-set-form">
+    {% csrf_token %}
+
+    {% if form.errors %}
+    <div class="errornote vyuct-set-errors">
+      <p><strong>Nastavení nelze uložit.</strong> Opravte prosím zvýrazněná pole níže.</p>
+      {% if form.non_field_errors %}
+      <ul>{% for err in form.non_field_errors %}<li>{{ err }}</li>{% endfor %}</ul>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <section class="card vyuct-set-card">
+      <h3>Způsob vyúčtování</h3>
+      <div class="inner">
+        <fieldset class="vyuct-rezim-fieldset">
+          <legend class="visually-hidden">{{ form.auto_rezim.label }}</legend>
+          {{ form.auto_rezim.errors }}
+          <div class="vyuct-rezim-list" role="radiogroup" aria-label="{{ form.auto_rezim.label }}">
+            {% for radio in form.auto_rezim %}
+            <div class="vyuct-rezim-option">
+              <label class="vyuct-rezim-label" for="{{ radio.id_for_label }}">
+                {{ radio.tag }}
+                <span class="vyuct-rezim-body">
+                  <span class="vyuct-rezim-text">{{ radio.choice_label }}</span>
+                  {% if radio.data.value == "MANUAL" %}
+                  <span class="vyuct-rezim-hint">Systém neposílá automatická vyúčtování. Vyúčtování vytvoříte ručně v profilu hráče nebo u rodiny.</span>
+                  {% elif radio.data.value == "CASTKA" %}
+                  <span class="vyuct-rezim-hint">Po tréninku zkontroluje celkový kredit. Když klesne na zadanou částku (např. −5000 Kč), odešle e-mail s vyúčtováním.</span>
+                  {% elif radio.data.value == "MESICNE" %}
+                  <span class="vyuct-rezim-hint">Od zadaného dne v měsíci uzavře při dalším tréninku období a pošle vyúčtování za uplynulý měsíc.</span>
+                  {% elif radio.data.value == "N_TRENINGU" %}
+                  <span class="vyuct-rezim-hint">Po zadaném počtu odehraných tréninků od poslední uzávěrky automaticky vytvoří vyúčtování.</span>
+                  {% endif %}
+                </span>
+              </label>
+            </div>
+            {% endfor %}
+          </div>
+        </fieldset>
+
+        <div class="vyuct-set-fields vyuct-rezim-params">
+          <div class="vyuct-field" data-rezim-field="CASTKA">
+            <label for="{{ form.auto_limit.id_for_label }}">{{ form.auto_limit.label }}</label>
+            {{ form.auto_limit }}
+            {% if form.auto_limit.help_text %}<p class="help">{{ form.auto_limit.help_text }}</p>{% endif %}
+            {{ form.auto_limit.errors }}
+          </div>
+          <div class="vyuct-field" data-rezim-field="CASTKA">
+            <label for="{{ form.auto_castka_k_uhrade.id_for_label }}">{{ form.auto_castka_k_uhrade.label }}</label>
+            {{ form.auto_castka_k_uhrade }}
+            {% if form.auto_castka_k_uhrade.help_text %}<p class="help">{{ form.auto_castka_k_uhrade.help_text }}</p>{% endif %}
+            {{ form.auto_castka_k_uhrade.errors }}
+          </div>
+          <div class="vyuct-field" data-rezim-field="N_TRENINGU">
+            <label for="{{ form.auto_pocet_treninku.id_for_label }}">{{ form.auto_pocet_treninku.label }}</label>
+            {{ form.auto_pocet_treninku }}
+            {% if form.auto_pocet_treninku.help_text %}<p class="help">{{ form.auto_pocet_treninku.help_text }}</p>{% endif %}
+            {{ form.auto_pocet_treninku.errors }}
+          </div>
+          <div class="vyuct-field" data-rezim-field="MESICNE">
+            <label for="{{ form.mesicni_den.id_for_label }}">{{ form.mesicni_den.label }}</label>
+            {{ form.mesicni_den }}
+            {% if form.mesicni_den.help_text %}<p class="help">{{ form.mesicni_den.help_text }}</p>{% endif %}
+            {{ form.mesicni_den.errors }}
+            <p class="help">Po zadaném dni v měsíci se při dalším tréninku uzavře období od poslední uzávěrky.</p>
+          </div>
+        </div>
+
+        <div class="vyuct-field vyuct-field-check" data-rezim-auto-only>
+          <label for="{{ form.auto_posilat_email.id_for_label }}">
+            {{ form.auto_posilat_email }} {{ form.auto_posilat_email.label }}
+          </label>
+        </div>
+
+        <div class="vyuct-field vyuct-field-check" data-rezim-auto-only>
+          <label for="{{ form.aplikovat_na_vsechny.id_for_label }}">
+            {{ form.aplikovat_na_vsechny }} {{ form.aplikovat_na_vsechny.label }}
+          </label>
+          {% if form.aplikovat_na_vsechny.help_text %}<p class="help">{{ form.aplikovat_na_vsechny.help_text }}</p>{% endif %}
+        </div>
+      </div>
+    </section>
+
+    <section class="card vyuct-set-card">
+      <h3>E-mail a platební údaje</h3>
+      <div class="inner">
+        <p class="vyuct-set-intro">
+          Výchozí varianta účtu v automatických e-mailech. Ruční vyúčtování z profilu hráče může zvolit jinou variantu.
+        </p>
+        <div class="vyuct-set-fields vyuct-set-fields-2col">
+          <div class="vyuct-field">
+            <label for="{{ form.email_variant.id_for_label }}">{{ form.email_variant.label }}</label>
+            {{ form.email_variant }}
+          </div>
+          <div class="vyuct-field">
+            <label for="{{ form.ucet_varianta_1.id_for_label }}">{{ form.ucet_varianta_1.label }}</label>
+            {{ form.ucet_varianta_1 }}
+          </div>
+          <div class="vyuct-field vyuct-field-full">
+            <label for="{{ form.ucet_varianta_2.id_for_label }}">{{ form.ucet_varianta_2.label }}</label>
+            {{ form.ucet_varianta_2 }}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card vyuct-set-card">
+      <h3>Přehled hráčů</h3>
+      <div class="inner">
+        <p class="vyuct-set-intro">
+          Všichni hráči používají stejný globální režim výše. Tabulka ukazuje stav od poslední uzávěrky.
+          <a href="{{ hraci_url }}">Otevřít všechny hráče →</a>
+        </p>
+        {% if hraci_prehled %}
+        <table class="list vyuct-set-table">
+          <thead>
+            <tr>
+              <th>Hráč</th>
+              <th>Poslední uzávěrka</th>
+              <th>Tréninků od uzávěrky</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in hraci_prehled %}
+            <tr>
+              <td><a href="{{ row.url }}">{{ row.jmeno }}</a></td>
+              <td>{{ row.posledni }}</td>
+              <td>{{ row.pocet_treninku }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% if hraci_celkem > 20 %}
+        <p class="help muted">Zobrazeno 20 z {{ hraci_celkem }} hráčů.</p>
+        {% endif %}
+        {% else %}
+        <p class="help muted">Zatím žádní hráči.</p>
+        {% endif %}
+      </div>
+    </section>
+
+    <div class="vyuct-set-actions card">
+      <div class="inner">
+        <button type="submit" class="button default">Uložit nastavení</button>
+        <a href="{{ changelist_url }}" class="button secondary">Zrušit</a>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -2,15 +2,51 @@
     --panel:#111827; --panel-2:#1f2937; --border:#334155; --text:#e5e7eb;
   }
   .actions-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:12px 0; }
-  .ledger-card{ background:var(--panel); border:0px solid var(--border); border-radius:12px; padding:12px; margin-top:16px; }
-  .ledger-title{ margin:0 0 8px; color:var(--text); font-size:16px; font-weight:600; }
-  .ledger-wrap{ overflow-y:auto; overflow-x:hidden; max-height:480px; }
+  .ledger-card {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    background: #fff;
+    border: 1px solid var(--line, #e2e5ea);
+    border-radius: 0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    padding: 14px 16px;
+    margin-top: 16px;
+  }
 
-  table.ledger{ width:100%; border-collapse:separate; border-spacing:0; color:var(--text); font-size:14px; table-layout:fixed; }
+  .ledger-title {
+    margin: 0 0 10px;
+    color: #111827;
+    font-size: 16px;
+    font-weight: 700;
+  }
 
-  table.ledger thead th{
-    position:sticky; top:0; background:var(--panel-2); color:var(--text);
-    padding:10px 8px; border-bottom:1px solid var(--border); white-space:nowrap; text-align:center; z-index:1;
+  .ledger-wrap {
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 480px;
+  }
+
+  table.ledger {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    color: #1f2937;
+    font-size: 14px;
+    table-layout: fixed;
+    background: #fff;
+  }
+
+  table.ledger thead th {
+    position: sticky;
+    top: 0;
+    background: var(--amber-100, #fff7d6);
+    color: #1f2937;
+    padding: 10px 8px;
+    border-bottom: 2px solid var(--amber, #080704);
+    white-space: nowrap;
+    text-align: center;
+    z-index: 1;
   }
 
   /* 10 sloupců: Datum, Čas, Hráč, Hodiny, Skupina, Sezóna, Cena, Zaplaceno, Kredit, Akce */
@@ -26,10 +62,12 @@
   table.ledger thead th:nth-child(10){ width:8%; }
 
   table.ledger tbody td{
-    padding:8px; border-top:1px solid var(--border); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    padding:8px; border-top:1px solid var(--line, #e2e5ea); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    color: #1f2937;
   }
-  table.ledger tbody tr:nth-child(even){ background:rgba(148,163,184,0.06); }
-  table.ledger tbody tr:hover{ background:rgba(148,163,184,0.12); }
+  table.ledger tbody tr:nth-child(odd){ background:#fff; }
+  table.ledger tbody tr:nth-child(even){ background:#fefefe; }
+  table.ledger tbody tr:hover{ background:var(--brand-100, #fff1de); }
 
   tr.typ-nauctovano { background:rgba(239,68,68,0.12); }
   tr.typ-platba, tr.typ-vratka { background:rgba(34,197,94,0.12); }
@@ -49,12 +87,6 @@
   table.ledger tbody td:nth-child(10){ white-space:nowrap; overflow:visible; text-overflow:clip; }
   table.ledger a.deletelink{ color:#f87171; text-decoration:none; font-weight:600; font-size:13px; }
   table.ledger a.deletelink:hover{ text-decoration:underline; }
-
-  .player-summary{ margin:12px 0 8px; display:flex; gap:12px; flex-wrap:wrap;
-    background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; }
-  .player-summary .ps-item{ display:flex; gap:6px; align-items:baseline; }
-  .player-summary .ps-label{ color:#374151; font-weight:600; }
-  .player-summary .ps-value{ color:#111827; font-weight:700; }
 
   table.ledger tfoot tr.totals td,
   table.ledger tfoot tr.totals th{

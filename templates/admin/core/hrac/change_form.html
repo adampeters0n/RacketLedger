@@ -21,33 +21,47 @@
 
   {# Panel s vyúčtováním – využívá hlavní <form>, jen přesměruje odeslání na vlastní view #}
   {% if original and original.pk %}
-  <div class="actions-row">
-    <label for="id_vyuct_from">Období</label>
-    <input type="date" name="_vyuct_from" id="id_vyuct_from">
-    <span>–</span>
-    <input type="date" name="_vyuct_to" id="id_vyuct_to">
+  <div class="vyuct-panel">
+    <h2 class="vyuct-panel__title">Vygenerovat vyúčtování</h2>
 
-    <label for="id_castka_k_uhrazeni" style="margin-left:10px;">Částka k úhradě</label>
-    <input type="number" name="_castka_k_uhrazeni" id="id_castka_k_uhrazeni"
-           step="1" min="0" placeholder="např. 5000" style="width:120px;">
-    
-    <label for="id_email_variant" style="margin-left:10px;">Varianta e-mailu:</label>
-    <select name="_email_variant" id="id_email_variant" style="padding: 6px; border-radius: 6px;">
-        <option value="1" selected>Účet 1 AJ Sport</option>
-        <option value="2">Účet 2 Káťa</option>
-    </select>
-    
-    <button type="submit"
-            class="button default"
-            formaction="{% url 'admin:core_hrac_vyuctovat' original.pk %}"
-            formmethod="post"
-            formnovalidate>
-      Vygenerovat vyúčtování teď
-    </button>
+    <div class="vyuct-panel__grid">
+      <div class="vyuct-field vyuct-field--period">
+        <label for="id_vyuct_from">Období</label>
+        <div class="vyuct-period">
+          <input type="date" name="_vyuct_from" id="id_vyuct_from">
+          <span class="vyuct-period__sep" aria-hidden="true">–</span>
+          <input type="date" name="_vyuct_to" id="id_vyuct_to">
+        </div>
+      </div>
 
-    {% if vyuctovani_list_url %}
-      <a href="{{ vyuctovani_list_url }}" class="button">Otevřít vyúčtování hráče</a>
-    {% endif %}
+      <div class="vyuct-field">
+        <label for="id_castka_k_uhrazeni">Částka k úhradě</label>
+        <input type="number" name="_castka_k_uhrazeni" id="id_castka_k_uhrazeni"
+               step="1" min="0" placeholder="např. 5000">
+      </div>
+
+      <div class="vyuct-field">
+        <label for="id_email_variant">Varianta e-mailu</label>
+        <select name="_email_variant" id="id_email_variant">
+          <option value="1" selected>Účet 1 AJ Sport</option>
+          <option value="2">Účet 2 Káťa</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="vyuct-panel__actions">
+      <button type="submit"
+              class="button default"
+              formaction="{% url 'admin:core_hrac_vyuctovat' original.pk %}"
+              formmethod="post"
+              formnovalidate>
+        Vygenerovat vyúčtování
+      </button>
+
+      {% if vyuctovani_list_url %}
+        <a href="{{ vyuctovani_list_url }}" class="button">Otevřít vyúčtování hráče</a>
+      {% endif %}
+    </div>
   </div>
   {% endif %}
 {% endblock %}
@@ -119,10 +133,19 @@
   </div>
 
   {% if player_summary %}
-  <div class="player-summary">
-    <div class="ps-item"><span class="ps-label">Odehrané tréninky</span><span class="ps-value">{{ player_summary.trainings_count }}</span></div>
-    <div class="ps-item"><span class="ps-label">Součet cen (tréninky)</span><span class="ps-value">{{ player_summary.trainings_sum }}</span></div>
-    <div class="ps-item"><span class="ps-label">Součet zaplaceno</span><span class="ps-value">{{ player_summary.payments_sum }}</span></div>
+  <div class="player-summary" aria-label="Souhrn hráče">
+    <div class="ps-item">
+      <span class="ps-label">Odehrané tréninky</span>
+      <span class="ps-value">{{ player_summary.trainings_count }}</span>
+    </div>
+    <div class="ps-item">
+      <span class="ps-label">Součet cen (tréninky)</span>
+      <span class="ps-value">{{ player_summary.trainings_sum }}</span>
+    </div>
+    <div class="ps-item">
+      <span class="ps-label">Součet zaplaceno</span>
+      <span class="ps-value">{{ player_summary.payments_sum }}</span>
+    </div>
     <div class="ps-item ps-credit {% if player_summary.credit_raw >= 0 %}is-positive{% else %}is-negative{% endif %}">
       <span class="ps-label">Aktuální kredit</span>
       <span class="ps-value">{{ player_summary.credit }}</span>

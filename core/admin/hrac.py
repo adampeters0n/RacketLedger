@@ -21,9 +21,10 @@ logger = logging.getLogger(__name__)
 
 @admin.register(Hrac)
 class HracAdmin(admin.ModelAdmin):
-    list_display = ("jmeno", "email", "kredit_display", "rodina_link")
-    search_fields = ("jmeno",)
-    fields = ("jmeno", "email", "rodina")
+    list_display = ("jmeno_display", "email", "kredit_display", "rodina_link")
+    list_display_links = ("jmeno_display",)
+    search_fields = ("jmeno", "prijmeni", "email")
+    fields = ("jmeno", "prijmeni", "email", "rodina")
     
     actions = ["akce_vygenerovat_vyuctovani", "akce_pridat_platbu"]
 
@@ -32,7 +33,14 @@ class HracAdmin(admin.ModelAdmin):
     
     list_per_page = 10_000
     list_max_show_all = 10_000
-    
+
+    def get_sortable_by(self, request):
+        return ("jmeno_display", "kredit_display")
+
+    @admin.display(description="Jméno", ordering="prijmeni")
+    def jmeno_display(self, obj):
+        return " ".join(p for p in (obj.prijmeni.strip(), obj.jmeno.strip()) if p) or "—"
+
     def get_queryset(self, request):
         """Přidá anotaci pro kredit, aby podle ní šlo řadit."""
         queryset = super().get_queryset(request)
@@ -79,7 +87,7 @@ class HracAdmin(admin.ModelAdmin):
             form = HracInfoForm(instance=hrac)
         ctx = dict(
             self.admin_site.each_context(request),
-            title=f"Změna informací – {hrac.jmeno}",
+            title=f"Změna informací – {hrac.cele_jmeno}",
             opts=self.model._meta,
             original=hrac,
             form=form,
@@ -123,7 +131,7 @@ class HracAdmin(admin.ModelAdmin):
 
         logger.info(
             ">>> HRAC_VYUCTOVAT: start hrac_id=%s jmeno=%s email=%s override_amount=%s vfrom=%s vto=%s variant=%s",
-            hrac.pk, hrac.jmeno, hrac.email, override_amount, vfrom, vto, email_variant
+            hrac.pk, hrac.cele_jmeno, hrac.email, override_amount, vfrom, vto, email_variant
         )
 
         vyuct = hrac.vygeneruj_vyuctovani(

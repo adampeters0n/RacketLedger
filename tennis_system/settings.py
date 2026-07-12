@@ -210,6 +210,11 @@ else:
     SERVER_EMAIL = "kptenis@volny.cz"
     EMAIL_SUBJECT_PREFIX = "[Tenis Čimice] "
 
+# Automatické vyúčtování – po naúčtování tréninku, když dluh od poslední uzávěrky
+# dosáhne této částky (Kč), systém vytvoří vyúčtování a pošle e-mail.
+VYUCTOVANI_AUTO_LIMIT = os.getenv("VYUCTOVANI_AUTO_LIMIT", "5000")
+VYUCTOVANI_EMAIL_VARIANT = os.getenv("VYUCTOVANI_EMAIL_VARIANT", "1")
+
 
 # =====================================
 # PRODUKČNÍ BEZPEČNOST (když DEBUG=False)

@@ -164,9 +164,9 @@
             <div class="add-day-hraci-rows" data-slot="{{ slot.index }}" data-multiselect-id="id_slots-{{ slot.index }}-hraci">
               {% if copy_loaded and slot.hraci_initial %}
                 {% for h in slot.hraci_initial %}
-                <div class="add-day-hraci-row" data-id="{{ h.pk }}" data-jmeno="{{ h.jmeno }}">
+                <div class="add-day-hraci-row" data-id="{{ h.pk }}" data-jmeno="{{ h.cele_jmeno }}">
                   <div class="add-day-hraci-search-wrap">
-                    <input type="text" class="add-day-hraci-search" value="{{ h.jmeno }}" placeholder="Vyhledat hráče…" autocomplete="off" aria-label="Vyhledat hráče">
+                    <input type="text" class="add-day-hraci-search" value="{{ h.cele_jmeno }}" placeholder="Vyhledat hráče…" autocomplete="off" aria-label="Vyhledat hráče">
                     <ul class="add-day-hraci-dropdown" role="listbox" aria-hidden="true"></ul>
                   </div>
                   <button type="button" class="btn-remove" aria-label="Odstranit">×</button>
@@ -186,7 +186,7 @@
               <button type="button" class="add-day-btn-pridat-hrace" data-slot="{{ slot.index }}">Přidat Hráče</button>
             </div>
           </div>
-          <script type="application/json" class="add-day-players-json" data-slot="{{ slot.index }}">[{% for h in form.fields.hraci.queryset %}{"id":"{{ h.pk }}","jmeno":"{{ h.jmeno|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
+          <script type="application/json" class="add-day-players-json" data-slot="{{ slot.index }}">[{% for h in form.fields.hraci.queryset %}{"id":"{{ h.pk }}","jmeno":"{{ h.cele_jmeno|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
           {% if slot.players_json %}
           <script type="application/json" class="add-day-initial-hraci" data-slot="{{ slot.index }}">{{ slot.players_json|safe }}</script>
           {% endif %}
@@ -196,7 +196,7 @@
               name="slots-{{ slot.index }}-hraci"
               id="id_slots-{{ slot.index }}-hraci"
               style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;"
-            >{% if slot.hraci_initial %}{% for h in slot.hraci_initial %}<option value="{{ h.pk }}" selected>{{ h.jmeno }}</option>{% endfor %}{% endif %}</select>
+            >{% if slot.hraci_initial %}{% for h in slot.hraci_initial %}<option value="{{ h.pk }}" selected>{{ h.cele_jmeno }}</option>{% endfor %}{% endif %}</select>
           </div>
           {% if form.hraci.errors %}<ul class="errorlist">{{ form.hraci.errors }}</ul>{% endif %}
         </div>

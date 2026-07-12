@@ -2,7 +2,12 @@
 from django.contrib import admin
 from django.urls import path
 
-from .admin_views import admin_analytika_view, admin_dashboard_view
+from .admin.changelist import patch_admin_single_column_sorting
+from .admin_views import (
+    admin_analytika_index_view,
+    admin_analytika_view,
+    admin_dashboard_view,
+)
 
 
 def _treneri_urls_for_site(site):
@@ -28,13 +33,19 @@ def _treneri_urls_for_site(site):
 
 def setup_admin_site():
     """Patch admin.site URLs and set branding."""
+    patch_admin_single_column_sorting()
     _original_get_urls = admin.site.get_urls
 
     def _new_get_urls():
         urls = _original_get_urls()
         extra = [
             path("", admin.site.admin_view(admin_dashboard_view), name="index"),
-            path("analytika/", admin.site.admin_view(admin_analytika_view), name="analytika"),
+            path("analytika/", admin.site.admin_view(admin_analytika_index_view), name="analytika"),
+            path(
+                "analytika/<slug:section>/",
+                admin.site.admin_view(admin_analytika_view),
+                name="analytika_section",
+            ),
         ]
         try:
             extra += _treneri_urls_for_site(admin.site)

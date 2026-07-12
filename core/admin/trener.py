@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from django.contrib import admin
 
+from ..forms import TrenerPlatbaForm
 from ..models import TrenerPlatba, TrenerProfil, TrenerSazba
 
 
@@ -30,6 +31,7 @@ class TrenerSazbaAdmin(admin.ModelAdmin):
 
 @admin.register(TrenerPlatba)
 class TrenerPlatbaAdmin(admin.ModelAdmin):
+    form = TrenerPlatbaForm
     list_display = ("vytvoreno", "uzivatel", "castka", "poznamka")
     list_filter = ("user", "vytvoreno")
     search_fields = ("user__username", "user__first_name", "user__last_name", "poznamka")

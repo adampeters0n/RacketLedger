@@ -73,54 +73,132 @@
   .sched-day-body::before{
     content:""; position:absolute; inset:0; background:
       repeating-linear-gradient(to bottom,
-        transparent 0, transparent calc(var(--hour-h) - 1px),
-        rgba(229,231,235,.9) calc(var(--hour-h) - 1px), rgba(229,231,235,.9) var(--hour-h)
+        transparent 0,
+        transparent calc(var(--hour-h) / 2 - 1px),
+        rgba(229,231,235,.35) calc(var(--hour-h) / 2 - 1px),
+        rgba(229,231,235,.35) calc(var(--hour-h) / 2),
+        transparent calc(var(--hour-h) / 2),
+        transparent calc(var(--hour-h) - 1px),
+        rgba(229,231,235,.9) calc(var(--hour-h) - 1px),
+        rgba(229,231,235,.9) var(--hour-h)
       );
     pointer-events:none;
   }
 
-  /* Základ eventu (styly společné pro oba režimy) – hranaté bubliny */
+  /* Základ eventu – pozice podle skutečného času (minuty), ne jen celých hodin */
   .ev{
     position:absolute; box-sizing:border-box;
     background:var(--brand-weak);
     border:1px solid var(--brand);
-    border-radius:0;
+    border-radius:4px;
     padding:4px 6px;
     color:#7c2d12;
-    box-shadow:0 6px 16px rgba(0,0,0,.06);
+    box-shadow:0 4px 12px rgba(0,0,0,.06);
     overflow:hidden;
-  }
-  .ev .ev-title{ font-weight:700; font-size:12px; line-height:1.15; color:inherit; }
-  .ev .ev-sub{ font-size:11px; line-height:1.1; color:inherit; opacity:.9; }
-  .ev:hover{ filter:brightness(.98); }
-
-  /* === TÝDEN (stack POD SEBE uvnitř stejného časového slotu) === */
-  .is-week .ev{
-    left:8px; right:8px;
-    /* výpočet výšky každého „pruhu“ ve shluku */
-    --slot-h: calc( var(--dur, 60) * (var(--hour-h) / 60) );
-    --lanes-safe: var(--lanes, 1);
-    --lane-h: calc( (var(--slot-h) - ((var(--lanes-safe) - 1) * var(--stack-gap))) / var(--lanes-safe) );
-
-    top:    calc( (var(--off) * (var(--hour-h) / 60)) + (var(--lane, 0) * (var(--lane-h) + var(--stack-gap))) );
-    height: var(--lane-h);
-    min-height: 20px;
-  }
-
-  /* === DEN (side-by-side VEDLE SEBE) === */
-  .is-day .ev{
-    /* plná výška slotu */
-    --slot-h: calc( var(--dur, 60) * (var(--hour-h) / 60) );
-    --lanes-safe: var(--lanes, 1);
-    /* šířka jednoho sloupce (minus 8px+8px vnitřní okraje a mezery) */
-    --lane-w: calc( (100% - 16px - ((var(--lanes-safe) - 1) * var(--stack-gap))) / var(--lanes-safe) );
-
-    top:    calc( var(--off) * (var(--hour-h) / 60) );
-    height: var(--slot-h);
-
-    left:  calc( 8px + (var(--lane, 0) * (var(--lane-w) + var(--stack-gap))) );
+    container-type: inline-size;
+    container-name: ev;
+    --slot-h: calc(var(--dur, 60) * (var(--hour-h) / 60));
+    --lanes-safe: max(var(--lanes, 1), 1);
+    --lane-w: calc((100% - 16px - ((var(--lanes-safe) - 1) * var(--stack-gap))) / var(--lanes-safe));
+    top: calc(var(--off) * (var(--hour-h) / 60));
+    height: max(var(--slot-h), 24px);
+    min-height: 24px;
+    left: calc(8px + (var(--lane, 0) * (var(--lane-w) + var(--stack-gap))));
     width: var(--lane-w);
-    right: auto;           /* přepíšeme nastavení z weekly varianty */
+    right: auto;
+    --ev-title-size: 12px;
+    --ev-sub-size: 10px;
+    --ev-pad-y: 4px;
+    --ev-pad-x: 6px;
+    padding: var(--ev-pad-y) var(--ev-pad-x);
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+  }
+  .ev-names{
+    flex:1 1 auto;
+    min-height:0;
+    overflow-y:auto;
+    overflow-x:hidden;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(0,0,0,.15) transparent;
+  }
+  .ev-names::-webkit-scrollbar{ width:3px; }
+  .ev-names::-webkit-scrollbar-thumb{ background:rgba(0,0,0,.15); border-radius:999px; }
+  .ev-name{
+    display:block;
+    font-weight:700;
+    font-size:var(--ev-title-size);
+    line-height:1.12;
+    color:inherit;
+    overflow-wrap:anywhere;
+    word-break:break-word;
+    hyphens:auto;
+  }
+  .ev .ev-sub{
+    flex-shrink:0;
+    font-size:var(--ev-sub-size);
+    line-height:1.1;
+    color:inherit;
+    opacity:.85;
+    font-weight:600;
+    letter-spacing:.01em;
+    overflow-wrap:anywhere;
+    word-break:break-word;
+  }
+  .ev:hover{ filter:brightness(.98); z-index:2; }
+
+  /* Méně místa při souběhu 2+ tréninků ve stejném čase */
+  .ev--nlanes-2{
+    --ev-title-size: 10px;
+    --ev-sub-size: 8px;
+    --ev-pad-y: 3px;
+    --ev-pad-x: 4px;
+  }
+
+  .ev--nlanes-3{
+    --ev-title-size: 9px;
+    --ev-sub-size: 7px;
+    --ev-pad-y: 2px;
+    --ev-pad-x: 3px;
+  }
+  .ev--nlanes-3 .ev-name{ line-height:1.08; }
+
+  .ev--nlanes-4,
+  .ev--nlanes-5,
+  .ev--nlanes-6{
+    --ev-title-size: 8px;
+    --ev-sub-size: 7px;
+    --ev-pad-y: 2px;
+    --ev-pad-x: 2px;
+  }
+  .ev--nlanes-4 .ev-name,
+  .ev--nlanes-5 .ev-name,
+  .ev--nlanes-6 .ev-name{ line-height:1.05; }
+
+  /* Více hráčů v jednom tréninku – ještě menší písmo, aby se vešli všichni */
+  .ev--players-3 .ev-name { font-size: min(10px, var(--ev-title-size)); }
+  .ev--players-4 .ev-name { font-size: min(9px, var(--ev-title-size)); }
+  .ev--players-5 .ev-name,
+  .ev--players-6 .ev-name { font-size: min(8px, var(--ev-title-size)); }
+
+  .ev--nlanes-3.ev--players-3 .ev-name,
+  .ev--nlanes-3.ev--players-4 .ev-name { font-size: 8px; }
+  .ev--nlanes-3.ev--players-3 .ev-sub,
+  .ev--nlanes-3.ev--players-4 .ev-sub { font-size: 7px; }
+  .ev--nlanes-3.ev--players-5 .ev-name,
+  .ev--nlanes-3.ev--players-6 .ev-name { font-size: 7px; }
+  .ev--nlanes-3.ev--players-5 .ev-sub,
+  .ev--nlanes-3.ev--players-6 .ev-sub { font-size: 6px; }
+
+  /* Jemné doladění podle skutečné šířky bloku */
+  @container ev (max-width: 72px){
+    .ev-name{ font-size: min(var(--ev-title-size), 9px); }
+    .ev-sub{ font-size: min(var(--ev-sub-size), 7px); }
+  }
+  @container ev (max-width: 52px){
+    .ev-name{ font-size: min(var(--ev-title-size), 8px); }
+    .ev-sub{ font-size: min(var(--ev-sub-size), 6px); }
   }
 
   /* === Barevné varianty podle formátu (stejné barvy jako legenda) ===
@@ -135,8 +213,9 @@
   .ev[class*="ev--skupina"],
   .ev[class*="ev--skup"],
   .ev[class*="ev--petice"],
-  .ev[class*="ev--kurt"],
   .ev[class*="ev--sobota"]      { background:#ccfbf1; border-color:#14b8a6; color:#115e59; }
+  .ev.ev--kurt-tre,
+  .ev[class*="ev--kurt-rezervace"] { background:#ffe4e6; border-color:#e11d48; color:#9f1239; }
 
   /* legenda – barvy shodné s událostmi v kalendáři */
   .legend{ margin-top:12px; color:var(--muted); font-size:13px; display:flex; gap:18px; flex-wrap:wrap; align-items:center; }
@@ -147,3 +226,4 @@
   .chip--trojice  { background:#ede9fe; border-color:#8b5cf6; }
   .chip--ctverice { background:#dcfce7; border-color:#22c55e; }
   .chip--skupina  { background:#ccfbf1; border-color:#14b8a6; }
+  .chip--rezervace { background:#ffe4e6; border-color:#e11d48; }

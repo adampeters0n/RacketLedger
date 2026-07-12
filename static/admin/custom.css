@@ -1127,6 +1127,12 @@ body.app-core.model-hrac.change-form .module.aligned .form-row > div,
 #content-main:has(form[action*="core/hrac/"]) .module.aligned .form-row > div{
   padding: 6px 0 6px 12px !important;
 }
+body.app-core.model-hrac.change-form .vyuct-panel,
+#content-main:has(form[action*="core/hrac/"]) .vyuct-panel{
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+  border-radius: 0 !important;
+}
 body.app-core.model-hrac.change-form .actions-row,
 #content-main:has(form[action*="core/hrac/"]) .actions-row{
   padding-left: 0 !important;
@@ -1179,6 +1185,11 @@ body.app-core.model-hrac.change-form .aligned td.readonly div,
 body.app-core.model-hrac.change-form .module input[type="submit"],
 body.app-core.model-hrac.change-form .module button,
 body.app-core.model-hrac.change-form .module .button,
+body.app-core.model-hrac.change-form .vyuct-panel input,
+body.app-core.model-hrac.change-form .vyuct-panel select,
+body.app-core.model-hrac.change-form .vyuct-panel button,
+body.app-core.model-hrac.change-form .vyuct-panel .button,
+body.app-core.model-hrac.change-form .vyuct-panel a.button,
 body.app-core.model-hrac.change-form .actions-row input,
 body.app-core.model-hrac.change-form .actions-row button,
 body.app-core.model-hrac.change-form .actions-row .button,
@@ -1186,6 +1197,11 @@ body.app-core.model-hrac.change-form .actions-row a.button,
 #content-main:has(form[action*="core/hrac/"]) .module input[type="submit"],
 #content-main:has(form[action*="core/hrac/"]) .module button,
 #content-main:has(form[action*="core/hrac/"]) .module .button,
+#content-main:has(form[action*="core/hrac/"]) .vyuct-panel input,
+#content-main:has(form[action*="core/hrac/"]) .vyuct-panel select,
+#content-main:has(form[action*="core/hrac/"]) .vyuct-panel button,
+#content-main:has(form[action*="core/hrac/"]) .vyuct-panel .button,
+#content-main:has(form[action*="core/hrac/"]) .vyuct-panel a.button,
 #content-main:has(form[action*="core/hrac/"]) .actions-row input,
 #content-main:has(form[action*="core/hrac/"]) .actions-row button,
 #content-main:has(form[action*="core/hrac/"]) .actions-row .button,
@@ -1257,6 +1273,11 @@ body.app-core.model-hrac.change-form .actions-row a.button,
   body.app-core.model-hrac.change-form .module input[type="submit"],
   body.app-core.model-hrac.change-form .module button,
   body.app-core.model-hrac.change-form .module .button,
+  body.app-core.model-hrac.change-form .vyuct-panel input,
+  body.app-core.model-hrac.change-form .vyuct-panel select,
+  body.app-core.model-hrac.change-form .vyuct-panel button,
+  body.app-core.model-hrac.change-form .vyuct-panel .button,
+  body.app-core.model-hrac.change-form .vyuct-panel a.button,
   body.app-core.model-hrac.change-form .actions-row input,
   body.app-core.model-hrac.change-form .actions-row button,
   body.app-core.model-hrac.change-form .actions-row .button,
@@ -1264,6 +1285,11 @@ body.app-core.model-hrac.change-form .actions-row a.button,
   #content-main:has(form[action*="core/hrac/"]) .module input[type="submit"],
   #content-main:has(form[action*="core/hrac/"]) .module button,
   #content-main:has(form[action*="core/hrac/"]) .module .button,
+  #content-main:has(form[action*="core/hrac/"]) .vyuct-panel input,
+  #content-main:has(form[action*="core/hrac/"]) .vyuct-panel select,
+  #content-main:has(form[action*="core/hrac/"]) .vyuct-panel button,
+  #content-main:has(form[action*="core/hrac/"]) .vyuct-panel .button,
+  #content-main:has(form[action*="core/hrac/"]) .vyuct-panel a.button,
   #content-main:has(form[action*="core/hrac/"]) .actions-row input,
   #content-main:has(form[action*="core/hrac/"]) .actions-row button,
   #content-main:has(form[action*="core/hrac/"]) .actions-row .button,
@@ -1325,14 +1351,16 @@ body.app-core.add-form .module .button{
   box-sizing: border-box !important;
 }
 
-/* Historie tréninků a plateb (hráč) – horizontální scroll tabulky, filtr uvnitř bloku */
+/* Historie tréninků a plateb (hráč) – hranatý bílý box jako ostatní tabulky */
 .ledger-card{
   max-width: 100% !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,.03) !important;
+  padding: 14px 16px !important;
 }
 .ledger-title,
 .ledger-card .ledger-title{
@@ -1495,6 +1523,21 @@ body.app-core.add-form .module .button{
 .button:hover, input[type=submit]:hover, a.button:hover{ filter:brightness(1.05); }
 a.button.secondary, .btn-secondary{ background:#FFFFFF !important; color:var(--text) !important; border:1px solid var(--line) !important; }
 a.button.secondary:hover{ background:#F7F7F7 !important; }
+
+/* ============================= */
+/* CHANGELIST – jednoduché řazení (jeden sloupec) */
+/* ============================= */
+body.change-list #result_list thead .sortoptions {
+  display: none !important;
+}
+
+body.change-list #result_list thead th.sorted {
+  background: var(--amber-100, #fff9ec);
+}
+
+body.change-list #result_list thead th.sortable a {
+  font-weight: 600;
+}
 
 /* ============================= */
 /* ZAROVNÁNÍ HLEDAT + POSUN AKCÍ */
@@ -1736,10 +1779,9 @@ ul.messagelist li.warning{ background:var(--amber-100) !important; color:#6B4E00
 
 /* historie/ledger boxy */
 .history-wrapper, .history-card, .history-panel,
-.ledger-wrapper, .ledger-card, .ledger-panel,
-[class*="history"], [class*="ledger"]{
+.ledger-wrapper, .ledger-card, .ledger-panel{
   background:var(--surface) !important; border:1px solid var(--line) !important;
-  border-radius:12px !important; box-shadow:0 1px 2px rgba(0,0,0,.05) !important;
+  border-radius:0 !important; box-shadow:0 1px 2px rgba(0,0,0,.03) !important;
 }
 /* bez borderu kolem řádku Období a kolem obalu tabulky */
 .ledger-filter,
@@ -1934,79 +1976,76 @@ ul.messagelist li.warning{ background:var(--amber-100) !important; color:#6B4E00
 
 
 /* ===== Souhrn hráče (pod tabulkou) ===== */
-.player-summary{
-  margin: 14px 0 8px;
-  padding: 14px;
+.player-summary {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 12px 0 10px;
   display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  background: #ffffff;
-  border: 1px solid #e5e7eb;           /* jemná linka jako zbytek adminu */
-  border-radius: 12px;
-  box-shadow: 0 1px 2px rgba(16,24,40,.04);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px 24px;
+  padding: 15px 20px;
+  background: var(--surface, #fff);
+  border: 1px solid var(--line, #e2e5ea);
+  border-radius: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
-.player-summary .ps-item{
-  position: relative;
+.player-summary .ps-item {
   display: flex;
   align-items: baseline;
-  gap: 12px;
-  padding: 12px 14px;
-  background: linear-gradient(#fafafa, #fff);
-  border: 1px solid #eef2f7;
-  border-radius: 10px;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  text-align: center;
 }
 
-/* drobná tečka vlevo – barvy jen decentně odlišené */
-.player-summary .ps-item::before{
-  content: "";
-  width: 10px; height: 10px;
-  border-radius: 999px;
-  background: #d1d5db;
-  flex: 0 0 10px;
-  box-shadow: 0 0 0 2px #fff inset;
+.player-summary .ps-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4b5563;
+  line-height: 1.35;
 }
-.player-summary .ps-item:nth-child(1)::before{ background:#60a5fa; } /* tréninky */
-.player-summary .ps-item:nth-child(2)::before{ background:#fbbf24; } /* součet cen */
-.player-summary .ps-item:nth-child(3)::before{ background:#34d399; } /* součet zaplaceno */
-.player-summary .ps-item:nth-child(4)::before{ background:#a78bfa; } /* aktuální kredit */
 
-.player-summary .ps-label{
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-  color: #6b7280;                       /* šedá jako v adminu */
+.player-summary .ps-label::after {
+  content: ":";
+  margin-left: 1px;
+}
+
+.player-summary .ps-value {
+  font-size: 17px;
   font-weight: 700;
-}
-
-.player-summary .ps-value{
-  margin-left: auto;                    /* čísla k pravému okraji “pill” */
-  font-size: 20px;
-  line-height: 1;
-  font-weight: 800;
   color: #111827;
   font-variant-numeric: tabular-nums lining-nums;
+  line-height: 1.25;
   white-space: nowrap;
 }
 
-/* Kredit – barvy podle znaménka */
-.player-summary .ps-item.ps-credit .ps-value{
-  transition: color .15s ease;
+.player-summary .ps-credit.is-positive .ps-value {
+  color: #15803d;
 }
-.player-summary .ps-item.ps-credit.is-positive .ps-value{ color:#16a34a; } /* green-600 */
-.player-summary .ps-item.ps-credit.is-negative .ps-value{ color:#dc2626; } /* red-600 */
 
-/* Tečka vlevo u kreditu bude taky podle znaménka (přebije dřívější nth-child) */
-.player-summary .ps-item.ps-credit::before{ background:#a3e635; }          /* 0 jako neutrální lime */
-.player-summary .ps-item.ps-credit.is-positive::before{ background:#22c55e; } /* green-500 */
-.player-summary .ps-item.ps-credit.is-negative::before{ background:#ef4444; } /* red-500 */
+.player-summary .ps-credit.is-negative .ps-value {
+  color: #b91c1c;
+}
 
+@media (max-width: 900px) {
+  .player-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 16px;
+  }
+}
 
-/* responsivní drobnosti */
-@media (max-width: 640px){
-  .player-summary{ padding: 12px; gap: 10px; }
-  .player-summary .ps-item{ padding: 10px 12px; }
-  .player-summary .ps-value{ font-size: 18px; }
+@media (max-width: 520px) {
+  .player-summary {
+    grid-template-columns: 1fr;
+    padding: 14px 16px;
+  }
+
+  .player-summary .ps-item {
+    justify-content: flex-start;
+    text-align: left;
+  }
 }
 
 

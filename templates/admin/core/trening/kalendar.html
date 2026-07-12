@@ -50,10 +50,17 @@
       <div class="sched-day">
         <div class="sched-day-body">
           {% for ev in d.events %}
-            <a class="ev ev--{{ ev.fmt }}"
+            <a class="ev ev--{{ ev.fmt }} ev--{{ ev.fmt_code }} ev--nlanes-{{ ev.lanes|default:1 }} ev--players-{{ ev.names|length|default:1 }}"
                href="{% url 'admin:core_trening_change' ev.id %}"
+               title="{{ ev.title }} · {{ ev.fmt_label }} · {{ ev.sub }}"
                style="--off: {{ ev.offset_min }}; --dur: {{ ev.dur_min }}; --lane: {{ ev.lane|default:0 }}; --lanes: {{ ev.lanes|default:1 }};">
-              <div class="ev-title">{{ ev.title }}</div>
+              <div class="ev-names">
+                {% for name in ev.names %}
+                <span class="ev-name">{{ name }}</span>
+                {% empty %}
+                <span class="ev-name">—</span>
+                {% endfor %}
+              </div>
               {% if ev.sub %}<div class="ev-sub">{{ ev.sub }}</div>{% endif %}
             </a>
           {% endfor %}
@@ -72,5 +79,6 @@
   <span class="item"><span class="chip chip--trojice"></span> Trojice</span>
   <span class="item"><span class="chip chip--ctverice"></span> Čtveřice</span>
   <span class="item"><span class="chip chip--skupina"></span> Skupina</span>
+  <span class="item"><span class="chip chip--rezervace"></span> Rezervace kurtu</span>
 </div>
 {% endblock %}

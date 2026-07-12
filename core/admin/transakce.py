@@ -46,7 +46,7 @@ class TransakceDatumFilter(admin.DateFieldListFilter):
 class TransakceAdmin(admin.ModelAdmin):
     list_display = ("datum_display", "hrac_link", "castka_display", "typ_display", "poznamka", "akce_smazat")
     list_filter = (OnlyPaymentsFilter, ("vytvoreno", TransakceDatumFilter))
-    search_fields = ("hrac__jmeno", "popis")
+    search_fields = ("hrac__jmeno", "hrac__prijmeni", "popis")
     actions = ["delete_selected"]
     list_per_page = 50
     
@@ -87,11 +87,11 @@ class TransakceAdmin(admin.ModelAdmin):
             time_str,
         )
 
-    @admin.display(description="Hráč", ordering="hrac__jmeno")
+    @admin.display(description="Hráč", ordering="hrac__prijmeni")
     def hrac_link(self, obj):
         if not obj.hrac: return "-"
         url = reverse("admin:core_hrac_change", args=[obj.hrac.id])
-        return format_html('<a href="{}" style="font-weight:600;">{}</a>', url, obj.hrac.jmeno)
+        return format_html('<a href="{}" style="font-weight:600;">{}</a>', url, obj.hrac.cele_jmeno)
 
     @admin.display(description="Částka", ordering="castka")
     def castka_display(self, obj):
@@ -156,7 +156,7 @@ class TransakceAdmin(admin.ModelAdmin):
         for t in qs:
             dt = dj_tz.localtime(t.datum) if dj_tz.is_aware(t.datum) else t.datum
             hraci = ", ".join(
-                d.hrac.jmeno for d in t.dochazky.all() if d.prisel and d.hrac_id
+                d.hrac.cele_jmeno for d in t.dochazky.all() if d.prisel and d.hrac_id
             ) or "—"
             items.append({
                 "time": dt.strftime("%H:%M"),

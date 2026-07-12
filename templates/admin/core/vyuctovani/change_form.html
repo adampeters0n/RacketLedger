@@ -1,0 +1,82 @@
+{% extends "admin/base_site.html" %}
+{% load static i18n admin_urls %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/vyuctovani-change-form.css' %}">
+{% endblock %}
+
+{% block content %}
+<div id="content-main" class="vyuct-detail">
+  <div class="vyuct-header">
+    <div>
+      <h1>{{ original.hrac.cele_jmeno }}</h1>
+      <p class="vyuct-lead">{{ obdobi }}</p>
+    </div>
+    <div class="vyuct-header-actions">
+      {% if has_delete_permission and show_delete %}
+        <a href="{{ delete_url }}" class="button vyuct-btn-danger">Smazat</a>
+      {% endif %}
+      <a href="{{ history_url }}" class="button">Historie</a>
+      <a href="{{ vyuctovani_list_url }}" class="button">Všechna vyúčtování hráče</a>
+      <a href="{{ nastaveni_url }}" class="button">Nastavení vyúčtování</a>
+      <a href="{{ hrac_change_url }}" class="button default">Profil hráče</a>
+    </div>
+  </div>
+
+  <div class="vyuct-kpi-bar">
+    <div class="vyuct-kpi vyuct-kpi-highlight">
+      <span class="vyuct-kpi-label">K úhradě</span>
+      <strong class="vyuct-kpi-value">{{ k_uhrade }}</strong>
+    </div>
+    <div class="vyuct-kpi">
+      <span class="vyuct-kpi-label">Naúčtováno</span>
+      <strong class="vyuct-kpi-value">{{ nauctovano }}</strong>
+    </div>
+    <div class="vyuct-kpi">
+      <span class="vyuct-kpi-label">Platby a vratky</span>
+      <strong class="vyuct-kpi-value">{{ platby }}</strong>
+    </div>
+    <div class="vyuct-kpi">
+      <span class="vyuct-kpi-label">Počet tréninků</span>
+      <strong class="vyuct-kpi-value">{{ pocet_treninku }}</strong>
+    </div>
+  </div>
+
+  <div class="vyuct-grid">
+    <section class="vyuct-card">
+      <h2>Kredit</h2>
+      <dl class="vyuct-dl">
+        <dt>Na začátku období</dt>
+        <dd>{{ kredit_start }}</dd>
+        <dt>Na konci období</dt>
+        <dd>{{ kredit_end }}</dd>
+        <dt>Po zaplacení částky k úhradě</dt>
+        <dd>{{ kredit_po_uhrade }}</dd>
+      </dl>
+      <p class="vyuct-hint">
+        Kladný kredit = přeplatek, záporný = dluh. Částka k úhradě je to, co bylo v e-mailu požadováno k zaplacení.
+      </p>
+    </section>
+
+    <section class="vyuct-card">
+      <h2>Informace</h2>
+      <dl class="vyuct-dl">
+        <dt>Důvod vyúčtování</dt>
+        <dd>{{ duvod }}</dd>
+        <dt>Vytvořeno</dt>
+        <dd>{{ vytvoreno }}</dd>
+        <dt>Hráč</dt>
+        <dd><a href="{{ hrac_change_url }}">{{ original.hrac.cele_jmeno }}</a></dd>
+      </dl>
+      <p class="vyuct-hint">
+        Toto je archivní záznam – čísla odpovídají stavu v okamžiku vytvoření vyúčtování.
+      </p>
+    </section>
+  </div>
+
+  <p class="vyuct-back">
+    <a href="{% url 'admin:core_vyuctovani_changelist' %}">← Zpět na seznam vyúčtování</a>
+  </p>
+</div>
+{% endblock %}

@@ -17,7 +17,7 @@ class RodinaAdmin(admin.ModelAdmin):
     list_display = ("nazev", "kredit_total_display")
     list_display_links = ("nazev",)
     ordering = ("nazev",)
-    search_fields = ("nazev", "clenove__jmeno")
+    search_fields = ("nazev", "clenove__jmeno", "clenove__prijmeni")
 
     fields = ("nazev", "kontakt_email", "clenove_preview")
     readonly_fields = ("clenove_preview",)
@@ -53,7 +53,7 @@ class RodinaAdmin(admin.ModelAdmin):
         if not obj or not getattr(obj, "pk", None):
             return "Nejprve uložte rodinu. Poté se zde zobrazí její členové."
 
-        members = obj.clenove.all().order_by("jmeno")
+        members = obj.clenove.all().order_by("prijmeni", "jmeno")
         if not members:
             return "Rodina nemá žádné členy."
 
@@ -63,7 +63,7 @@ class RodinaAdmin(admin.ModelAdmin):
             (
                 (
                     reverse("admin:core_hrac_change", args=[h.id]),
-                    h.jmeno,
+                    h.cele_jmeno,
                     f"{int(h.kredit):,}".replace(",", " "),
                 )
                 for h in members
@@ -238,7 +238,7 @@ class RodinaAdmin(admin.ModelAdmin):
         for dt, tx, is_charge in events:
             datum_str, cas_str = _fmt_dt(dt)
 
-            hrac_jmeno = tx.hrac.jmeno if getattr(tx, "hrac", None) else "—"
+            hrac_jmeno = tx.hrac.cele_jmeno if getattr(tx, "hrac", None) else "—"
             hodiny = skupina = sezona = cena = zaplaceno = ""
 
             if is_charge and tx.trening:

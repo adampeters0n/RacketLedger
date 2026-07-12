@@ -1,0 +1,30 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/cenik-change-form.css' %}">
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<div id="cenik-typ-config" hidden data-format-add-url="{{ formaty_pridat_url }}"></div>
+<script src="{% static 'admin/js/cenik-change-form.js' %}" defer></script>
+{% endblock %}
+
+{% block form_top %}
+{% if not original %}
+<div class="cenik-menu-bar">
+  <a href="{{ formaty_url }}?next={{ request.get_full_path|urlencode }}" class="button">Ceník Menu</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block object-tools-items %}
+{% if original %}
+<li>
+  <a href="{{ formaty_url }}?next={{ request.get_full_path|urlencode }}">Ceník Menu</a>
+</li>
+{% endif %}
+{{ block.super }}
+{% endblock %}
