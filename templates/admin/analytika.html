@@ -102,8 +102,9 @@
         </div>
       </header>
 
+      {% if analytika_section == 'prehled' %}
       <!-- ═══ SEKCE: PŘEHLED ═══ -->
-      <section class="analytika-section{% if analytika_section == 'prehled' %} active{% endif %}" id="section-prehled" data-title="Přehled" data-subtitle="Klíčové ukazatele tenisového systému za aktuální měsíc">
+      <section class="analytika-section active" id="section-prehled" data-title="Přehled" data-subtitle="Klíčové ukazatele tenisového systému za aktuální měsíc">
 
         <div class="hero-kpi-row">
           <div class="hero-kpi">
@@ -235,9 +236,11 @@
           </div>
         </div>
       </section>
+      {% endif %}
 
+      {% if analytika_section == 'aktivita' %}
       <!-- ═══ SEKCE: AKTIVITA ═══ -->
-      <section class="analytika-section{% if analytika_section == 'aktivita' %} active{% endif %}" id="section-aktivita" data-title="Aktivita" data-subtitle="Odehrané hodiny, tréninky a denní trend">
+      <section class="analytika-section active" id="section-aktivita" data-title="Aktivita" data-subtitle="Odehrané hodiny, tréninky a denní trend">
 
         <div class="panel">
           <div class="panel-header">
@@ -326,9 +329,11 @@
           </div>
         </div>
       </section>
+      {% endif %}
 
+      {% if analytika_section == 'finance' %}
       <!-- ═══ SEKCE: FINANCE ═══ -->
-      <section class="analytika-section{% if analytika_section == 'finance' %} active{% endif %}" id="section-finance" data-title="Finance" data-subtitle="Naúčtování, platby a finanční srovnání">
+      <section class="analytika-section active" id="section-finance" data-title="Finance" data-subtitle="Naúčtování, platby a finanční srovnání">
 
         <div class="panel-grid panel-grid--2-1">
           <div class="panel">
@@ -418,9 +423,11 @@
           </div>
         </div>
       </section>
+      {% endif %}
 
+      {% if analytika_section == 'ucetnictvi' %}
       <!-- ═══ SEKCE: ÚČETNICTVÍ ═══ -->
-      <section class="analytika-section{% if analytika_section == 'ucetnictvi' %} active{% endif %}" id="section-ucetnictvi" data-title="Účetnictví" data-subtitle="Cash flow, zisky, marže a výnosy na hodinu">
+      <section class="analytika-section active" id="section-ucetnictvi" data-title="Účetnictví" data-subtitle="Cash flow, zisky, marže a výnosy na hodinu">
 
         <div class="acc-grid">
           <div class="acc-card teal">
@@ -633,9 +640,11 @@
           </div>
         </div>
       </section>
+      {% endif %}
 
+      {% if analytika_section == 'hraci' %}
       <!-- ═══ SEKCE: HRÁČI ═══ -->
-      <section class="analytika-section{% if analytika_section == 'hraci' %} active{% endif %}" id="section-hraci" data-title="Hráči" data-subtitle="Kredity, dluhy a přeplatky hráčů">
+      <section class="analytika-section active" id="section-hraci" data-title="Hráči" data-subtitle="Kredity, dluhy a přeplatky hráčů">
 
         <div class="panel-grid panel-grid--3">
           <div class="panel">
@@ -718,9 +727,11 @@
           </div>
         </div>
       </section>
+      {% endif %}
 
+      {% if analytika_section == 'treneri' %}
       <!-- ═══ SEKCE: TRENÉŘI ═══ -->
-      <section class="analytika-section{% if analytika_section == 'treneri' %} active{% endif %}" id="section-treneri" data-title="Trenéři" data-subtitle="Náklady na trenéry – hodiny, nároky a výplaty">
+      <section class="analytika-section active" id="section-treneri" data-title="Trenéři" data-subtitle="Náklady na trenéry – hodiny, nároky a výplaty">
 
         <div class="panel-grid panel-grid--2">
           <div class="panel">
@@ -780,9 +791,11 @@
           </div>
         </div>
       </section>
+      {% endif %}
 
+      {% if analytika_section == 'naklady' %}
       <!-- ═══ SEKCE: OSTATNÍ NÁKLADY ═══ -->
-      <section class="analytika-section{% if analytika_section == 'naklady' %} active{% endif %}" id="section-naklady" data-title="Ostatní náklady" data-subtitle="Provozní náklady mimo výplaty trenérů – započítávají se do čistého zisku">
+      <section class="analytika-section active" id="section-naklady" data-title="Ostatní náklady" data-subtitle="Provozní náklady mimo výplaty trenérů – započítávají se do čistého zisku">
 
         <div class="hero-kpi-row hero-kpi-row--3">
           <div class="hero-kpi">
@@ -928,30 +941,47 @@
           </div>
         </div>
       </section>
+      {% endif %}
 
     </main>
   </div>
 
   <!-- JSON Data -->
+  {% if analytika_section == 'hraci' %}
   {{ debtors|json_script:"debtors-list-data" }}
-  {{ treneri|json_script:"treneri-list-data" }}
-  {{ monthly_chart_data|json_script:"monthly-data" }}
-  {{ yearly_chart_data|json_script:"yearly-data" }}
-  {{ alltime_chart_data|json_script:"alltime-data" }}
   {{ debtors_chart_data|json_script:"debtors-data" }}
+  {% endif %}
+  {% if analytika_section == 'treneri' %}
+  {{ treneri|json_script:"treneri-list-data" }}
   {{ trener_chart_data|json_script:"trener-data" }}
   {{ trener_hours_chart_data|json_script:"trener-hours-data" }}
-  {{ payment_types_data|json_script:"payment-types-data" }}
+  {% endif %}
+  {% if analytika_section == 'aktivita' or analytika_section == 'finance' %}
+  {{ monthly_chart_data|json_script:"monthly-data" }}
+  {{ yearly_chart_data|json_script:"yearly-data" }}
+  {% endif %}
+  {% if analytika_section == 'aktivita' %}
+  {{ alltime_chart_data|json_script:"alltime-data" }}
   {{ activity_data|json_script:"activity-data" }}
+  {% endif %}
+  {% if analytika_section == 'finance' %}
+  {{ payment_types_data|json_script:"payment-types-data" }}
+  {% endif %}
+  {% if analytika_section == 'ucetnictvi' %}
   {{ accounting_monthly_data|json_script:"accounting-monthly-data" }}
   {{ accounting_yearly_data|json_script:"accounting-yearly-data" }}
   {{ accounting_alltime_data|json_script:"accounting-alltime-data" }}
   {{ accounting_charts_data|json_script:"accounting-charts-data" }}
+  {% endif %}
+  {% if analytika_section == 'prehled' %}
   {{ kpis.trainings_count_current|json_script:"kpi-trainings-count" }}
   {{ kpis.charges_count_current|json_script:"kpi-charges-count" }}
   {{ kpis.payments_count_current|json_script:"kpi-payments-count" }}
   {{ kpis|json_script:"kpi-data" }}
+  {% endif %}
+  {% if analytika_section == 'naklady' %}
   {{ naklady_charts_data|json_script:"naklady-charts-data" }}
+  {% endif %}
   {{ analytika_section_urls|json_script:"analytika-section-urls" }}
 
 </div>
