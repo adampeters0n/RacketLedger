@@ -32,37 +32,44 @@ def _table_columns(schema_editor, table):
 
 
 def ensure_cenikformat_table(apps, schema_editor):
+    """Vytvoří tabulku CenikFormat – portable (SQLite i PostgreSQL)."""
+    CenikFormat = apps.get_model("core", "CenikFormat")
+    table = CenikFormat._meta.db_table
     connection = schema_editor.connection
-    table = "core_cenikformat"
     tables = connection.introspection.table_names()
 
     if table not in tables:
-        schema_editor.execute(
-            'CREATE TABLE "core_cenikformat" ('
-            '"id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, '
-            '"kod" varchar(15) NOT NULL UNIQUE, '
-            '"nazev" varchar(120) NOT NULL UNIQUE, '
-            '"poradi" smallint unsigned NOT NULL CHECK ("poradi" >= 0)'
-            ")"
-        )
+        schema_editor.create_model(CenikFormat)
         return
 
     columns = _table_columns(schema_editor, table)
-    if "kod" not in columns:
-        schema_editor.execute(
-            'CREATE TABLE "core_cenikformat_new" ('
-            '"id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, '
-            '"kod" varchar(15) NOT NULL UNIQUE, '
-            '"nazev" varchar(120) NOT NULL UNIQUE, '
-            '"poradi" smallint unsigned NOT NULL CHECK ("poradi" >= 0)'
-            ")"
+    if "kod" in columns:
+        return
+
+    # Starší lokální schéma bez sloupce kod – přestavět tabulku přes Django ORM.
+    with connection.cursor() as cursor:
+        cursor.execute(f'SELECT "id", "nazev", "poradi" FROM "{table}"')
+        rows = list(cursor.fetchall())
+
+    schema_editor.delete_model(CenikFormat)
+    schema_editor.create_model(CenikFormat)
+
+    CenikFormat = apps.get_model("core", "CenikFormat")
+    for row_id, nazev, poradi in rows:
+        CenikFormat.objects.create(
+            id=row_id,
+            kod=nazev,
+            nazev=nazev,
+            poradi=poradi or 0,
         )
-        schema_editor.execute(
-            'INSERT INTO "core_cenikformat_new" ("id", "kod", "nazev", "poradi") '
-            'SELECT "id", "nazev", "nazev", "poradi" FROM "core_cenikformat"'
-        )
-        schema_editor.execute('DROP TABLE "core_cenikformat"')
-        schema_editor.execute('ALTER TABLE "core_cenikformat_new" RENAME TO "core_cenikformat"')
+
+    if rows and connection.vendor == "postgresql":
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT setval(pg_get_serial_sequence(%s, 'id'), "
+                "(SELECT MAX(id) FROM core_cenikformat))",
+                [table],
+            )
 
 
 def seed_formats(apps, schema_editor):
