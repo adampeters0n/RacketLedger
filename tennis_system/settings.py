@@ -39,9 +39,13 @@ DEBUG = _get_bool("DEBUG", True)
 _default_hosts = ["127.0.0.1", "localhost"]
 ALLOWED_HOSTS = [h for h in os.getenv("ALLOWED_HOSTS", ",".join(_default_hosts)).split(",") if h]
 
-# Produkční domény (doplňuje ALLOWED_HOSTS z env) – bez hardcoded klubu
+# Produkční domény (doplňuje ALLOWED_HOSTS z env).
+# Default Čimice – lze přepsat/rozšířit přes EXTRA_ALLOWED_HOSTS.
 ALLOWED_HOSTS.extend([
-    h for h in os.getenv("EXTRA_ALLOWED_HOSTS", "").split(",") if h
+    h for h in os.getenv(
+        "EXTRA_ALLOWED_HOSTS",
+        "tscimice.cz,www.tscimice.cz",
+    ).split(",") if h
 ])
 
 # CSRF důvěryhodné originy (z env, čárkami oddělené; musí mít https:// prefixy)
@@ -49,7 +53,10 @@ CSRF_TRUSTED_ORIGINS = [o for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split("
 
 # Produkční CSRF originy (doplňuje CSRF_TRUSTED_ORIGINS z env)
 CSRF_TRUSTED_ORIGINS.extend([
-    o for o in os.getenv("EXTRA_CSRF_TRUSTED_ORIGINS", "").split(",") if o
+    o for o in os.getenv(
+        "EXTRA_CSRF_TRUSTED_ORIGINS",
+        "https://tscimice.cz,https://www.tscimice.cz",
+    ).split(",") if o
 ])
 
 # =====================================
