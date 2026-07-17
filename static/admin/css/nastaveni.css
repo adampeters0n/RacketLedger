@@ -1,0 +1,703 @@
+/* Nastavení – Apple-style sidebar + Excel barevné palety */
+
+html:has(#content-main.nast-app) {
+  scrollbar-gutter: stable;
+}
+
+.nast-app {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 20px;
+  padding: 8px 4px 24px;
+  max-width: 920px;
+  align-items: start;
+  overflow-anchor: none;
+}
+
+/* ── Sidebar ── */
+.nast-sidebar {
+  position: sticky;
+  top: 88px;
+}
+
+.nast-sidebar-title {
+  margin: 0 0 12px;
+  padding: 0 12px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-strong);
+  letter-spacing: -0.02em;
+}
+
+.nast-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nast-sidebar-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.nast-sidebar-item:hover {
+  background: var(--brand-100);
+  color: var(--text-strong);
+}
+
+.nast-sidebar-item.is-active {
+  background: var(--brand);
+  color: #fff;
+}
+
+/* ── Main panel ── */
+.nast-main {
+  min-width: 0;
+}
+
+.nast-panel[hidden] {
+  display: none !important;
+}
+
+.nast-panel-head {
+  margin-bottom: 16px;
+}
+
+.nast-panel-head h2 {
+  margin: 0 0 4px;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-strong);
+  letter-spacing: -0.02em;
+}
+
+.nast-panel-head p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--muted, #64748b);
+  line-height: 1.45;
+}
+
+/* Toast mimo tok stránky – nezpůsobuje posun layoutu */
+.nast-save-status,
+.nast-vzhled-status {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  z-index: 10001;
+  margin: 0;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--brand);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+}
+
+.nast-save-status.is-visible,
+.nast-vzhled-status.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.nast-save-status.is-error,
+.nast-vzhled-status.is-error {
+  color: #dc2626;
+}
+
+/* ── Skupiny řádků (Apple-style) ── */
+.nast-group {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: visible;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  margin-bottom: 16px;
+}
+
+.nast-group-label {
+  margin: 0;
+  padding: 12px 16px 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted, #64748b);
+}
+
+.nast-group-hint {
+  margin: 0;
+  padding: 0 16px 10px;
+  font-size: 0.82rem;
+  color: var(--muted, #64748b);
+  line-height: 1.4;
+}
+
+.nast-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
+  min-height: 52px;
+  box-sizing: border-box;
+}
+
+.nast-group > .nast-row:first-child,
+.nast-group > .nast-group-label:first-child + .nast-group-hint + .nast-excel-list .nast-excel-row:first-child,
+.nast-group > .nast-group-label:first-child + .nast-excel-list .nast-excel-row:first-child,
+.nast-group > .nast-excel-list .nast-excel-row:first-child {
+  border-top: none;
+}
+
+.nast-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nast-row-label {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--text-strong);
+}
+
+.nast-row-detail {
+  font-size: 0.8rem;
+  color: var(--muted, #64748b);
+  line-height: 1.35;
+}
+
+.nast-row-control {
+  flex-shrink: 0;
+  min-width: 200px;
+  max-width: 260px;
+}
+
+.nast-row-input,
+.nast-app .nast-row-control select,
+.nast-app .nast-row-control input[type="text"],
+.nast-app .nast-row-control input[type="email"],
+.nast-app .nast-row-control input[type="number"] {
+  width: 100%;
+  max-width: 260px;
+  box-sizing: border-box;
+  min-height: 42px !important;
+  height: auto !important;
+  padding: 10px 12px !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 8px !important;
+  font-size: 0.95rem !important;
+  line-height: 1.4 !important;
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  overflow: visible !important;
+  -webkit-appearance: auto !important;
+  appearance: auto !important;
+}
+
+.nast-app .nast-row-control select {
+  padding-right: 2.25rem !important;
+}
+
+.nast-row-input {
+  width: 100%;
+  max-width: 260px;
+}
+
+/* ── Toggle (tmavý režim) ── */
+.nast-row-toggle {
+  padding-top: 14px;
+  padding-bottom: 14px;
+  min-height: 56px;
+}
+
+.nast-switch {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  cursor: pointer;
+  width: 46px;
+  height: 28px;
+}
+
+.nast-switch-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+
+.nast-switch-track {
+  position: relative;
+  display: block;
+  width: 46px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--line);
+  transition: background 0.2s;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+}
+
+.nast-switch-track::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+
+.nast-switch-input:checked + .nast-switch-track {
+  background: var(--brand);
+}
+
+.nast-switch-input:checked + .nast-switch-track::after {
+  transform: translateX(18px);
+}
+
+.nast-switch-input:focus-visible + .nast-switch-track {
+  outline: none;
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.12),
+    0 0 0 2px var(--brand);
+}
+
+/* ── Excel-style barevné řádky ── */
+.nast-excel-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.nast-excel-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--line);
+  cursor: pointer;
+  transition: background-color 0.12s;
+  margin: 0;
+  min-height: 52px;
+  box-sizing: border-box;
+}
+
+.nast-excel-row:hover {
+  background: var(--brand-100);
+}
+
+.nast-excel-row.is-active,
+.nast-excel-input:checked + .nast-excel-strip + .nast-excel-meta + .nast-excel-check,
+.nast-excel-input:checked ~ .nast-excel-check {
+  /* handled via JS class */
+}
+
+.nast-excel-row:has(.nast-excel-input:checked) {
+  background: var(--brand-100);
+}
+
+.nast-excel-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.nast-excel-strip {
+  display: flex;
+  flex-shrink: 0;
+  width: 132px;
+  height: 22px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+.nast-excel-swatch {
+  flex: 1;
+  min-width: 0;
+}
+
+.nast-excel-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.nast-excel-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-strong);
+}
+
+.nast-excel-desc {
+  font-size: 0.78rem;
+  color: var(--muted, #64748b);
+}
+
+.nast-excel-check {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.12s, visibility 0.12s;
+}
+
+.nast-excel-row:has(.nast-excel-input:checked) .nast-excel-check {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ── Link řádky ── */
+.nast-row-link {
+  text-decoration: none !important;
+  color: inherit !important;
+  transition: background 0.12s;
+}
+
+.nast-row-link:hover {
+  background: var(--brand-100);
+}
+
+.nast-row-chevron {
+  flex-shrink: 0;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--muted, #94a3b8);
+  font-weight: 300;
+}
+
+.nast-summary-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.nast-summary-title {
+  margin: 0 0 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted, #64748b);
+}
+
+.nast-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  margin: 0;
+}
+
+.nast-summary-grid dt {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted, #64748b);
+}
+
+.nast-summary-grid dd {
+  margin: 2px 0 0;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.nast-row-control--inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nast-row-control--inline input {
+  width: 4.5rem;
+  min-height: 42px !important;
+  text-align: center;
+}
+
+.nast-inline-sep {
+  color: var(--muted, #64748b);
+  font-weight: 600;
+}
+
+/* ── Footer ── */
+.nast-form-footer {
+  padding-top: 4px;
+}
+
+.nast-error {
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+
+/* ── Mobil ── */
+@media (max-width: 760px) {
+  .nast-app {
+    grid-template-columns: 1fr;
+    max-width: none;
+    padding: 0;
+  }
+
+  .nast-sidebar {
+    position: static;
+  }
+
+  .nast-sidebar-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .nast-sidebar-item {
+    width: auto;
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    font-size: 0.85rem;
+  }
+
+  .nast-sidebar-item.is-active {
+    border-color: var(--brand);
+  }
+
+  .nast-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .nast-row-control {
+    min-width: 0;
+    max-width: none;
+  }
+
+  .nast-row-input {
+    max-width: none;
+  }
+
+  .nast-excel-strip {
+    width: 100%;
+    max-width: 200px;
+  }
+}
+
+.nast-row--stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.nast-row-control--wide {
+  max-width: none;
+}
+
+.nast-row-control--wide textarea {
+  width: 100%;
+  min-height: 96px;
+}
+
+.nast-inline-action {
+  margin: 0;
+}
+
+.nast-row-actions {
+  margin-top: 12px;
+}
+
+.nast-file-input {
+  max-width: 100%;
+}
+
+.nast-summary-grid {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+/* ── Upload loga / favicon ── */
+.nast-row-upload {
+  align-items: flex-start;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.nast-upload-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 220px;
+  max-width: 280px;
+}
+
+.nast-upload-preview {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.nast-upload-preview--small {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+}
+
+.nast-upload-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.nast-upload-trigger {
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.nast-upload-field {
+  width: 100%;
+  font-size: 0.82rem;
+  color: var(--muted, #64748b);
+  line-height: 1.5;
+}
+
+.nast-upload-field a {
+  color: var(--brand-600, var(--brand));
+  word-break: break-all;
+}
+
+.nast-upload-field input[type="file"].nast-file-native-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.nast-translated-file {
+  position: relative;
+  width: 100%;
+}
+
+.nast-file-ui {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.nast-file-choose-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text-strong);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.nast-file-choose-btn:hover {
+  background: var(--brand-100);
+  border-color: var(--brand);
+}
+
+.nast-file-status {
+  font-size: 0.82rem;
+  color: var(--muted, #64748b);
+}
+
+.nast-upload-field input[type="file"] {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  font-size: 0.82rem;
+  color: var(--text);
+}
+
+.nast-upload-field input[type="file"]::file-selector-button {
+  margin-right: 10px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text-strong);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.nast-upload-field input[type="file"]::file-selector-button:hover {
+  background: var(--brand-100);
+  border-color: var(--brand);
+}
+
+.nast-upload-field input[type="checkbox"] {
+  margin-right: 6px;
+}
+
+.nast-row-preview {
+  background: var(--bg);
+}
+
+.nast-row-preview .nast-row-detail {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  color: var(--text);
+}

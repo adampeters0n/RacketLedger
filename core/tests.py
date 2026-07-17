@@ -149,9 +149,9 @@ class BillingLogicTests(TestCase):
             popis="Initial charge"
         )
 
-        # Generate first billing
+        # Generate first billing (automatic closure updates posledni_vyuctovani_at)
         vyuct1 = self.hrac.vygeneruj_vyuctovani(
-            duvod="manual",
+            duvod="CASTKA",
             send_email=False
         )
         self.hrac.refresh_from_db()
@@ -569,8 +569,11 @@ class VyuctovaniNastaveniFormTests(TestCase):
             "mesicni_den": "5",
             "auto_posilat_email": "on",
             "email_variant": nast.email_variant,
+            "ucet_nazev_1": nast.ucet_nazev_1,
+            "ucet_nazev_2": nast.ucet_nazev_2,
             "ucet_varianta_1": nast.ucet_varianta_1,
             "ucet_varianta_2": nast.ucet_varianta_2,
+            "variabilni_symbol_popis": nast.variabilni_symbol_popis,
         }
         form = VyuctovaniNastaveniForm(data, instance=nast)
         self.assertTrue(form.is_valid(), form.errors)
@@ -774,3 +777,421 @@ class CreditCalculationTests(TestCase):
         # 4. Porovnání
         # SQL vrací -600 (kredit), Python vrací -600 (kredit)
         self.assertEqual(hrac_z_db._kredit_sql, python_kredit)
+
+
+class ChangelistSearchTests(TestCase):
+    """Vyhledávání v admin changelistu – datum a jméno."""
+
+    def setUp(self):
+        self.coach = User.objects.create_user(
+            username="JanNovak",
+            password="x",
+            first_name="Jan",
+            last_name="Novák",
+        )
+        self.hrac = Hrac.objects.create(jmeno="Petr", prijmeni="Svoboda", email="petr@example.com")
+        self.training_day = timezone.make_aware(datetime(2025, 6, 7, 10, 0))
+        self.other_day = timezone.make_aware(datetime(2025, 7, 15, 14, 0))
+        self.trening_june = Trening.objects.create(
+            trener=self.coach,
+            datum=self.training_day,
+            delka_minut=60,
+            format=Cenik.Format.SOLO_C,
+            kurt=Cenik.Kurt.VENEK,
+            poznamka="ranní trénink",
+        )
+        self.trening_july = Trening.objects.create(
+            trener=self.coach,
+            datum=self.other_day,
+            delka_minut=60,
+            format=Cenik.Format.SOLO_C,
+            kurt=Cenik.Kurt.VENEK,
+        )
+        Dochazka.objects.create(trening=self.trening_june, hrac=self.hrac, prisel=True)
+        self.platba = Transakce.objects.create(
+            hrac=self.hrac,
+            typ=Transakce.Typ.PLATBA,
+            castka=Decimal("500"),
+            popis="platba červen",
+            vytvoreno=self.training_day,
+        )
+        self.vyuctovani = Vyuctovani.objects.create(
+            hrac=self.hrac,
+            period_from=self.training_day,
+            period_to=self.other_day,
+            amount_due=Decimal("100"),
+            reason="manual",
+        )
+
+    def test_parse_czech_date_parts_numeric(self):
+        from core.admin_utils import parse_czech_date_parts
+
+        parts = parse_czech_date_parts("7.6.2025")
+        self.assertEqual(parts.day, 7)
+        self.assertEqual(parts.month, 6)
+        self.assertEqual(parts.year, 2025)
+
+        parts_no_year = parse_czech_date_parts("7.6")
+        self.assertEqual(parts_no_year.day, 7)
+        self.assertEqual(parts_no_year.month, 6)
+        self.assertIsNone(parts_no_year.year)
+
+    def test_trening_search_by_date_and_name(self):
+        from core.admin.trening import TreningAdmin
+        from core.models import Trening
+
+        admin = TreningAdmin(Trening, None)
+        qs = Trening.objects.all()
+
+        date_qs, _ = admin.get_search_results(None, qs, "7.6.2025")
+        self.assertEqual(list(date_qs), [self.trening_june])
+
+        name_qs, _ = admin.get_search_results(None, qs, "Svoboda")
+        self.assertIn(self.trening_june, list(name_qs))
+
+    def test_transakce_search_by_date(self):
+        from core.admin.transakce import TransakceAdmin
+        from core.models import Transakce
+
+        admin = TransakceAdmin(Transakce, None)
+        qs = admin.get_queryset(None)
+        found, _ = admin.get_search_results(None, qs, "7.6.2025")
+        self.assertIn(self.platba, list(found))
+
+    def test_vyuctovani_search_by_date(self):
+        from core.admin.vyuctovani import VyuctovaniAdmin
+        from core.models import Vyuctovani
+
+        admin = VyuctovaniAdmin(Vyuctovani, None)
+        qs = Vyuctovani.objects.all()
+        found, _ = admin.get_search_results(None, qs, "7.6.2025")
+        self.assertIn(self.vyuctovani, list(found))
+
+    def test_trening_search_clear_returns_all(self):
+        from core.admin.trening import TreningAdmin
+        from core.models import Trening
+
+        admin = TreningAdmin(Trening, None)
+        qs = Trening.objects.all()
+        filtered, _ = admin.get_search_results(None, qs, "7.6.2025")
+        self.assertEqual(filtered.count(), 1)
+
+        cleared, _ = admin.get_search_results(None, qs, "")
+        self.assertEqual(cleared.count(), 2)
+
+
+class SystemNastaveniTests(TestCase):
+    def _form_data(self, **overrides):
+        from core.models import SystemNastaveni, VyuctovaniNastaveni
+
+        nast = SystemNastaveni.load()
+        vyuct = VyuctovaniNastaveni.load()
+        data = {
+            "nazev_klubu": nast.nazev_klubu,
+            "slogan": nast.slogan,
+            "kontakt_email": nast.kontakt_email,
+            "kontakt_telefon": nast.kontakt_telefon,
+            "kontakt_adresa": nast.kontakt_adresa,
+            "email_jmeno": nast.from_email_parts()[0],
+            "email_adresa": nast.from_email_parts()[1],
+            "email_oznaceni": nast.subject_tag_display(),
+            "email_podpis": nast.email_podpis,
+            "tmavy_rezim": nast.tmavy_rezim,
+            "barevna_varianta": nast.barevna_varianta,
+            "vychozi_delka_minut": nast.vychozi_delka_minut,
+            "vychozi_kurt": nast.vychozi_kurt,
+            "sezona_automaticky_kurt": nast.sezona_automaticky_kurt,
+            "sezona_venek_od": nast.sezona_venek_od,
+            "sezona_venek_do": nast.sezona_venek_do,
+            "rozvrh_od_hodina": nast.rozvrh_od_hodina,
+            "rozvrh_do_hodina": nast.rozvrh_do_hodina,
+            "vychozi_zobrazeni_rozvrhu": nast.vychozi_zobrazeni_rozvrhu,
+            "prah_dluhu_dashboard": nast.prah_dluhu_dashboard,
+            "zvyraznit_zaporny_kredit": nast.zvyraznit_zaporny_kredit,
+            "radku_na_stranku": nast.radku_na_stranku,
+            "vyuctovani_rezim": vyuct.auto_rezim,
+        }
+        data.update(overrides)
+        return data
+
+    def test_schedule_hours_respects_range(self):
+        from core.forms import SystemNastaveniForm
+        from core.models import SystemNastaveni
+
+        nast = SystemNastaveni.load()
+        nast.rozvrh_od_hodina = 7
+        nast.rozvrh_do_hodina = 21
+        nast.save(sync_colors=False)
+
+        self.assertEqual(nast.schedule_hours(), list(range(7, 22)))
+        self.assertEqual(nast.schedule_hour_count, 15)
+
+    def test_form_rejects_invalid_schedule_range(self):
+        from core.forms import SystemNastaveniForm
+
+        form = SystemNastaveniForm(data=self._form_data(rozvrh_od_hodina=10, rozvrh_do_hodina=10))
+        self.assertFalse(form.is_valid())
+        self.assertIn("rozvrh_do_hodina", form.errors)
+
+    def test_training_defaults_from_settings(self):
+        from core.models import Cenik, SystemNastaveni
+
+        nast = SystemNastaveni.load()
+        nast.vychozi_delka_minut = 90
+        nast.vychozi_kurt = Cenik.Kurt.VENEK
+        nast.save(sync_colors=False)
+
+        defaults = SystemNastaveni.training_defaults()
+        self.assertEqual(defaults["delka_minut"], 90)
+        self.assertEqual(defaults["kurt"], Cenik.Kurt.VENEK)
+
+    def test_home_uses_club_name_and_contact(self):
+        from core.models import SystemNastaveni
+        from core.views import home
+        from django.test import RequestFactory
+
+        nast = SystemNastaveni.load()
+        nast.nazev_klubu = "Testovací klub"
+        nast.kontakt_email = "klub@example.com"
+        nast.kontakt_telefon = "+420 123 456"
+        nast.save(sync_colors=False)
+
+        request = RequestFactory().get("/")
+        response = home(request)
+        content = response.content.decode()
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Testovací klub", content)
+        self.assertIn("klub@example.com", content)
+        self.assertIn("+420 123 456", content)
+
+    def test_seasonal_kurt_in_summer(self):
+        from datetime import date
+        from core.models import Cenik, SystemNastaveni
+
+        nast = SystemNastaveni.load()
+        nast.sezona_automaticky_kurt = True
+        nast.sezona_venek_od = 4
+        nast.sezona_venek_do = 10
+        nast.save(sync_colors=False)
+
+        self.assertEqual(nast.kurt_pro_datum(date(2026, 7, 15)), Cenik.Kurt.VENEK)
+        self.assertEqual(nast.kurt_pro_datum(date(2026, 1, 15)), Cenik.Kurt.HALA)
+
+    def test_email_subject_prefix(self):
+        from core.models import SystemNastaveni
+
+        self.assertEqual(
+            SystemNastaveni.compose_subject_prefix("Tenis Čimice"),
+            "[Tenis Čimice] ",
+        )
+        nast = SystemNastaveni.load()
+        nast.email_predmet_prefix = "[Klub] "
+        nast.save(sync_colors=False)
+        self.assertEqual(nast.subject_tag_display(), "Klub")
+        self.assertEqual(
+            nast.format_email_subject("Test"),
+            "[Klub] Test",
+        )
+        nast.email_predmet_prefix = SystemNastaveni.compose_subject_prefix("Nový klub")
+        nast.save(sync_colors=False)
+        self.assertEqual(
+            nast.format_email_subject("Test"),
+            "[Nový klub] Test",
+        )
+
+    def test_from_email_parts(self):
+        from core.models import SystemNastaveni
+
+        nast = SystemNastaveni(email_odesilatel="Tenis Čimice <kptenis@volny.cz>")
+        jmeno, adresa = nast.from_email_parts()
+        self.assertEqual(jmeno, "Tenis Čimice")
+        self.assertEqual(adresa, "kptenis@volny.cz")
+        self.assertEqual(
+            SystemNastaveni.compose_from_email("Tenis Čimice", "kptenis@volny.cz"),
+            "Tenis Čimice <kptenis@volny.cz>",
+        )
+
+    def test_vzhled_ajax_save(self):
+        from django.contrib.auth import get_user_model
+        from django.test import RequestFactory
+        from core.admin_views import admin_nastaveni_vzhled_view
+        from core.models import SystemNastaveni
+
+        user = get_user_model().objects.create_superuser("admin", "admin@test.com", "pass")
+        request = RequestFactory().post(
+            "/admin/nastaveni/vzhled/",
+            {"barevna_varianta": "modra", "tmavy_rezim": "true"},
+        )
+        request.user = user
+
+        resp = admin_nastaveni_vzhled_view(request)
+        self.assertEqual(resp.status_code, 200)
+        import json
+        data = json.loads(resp.content)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["barevna_varianta"], "modra")
+        self.assertTrue(data["tmavy_rezim"])
+        self.assertIn("--brand: #2563EB", data["theme_style"])
+
+        nast = SystemNastaveni.load()
+        self.assertEqual(nast.barevna_varianta, "modra")
+        self.assertTrue(nast.tmavy_rezim)
+
+    def test_resolve_theme_ignores_stale_barva_fields(self):
+        from core.models import SystemNastaveni
+        from core.system_theme import resolve_theme_colors
+
+        nast = SystemNastaveni.load()
+        nast.barevna_varianta = "zelena"
+        nast.barva_brand = "#E67817"
+        nast.vlastni_barvy = False
+        nast.save(sync_colors=False)
+
+        colors = resolve_theme_colors(nast)
+        self.assertEqual(colors["brand"], "#14833B")
+
+    def test_changelist_includes_global_theme(self):
+        from django.contrib.auth import get_user_model
+        from django.test import RequestFactory
+        from core.models import SystemNastaveni, Trening
+        from django.contrib import admin
+
+        user = get_user_model().objects.create_superuser("admin2", "a2@test.com", "pass")
+        nast = SystemNastaveni.load()
+        nast.barevna_varianta = "modra"
+        nast.tmavy_rezim = True
+        nast.save(sync_colors=True)
+
+        request = RequestFactory().get("/admin/core/trening/")
+        request.user = user
+        ma = admin.site._registry[Trening]
+        response = ma.changelist_view(request)
+        response.render()
+        html = response.content.decode()
+
+        self.assertNotIn("admin/css/dark_mode.css", html)
+        self.assertIn("system-theme-state", html)
+        self.assertIn("--brand: #2563EB", html)
+        self.assertIn("admin/js/theme.js", html)
+
+    def test_autosave_ajax(self):
+        from django.contrib.auth import get_user_model
+        from django.test import RequestFactory
+        from core.admin_views import admin_nastaveni_autosave_view
+        from core.models import SystemNastaveni, VyuctovaniNastaveni
+
+        user = get_user_model().objects.create_superuser("admin3", "a3@test.com", "pass")
+        nast = SystemNastaveni.load()
+        vyuct = VyuctovaniNastaveni.load()
+        request = RequestFactory().post(
+            "/admin/nastaveni/ulozit/",
+            {
+                "nazev_klubu": "Test klub AJAX",
+                "slogan": nast.slogan or "",
+                "kontakt_email": nast.kontakt_email or "",
+                "kontakt_telefon": nast.kontakt_telefon or "",
+                "kontakt_adresa": nast.kontakt_adresa or "",
+                "email_podpis": nast.email_podpis or "",
+                "email_jmeno": "",
+                "email_adresa": "",
+                "email_oznaceni": "",
+                "barevna_varianta": nast.barevna_varianta or "oranzova",
+                "vychozi_delka_minut": str(nast.vychozi_delka_minut or 60),
+                "vychozi_kurt": nast.vychozi_kurt or "HALA",
+                "sezona_venek_od": str(nast.sezona_venek_od or 4),
+                "sezona_venek_do": str(nast.sezona_venek_do or 10),
+                "rozvrh_od_hodina": str(nast.rozvrh_od_hodina or 6),
+                "rozvrh_do_hodina": str(nast.rozvrh_do_hodina or 22),
+                "vychozi_zobrazeni_rozvrhu": nast.vychozi_zobrazeni_rozvrhu or "tyden",
+                "prah_dluhu_dashboard": str(nast.prah_dluhu_dashboard or 0),
+                "radku_na_stranku": str(nast.radku_na_stranku or 50),
+                "vyuctovani_rezim": vyuct.auto_rezim,
+            },
+        )
+        request.user = user
+
+        resp = admin_nastaveni_autosave_view(request)
+        self.assertEqual(resp.status_code, 200)
+        import json
+        data = json.loads(resp.content)
+        self.assertTrue(data["ok"])
+        self.assertEqual(data["nazev_klubu"], "Test klub AJAX")
+
+        nast.refresh_from_db()
+        self.assertEqual(nast.nazev_klubu, "Test klub AJAX")
+
+    def test_debt_threshold_filter(self):
+        from decimal import Decimal
+        from django.db.models import Sum, Case, When, F, Value, DecimalField
+        from core.models import Hrac, SystemNastaveni, Transakce
+
+        nast = SystemNastaveni.load()
+        nast.prah_dluhu_dashboard = Decimal("-500")
+        nast.save(sync_colors=False)
+
+        qs = Hrac.objects.annotate(
+            _kredit_calculated=Sum(
+                Case(
+                    When(transakce__typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA], then=F("transakce__castka")),
+                    When(transakce__typ=Transakce.Typ.NAUCTOVANO, then=-F("transakce__castka")),
+                    default=Value(0),
+                    output_field=DecimalField(max_digits=12, decimal_places=2),
+                )
+            )
+        ).filter(_kredit_calculated__isnull=False)
+
+        filtered = list(nast.filter_debtors(qs).values_list("_kredit_calculated", flat=True))
+        for val in filtered:
+            self.assertLessEqual(val, Decimal("-500"))
+
+class RolesAndImportGuardTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth.models import Group, User
+        from core.roles import CLUB_ADMIN_GROUP, ensure_role_groups
+
+        ensure_role_groups()
+        self.platform = User.objects.create_superuser("platform", "p@example.com", "x")
+        self.club = User.objects.create_user("club", "c@example.com", "x", is_staff=True)
+        self.club.groups.add(Group.objects.get(name=CLUB_ADMIN_GROUP))
+
+    def test_platform_vs_club_permissions(self):
+        from core.roles import (
+            can_export_data,
+            can_import_data,
+            can_manage_users,
+            is_club_admin,
+            is_platform_admin,
+        )
+
+        self.assertTrue(is_platform_admin(self.platform))
+        self.assertTrue(is_club_admin(self.platform))
+        self.assertTrue(can_import_data(self.platform))
+        self.assertTrue(can_export_data(self.platform))
+        self.assertTrue(can_manage_users(self.platform))
+
+        self.assertFalse(is_platform_admin(self.club))
+        self.assertTrue(is_club_admin(self.club))
+        self.assertFalse(can_import_data(self.club))
+        self.assertFalse(can_export_data(self.club))
+        self.assertFalse(can_manage_users(self.club))
+
+    def test_import_blocked_on_non_sqlite(self):
+        from unittest.mock import patch
+        from core.data_import import ImportNotAllowed, assert_full_db_import_allowed
+
+        with patch("core.data_import.settings") as mock_settings:
+            mock_settings.DATABASES = {
+                "default": {"ENGINE": "django.db.backends.postgresql"}
+            }
+            with self.assertRaises(ImportNotAllowed):
+                assert_full_db_import_allowed()
+
+    def test_email_variant_labels_are_configurable(self):
+        from core.models import VyuctovaniNastaveni
+
+        nast = VyuctovaniNastaveni.load()
+        nast.ucet_nazev_1 = "Hlavní účet"
+        nast.ucet_nazev_2 = "Vedlejší účet"
+        nast.save()
+        self.assertEqual(nast.email_variant_label("1"), "Hlavní účet")
+        self.assertEqual(nast.get_email_variant_display(), "Hlavní účet")

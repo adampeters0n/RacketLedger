@@ -8,17 +8,20 @@ from django.urls import path, reverse
 from django.utils import timezone as dj_tz
 from django.utils.html import format_html
 
-from ..admin_utils import parse_czech_date_parts
+from django.utils.translation import gettext, gettext_lazy as _
+
+from ..admin_utils import filter_queryset_by_parsed_date, parse_czech_date_parts
+from ..admin_mixins import ConfigurableListPerPageMixin
 from ..forms import VyuctovaniNastaveniForm
 from ..models import Hrac, Vyuctovani, VyuctovaniNastaveni
 
 REASON_LABELS = {
-    "manual": "Ručně z adminu",
-    "MESICNE": "Měsíčně",
-    "N_TRENINGU": "Po N trénincích",
-    "CASTKA": "Limit kreditu",
-    "AUTO": "Automaticky (limit kreditu)",
-    "rodina": "Vyúčtování rodiny",
+    "manual": _("Ručně z adminu"),
+    "MESICNE": _("Měsíčně"),
+    "N_TRENINGU": _("Po N trénincích"),
+    "CASTKA": _("Limit kreditu"),
+    "AUTO": _("Automaticky (limit kreditu)"),
+    "rodina": _("Vyúčtování rodiny"),
 }
 
 REZIM_LABELS = dict(VyuctovaniNastaveni.AutoRezim.choices)
@@ -27,15 +30,15 @@ REZIM_LABELS = dict(VyuctovaniNastaveni.AutoRezim.choices)
 class VyuctovaniDatumFilter(admin.DateFieldListFilter):
     def __init__(self, field, request, params, model, model_admin, field_path):
         super().__init__(field, request, params, model, model_admin, field_path)
-        self.title = "Data"
+        self.title = _("Data")
         if self.links:
             links = list(self.links)
-            links[0] = ("Vše", links[0][1])
+            links[0] = (_("Vše"), links[0][1])
             self.links = links
 
 
 @admin.register(Vyuctovani)
-class VyuctovaniAdmin(admin.ModelAdmin):
+class VyuctovaniAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
     change_form_template = "admin/core/vyuctovani/change_form.html"
     change_list_template = "admin/core/vyuctovani/change_list.html"
 
@@ -52,7 +55,7 @@ class VyuctovaniAdmin(admin.ModelAdmin):
     ordering = ("-period_to",)
     list_filter = (("created_at", VyuctovaniDatumFilter),)
     search_fields = ("hrac__jmeno", "hrac__prijmeni")
-    list_per_page = 50
+    list_per_page_default = 50
 
     list_display = (
         "col_obdobi",
@@ -94,15 +97,22 @@ class VyuctovaniAdmin(admin.ModelAdmin):
                     )
                     self.message_user(
                         request,
-                        f"Nastavení uloženo. Režim synchronizován u {updated} hráčů.",
+                        gettext(
+                            "Nastavení uloženo. Režim synchronizován u %(updated)s hráčů."
+                        )
+                        % {"updated": updated},
                         level=messages.SUCCESS,
                     )
                 else:
-                    self.message_user(request, "Nastavení vyúčtování uloženo.", level=messages.SUCCESS)
+                    self.message_user(
+                        request,
+                        gettext("Nastavení vyúčtování uloženo."),
+                        level=messages.SUCCESS,
+                    )
                 return redirect("admin:core_vyuctovani_nastaveni")
             self.message_user(
                 request,
-                "Nastavení se nepodařilo uložit. Zkontrolujte zvýrazněná pole.",
+                gettext("Nastavení se nepodařilo uložit. Zkontrolujte zvýrazněná pole."),
                 level=messages.ERROR,
             )
         else:
@@ -124,7 +134,7 @@ class VyuctovaniAdmin(admin.ModelAdmin):
 
         ctx = {
             **self.admin_site.each_context(request),
-            "title": "Nastavení vyúčtování",
+            "title": _("Nastavení vyúčtování"),
             "form": form,
             "opts": self.model._meta,
             "changelist_url": reverse("admin:core_vyuctovani_changelist"),
@@ -144,15 +154,12 @@ class VyuctovaniAdmin(admin.ModelAdmin):
     def get_search_results(self, request, queryset, search_term):
         parts = parse_czech_date_parts(search_term)
         if parts:
-            if parts.year is not None:
-                return queryset.filter(
-                    period_from__year=parts.year,
-                    period_from__month=parts.month,
-                    period_from__day=parts.day,
-                ), False
-            return queryset.filter(
-                period_from__month=parts.month,
-                period_from__day=parts.day,
+            return filter_queryset_by_parsed_date(
+                queryset,
+                parts,
+                "period_from",
+                "period_to",
+                "created_at",
             ), False
         return super().get_search_results(request, queryset, search_term)
 
@@ -229,9 +236,9 @@ class VyuctovaniAdmin(admin.ModelAdmin):
             return format_html('<span class="vyuct-kredit-plus">+{} Kč (přeplatek)</span>', f"{value:,.0f}".replace(",", " "))
         return "0 Kč"
 
+    @admin.display(description=_("Období"))
     def col_obdobi(self, obj):
         return self._fmt_obdobi(obj)
-    col_obdobi.short_description = "Období"
 
     def _fallback_charges(self, obj):
         return obj.nacitano_v_obdobi
@@ -242,36 +249,36 @@ class VyuctovaniAdmin(admin.ModelAdmin):
     def _fallback_credit_end(self, obj):
         return obj.kredit_na_konci
 
+    @admin.display(description=_("Naúčtováno"))
     def col_nauctovano(self, obj):
         val = obj.charges_total or 0
         if val == 0 and obj.amount_due == 0 and obj.payments_total == 0:
             val = self._fallback_charges(obj)
         return self._kc(val)
-    col_nauctovano.short_description = "Naúčtováno"
 
+    @admin.display(description=_("Platby/vratky"))
     def col_platby(self, obj):
         val = obj.payments_total or 0
         if val == 0 and obj.amount_due == 0 and obj.charges_total == 0:
             val = self._fallback_payments(obj)
         return self._kc(val)
-    col_platby.short_description = "Platby/vratky"
 
+    @admin.display(description=_("K úhradě"))
     def col_k_uhrade(self, obj):
         if obj.amount_due is None or (obj.amount_due == 0 and obj.charges_total == 0 and obj.payments_total == 0):
             val = (self._fallback_charges(obj) - self._fallback_payments(obj))
         else:
             val = obj.amount_due
         return self._kc(val)
-    col_k_uhrade.short_description = "K úhradě"
 
+    @admin.display(description=_("Kredit"))
     def col_kredit(self, obj):
         val = obj.credit_end or 0
         if val == 0 and obj.amount_due == 0 and obj.charges_total == 0 and obj.payments_total == 0:
             val = self._fallback_credit_end(obj)
         return self._kc_kredit(val)
-    col_kredit.short_description = "Kredit"
 
+    @admin.display(description=_("Kredit po úhradě"))
     def col_kredit_po_uhrade(self, obj):
         val = (Decimal(obj.credit_end or 0) + Decimal(obj.amount_due or 0))
         return self._kc_kredit(val)
-    col_kredit_po_uhrade.short_description = "Kredit po úhradě"

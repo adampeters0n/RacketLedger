@@ -1,10 +1,12 @@
 {% extends "admin/base_site.html" %}
-{% load static %}
+{% load static i18n %}
+{% block extrastyle %}
+<link rel="stylesheet" href="{% static 'admin/css/dashboard.css' %}">
+{{ block.super }}
+{% endblock %}
 
 {% block extrahead %}
-<link rel="stylesheet" href="{% static 'admin/css/dashboard.css' %}">
-  {{ block.super }}
-  <link rel="stylesheet" href="{% static 'admin/custom.css' %}">
+{{ block.super }}
 {% endblock %}
 
 {% block content %}
@@ -12,22 +14,22 @@
 
   <div class="card">
     <div class="quick">
-      <a class="button default" href="{{ quick.add_training }}">+ Nový trénink</a>
-      <a class="button" href="{{ quick.add_payment }}">+ Platba od hráče</a>
-      <a class="button" href="{{ quick.add_player }}">+ Nový hráč</a>
-      <a class="button" href="{{ quick.coaches }}">Přehled trenérů</a>
+      <a class="button default" href="{{ quick.add_training }}">{% trans "+ Nový trénink" %}</a>
+      <a class="button" href="{{ quick.add_payment }}">{% trans "+ Platba od hráče" %}</a>
+      <a class="button" href="{{ quick.add_player }}">{% trans "+ Nový hráč" %}</a>
+      <a class="button" href="{{ quick.coaches }}">{% trans "Přehled trenérů" %}</a>
       
-      <a class="button" href="{% url 'admin:analytika' %}">Analytika</a>
+      <a class="button" href="{% url 'admin:analytika' %}">{% trans "Analytika" %}</a>
     </div>
   </div>
 
   <div class="cols" style="margin-top:18px;">
     <div>
       <div class="card">
-        <h3>Poslední platby</h3>
+        <h3>{% trans "Poslední platby" %}</h3>
         <div class="inner">
           <table class="list">
-            <thead><tr><th>Datum</th><th>Hráč</th><th class="num">Částka</th></tr></thead>
+            <thead><tr><th>{% trans "Datum" %}</th><th>{% trans "Hráč" %}</th><th class="num">{% trans "Částka" %}</th></tr></thead>
             <tbody>
             {% for p in posledni_platby %}
               <tr>
@@ -36,7 +38,7 @@
                 <td class="num">{{ p.castka }}</td>
               </tr>
             {% empty %}
-              <tr><td colspan="3" class="muted">Žádné platby.</td></tr>
+              <tr><td colspan="3" class="muted">{% trans "Žádné platby." %}</td></tr>
             {% endfor %}
             </tbody>
           </table>
@@ -44,10 +46,10 @@
       </div>
 
       <div class="card" style="margin-top:18px;">
-        <h3>Poslední tréninky</h3>
+        <h3>{% trans "Poslední tréninky" %}</h3>
         <div class="inner">
           <table class="list">
-            <thead><tr><th>Datum</th><th>Trenér</th><th>Formát</th></tr></thead>
+            <thead><tr><th>{% trans "Datum" %}</th><th>{% trans "Trenér" %}</th><th>{% trans "Formát" %}</th></tr></thead>
             <tbody>
             {% for t in posledni_treninky %}
               <tr>
@@ -56,7 +58,7 @@
                 <td>{{ t.format }}</td>
               </tr>
             {% empty %}
-              <tr><td colspan="3" class="muted">Žádné tréninky.</td></tr>
+              <tr><td colspan="3" class="muted">{% trans "Žádné tréninky." %}</td></tr>
             {% endfor %}
             </tbody>
           </table>
@@ -66,10 +68,10 @@
 
     <div>
       <div class="card">
-        <h3>Top dlužníci (hráči)</h3>
+        <h3>{% trans "Top dlužníci (hráči)" %}</h3>
         <div class="inner">
           <table class="list">
-            <thead><tr><th>Hráč</th><th class="num">Kredit</th></tr></thead>
+            <thead><tr><th>{% trans "Hráč" %}</th><th class="num">Kredit</th></tr></thead>
             <tbody>
             {% for r in debtors %}
               <tr>
@@ -77,7 +79,7 @@
                 <td class="num">{{ r.kredit }}</td>
               </tr>
             {% empty %}
-              <tr><td colspan="2" class="muted">Nikdo nedluží 🎉</td></tr>
+              <tr><td colspan="2" class="muted">{% trans "Nikdo nedluží 🎉" %}</td></tr>
             {% endfor %}
             </tbody>
           </table>
@@ -85,10 +87,10 @@
       </div>
 
       <div class="card" style="margin-top:18px;">
-        <h3>K vyplacení trenérům</h3>
+        <h3>{% trans "K vyplacení trenérům" %}</h3>
         <div class="inner">
           <table class="list">
-            <thead><tr><th>Trenér</th><th class="num">Částka</th></tr></thead>
+            <thead><tr><th>{% trans "Trenér" %}</th><th class="num">{% trans "Částka" %}</th></tr></thead>
             <tbody>
             {% for r in treneri %}
               <tr>
@@ -96,7 +98,7 @@
                 <td class="num">{{ r.balance }}</td>
               </tr>
             {% empty %}
-              <tr><td colspan="2" class="muted">Nic k vyplacení.</td></tr>
+              <tr><td colspan="2" class="muted">{% trans "Nic k vyplacení." %}</td></tr>
             {% endfor %}
             </tbody>
           </table>

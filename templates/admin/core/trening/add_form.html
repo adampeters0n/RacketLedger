@@ -16,7 +16,6 @@
 {% block extrastyle %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'admin/css/add-day.css' %}">
-<link rel="stylesheet" href="{% static 'admin/custom.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -24,36 +23,36 @@
   <h1>{{ title }}</h1>
 
   <div class="add-day-card add-day-copy-card">
-    <h2 class="add-day-card-title">Kopírovat z jiného dne / týdne</h2>
-    <p class="add-day-copy-help">Načtěte tréninky ze zvoleného dne nebo týdne, upravte je a uložte jako nové.</p>
+    <h2 class="add-day-card-title">{% trans 'Kopírovat z jiného dne / týdne' %}</h2>
+    <p class="add-day-copy-help">{% trans 'Načtěte tréninky ze zvoleného dne nebo týdne, upravte je a uložte jako nové.' %}</p>
     <form method="get" action="{% url 'admin:core_trening_add' %}" class="add-day-copy-form" id="copy-trainings-form">
       <input type="hidden" name="copy" value="1">
       <div class="add-day-copy-fields">
         <p class="add-day-row">
-          <label for="{{ copy_form.source_date.id_for_label }}">Kopírovat z</label>
+          <label for="{{ copy_form.source_date.id_for_label }}">{% trans "Kopírovat z" %}</label>
           <span class="add-day-datum-input-wrap">
             {{ copy_form.source_date }}
           </span>
         </p>
         <p class="add-day-row">
-          <label for="{{ copy_form.target_date.id_for_label }}">Přidat do</label>
+          <label for="{{ copy_form.target_date.id_for_label }}">{% trans "Přidat do" %}</label>
           <span class="add-day-datum-input-wrap">
             {{ copy_form.target_date }}
           </span>
         </p>
         <p class="add-day-row">
-          <label for="{{ copy_form.scope.id_for_label }}">Rozsah</label>
+          <label for="{{ copy_form.scope.id_for_label }}">{% trans "Rozsah" %}</label>
           {{ copy_form.scope }}
         </p>
         <p class="add-day-row">
-          <label for="{{ copy_form.trener.id_for_label }}">Trenér</label>
+          <label for="{{ copy_form.trener.id_for_label }}">{% trans "Trenér" %}</label>
           {{ copy_form.trener }}
         </p>
       </div>
       <div class="add-day-copy-actions">
-        <button type="submit" class="add-day-btn-save add-day-btn-copy-load">Načíst tréninky</button>
+        <button type="submit" class="add-day-btn-save add-day-btn-copy-load">{% trans "Načíst tréninky" %}</button>
         {% if copy_loaded %}
-        <span class="add-day-copy-status">Načteno {{ copy_slot_count }} tréninků – zkontrolujte a uložte níže.</span>
+        <span class="add-day-copy-status">{% blocktrans with count=copy_slot_count %}Načteno {{ count }} tréninků – zkontrolujte a uložte níže.{% endblocktrans %}</span>
         {% endif %}
       </div>
     </form>
@@ -72,21 +71,21 @@
     <input type="hidden" name="day-datum" id="id_day-datum" value="{{ copy_hidden_day_datum }}">
     {% else %}
     <div class="add-day-card add-day-datum-card">
-      <h2 class="add-day-card-title">Vyplňte položky</h2>
+      <h2 class="add-day-card-title">{% trans "Vyplňte položky" %}</h2>
       <p class="add-day-row">
-        <label for="id_day-trener">Trenér</label>
+        <label for="id_day-trener">{% trans "Trenér" %}</label>
         {{ day_form.trener }}
       </p>
       {% if day_form.trener.errors %}<ul class="errorlist">{{ day_form.trener.errors }}</ul>{% endif %}
       <p class="add-day-row add-day-datum-row">
         <span class="add-day-datum-shortcuts">
-          <a href="#" id="add-day-dnes">Dnes</a>
-          <a href="#" id="add-day-minuly-tyden" title="Předchozí týden">−7 dní</a>
-          <a href="#" id="add-day-calendar" title="Kalendář" aria-label="Otevřít kalendář">
+          <a href="#" id="add-day-dnes">{% trans "Dnes" %}</a>
+          <a href="#" id="add-day-minuly-tyden" title="{% trans 'Předchozí týden' %}">{% trans "−7 dní" %}</a>
+          <a href="#" id="add-day-calendar" title="{% trans 'Kalendář' %}" aria-label="{% trans 'Otevřít kalendář' %}">
             <img src="{% static 'admin/img/icon-calendar-single.svg' %}" alt="">
           </a>
         </span>
-        <label for="id_day-datum" class="add-day-label-inline">Datum</label>
+        <label for="id_day-datum" class="add-day-label-inline">{% trans "Datum" %}</label>
         <span class="add-day-datum-input-wrap">
           {{ day_form.datum }}
         </span>
@@ -102,16 +101,16 @@
       {% with form=slot.form %}
       <div class="slot-card add-day-card" data-slot-index="{{ slot.index }}" {% if slot.hidden %}style="display:none;"{% endif %}>
         <h2 class="add-day-card-title add-day-slot-title-row">
-          <span class="add-day-slot-title-text">Trénink {{ slot.index|add:1 }}</span>
+          <span class="add-day-slot-title-text">{% blocktrans with num=slot.index|add:1 %}Trénink {{ num }}{% endblocktrans %}</span>
           {% if copy_loaded or slot.index > 0 %}
-          <button type="button" class="add-day-slot-close" title="Smazat tento trénink" aria-label="Smazat tento trénink">×</button>
+          <button type="button" class="add-day-slot-close" title="{% trans 'Smazat tento trénink' %}" aria-label="{% trans 'Smazat tento trénink' %}">×</button>
           {% endif %}
         </h2>
 
         <div class="add-day-fields">
           {% if copy_loaded and copy_scope == 'week' %}
           <p class="add-day-row add-day-slot-datum-row">
-            <label for="id_slots-{{ slot.index }}-slot_datum">Datum</label>
+            <label for="id_slots-{{ slot.index }}-slot_datum">{% trans "Datum" %}</label>
             {{ form.slot_datum }}
           </p>
           {% else %}
@@ -120,7 +119,7 @@
 
           {% if copy_loaded %}
           <p class="add-day-row">
-            <label for="id_slots-{{ slot.index }}-trener">Trenér</label>
+            <label for="id_slots-{{ slot.index }}-trener">{% trans "Trenér" %}</label>
             {{ form.trener }}
           </p>
           {% else %}
@@ -128,45 +127,45 @@
           {% endif %}
 
           <p class="add-day-row">
-            <label for="id_slots-{{ slot.index }}-cas">Čas</label>
+            <label for="id_slots-{{ slot.index }}-cas">{% trans "Čas" %}</label>
             {{ form.cas }}
           </p>
           {% if form.cas.errors %}<ul class="errorlist">{{ form.cas.errors }}</ul>{% endif %}
 
           <p class="add-day-row">
-            <label for="id_slots-{{ slot.index }}-delka_minut">Délka (hodiny)</label>
+            <label for="id_slots-{{ slot.index }}-delka_minut">{% trans "Délka (hodiny)" %}</label>
             {{ form.delka_minut }}
           </p>
           {% if form.delka_minut.errors %}<ul class="errorlist">{{ form.delka_minut.errors }}</ul>{% endif %}
 
           <p class="add-day-row">
-            <label for="id_slots-{{ slot.index }}-format">Formát</label>
+            <label for="id_slots-{{ slot.index }}-format">{% trans "Formát" %}</label>
             {{ form.format }}
           </p>
           {% if form.format.errors %}<ul class="errorlist">{{ form.format.errors }}</ul>{% endif %}
 
           <p class="add-day-row">
-            <label for="id_slots-{{ slot.index }}-kurt">Kurt</label>
+            <label for="id_slots-{{ slot.index }}-kurt">{% trans "Kurt" %}</label>
             {{ form.kurt }}
           </p>
           {% if form.kurt.errors %}<ul class="errorlist">{{ form.kurt.errors }}</ul>{% endif %}
 
           <p class="add-day-row">
-            <label for="id_slots-{{ slot.index }}-poznamka">Poznámka</label>
+            <label for="id_slots-{{ slot.index }}-poznamka">{% trans "Poznámka" %}</label>
             {{ form.poznamka }}
           </p>
           {% if form.poznamka.errors %}<ul class="errorlist">{{ form.poznamka.errors }}</ul>{% endif %}
         </div>
 
         <div class="add-day-hraci-wrap">
-          <h3 class="add-day-hraci-title">HRÁČI</h3>
+          <h3 class="add-day-hraci-title">{% trans "HRÁČI" %}</h3>
           <div class="add-day-hraci-table">
             <div class="add-day-hraci-rows" data-slot="{{ slot.index }}" data-multiselect-id="id_slots-{{ slot.index }}-hraci">
               {% if copy_loaded and slot.hraci_initial %}
                 {% for h in slot.hraci_initial %}
                 <div class="add-day-hraci-row" data-id="{{ h.pk }}" data-jmeno="{{ h.cele_jmeno }}">
                   <div class="add-day-hraci-search-wrap">
-                    <input type="text" class="add-day-hraci-search" value="{{ h.cele_jmeno }}" placeholder="Vyhledat hráče…" autocomplete="off" aria-label="Vyhledat hráče">
+                    <input type="text" class="add-day-hraci-search" value="{{ h.cele_jmeno }}" placeholder="{% trans 'Vyhledat hráče…' %}" autocomplete="off" aria-label="{% trans 'Vyhledat hráče' %}">
                     <ul class="add-day-hraci-dropdown" role="listbox" aria-hidden="true"></ul>
                   </div>
                   <button type="button" class="btn-remove" aria-label="Odstranit">×</button>
@@ -175,7 +174,7 @@
               {% else %}
               <div class="add-day-hraci-row">
                 <div class="add-day-hraci-search-wrap">
-                  <input type="text" class="add-day-hraci-search" placeholder="Vyhledat hráče…" autocomplete="off" aria-label="Vyhledat hráče">
+                  <input type="text" class="add-day-hraci-search" placeholder="{% trans 'Vyhledat hráče…' %}" autocomplete="off" aria-label="{% trans 'Vyhledat hráče' %}">
                   <ul class="add-day-hraci-dropdown" role="listbox" aria-hidden="true"></ul>
                 </div>
                 <button type="button" class="btn-remove" aria-label="Odstranit">×</button>
@@ -183,7 +182,7 @@
               {% endif %}
             </div>
             <div class="add-day-hraci-add-row">
-              <button type="button" class="add-day-btn-pridat-hrace" data-slot="{{ slot.index }}">Přidat Hráče</button>
+              <button type="button" class="add-day-btn-pridat-hrace" data-slot="{{ slot.index }}">{% trans "Přidat Hráče" %}</button>
             </div>
           </div>
           <script type="application/json" class="add-day-players-json" data-slot="{{ slot.index }}">[{% for h in form.fields.hraci.queryset %}{"id":"{{ h.pk }}","jmeno":"{{ h.cele_jmeno|escapejs }}"}{% if not forloop.last %},{% endif %}{% endfor %}]</script>
@@ -209,14 +208,14 @@
       <div class="add-day-add-slot-inner">
         <button type="button" id="btn-add-slot" class="add-day-btn-add-slot">
           <span class="add-day-btn-add-icon">+</span>
-          <span class="add-day-btn-add-label">Přidat Trénink</span>
+          <span class="add-day-btn-add-label">{% trans "Přidat Trénink" %}</span>
         </button>
       </div>
     </div>
 
     <div class="add-day-submit-row">
-      <input type="submit" value="Uložit" name="_save" class="add-day-btn-save">
-      <button type="submit" name="_addanother" value="1" class="add-day-btn-save-addanother">Uložit: Přidat Další</button>
+      <input type="submit" value="{% trans 'Uložit' %}" name="_save" class="add-day-btn-save">
+      <button type="submit" name="_addanother" value="1" class="add-day-btn-save-addanother">{% trans "Uložit: Přidat Další" %}</button>
     </div>
   </form>
 </div>

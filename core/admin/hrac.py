@@ -12,6 +12,7 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone as dj_tz
 from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 
 from ..forms import HracInfoForm
 from ..models import Hrac, Transakce
@@ -37,7 +38,7 @@ class HracAdmin(admin.ModelAdmin):
     def get_sortable_by(self, request):
         return ("jmeno_display", "kredit_display")
 
-    @admin.display(description="Jméno", ordering="prijmeni")
+    @admin.display(description=_("Jméno"), ordering="prijmeni")
     def jmeno_display(self, obj):
         return " ".join(p for p in (obj.prijmeni.strip(), obj.jmeno.strip()) if p) or "—"
 
@@ -156,18 +157,26 @@ class HracAdmin(admin.ModelAdmin):
         )
         return redirect("admin:core_hrac_change", object_id)
 
+    @admin.display(description=_("Kredit"), ordering="_kredit_sort")
     def kredit_display(self, obj):
-        return f"{obj.kredit:.0f} Kč"
-    kredit_display.short_description = "Kredit"
-    kredit_display.admin_order_field = "_kredit_sort"
+        val = obj.kredit
+        text = f"{val:.0f} Kč"
+        try:
+            from ..models import SystemNastaveni
 
+            if SystemNastaveni.load().zvyraznit_zaporny_kredit and val < 0:
+                return format_html('<span class="kredit-zaporny">{}</span>', text)
+        except Exception:
+            pass
+        return text
+
+    @admin.display(description=_("Rodina"))
     def rodina_link(self, obj):
         if not obj.rodina_id:
             return "—"
         url = reverse("admin:core_rodina_change", args=[obj.rodina_id])
         nazev = obj.rodina.nazev or f"Rodina #{obj.rodina_id}"
         return format_html('<a href="{}">{}</a>', url, nazev)
-    rodina_link.short_description = "Rodina"
 
     def akce_vygenerovat_vyuctovani(self, request, queryset):
         def _parse_date(s: str, end: bool = False):
@@ -212,7 +221,7 @@ class HracAdmin(admin.ModelAdmin):
             )
             count += 1
         self.message_user(request, f"Vyúčtování vytvořeno pro {count} hráčů.", level=messages.SUCCESS)
-    akce_vygenerovat_vyuctovani.short_description = "Vygenerovat vyúčtování (poslat e-mail)"
+    akce_vygenerovat_vyuctovani.short_description = _("Vygenerovat vyúčtování (poslat e-mail)")
     
     def akce_pridat_platbu(self, request, queryset):
         raw_amount = request.POST.get("_bulk_payment_amount")
@@ -253,7 +262,21 @@ class HracAdmin(admin.ModelAdmin):
         except (ValueError, InvalidOperation) as e:
             self.message_user(request, f"Chyba při zadávání platby: {e}", messages.ERROR)
 
-    akce_pridat_platbu.short_description = "Zadat platbu vybraným hráčům"
+    akce_pridat_platbu.short_description = _("Zadat platbu vybraným hráčům")
+
+    def _email_variant_context(self) -> dict:
+        from ..models import VyuctovaniNastaveni
+
+        nast = VyuctovaniNastaveni.load()
+        return {
+            "email_variant_label_1": nast.email_variant_label("1"),
+            "email_variant_label_2": nast.email_variant_label("2"),
+        }
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context.update(self._email_variant_context())
+        return super().changelist_view(request, extra_context=extra_context)
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
         hrac = Hrac.objects.get(pk=object_id)
@@ -376,6 +399,7 @@ class HracAdmin(admin.ModelAdmin):
         end_credit = running_credit
 
         extra_context = extra_context or {}
+        extra_context.update(self._email_variant_context())
         extra_context["ledger_rows"] = rows
         extra_context["ledger_totals"] = {
             "hodiny": trainings_hours,

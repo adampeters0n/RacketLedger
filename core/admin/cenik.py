@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
+from django.utils.translation import gettext_lazy as _
 
 from ..models import Cenik, CenikFormat
 
@@ -20,9 +21,9 @@ class CenikAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["format"] = forms.ChoiceField(
-            label="Typ tréninku",
+            label=_("Typ tréninku"),
             choices=[("", "---------")] + CenikFormat.choices() + [
-                (NEW_TYP_VALUE, "— Nový typ tréninku —"),
+                (NEW_TYP_VALUE, _("— Nový typ tréninku —")),
             ],
             widget=forms.Select(attrs={"class": "vTextField cenik-typ-select"}),
         )
@@ -31,7 +32,7 @@ class CenikAdminForm(forms.ModelForm):
     def clean_format(self):
         value = self.cleaned_data.get("format")
         if value == NEW_TYP_VALUE:
-            raise ValidationError("Nejdříve zadejte název nového typu tréninku, nebo vyberte existující.")
+            raise ValidationError(_("Nejdříve zadejte název nového typu tréninku, nebo vyberte existující."))
         return value
 
 
@@ -42,7 +43,7 @@ class CenikAdmin(admin.ModelAdmin):
     list_display = ("format_nazev", "kurt", "cena_za_hodinu", "platnost_od", "platnost_do")
     search_fields = ("format",)
 
-    @admin.display(description="Typ tréninku", ordering="format")
+    @admin.display(description=_("Typ tréninku"), ordering="format")
     def format_nazev(self, obj):
         return obj.get_format_display()
 
@@ -79,7 +80,7 @@ class CenikAdmin(admin.ModelAdmin):
         if action == "add":
             nazev = (request.POST.get("fmt_new_nazev") or "").strip()
             if not nazev:
-                messages.error(request, "Zadejte název nového typu tréninku.")
+                messages.error(request, _("Zadejte název nového typu tréninku."))
             elif CenikFormat.objects.filter(nazev=nazev).exists():
                 messages.warning(request, f"Typ „{nazev}“ už existuje.")
             else:
@@ -89,19 +90,19 @@ class CenikAdmin(admin.ModelAdmin):
             fmt = CenikFormat.objects.filter(pk=request.POST.get("fmt_id")).first()
             nazev = (request.POST.get("fmt_nazev") or "").strip()
             if not fmt:
-                messages.error(request, "Typ tréninku nebyl nalezen.")
+                messages.error(request, _("Typ tréninku nebyl nalezen."))
             elif not nazev:
-                messages.error(request, "Zadejte název typu tréninku.")
+                messages.error(request, _("Zadejte název typu tréninku."))
             elif CenikFormat.objects.exclude(pk=fmt.pk).filter(nazev=nazev).exists():
                 messages.error(request, f"Typ „{nazev}“ už existuje.")
             else:
                 fmt.nazev = nazev
                 fmt.save(update_fields=["nazev"])
-                messages.success(request, "Název typu tréninku byl upraven.")
+                messages.success(request, _("Název typu tréninku byl upraven."))
         elif action == "delete":
             fmt = CenikFormat.objects.filter(pk=request.POST.get("fmt_id")).first()
             if not fmt:
-                messages.error(request, "Typ tréninku nebyl nalezen.")
+                messages.error(request, _("Typ tréninku nebyl nalezen."))
             elif fmt.je_pouzity():
                 messages.error(
                     request,

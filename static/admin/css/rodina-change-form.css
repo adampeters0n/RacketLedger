@@ -65,8 +65,7 @@
     padding:8px; border-top:1px solid var(--line, #e2e5ea); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     color: #1f2937;
   }
-  table.ledger tbody tr:nth-child(odd){ background:#fff; }
-  table.ledger tbody tr:nth-child(even){ background:#fefefe; }
+  table.ledger tbody tr{ background:var(--surface, #fff); }
   table.ledger tbody tr:hover{ background:var(--brand-100, #fff1de); }
 
   tr.typ-nauctovano { background:rgba(239,68,68,0.12); }
@@ -86,7 +85,7 @@
 
   table.ledger tbody td:nth-child(10){ white-space:nowrap; overflow:visible; text-overflow:clip; }
   table.ledger a.deletelink{ color:#f87171; text-decoration:none; font-weight:600; font-size:13px; }
-  table.ledger a.deletelink:hover{ text-decoration:underline; }
+  table.ledger a.deletelink:hover{ text-decoration:none; color:var(--brand) !important; }
 
   table.ledger tfoot tr.totals td,
   table.ledger tfoot tr.totals th{

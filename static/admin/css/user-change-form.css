@@ -1,0 +1,541 @@
+/* Úprava uživatele – stejný vzhled jako trénink / hráč (bílé karty, bubliny) */
+body.app-auth.model-user.change-form {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+body.app-auth.model-user.change-form #content-main {
+  padding: 16px !important;
+  box-sizing: border-box !important;
+}
+
+body.app-auth.model-user.change-form fieldset.module.aligned {
+  background: #fff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 10px !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  padding: 16px !important;
+  margin-bottom: 12px !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+body.app-auth.model-user.change-form fieldset.module.aligned h2 {
+  margin: 0 0 16px !important;
+  padding: 0 0 10px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid #eef0ea !important;
+}
+
+body.app-auth.model-user.change-form .aligned table,
+body.app-auth.model-user.change-form .aligned tbody,
+body.app-auth.model-user.change-form .aligned tr,
+body.app-auth.model-user.change-form .aligned th,
+body.app-auth.model-user.change-form .aligned td {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+body.app-auth.model-user.change-form .aligned tr {
+  margin-bottom: 16px !important;
+}
+
+body.app-auth.model-user.change-form .aligned tr:last-child {
+  margin-bottom: 0 !important;
+}
+
+body.app-auth.model-user.change-form .aligned th,
+body.app-auth.model-user.change-form .form-row > label,
+body.app-auth.model-user.change-form .flex-container > label {
+  display: block !important;
+  margin: 0 0 8px !important;
+  padding: 0 !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  color: #111827 !important;
+  text-align: left !important;
+}
+
+body.app-auth.model-user.change-form .aligned td,
+body.app-auth.model-user.change-form .form-row > div,
+body.app-auth.model-user.change-form .flex-container {
+  max-width: 360px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+body.app-auth.model-user.change-form .aligned input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+body.app-auth.model-user.change-form .aligned select:not([multiple]),
+body.app-auth.model-user.change-form .aligned textarea,
+body.app-auth.model-user.change-form .form-row input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+body.app-auth.model-user.change-form .form-row select:not([multiple]),
+body.app-auth.model-user.change-form .form-row textarea {
+  width: 100% !important;
+  max-width: 360px !important;
+  box-sizing: border-box !important;
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 6px 10px !important;
+  background: var(--surface, #fff) !important;
+  border: 1px solid var(--line-200, #e5e7eb) !important;
+  color: var(--text, #1f2937) !important;
+  border-radius: 8px !important;
+  font-size: 14px !important;
+}
+
+body.app-auth.model-user.change-form .aligned textarea {
+  height: auto !important;
+  min-height: 72px !important;
+}
+
+body.app-auth.model-user.change-form .aligned input:focus,
+body.app-auth.model-user.change-form .aligned input:focus-visible,
+body.app-auth.model-user.change-form .aligned select:not([multiple]):focus,
+body.app-auth.model-user.change-form .aligned select:not([multiple]):focus-visible,
+body.app-auth.model-user.change-form .aligned textarea:focus,
+body.app-auth.model-user.change-form .aligned textarea:focus-visible {
+  outline: 2px solid var(--brand, #E67817) !important;
+  outline-offset: 2px !important;
+  border-color: var(--brand, #E67817) !important;
+  box-shadow: 0 0 0 3px rgba(230, 120, 23, 0.15) !important;
+}
+
+body.app-auth.model-user.change-form .help,
+body.app-auth.model-user.change-form p.help,
+body.app-auth.model-user.change-form .helptext {
+  margin-top: 6px !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+  color: #6b7280 !important;
+  max-width: 360px !important;
+}
+
+body.app-auth.model-user.change-form .aligned .readonly,
+body.app-auth.model-user.change-form .aligned td.readonly {
+  padding: 10px 12px !important;
+  background: #f9fafb !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+  overflow-x: auto !important;
+  max-width: 360px !important;
+}
+
+body.app-auth.model-user.change-form .aligned .readonly a.button,
+body.app-auth.model-user.change-form .aligned td.readonly a {
+  display: inline-flex !important;
+  align-items: center !important;
+  margin-top: 8px !important;
+}
+
+body.app-auth.model-user.change-form .form-row.field-is_active,
+body.app-auth.model-user.change-form .form-row.field-is_staff,
+body.app-auth.model-user.change-form .form-row.field-is_superuser,
+body.app-auth.model-user.change-form .aligned tr.field-is_active,
+body.app-auth.model-user.change-form .aligned tr.field-is_staff,
+body.app-auth.model-user.change-form .aligned tr.field-is_superuser {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+body.app-auth.model-user.change-form .form-row.field-is_active > label,
+body.app-auth.model-user.change-form .form-row.field-is_staff > label,
+body.app-auth.model-user.change-form .form-row.field-is_superuser > label,
+body.app-auth.model-user.change-form .aligned tr.field-is_active th,
+body.app-auth.model-user.change-form .aligned tr.field-is_staff th,
+body.app-auth.model-user.change-form .aligned tr.field-is_superuser th {
+  margin: 0 !important;
+  width: auto !important;
+  order: 2 !important;
+}
+
+body.app-auth.model-user.change-form .form-row.field-is_active > div,
+body.app-auth.model-user.change-form .form-row.field-is_staff > div,
+body.app-auth.model-user.change-form .form-row.field-is_superuser > div,
+body.app-auth.model-user.change-form .aligned tr.field-is_active td,
+body.app-auth.model-user.change-form .aligned tr.field-is_staff td,
+body.app-auth.model-user.change-form .aligned tr.field-is_superuser td {
+  width: auto !important;
+  max-width: none !important;
+  order: 1 !important;
+}
+
+body.app-auth.model-user.change-form .aligned input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  min-height: 18px !important;
+  accent-color: var(--brand, #E67817) !important;
+}
+
+/* Skupiny a oprávnění – filter_horizontal (SelectFilter) */
+body.app-auth.model-user.change-form .aligned tr.field-groups,
+body.app-auth.model-user.change-form .aligned tr.field-user_permissions,
+body.app-auth.model-user.change-form .form-row.field-groups,
+body.app-auth.model-user.change-form .form-row.field-user_permissions {
+  margin-bottom: 20px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+}
+
+body.app-auth.model-user.change-form .aligned tr.field-groups th,
+body.app-auth.model-user.change-form .aligned tr.field-user_permissions th,
+body.app-auth.model-user.change-form .form-row.field-groups > label,
+body.app-auth.model-user.change-form .form-row.field-user_permissions > label {
+  margin-bottom: 10px !important;
+}
+
+body.app-auth.model-user.change-form .aligned tr.field-groups td,
+body.app-auth.model-user.change-form .aligned tr.field-user_permissions td,
+body.app-auth.model-user.change-form .form-row.field-groups > div,
+body.app-auth.model-user.change-form .form-row.field-user_permissions > div,
+body.app-auth.model-user.change-form .form-row.field-groups .flex-container,
+body.app-auth.model-user.change-form .form-row.field-user_permissions .flex-container,
+body.app-auth.model-user.change-form .form-row.field-groups .related-widget-wrapper,
+body.app-auth.model-user.change-form .form-row.field-user_permissions .related-widget-wrapper {
+  max-width: 100% !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+body.app-auth.model-user.change-form .aligned tr.field-groups .help,
+body.app-auth.model-user.change-form .aligned tr.field-user_permissions .help,
+body.app-auth.model-user.change-form .form-row.field-groups .help,
+body.app-auth.model-user.change-form .form-row.field-user_permissions .help {
+  max-width: 100% !important;
+  margin-top: 10px !important;
+}
+
+body.app-auth.model-user.change-form .selector {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch !important;
+  gap: clamp(8px, 1.5vw, 14px) !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  float: none !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
+
+body.app-auth.model-user.change-form .selector-available,
+body.app-auth.model-user.change-form .selector-chosen {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 calc(50% - 28px) !important;
+  min-width: 0 !important;
+  width: auto !important;
+  max-width: none !important;
+  float: none !important;
+}
+
+body.app-auth.model-user.change-form .selector-available-title,
+body.app-auth.model-user.change-form .selector-chosen-title {
+  background: var(--amber-100, #fff7d6) !important;
+  color: #111827 !important;
+  border: 1px solid var(--line-200, #e5e7eb) !important;
+  border-bottom: none !important;
+  border-radius: 8px 8px 0 0 !important;
+  padding: 8px 10px !important;
+}
+
+body.app-auth.model-user.change-form .selector-chosen-title {
+  background: #f3f4f6 !important;
+}
+
+body.app-auth.model-user.change-form .aligned .selector-available-title label,
+body.app-auth.model-user.change-form .aligned .selector-chosen-title label,
+body.app-auth.model-user.change-form .selector-available-title label,
+body.app-auth.model-user.change-form .selector-chosen-title label {
+  display: block !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  color: #111827 !important;
+}
+
+body.app-auth.model-user.change-form .selector .helptext,
+body.app-auth.model-user.change-form .selector p.help {
+  margin: 0 !important;
+  padding: 6px 10px !important;
+  font-size: 11px !important;
+  line-height: 1.35 !important;
+  color: #6b7280 !important;
+  background: #f9fafb !important;
+  border: 1px solid var(--line-200, #e5e7eb) !important;
+  border-top: none !important;
+  max-width: 100% !important;
+}
+
+body.app-auth.model-user.change-form .selector .selector-filter {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  padding: 6px 8px !important;
+  border: 1px solid var(--line-200, #e5e7eb) !important;
+  border-top: none !important;
+  background: #fff !important;
+}
+
+body.app-auth.model-user.change-form .selector .selector-filter label {
+  float: none !important;
+  width: auto !important;
+  min-width: auto !important;
+  margin: 0 !important;
+  flex: 0 0 auto !important;
+}
+
+body.app-auth.model-user.change-form .selector-filter input {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  max-width: none !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  margin: 0 !important;
+  border-radius: 6px !important;
+}
+
+body.app-auth.model-user.change-form .selector select[multiple] {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: clamp(200px, 30vh, 340px) !important;
+  min-height: clamp(200px, 30vh, 340px) !important;
+  margin: 0 0 10px !important;
+  padding: 4px 8px !important;
+  border: 1px solid var(--line-200, #e5e7eb) !important;
+  border-top: none !important;
+  border-radius: 0 0 8px 8px !important;
+  background: #fff !important;
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+  box-sizing: border-box !important;
+}
+
+body.app-auth.model-user.change-form .selector .selector-chosen--with-filtered select[multiple] {
+  margin: 0 !important;
+  border-radius: 0 !important;
+  height: clamp(160px, 24vh, 280px) !important;
+  min-height: clamp(160px, 24vh, 280px) !important;
+}
+
+body.app-auth.model-user.change-form .selector ul.selector-chooser {
+  display: block !important;
+  align-self: center !important;
+  flex: 0 0 36px !important;
+  width: 36px !important;
+  margin: 0 !important;
+  padding: 4px !important;
+  transform: none !important;
+  background: #f3f4f6 !important;
+  border: 1px solid var(--line-200, #e5e7eb) !important;
+  border-radius: 10px !important;
+  list-style: none !important;
+}
+
+body.app-auth.model-user.change-form .selector-chooser li {
+  margin: 0 !important;
+  padding: 2px !important;
+  list-style: none !important;
+}
+
+body.app-auth.model-user.change-form .selector-add,
+body.app-auth.model-user.change-form .selector-remove {
+  width: 24px !important;
+  height: 24px !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+}
+
+body.app-auth.model-user.change-form .selector-chosen .list-footer-display {
+  margin: 0 !important;
+  padding: 8px 10px !important;
+  text-align: center !important;
+  background: #fff3df !important;
+  color: #c96510 !important;
+  border: 1px solid var(--line-200, #e5e7eb) !important;
+  border-top: none !important;
+  border-radius: 0 0 8px 8px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+}
+
+body.app-auth.model-user.change-form .selector-chosen .list-footer-display__clear {
+  color: #6b7280 !important;
+}
+
+body.app-auth.model-user.change-form .selector .help {
+  max-width: 100% !important;
+}
+
+body.app-auth.model-user.change-form #content-main .submit-row {
+  margin-top: 12px !important;
+  padding: 12px 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+body.app-auth.model-user.change-form .object-tools a {
+  border-radius: 999px !important;
+}
+
+/* Tablet – mírně nižší seznamy, stále vedle sebe */
+@media (max-width: 1100px) {
+  body.app-auth.model-user.change-form .selector select[multiple] {
+    height: clamp(180px, 28vh, 280px) !important;
+    min-height: clamp(180px, 28vh, 280px) !important;
+  }
+
+  body.app-auth.model-user.change-form .selector .selector-chosen--with-filtered select[multiple] {
+    height: clamp(150px, 22vh, 240px) !important;
+    min-height: clamp(150px, 22vh, 240px) !important;
+  }
+}
+
+/* Úzká obrazovka – sloupce pod sebe */
+@media (max-width: 900px) {
+  body.app-auth.model-user.change-form .selector {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  body.app-auth.model-user.change-form .selector-available,
+  body.app-auth.model-user.change-form .selector-chosen {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    max-width: 100% !important;
+  }
+
+  body.app-auth.model-user.change-form .selector ul.selector-chooser {
+    display: flex !important;
+    flex-direction: row !important;
+    align-self: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    padding: 10px !important;
+    order: 2 !important;
+  }
+
+  body.app-auth.model-user.change-form .selector-available {
+    order: 1 !important;
+  }
+
+  body.app-auth.model-user.change-form .selector-chosen {
+    order: 3 !important;
+  }
+
+  body.app-auth.model-user.change-form .selector select[multiple] {
+    height: clamp(160px, 24vh, 240px) !important;
+    min-height: clamp(160px, 24vh, 240px) !important;
+  }
+
+  body.app-auth.model-user.change-form .selector .selector-chosen--with-filtered select[multiple] {
+    height: clamp(140px, 20vh, 220px) !important;
+    min-height: clamp(140px, 20vh, 220px) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  body.app-auth.model-user.change-form #content-main {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  body.app-auth.model-user.change-form fieldset.module.aligned {
+    padding: 12px !important;
+  }
+
+  body.app-auth.model-user.change-form .aligned input:not([type="checkbox"]):not([type="radio"]),
+  body.app-auth.model-user.change-form .aligned select:not([multiple]),
+  body.app-auth.model-user.change-form .aligned textarea,
+  body.app-auth.model-user.change-form .aligned .readonly,
+  body.app-auth.model-user.change-form .help {
+    max-width: 100% !important;
+  }
+}
+
+/* Mobil */
+@media (max-width: 520px) {
+  body.app-auth.model-user.change-form #content-main {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  body.app-auth.model-user.change-form fieldset.module.aligned {
+    padding: 10px !important;
+    border-radius: 8px !important;
+  }
+
+  body.app-auth.model-user.change-form .selector-available-title,
+  body.app-auth.model-user.change-form .selector-chosen-title {
+    padding: 7px 8px !important;
+  }
+
+  body.app-auth.model-user.change-form .aligned .selector-available-title label,
+  body.app-auth.model-user.change-form .aligned .selector-chosen-title label,
+  body.app-auth.model-user.change-form .selector-available-title label,
+  body.app-auth.model-user.change-form .selector-chosen-title label {
+    font-size: 12px !important;
+    line-height: 1.3 !important;
+  }
+
+  body.app-auth.model-user.change-form .selector .helptext,
+  body.app-auth.model-user.change-form .selector p.help {
+    font-size: 10px !important;
+    padding: 5px 8px !important;
+  }
+
+  body.app-auth.model-user.change-form .selector-filter input {
+    height: 36px !important;
+    min-height: 36px !important;
+    font-size: 16px !important; /* zabrání zoomu na iOS */
+  }
+
+  body.app-auth.model-user.change-form .selector select[multiple] {
+    height: clamp(140px, 22vh, 200px) !important;
+    min-height: clamp(140px, 22vh, 200px) !important;
+    font-size: 14px !important;
+  }
+
+  body.app-auth.model-user.change-form .selector .selector-chosen--with-filtered select[multiple] {
+    height: clamp(120px, 18vh, 180px) !important;
+    min-height: clamp(120px, 18vh, 180px) !important;
+  }
+
+  body.app-auth.model-user.change-form .selector-add,
+  body.app-auth.model-user.change-form .selector-remove {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  body.app-auth.model-user.change-form .selector ul.selector-chooser {
+    padding: 12px !important;
+    gap: 16px !important;
+  }
+
+  body.app-auth.model-user.change-form .selector-chosen .list-footer-display {
+    font-size: 11px !important;
+    padding: 10px 8px !important;
+  }
+}

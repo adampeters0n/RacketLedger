@@ -84,11 +84,31 @@ body{
   box-shadow:0 0 0 3px rgba(226,239,69,.35), 0 0 20px rgba(226,239,69,.5);
 }
 
+.nav__logo{
+  width:32px;
+  height:32px;
+  object-fit:contain;
+  border-radius:6px;
+}
+
 .nav__links{
   display:flex;
   align-items:center;
   gap:6px;
 }
+
+.nav__lang{display:inline-flex;align-items:center}
+.nav__lang-select{
+  padding:8px 12px;
+  font-size:.82rem;
+  font-weight:600;
+  border:1px solid var(--line);
+  border-radius:100px;
+  background:var(--white);
+  color:var(--ink);
+  cursor:pointer;
+}
+.nav__lang-select:hover{border-color:var(--yellow-deep)}
 
 .nav__links a{
   padding:9px 18px;

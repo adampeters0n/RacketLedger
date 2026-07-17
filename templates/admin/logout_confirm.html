@@ -1,22 +1,23 @@
 {% extends "admin/base_site.html" %}
 
+{% load i18n %}
 {% block bodyclass %}{{ block.super }} logout-confirmation{% endblock %}
 
 {% block breadcrumbs %}
 <div class="breadcrumbs">
-  <a href="{% url 'admin:index' %}">Domů</a>
-  &rsaquo; Odhlášení
+  <a href="{% url 'admin:index' %}">{% trans "Domů" %}</a>
+  &rsaquo; {% trans "Odhlášení" %}
 </div>
 {% endblock %}
 
 {% block content %}
-<h1>Odhlášení</h1>
-<p>Opravdu se chcete odhlásit ze systému Tenis systém Čimice?</p>
+<h1>{% trans "Odhlášení" %}</h1>
+<p>{% blocktrans with name=system_nazev_klubu|default:"TenisSystém" %}Opravdu se chcete odhlásit ze systému {{ name }}?{% endblocktrans %}</p>
 <form method="post">
   {% csrf_token %}
   <div class="delete-confirm-actions logout-confirm-actions">
-    <input type="submit" value="Ano, odhlásit se" class="delete-confirm-submit">
-    <a href="{{ cancel_url }}" class="button secondary">Zrušit</a>
+    <input type="submit" value="{% trans 'Ano, odhlásit se' %}" class="delete-confirm-submit">
+    <a href="{{ cancel_url }}" class="button secondary">{% trans "Zrušit" %}</a>
   </div>
 </form>
 {% endblock %}

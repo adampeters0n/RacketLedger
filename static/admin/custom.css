@@ -6,8 +6,10 @@
   --accent:#14833B; --accent-600:#0F6B2E; --accent-100:#E9F7EE;
   --amber:#080704; --amber-100:#FFF7D6; --amber-200:#FFE9A6;
   --danger:#D92D20; --danger-100:#FFE5E1; --line-200:#929aa4;
+  --table-head:#FFE9A6; --table-row-alt:#FFFAF0; --table-row-hover:#FFFEF2;
+  --muted:#64748B;
 
-  --page-pad:18px;   /* vnitřní odsazení stránky */
+  --page-pad:18px;   /* vnitřní odsazení stránky – drobečky, zprávy, tabulky */
   --filter-w:0px;    /* šířka pravého panelu (0 = žádný sloupec) */
   --gap:12px;        /* mezera mezi obsahem a filtrem */
 
@@ -26,6 +28,10 @@
   --admin-actions-select-width: 300px;
 
   color-scheme: light;
+}
+
+@media (max-width: 767px){
+  :root{ --page-pad:15px; }
 }
 
 /* === Základ === */
@@ -70,8 +76,21 @@ body.app-core.model-trening.change-form{ width:100% !important; max-width:100% !
 #content, #content-main, .colM{
   max-width:none !important; width:100% !important; margin:0 !important; float:none !important;
 }
-#content{ padding-left:var(--page-pad) !important; padding-right:var(--page-pad) !important; }
-div.breadcrumbs{ padding-left:var(--page-pad) !important; padding-right:var(--page-pad) !important; }
+
+/* Jednotné horizontální odsazení – drobečky, zprávy, nadpisy i tabulky */
+main#content-start.content{
+  padding-left:var(--page-pad) !important;
+  padding-right:var(--page-pad) !important;
+  box-sizing:border-box !important;
+}
+div.breadcrumbs{
+  padding-left:var(--page-pad) !important;
+  padding-right:var(--page-pad) !important;
+}
+#content{
+  padding-left:0 !important;
+  padding-right:0 !important;
+}
 
 /* === CHANGELIST: obsah + případný filtr === */
 body.change-list #content{
@@ -92,11 +111,11 @@ body.change-list #content{
   #content > #changelist-filter, #content > .filters{ grid-column:1 !important; position:static !important; max-width:100% !important; }
 }
 
-/* odkazy v obsahu */
-#content a, #content-main a, .module a, .results a, table a{
+/* odkazy v obsahu (mimo tabulky) */
+#content a, #content-main a, .module a, .results a{
   color:var(--text-strong) !important; text-decoration:underline;
 }
-#content a:hover, #content-main a:hover, .module a:hover, .results a:hover, table a:hover{ text-decoration:none; }
+#content a:hover, #content-main a:hover, .module a:hover, .results a:hover{ text-decoration:none; }
 
 /* kill dark-mode přepínače */
 .theme-toggle, .dark-mode-toggle, [class*="theme-toggle"],
@@ -110,8 +129,8 @@ body.change-list #content{
 /* =================================================================== */
 
 #header{
-  position:relative;                          /* ukotvení pro utility odkazy */
-  background:var(--surface) !important;
+  position:relative;
+  background:var(--bg) !important;
   border-bottom:3px solid var(--brand) !important;
   color:var(--text) !important;
   overflow:visible !important;
@@ -193,7 +212,7 @@ body.change-list #content{
 /* TOP NAV */
 .ts-topnav, .topnav{
   position:relative;
-  background:var(--surface) !important;
+  background:transparent !important;
   display:flex; align-items:center; gap:8px;
   justify-content:flex-start !important;
   padding:0 var(--page-pad) !important;
@@ -218,9 +237,10 @@ body.change-list #content{
 
 .ts-topnav a:hover, .topnav a:hover{ background:var(--brand-100); border-color:var(--brand-100); }
 .ts-topnav a.is-active, .topnav a.active{
-  background:#E67817; border:1px solid var(--brand);
-  box-shadow:inset 0 -3px 0 var(--brand);
-  color:var(--text) !important;
+  background:var(--brand) !important;
+  border:1px solid var(--brand) !important;
+  box-shadow:none !important;
+  color:#fff !important;
 }
 .ts-topnav a:focus-visible, .topnav a:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
 
@@ -330,7 +350,16 @@ div.breadcrumbs a:hover{ background:var(--amber-100); }
 }
 #changelist-filter h2, #changelist-filter a, #changelist-filter li,
 #changelist-filter .filter-title, #changelist-filter .filter{ color:var(--text) !important; }
-#changelist-filter a:hover{ text-decoration:none; }
+#changelist-filter a,
+#changelist-filter a:visited,
+.filters a,
+.filters a:visited{
+  text-decoration:none !important;
+}
+#changelist-filter a:hover,
+.filters a:hover{
+  text-decoration:none !important;
+}
 
 /* boxy (submit-row má vlastní styl níže – jako Trénink change_form) */
 .module, .panel, .card{
@@ -357,14 +386,30 @@ div.breadcrumbs a:hover{ background:var(--amber-100); }
 /* tabulky */
 table{ background:var(--surface) !important; border-color:var(--line) !important; width:100% !important; table-layout:auto !important; }
 th, td{ color:var(--text) !important; }
-thead th{ background:var(--amber-100) !important; color:var(--text) !important; border-bottom:2px solid var(--amber) !important; }
-#result_list tbody tr:nth-child(odd){ background:#FFFFFF !important; }
-#result_list tbody tr:nth-child(even){ background:#fefefe !important; }
-#result_list tbody tr.selected, tr.row-selected{ outline:2px solid var(--accent) !important; background:var(--accent-100) !important; }
+thead th{ background:var(--table-head) !important; color:var(--text-strong) !important; border-bottom:1px solid var(--line) !important; }
+#result_list tbody tr:nth-child(odd){ background:var(--surface) !important; }
+#result_list tbody tr:nth-child(even){ background:var(--surface) !important; }
+#result_list tbody tr.selected,
+#result_list tbody tr.row-selected{
+  outline:none !important;
+  box-shadow:none !important;
+}
+#result_list tbody tr.selected > th,
+#result_list tbody tr.selected > td,
+#result_list tbody tr.row-selected > th,
+#result_list tbody tr.row-selected > td{
+  background:var(--table-row-hover) !important;
+  color:var(--text) !important;
+  border-top-color:var(--line) !important;
+  border-bottom-color:var(--line) !important;
+  border-left-color:var(--line) !important;
+  border-right-color:var(--line) !important;
+  box-shadow:none !important;
+}
 
 /* platby tabulka */
 table.payments thead th{ background:var(--amber-200) !important; border-bottom:0px solid var(--brand) !important; }
-table.payments tbody tr:nth-child(even){ background:#FFF9EC !important; }
+table.payments tbody tr:nth-child(even){ background:var(--surface) !important; }
 
 /* formuláře */
 input, select, textarea{
@@ -690,409 +735,9 @@ body.change-form .aligned td{
   }
 }
 
-/* ======================================================================== */
-/* ÚPRAVA UŽIVATELE (/admin/auth/user/<id>/change/) – bílá pole zneviditelněna */
-/* ======================================================================== */
-body.app-auth.model-user.change-form #content,
-body.app-auth.model-user.change-form #content-main{
-  overflow: visible !important;
-  box-sizing: border-box !important;
-}
-body.app-auth.model-user.change-form #content-main{
-  padding: 28px !important;
-}
-body.app-auth.model-user.change-form #content{
-  padding-left: var(--page-pad) !important;
-  padding-right: var(--page-pad) !important;
-}
-/* Bílá pole (module, panel, card) – zrušení pozadí, borderu a stínu */
-body.app-auth.model-user.change-form .module,
-body.app-auth.model-user.change-form .panel,
-body.app-auth.model-user.change-form .card{
-  background: var(--bg) !important;
-  border: none !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
-  padding: 24px !important;
-  box-sizing: border-box !important;
-  overflow: visible !important;
-}
-/* Nadpisy sekcí (Heslo, Osobní údaje, Oprávnění…) – bez žlutého pole */
-body.app-auth.model-user.change-form .module caption,
-body.app-auth.model-user.change-form .module h2,
-body.app-auth.model-user.change-form .panel h2,
-body.app-auth.model-user.change-form .card h2{
-  background: transparent !important;
-  border: none !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
-body.app-auth.model-user.change-form #content,
-body.app-auth.model-user.change-form #content-main,
-body.app-auth.model-user.change-form .module,
-body.app-auth.model-user.change-form .form-row,
-body.app-auth.model-user.change-form .aligned,
-body.app-auth.model-user.change-form .aligned th,
-body.app-auth.model-user.change-form .aligned td,
-body.app-auth.model-user.change-form label,
-body.app-auth.model-user.change-form p,
-body.app-auth.model-user.change-form .help{
-  text-align: left !important;
-}
-body.app-auth.model-user.change-form .submit-row{
-  border-width: 0 !important;
-  box-shadow: none !important;
-  padding: 12px 0 !important;
-}
-body.app-auth.model-user.change-form .module,
-body.app-auth.model-user.change-form .panel,
-body.app-auth.model-user.change-form .card{
-  max-width: 100% !important;
-  min-width: 0 !important;
-  overflow-wrap: break-word !important;
-  word-wrap: break-word !important;
-}
-body.app-auth.model-user.change-form .aligned,
-body.app-auth.model-user.change-form .aligned table,
-body.app-auth.model-user.change-form .form-row{
-  overflow: visible !important;
-}
-body.app-auth.model-user.change-form .aligned th,
-body.app-auth.model-user.change-form .aligned td{
-  max-width: 100% !important;
-  min-width: 0 !important;
-  word-wrap: break-word !important;
-  overflow-wrap: break-word !important;
-}
-/* Buňka s dlouhým readonly (heslo hash/salt) – posouvání jen uvnitř bílého pole */
-body.app-auth.model-user.change-form .aligned .readonly,
-body.app-auth.model-user.change-form .aligned td.readonly{
-  overflow-x: auto !important;
-  overflow-y: visible !important;
-  -webkit-overflow-scrolling: touch !important;
-  max-width: 100% !important;
-  min-width: 0 !important;
-  font-size: 0.85em !important;
-  line-height: 1.35 !important;
-}
-body.app-auth.model-user.change-form .aligned .readonly p,
-body.app-auth.model-user.change-form .aligned .readonly div,
-body.app-auth.model-user.change-form .aligned td.readonly p,
-body.app-auth.model-user.change-form .aligned td.readonly div{
-  min-width: min-content !important;
-  overflow-wrap: normal !important;
-  word-break: normal !important;
-}
-body.app-auth.model-user.change-form .help,
-body.app-auth.model-user.change-form p.help,
-body.app-auth.model-user.change-form .helptext,
-body.app-auth.model-user.change-form [class*="help"]{
-  word-wrap: break-word !important;
-  overflow-wrap: break-word !important;
-  word-break: break-word !important;
-  max-width: 100% !important;
-  font-size: 0.85em !important;
-  line-height: 1.3 !important;
-}
-body.app-auth.model-user.change-form label{
-  font-size: 0.9em !important;
-}
-body.app-auth.model-user.change-form .aligned input,
-body.app-auth.model-user.change-form .aligned select,
-body.app-auth.model-user.change-form .aligned textarea{
-  max-width: 100% !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-  font-size: 0.95em !important;
-}
-body.app-auth.model-user.change-form .readonly,
-body.app-auth.model-user.change-form .form-row.readonly{
-  max-width: 100% !important;
-}
-/* U ostatního readonly textu (ne hash) zalamování */
-body.app-auth.model-user.change-form .aligned th .readonly,
-body.app-auth.model-user.change-form .readonly label{
-  word-break: break-word !important;
-  overflow-wrap: break-word !important;
-}
-/* Mobil: veškerý padding je UVNITŘ bílých polí; obsah se musí vejít a nic nepřetékat */
-/* Pro 390px a méně platí i selektor podle formuláře (form[action*="auth/user"]), aby to vždy sedělo */
-@media (max-width: 768px){
-  body.app-auth.model-user.change-form #content,
-  body.app-auth.model-user.change-form #content-main,
-  #content-main:has(form[action*="auth/user"]){
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-    max-width: 100% !important;
-    overflow-x: hidden !important;
-  }
-  body.app-auth.model-user.change-form #content-main,
-  #content-main:has(form[action*="auth/user"]){
-    min-width: 0 !important;
-  }
-  /* Bílá pole – větší vertikální padding, aby se obsah vejít i svisle */
-  body.app-auth.model-user.change-form .module,
-  body.app-auth.model-user.change-form .panel,
-  body.app-auth.model-user.change-form .card,
-  #content-main:has(form[action*="auth/user"]) .module,
-  #content-main:has(form[action*="auth/user"]) .panel,
-  #content-main:has(form[action*="auth/user"]) .card{
-    padding: 28px 24px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
-    overflow-x: hidden !important;
-  }
-  body.app-auth.model-user.change-form .aligned tr,
-  body.app-auth.model-user.change-form .form-row,
-  #content-main:has(form[action*="auth/user"]) .aligned tr,
-  #content-main:has(form[action*="auth/user"]) .form-row{
-    padding-top: 6px !important;
-    padding-bottom: 6px !important;
-    min-width: 0 !important;
-  }
-  #content-main:has(form[action*="auth/user"]) .form-row > div,
-  body.app-auth.model-user.change-form .form-row > div{
-    min-width: 0 !important;
-    max-width: 100% !important;
-  }
-  body.app-auth.model-user.change-form .aligned th,
-  body.app-auth.model-user.change-form .aligned td,
-  #content-main:has(form[action*="auth/user"]) .aligned th,
-  #content-main:has(form[action*="auth/user"]) .aligned td{
-    padding-top: 10px !important;
-    padding-bottom: 10px !important;
-  }
-  /* Tabulka – fixed layout, sloupce omezené, aby hash nepřetékal */
-  body.app-auth.model-user.change-form .module .aligned,
-  body.app-auth.model-user.change-form .module table,
-  body.app-auth.model-user.change-form .panel .aligned,
-  body.app-auth.model-user.change-form .card .aligned,
-  #content-main:has(form[action*="auth/user"]) .module .aligned,
-  #content-main:has(form[action*="auth/user"]) .module table,
-  #content-main:has(form[action*="auth/user"]) .aligned{
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    table-layout: fixed !important;
-    box-sizing: border-box !important;
-  }
-  body.app-auth.model-user.change-form .aligned th,
-  body.app-auth.model-user.change-form .aligned td,
-  #content-main:has(form[action*="auth/user"]) .aligned th,
-  #content-main:has(form[action*="auth/user"]) .aligned td{
-    max-width: 100% !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
-    padding-left: 0 !important;
-    padding-right: 16px !important;
-    overflow-x: hidden !important;
-  }
-  body.app-auth.model-user.change-form .aligned th,
-  #content-main:has(form[action*="auth/user"]) .aligned th{
-    padding-left: 0 !important;
-  }
-  body.app-auth.model-user.change-form .module h2,
-  body.app-auth.model-user.change-form .panel h2,
-  body.app-auth.model-user.change-form .card h2,
-  #content-main:has(form[action*="auth/user"]) .module h2{
-    margin-top: 0 !important;
-    margin-bottom: 16px !important;
-    padding-bottom: 8px !important;
-  }
-  /* Readonly (heslo, hash, salt) – zalamovat, nikdy nepřetékat */
-  body.app-auth.model-user.change-form .module .readonly,
-  body.app-auth.model-user.change-form .module td.readonly,
-  body.app-auth.model-user.change-form .aligned .readonly,
-  body.app-auth.model-user.change-form .aligned td.readonly,
-  #content-main:has(form[action*="auth/user"]) .readonly,
-  #content-main:has(form[action*="auth/user"]) td.readonly,
-  #content-main:has(form[action*="auth/user"]) .module .readonly,
-  #content-main:has(form[action*="auth/user"]) .aligned td.readonly{
-    max-width: 100% !important;
-    min-width: 0 !important;
-    overflow-x: hidden !important;
-  }
-  body.app-auth.model-user.change-form .module .readonly p,
-  body.app-auth.model-user.change-form .module .readonly div,
-  body.app-auth.model-user.change-form .module td.readonly p,
-  body.app-auth.model-user.change-form .module td.readonly div,
-  body.app-auth.model-user.change-form .aligned .readonly p,
-  body.app-auth.model-user.change-form .aligned .readonly div,
-  body.app-auth.model-user.change-form .aligned td.readonly p,
-  body.app-auth.model-user.change-form .aligned td.readonly div,
-  #content-main:has(form[action*="auth/user"]) .readonly p,
-  #content-main:has(form[action*="auth/user"]) .readonly div,
-  #content-main:has(form[action*="auth/user"]) td.readonly p,
-  #content-main:has(form[action*="auth/user"]) td.readonly div{
-    word-break: break-all !important;
-    overflow-wrap: anywhere !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-  }
-  body.app-auth.model-user.change-form .module .help,
-  body.app-auth.model-user.change-form .module p.help,
-  body.app-auth.model-user.change-form .aligned input,
-  body.app-auth.model-user.change-form .aligned select,
-  body.app-auth.model-user.change-form .aligned textarea,
-  #content-main:has(form[action*="auth/user"]) .help,
-  #content-main:has(form[action*="auth/user"]) .aligned input,
-  #content-main:has(form[action*="auth/user"]) .aligned select,
-  #content-main:has(form[action*="auth/user"]) .aligned textarea{
-    max-width: 100% !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-  /* Help text („Požadováno. 150 znaků…“) – zmenšený font, zalamování, box-sizing */
-  #content-main:has(form[action*="auth/user"]) .help,
-  #content-main:has(form[action*="auth/user"]) p.help,
-  #content-main:has(form[action*="auth/user"]) .form-row .help,
-  body.app-auth.model-user.change-form .help,
-  body.app-auth.model-user.change-form p.help,
-  body.app-auth.model-user.change-form .form-row .help{
-    white-space: normal !important;
-    word-break: break-word !important;
-    overflow-wrap: break-word !important;
-    font-size: 0.85rem !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-  }
-  /* Readonly (algoritmus, hash) – explicitní white-space pro zalamování */
-  #content-main:has(form[action*="auth/user"]) .readonly p,
-  #content-main:has(form[action*="auth/user"]) .readonly div,
-  #content-main:has(form[action*="auth/user"]) td.readonly p,
-  #content-main:has(form[action*="auth/user"]) td.readonly div,
-  body.app-auth.model-user.change-form .aligned .readonly p,
-  body.app-auth.model-user.change-form .aligned .readonly div,
-  body.app-auth.model-user.change-form .aligned td.readonly p,
-  body.app-auth.model-user.change-form .aligned td.readonly div{
-    white-space: normal !important;
-  }
-  /* Tlačítka (Resetovat heslo) – vejít se do kontejneru, padding místo fixní šířky */
-  #content-main:has(form[action*="auth/user"]) .module input[type="submit"],
-  #content-main:has(form[action*="auth/user"]) .module button,
-  #content-main:has(form[action*="auth/user"]) .module .button,
-  body.app-auth.model-user.change-form .module input[type="submit"],
-  body.app-auth.model-user.change-form .module button,
-  body.app-auth.model-user.change-form .module .button{
-    max-width: 100% !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
-  }
-}
 
-/* 390px a méně – tvrdé omezení, nic nesmí jít mimo bílé pole zprava */
-@media (max-width: 390px){
-  #content:has(form[action*="auth/user"]),
-  body.app-auth.model-user.change-form #content{
-    padding-left: 10px !important;
-    padding-right: 10px !important;
-    width: 100% !important;
-    max-width: 100vw !important;
-    overflow-x: hidden !important;
-    box-sizing: border-box !important;
-  }
-  #content-main:has(form[action*="auth/user"]),
-  body.app-auth.model-user.change-form #content-main{
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    overflow-x: hidden !important;
-    box-sizing: border-box !important;
-  }
-  #content-main:has(form[action*="auth/user"]) .module,
-  #content-main:has(form[action*="auth/user"]) .panel,
-  #content-main:has(form[action*="auth/user"]) .card,
-  body.app-auth.model-user.change-form .module,
-  body.app-auth.model-user.change-form .panel,
-  body.app-auth.model-user.change-form .card{
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    overflow-x: hidden !important;
-    padding: 24px 20px !important;
-    box-sizing: border-box !important;
-  }
-  /* Tabulka – pevné podíly sloupců, aby data sloupec nepřetékal */
-  #content-main:has(form[action*="auth/user"]) table,
-  #content-main:has(form[action*="auth/user"]) .aligned,
-  body.app-auth.model-user.change-form .module table,
-  body.app-auth.model-user.change-form .aligned{
-    table-layout: fixed !important;
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-  #content-main:has(form[action*="auth/user"]) th,
-  body.app-auth.model-user.change-form .aligned th{
-    width: 38% !important;
-    max-width: 38% !important;
-    box-sizing: border-box !important;
-  }
-  #content-main:has(form[action*="auth/user"]) td,
-  body.app-auth.model-user.change-form .aligned td{
-    width: 62% !important;
-    max-width: 62% !important;
-    min-width: 0 !important;
-    overflow-x: hidden !important;
-    box-sizing: border-box !important;
-  }
-  /* Inputy a selecty – musí se vejít do buňky (přepíše Django forms.css) */
-  #content-main:has(form[action*="auth/user"]) input,
-  #content-main:has(form[action*="auth/user"]) select,
-  #content-main:has(form[action*="auth/user"]) textarea,
-  #content-main:has(form[action*="auth/user"]) .vTextField,
-  body.app-auth.model-user.change-form .aligned input,
-  body.app-auth.model-user.change-form .aligned select,
-  body.app-auth.model-user.change-form .aligned textarea{
-    max-width: 100% !important;
-    width: 100% !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
-  }
-  /* Help text – menší font, zalamování, white-space (podle analýzy) */
-  #content-main:has(form[action*="auth/user"]) .help,
-  #content-main:has(form[action*="auth/user"]) p.help,
-  #content-main:has(form[action*="auth/user"]) .form-row p,
-  #content-main:has(form[action*="auth/user"]) .form-row .help,
-  body.app-auth.model-user.change-form .help,
-  body.app-auth.model-user.change-form p.help,
-  body.app-auth.model-user.change-form .form-row p,
-  body.app-auth.model-user.change-form .form-row .help{
-    max-width: 100% !important;
-    word-break: break-word !important;
-    overflow-wrap: break-word !important;
-    white-space: normal !important;
-    font-size: 0.8rem !important;
-    box-sizing: border-box !important;
-  }
-  /* Readonly (algoritmus, hash) – white-space: normal + break-all */
-  #content-main:has(form[action*="auth/user"]) .readonly p,
-  #content-main:has(form[action*="auth/user"]) .readonly div,
-  #content-main:has(form[action*="auth/user"]) td p,
-  #content-main:has(form[action*="auth/user"]) td div,
-  body.app-auth.model-user.change-form .aligned td.readonly p,
-  body.app-auth.model-user.change-form .aligned td.readonly div,
-  body.app-auth.model-user.change-form .aligned td p,
-  body.app-auth.model-user.change-form .aligned td div{
-    word-break: break-all !important;
-    overflow-wrap: anywhere !important;
-    white-space: normal !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-  }
-  /* Tlačítka (Resetovat heslo) – max-width 100%, aby nepřetékala */
-  #content-main:has(form[action*="auth/user"]) input[type="submit"],
-  #content-main:has(form[action*="auth/user"]) button,
-  #content-main:has(form[action*="auth/user"]) .button,
-  body.app-auth.model-user.change-form input[type="submit"],
-  body.app-auth.model-user.change-form button,
-  body.app-auth.model-user.change-form .button{
-    max-width: 100% !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
-  }
-}
+/* Uživatel change/add – styly v static/admin/css/user-change-form.css */
+
 
 /* ======================================================================== */
 /* HRÁČ (core/hrac) – změna – stejná kritéria jako uživatel (help, readonly, tlačítka, form-row) */
@@ -1494,6 +1139,13 @@ body.app-core.add-form .module .button{
   }
 }
 
+/* Changelist – živé vyhledávání bez reloadu */
+#changelist.ts-search-loading #changelist-form{
+  opacity: 0.55 !important;
+  pointer-events: none !important;
+  transition: opacity 0.15s ease !important;
+}
+
 /* Filter horizontal (Skupiny, Oprávnění u uživatele) – instrukce a boxy nepřetékají */
 #content .selector{ max-width: 100% !important; min-width: 0 !important; }
 #content .selector .help,
@@ -1503,6 +1155,10 @@ body.app-core.add-form .module .button{
 #content .selector select{ max-width: 100% !important; min-width: 0 !important; box-sizing: border-box !important; }
 @media (max-width: 768px){
   #content .selector{ overflow: visible !important; display: block !important; }
+  body.app-auth.model-user.change-form #content .selector{
+    display: flex !important;
+    flex-direction: column !important;
+  }
   #content .selector-available,
   #content .selector-chosen{ float: none !important; width: 100% !important; max-width: 100% !important; margin-bottom: 12px !important; }
 }
@@ -1532,7 +1188,7 @@ body.change-list #result_list thead .sortoptions {
 }
 
 body.change-list #result_list thead th.sorted {
-  background: var(--amber-100, #fff9ec);
+  background: var(--table-head) !important;
 }
 
 body.change-list #result_list thead th.sortable a {
@@ -1758,18 +1414,47 @@ body.change-list #result_list thead th.sortable a {
 
 .submit-row .deletelink-box{ margin-left:auto; order:2; }
 
-/* messages – celé vidět, nezalomí se */
+/* messages – jen text s odkazy, bez barevných boxů; odsazení řeší main#content-start */
 #content ul.messagelist,
-#content-main ul.messagelist{
+#content-main ul.messagelist,
+main#content-start.content > ul.messagelist{
   max-width: 100% !important;
   overflow: visible !important;
   word-wrap: break-word !important;
   overflow-wrap: break-word !important;
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 0 1rem 0 !important;
 }
-ul.messagelist li{ border-radius:8px; max-width: 100%; word-wrap: break-word; overflow-wrap: break-word; }
-ul.messagelist li.success{ background:var(--accent-100) !important; color:var(--accent-600) !important; border:1px solid var(--accent) !important; }
-ul.messagelist li.error{ background:var(--danger-100) !important; color:var(--danger) !important; border:1px solid var(--danger) !important; }
-ul.messagelist li.warning{ background:var(--amber-100) !important; color:#6B4E00 !important; border:1px solid var(--amber) !important; }
+ul.messagelist li{
+  border-radius: 0 !important;
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  background: none !important;
+  background-image: none !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 0 0.35rem 0 !important;
+  color: var(--text) !important;
+  list-style: none !important;
+}
+ul.messagelist li.success,
+ul.messagelist li.error,
+ul.messagelist li.warning,
+ul.messagelist li.info{
+  background: none !important;
+  background-image: none !important;
+  border: none !important;
+  color: var(--text) !important;
+}
+ul.messagelist li a{
+  color: var(--accent) !important;
+  text-decoration: none;
+}
+ul.messagelist li a:hover{
+  text-decoration: underline;
+}
 
 /* úklid */
 .change-list .results, .results, .module table, .payments-card,
@@ -2251,24 +1936,22 @@ ul.messagelist li.warning{ background:var(--amber-100) !important; color:#6B4E00
 #result_list thead th,
 .module table thead th,
 .results thead th {
-  background: var(--amber-100) !important;
-  color: var(--text) !important;
+  background: var(--table-head) !important;
+  color: var(--text-strong) !important;
 }
 
-/* jakýkoliv hover na thead zrušit (když přijde z default admin CSS) */
 #result_list thead tr:hover th,
 .module table thead tr:hover th,
 .results thead tr:hover th,
 table thead tr:hover th {
-  background: var(--amber-100) !important;
-  color: var(--text) !important;
+  background: var(--table-head) !important;
+  color: var(--text-strong) !important;
 }
 
-/* hover jen na tělo tabulky, ne na thead */
 #result_list tbody tr:hover td,
 .module table tbody tr:hover td,
 .results tbody tr:hover td {
-  background: #fff8e6 !important; /* jemný krémový */
+  background: var(--table-row-hover) !important;
 }
 
 /* ===== FIX 2: Kalendář v „Přidat trénink“ ===== */
@@ -2338,16 +2021,16 @@ html, body, .change-list, .results, table, .select2-container, .calendarbox {
 
 /* TABULKY (hlavička + řádky + hover) */
 table thead th{
-  background: var(--amber-100) !important;
-  color: var(--text) !important;
+  background: var(--table-head) !important;
+  color: var(--text-strong) !important;
   background-image: none !important;
   box-shadow:none !important; filter:none !important;
 }
 table thead th::before, table thead th::after{ background:transparent !important; box-shadow:none !important; }
 
-table tbody tr, table tbody td{ background:#fff !important; color:var(--text) !important; }
-table tbody tr:nth-child(even){ background:#fffaf0 !important; }
-table tbody tr:hover > td{ background:#fff3df !important; color:var(--text) !important; }
+table tbody tr, table tbody td{ background:var(--surface) !important; color:var(--text) !important; }
+table tbody tr:nth-child(even){ background:var(--surface) !important; }
+table tbody tr:hover > td{ background:var(--table-row-hover) !important; color:var(--text) !important; }
 
 /* SELECT2 (dropdown, vyhledávací input, položky) */
 .select2-container--admin-autocomplete .select2-selection--single{
@@ -2452,7 +2135,14 @@ html, body, #result_list, .results, table {
 #result_list tbody th[scope="row"] { position: static !important; }
 #result_list td::before, #result_list td::after,
 #result_list th::before, #result_list th::after { content: none !important; }
-#result_list tbody tr:hover > td { background: #fff3df !important; }
+#result_list tbody tr:hover > td { background: var(--table-row-hover) !important; }
+#result_list tbody tr.selected:hover > th,
+#result_list tbody tr.selected:hover > td,
+#result_list tbody tr.row-selected:hover > th,
+#result_list tbody tr.row-selected:hover > td{
+  background:var(--table-row-hover) !important;
+  color:var(--text) !important;
+}
 
 /* =================================================================== */
 /* === GLOBÁLNÍ FIX v2: Hover efekt pro všechny tabulky (agresivní) === */
@@ -2461,26 +2151,23 @@ html, body, #result_list, .results, table {
 /* 1. STATICKÝ STAV HLAVIČKY: Vynutí krémové pozadí a správnou barvu textu. */
 table thead th,
 table thead th a {
-    background: var(--amber-100) !important;
-    color: var(--text) !important;
+    background: var(--table-head) !important;
+    color: var(--text-strong) !important;
     background-image: none !important;
     box-shadow: none !important;
     filter: none !important;
     text-decoration: none !important;
 }
 
-/* 2. HOVER STAV HLAVIČKY: Zůstaň krémová, nic neměň! */
-/* Toto je klíčová část, která aktivně bojuje proti nechtěnému černému hoveru. */
 table thead tr:hover th,
 table thead tr:hover th a {
-    background: var(--amber-100) !important;
-    color: var(--text) !important;
+    background: var(--table-head) !important;
+    color: var(--text-strong) !important;
 }
 
-/* === GLOBÁLNÍ FIX: Hover efekt pro CELÝ řádek tabulky (včetně <th>) === */
 table tbody tr:hover td,
 table tbody tr:hover th {
-  background: #fff3df !important; /* Váš stávající jemně oranžový hover */
+  background: var(--table-row-hover) !important;
   color: var(--text) !important;
 }
 /* =================================================================== */
@@ -2515,4 +2202,9 @@ table tbody tr:hover th {
 body.change-form .aligned .form-row,
 body.add-form .aligned .form-row {
   overflow: visible !important;
+}
+
+.kredit-zaporny {
+  color: #dc2626;
+  font-weight: 700;
 }

@@ -1,0 +1,2378 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-14 23:23+0200\n"
+"PO-Revision-Date: 2026-07-14 22:12\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Typ tréninku"
+msgstr "Tipo de entrenamiento"
+
+msgid "— Nový typ tréninku —"
+msgstr "— Nuevo tipo de entrenamiento —"
+
+msgid "Nejdříve zadejte název nového typu tréninku, nebo vyberte existující."
+msgstr "Introduzca el nombre del nuevo tipo de entrenamiento."
+
+msgid "Zadejte název nového typu tréninku."
+msgstr "Introduzca el nombre del nuevo tipo de entrenamiento."
+
+msgid "Typ tréninku nebyl nalezen."
+msgstr "Tipo de entrenamiento no encontrado."
+
+msgid "Zadejte název typu tréninku."
+msgstr "Introduzca el nombre del tipo de entrenamiento."
+
+msgid "Název typu tréninku byl upraven."
+msgstr "Nombre del tipo de entrenamiento actualizado."
+
+msgid "Jméno"
+msgstr "Nombre"
+
+msgid "Kredit"
+msgstr "Crédito"
+
+msgid "Rodina"
+msgstr "Familia"
+
+msgid "Vygenerovat vyúčtování (poslat e-mail)"
+msgstr "Generar facturación (enviar correo)"
+
+msgid "Zadat platbu vybraným hráčům"
+msgstr "Registrar pago para jugadores seleccionados"
+
+msgid "Hráč"
+msgstr "Jugador"
+
+msgid "Cena"
+msgstr "Precio"
+
+msgid "Naúčtováno"
+msgstr "Facturado"
+
+msgid "Kdy naúčtováno"
+msgstr "Cuándo facturado"
+
+msgid "Typ"
+msgstr "Tipo"
+
+msgid "Datum"
+msgstr "Fecha"
+
+msgid "Částka"
+msgstr "Cantidad"
+
+msgid "Poznámka"
+msgstr "Nota"
+
+msgid "Akce"
+msgstr "Acciones"
+
+msgid "Trenér"
+msgstr "Entrenador"
+
+msgid "Sezóna"
+msgstr "Temporada"
+
+msgid "Léto"
+msgstr "Verano"
+
+msgid "Zima"
+msgstr "Invierno"
+
+msgid "Vše"
+msgstr "Todo"
+
+msgid "Formát"
+msgstr "Formato"
+
+msgid "Délka (hodiny)"
+msgstr "Duración (horas)"
+
+msgid "Trénink: přidat"
+msgstr "Entrenamiento: añadir"
+
+msgid "Vyberte trenéra pro celý den."
+msgstr "Seleccione un entrenador para todo el día."
+
+msgid "Hráč(i)"
+msgstr "Jugador(es)"
+
+msgid "Částka / hráč"
+msgstr "Importe / jugador"
+
+msgid "Trenéři – souhrn"
+msgstr "Entrenadores – resumen"
+
+msgid "Neplatné datum 'Od'."
+msgstr "Fecha «Desde» no válida."
+
+msgid "Neplatná částka sazby."
+msgstr "Importe de tarifa no válido."
+
+#, python-format
+msgid "Trenér – %(name)s"
+msgstr "Entrenador – %(name)s"
+
+msgid "Ručně z adminu"
+msgstr "Manualmente desde admin"
+
+msgid "Měsíčně"
+msgstr "Mensual"
+
+msgid "Po N trénincích"
+msgstr "Tras N entrenamientos"
+
+msgid "Limit kreditu"
+msgstr "Límite de crédito"
+
+msgid "Automaticky (limit kreditu)"
+msgstr "Automáticamente (límite de crédito)"
+
+msgid "Vyúčtování rodiny"
+msgstr "Facturación familiar"
+
+msgid "Data"
+msgstr "Fechas"
+
+#, python-format
+msgid "Nastavení uloženo. Režim synchronizován u %(updated)s hráčů."
+msgstr "Configuración guardada. Modo sincronizado en %(updated)s jugadores."
+
+msgid "Nastavení vyúčtování uloženo."
+msgstr "Configuración de facturación guardada."
+
+msgid "Nastavení se nepodařilo uložit. Zkontrolujte zvýrazněná pole."
+msgstr "No se pudo guardar la configuración. Verifique los campos resaltados."
+
+msgid "Nastavení vyúčtování"
+msgstr "Configuración de facturación"
+
+msgid "Období"
+msgstr "Período"
+
+msgid "Platby/vratky"
+msgstr "Pagos/reembolsos"
+
+msgid "K úhradě"
+msgstr "Importe a pagar"
+
+msgid "Kredit po úhradě"
+msgstr "Crédito tras el pago"
+
+msgid "Přehled"
+msgstr "Resumen"
+
+msgid "Neplatné datum nákladů."
+msgstr "Fecha de gasto no válida."
+
+#, python-format
+msgid "Náklady za %(date)s uloženy (%(count)s kategorií)."
+msgstr "Gastos de %(date)s ahorrados (categorías %(count)s)."
+
+#, python-format
+msgid "Náklady za %(date)s vymazány – nebyla zadána žádná částka."
+msgstr "Gastos de %(date)s compensados: no se ingresaron montos."
+
+msgid "Analytika"
+msgstr "Analítica"
+
+msgid "Zatím žádné"
+msgstr "Ninguno todavía"
+
+msgid "Zadejte e-mail pro testovací zprávu."
+msgstr "Ingrese un correo electrónico para el mensaje de prueba."
+
+#, python-format
+msgid "Testovací e-mail odeslán na %(email)s."
+msgstr "Correo electrónico de prueba enviado a %(email)s."
+
+#, python-format
+msgid "Odeslání testovacího e-mailu selhalo: %(error)s"
+msgstr "Error al enviar el correo electrónico de prueba: %(error)s"
+
+msgid "Nastavení systému uloženo."
+msgstr "Configuración del sistema guardada."
+
+msgid "Obecné"
+msgstr "General"
+
+msgid "Vzhled"
+msgstr "Apariencia"
+
+msgid "Provoz"
+msgstr "Operaciones"
+
+msgid "E-maily"
+msgstr "Correos"
+
+msgid "Upozornění"
+msgstr "Alertas"
+
+msgid "Uživatelé"
+msgstr "Usuarios"
+
+#, python-format
+msgid "%(count)s účtů · %(staff)s s přístupem"
+msgstr "%(count)s cuentas · %(staff)s con acceso"
+
+msgid "Skupiny"
+msgstr "Grupos"
+
+#, python-format
+msgid "%(count)s skupin oprávnění"
+msgstr "%(count)s grupos de permisos"
+
+msgid "Změna hesla"
+msgstr "Cambiar la contraseña"
+
+msgid "Nástroje"
+msgstr "Herramientas"
+
+msgid "Ceník menu"
+msgstr "Menú de lista de precios"
+
+msgid "Typy a formáty tréninků"
+msgstr "Tipos y formatos de formación"
+
+msgid "Rodiny"
+msgstr "Familias"
+
+msgid "Rodinné skupiny hráčů"
+msgstr "Grupos familiares de jugadores."
+
+msgid "Zapnuto"
+msgstr "Activado"
+
+msgid "Vypnuto"
+msgstr "Desactivado"
+
+msgid "Přehledy a exporty"
+msgstr "Informes y exportaciones"
+
+msgid "Rozvrh tréninků"
+msgstr "Horario de entrenamiento"
+
+msgid "Týdenní kalendář"
+msgstr "calendario semanal"
+
+msgid "Export dat (JSON)"
+msgstr "Exportación de datos (JSON)"
+
+msgid "Záloha hráčů, tréninků a plateb"
+msgstr "Backup de jugadores, entrenamientos y pagos."
+
+msgid "Nastavení"
+msgstr "Configuración"
+
+msgid "Vyberte JSON soubor k importu."
+msgstr "Seleccione un archivo JSON para importar."
+
+msgid "Data naimportována."
+msgstr "Datos importados."
+
+#, python-format
+msgid "Záloha DB: %(name)s"
+msgstr "Copia de seguridad de base de datos: %(name)s"
+
+#, python-format
+msgid "Import selhal: %(error)s"
+msgstr "Error de importación: %(error)s"
+
+#, python-format
+msgid "Export dat se nezdařil: %(error)s"
+msgstr "Error al exportar datos: %(error)s"
+
+msgid "Poslední rok"
+msgstr "Último año"
+
+msgid "Poslední půlrok"
+msgstr "Último semestre"
+
+msgid "Celá doba"
+msgstr "Todo el período"
+
+msgid "Datum dne"
+msgstr "Fecha del día"
+
+msgid "Jeden den"
+msgstr "Un día"
+
+msgid "Celý týden"
+msgstr "Semana completa"
+
+msgid "Kopírovat z"
+msgstr "Copiar de"
+
+msgid "Přidat do"
+msgstr "Añadir a"
+
+msgid "Rozsah"
+msgstr "Alcance"
+
+msgid "Všichni trenéři"
+msgstr "Todos los entrenadores"
+
+msgid "Čas"
+msgstr "Hora"
+
+msgid "Kurt"
+msgstr "Pista"
+
+msgid "—— stejný jako nahoře ——"
+msgstr "—— igual que arriba ——"
+
+msgid "Hráči"
+msgstr "Jugadores"
+
+msgid "Synchronizovat režim u všech stávajících hráčů"
+msgstr "Sincronizar modo para todos los jugadores existentes"
+
+msgid ""
+"Přepíše u všech hráčů režim, počet tréninků a limit kreditu podle nastavení "
+"výše."
+msgstr ""
+"Sobrescribe modo, número de entrenamientos y límite de crédito para todos "
+"los jugadores según la configuración anterior."
+
+msgid "Způsob vyúčtování"
+msgstr "Método de facturación"
+
+msgid "Jméno odesílatele"
+msgstr "Remitente"
+
+msgid "E-mail odesílatele"
+msgstr "Remitente"
+
+msgid "Označení klubu v předmětu"
+msgstr "Nombre del club en el asunto"
+
+msgid "Režim vyúčtování"
+msgstr "facturar"
+
+msgid "Venku"
+msgstr "Exterior"
+
+msgid "Hala"
+msgstr "Interior"
+
+msgid "Hledat"
+msgstr "Buscar"
+
+msgid "Zaplaceno"
+msgstr "Pagado"
+
+msgid "Nezaplaceno"
+msgstr "No pagado"
+
+msgid "Hodiny"
+msgstr "Horas"
+
+msgid "Dluh"
+msgstr "Deuda"
+
+msgid "Dluhy"
+msgstr "Deudas"
+
+msgid "Přebytky"
+msgstr "excedentes"
+
+msgid "Detail grafu"
+msgstr "Detalle del gráfico"
+
+msgid "Zaplaceno (celkem)"
+msgstr "Pagado (total)"
+
+msgid "Celkem zaplaceno:"
+msgstr "Total pagado:"
+
+msgid "Hodiny + finance"
+msgstr "Horas + finanzas"
+
+msgid "Hodiny celkem"
+msgstr "Horas totales"
+
+msgid "Hodiny (celkem)"
+msgstr "Horas (total)"
+
+msgid "Kredity a dluhy"
+msgstr "Créditos y deudas"
+
+msgid "Kategorie"
+msgstr "Categoría"
+
+msgid "Upravit"
+msgstr "Editar"
+
+msgid "Informace"
+msgstr "Información"
+
+msgid "Platby a vratky"
+msgstr "Pagos y reembolsos"
+
+msgid "Za celou dobu evidence"
+msgstr "Durante todo el período"
+
+msgid "Rozbalit detail"
+msgstr "Expandir detalle"
+
+msgid "Uložení se nezdařilo."
+msgstr "Error al guardar."
+
+msgid "Chybí CSRF token – obnovte stránku"
+msgstr "Falta el token CSRF: actualice la página"
+
+msgid "Nastavení uloženo"
+msgstr "Configuración guardada"
+
+msgid "Vzhled uložen"
+msgstr "Apariencia guardada"
+
+msgid "Uložení vzhledu se nezdařilo."
+msgstr "No se pudo guardar la apariencia."
+
+msgid "Přehled tréninků – Jméno hráče"
+msgstr "Resumen del entrenamiento: nombre del jugador"
+
+msgid "Vybrat soubor"
+msgstr "Elegir archivo"
+
+msgid "Soubor nevybrán"
+msgstr "Ningún archivo seleccionado"
+
+msgid "Kč"
+msgstr "CZK"
+
+msgid "% z naúčtováno"
+msgstr "% de lo cobrado"
+
+msgid "Graf se nepodařilo vykreslit:"
+msgstr "No se pudo representar el gráfico:"
+
+msgid "Otevřít detail"
+msgstr "Detalle abierto"
+
+msgid "Měsíční rozpad"
+msgstr "Desglose mensual"
+
+msgid "Odehrané hodiny"
+msgstr "Horas jugadas"
+
+msgid "Úhrada"
+msgstr "Pago"
+
+msgid "Hrubý zisk"
+msgstr "Beneficio bruto"
+
+msgid "Čistý zisk"
+msgstr "Beneficio neto"
+
+msgid "Výplaty trenérům"
+msgstr "Pagos del entrenador"
+
+msgid "Ostatní náklady"
+msgstr "Otros gastos"
+
+msgid "Účetní detail"
+msgstr "detalle contable"
+
+msgid "Přijato"
+msgstr "Recibió"
+
+msgid "Náklady trenérů"
+msgstr "Costos del autocar"
+
+msgid "Denní aktivita"
+msgstr "Actividad diaria"
+
+msgid "Rozložení dne"
+msgstr "Distribución de días"
+
+msgid "měsíc"
+msgstr "mes"
+
+msgid "celkem"
+msgstr "total"
+
+msgid "100 % (základ)"
+msgstr "100% (base)"
+
+msgid "Finanční srovnání –"
+msgstr "Comparación financiera –"
+
+msgid "Podíl"
+msgstr "Compartir"
+
+msgid "Otevřít profil"
+msgstr "Abrir perfil"
+
+msgid "Aktivita – tento měsíc"
+msgstr "Actividad – este mes"
+
+msgid "Počet tréninků"
+msgstr "Número de entrenamientos"
+
+msgid "Průměr na trénink"
+msgstr "Promedio por entrenamiento"
+
+msgid "Finance – tento měsíc"
+msgstr "Finanzas – este mes"
+
+msgid "Přijaté platby"
+msgstr "Pagos recibidos"
+
+msgid "Průměr na fakturu"
+msgstr "Promedio por factura"
+
+msgid "Průměr na platbu"
+msgstr "Promedio por pago"
+
+msgid "Počet faktur"
+msgstr "Número de facturas"
+
+msgid "Celkové souhrny"
+msgstr "Totales generales"
+
+msgid "Tréninků celkem"
+msgstr "entrenamientos totales"
+
+msgid "Naúčtováno celkem"
+msgstr "Total cobrado"
+
+msgid "K vyplacení trenérům"
+msgstr "para pagar a los entrenadores"
+
+msgid "Dlužné částky"
+msgstr "Montos de deuda"
+
+msgid "Bilance hráčů"
+msgstr "Saldo del jugador"
+
+msgid "Finanční rovnováha"
+msgstr "equilibrio financiero"
+
+msgid "Základní ukazatele"
+msgstr "Métricas clave"
+
+msgid "Kladný"
+msgstr "Positivo"
+
+msgid "Záporný"
+msgstr "Negativo"
+
+msgid "Nulový"
+msgstr "Cero"
+
+msgid "Měsíc:"
+msgstr "Mes:"
+
+msgid "Kumulativně:"
+msgstr "Acumulativo:"
+
+msgid "Žádné položky"
+msgstr "Sin artículos"
+
+msgid "Měsíční rozpad po dnech"
+msgstr "Desglose mensual por días"
+
+msgid "Náklady:"
+msgstr "Costos:"
+
+msgid "Dluhy hráčů"
+msgstr "Deudas de jugadores"
+
+msgid "Přebytky hráčů"
+msgstr "Excedentes de jugadores"
+
+msgid "Rozložení bilance"
+msgstr "Distribución del saldo"
+
+msgid "Hráč – dlužník"
+msgstr "Jugador – deudor"
+
+msgid "Profil hráče"
+msgstr "Perfil del jugador"
+
+msgid "Podíl z celkových dluhů"
+msgstr "Proporción de deudas totales"
+
+msgid "Detail trenéra"
+msgstr "Detalle del entrenador"
+
+msgid "Hodiny (měsíc)"
+msgstr "Horas (mes)"
+
+msgid "Nárok (měsíc)"
+msgstr "Reclamación (mes)"
+
+msgid "Tréninků (měsíc)"
+msgstr "Entrenamientos (mes)"
+
+msgid "Trenér – aktivita"
+msgstr "Entrenador – actividad"
+
+msgid "Tento měsíc"
+msgstr "este mes"
+
+msgid "Porovnání"
+msgstr "Comparación"
+
+msgid "Vyberte rok"
+msgstr "Seleccionar año"
+
+msgid "Leden"
+msgstr "Enero"
+
+msgid "Únor"
+msgstr "Febrero"
+
+msgid "Březen"
+msgstr "Marzo"
+
+msgid "Duben"
+msgstr "Abril"
+
+msgid "Květen"
+msgstr "Mayo"
+
+msgid "Červen"
+msgstr "Junio"
+
+msgid "Červenec"
+msgstr "Julio"
+
+msgid "Srpen"
+msgstr "Agosto"
+
+msgid "Září"
+msgstr "Septiembre"
+
+msgid "Říjen"
+msgstr "Octubre"
+
+msgid "Listopad"
+msgstr "Noviembre"
+
+msgid "Prosinec"
+msgstr "Diciembre"
+
+msgid "Příjmení"
+msgstr "Apellido"
+
+msgid "Formát ceníku"
+msgstr "Formato de lista de precios"
+
+msgid "Formáty ceníku"
+msgstr "Formatos de lista de precios"
+
+msgid "Služba (neplatí pro kurt)"
+msgstr "Servicio (no relacionado con pista)"
+
+msgid "Cena za hodinu"
+msgstr "Precio por hora"
+
+msgid "Platnost od"
+msgstr "Válido desde"
+
+msgid "Platnost do"
+msgstr "Válido hasta"
+
+msgid "Ceník"
+msgstr "Lista de precios"
+
+msgid "Trénink"
+msgstr "Capacitación"
+
+msgid "Tréninky"
+msgstr "Entrenamientos"
+
+msgid "Platba"
+msgstr "Pago"
+
+msgid "Vrácení/bonifikace"
+msgstr "Reembolso/bonificación"
+
+msgid "Úprava"
+msgstr "Ajuste"
+
+msgid "Datum platby"
+msgstr "Fecha de pago"
+
+msgid "Platby"
+msgstr "Pagos"
+
+msgid "Ručně"
+msgstr "Manualmente"
+
+msgid "Období od"
+msgstr "Período desde"
+
+msgid "Období do"
+msgstr "Período hasta"
+
+msgid "Kredit na začátku"
+msgstr "Crédito al inicio"
+
+msgid "Kredit na konci"
+msgstr "Crédito al final"
+
+msgid "Důvod"
+msgstr "Motivo"
+
+msgid "Poslední transakce v uzávěrce"
+msgstr "Última transacción en el cierre"
+
+msgid "Interní ukotvení pro detekci opakovaného vyúčtování."
+msgstr "Ancla interna para detectar facturación repetida."
+
+msgid "Vytvořeno"
+msgstr "Creado"
+
+msgid "Vyúčtování"
+msgstr "Facturación"
+
+msgid "Dle odehraných tréninků"
+msgstr "Según entrenamientos jugados"
+
+msgid "Pouze manuálně"
+msgstr "Solo manualmente"
+
+msgid "Účet 1 AJ Sport"
+msgstr "Cuenta 1 AJ Sport"
+
+msgid "Účet 2 Káťa"
+msgstr "Cuenta 2 Káťa"
+
+msgid "Limit kreditu (Kč)"
+msgstr "Límite de crédito (Kč)"
+
+msgid ""
+"Vyúčtování se vytvoří, když kredit hráče klesne na tuto zápornou částku nebo "
+"níže (např. −5000 Kč)."
+msgstr ""
+"La facturación se creará cuando el crédito del jugador baje a este imp"
+"orte negativo o inferior (p. ej. −5000 Kč)."
+
+msgid "Částka k zaplacení v e-mailu (Kč)"
+msgstr "cantidad a pagar"
+
+msgid ""
+"Částka zobrazená v e-mailu jako požadavek k úhradě. Ponechte 0 pro "
+"automatický výpočet z období."
+msgstr ""
+"Importe mostrado en el correo como solicitud de pago. Deje 0 para cálc"
+"ulo automático del período."
+
+msgid "Po tolika odehraných trénincích od poslední uzávěrky se vyúčtuje."
+msgstr ""
+"Tras el número indicado de entrenamientos desde el último cierre, crea la "
+"facturación automáticamente."
+
+msgid "Den v měsíci"
+msgstr "este mes"
+
+msgid "Od tohoto dne v měsíci (po dalším tréninku) proběhne měsíční uzávěrka."
+msgstr ""
+"Tras el día indicado del mes, el siguiente entrenamiento cierra el período "
+"desde el último cierre."
+
+msgid "Posílat e-mail při automatickém vyúčtování"
+msgstr "Enviar correo en facturación automática"
+
+msgid "Výchozí varianta e-mailu"
+msgstr "Variante de correo predeterminada"
+
+msgid "Číslo účtu – varianta 1"
+msgstr "Número de cuenta – variante 1"
+
+msgid "Číslo účtu – varianta 2"
+msgstr "Número de cuenta – variante 2"
+
+msgid "Vyúčtování pouze ručně z profilu hráče"
+msgstr "Facturación solo manualmente desde el perfil del jugador"
+
+#, python-format
+msgid "Při kreditu −%(limit)s Kč nebo níže"
+msgstr "Cuando el crédito es −%(limit)s CZK o menos"
+
+#, python-format
+msgid "Po %(count)s odehraných trénincích"
+msgstr "Tras %(count)s entrenamientos jugados"
+
+#, python-format
+msgid "Každý měsíc od %(day)s. dne (po tréninku)"
+msgstr "Cada mes desde el día %(day)s (tras el entrenamiento)"
+
+msgid "Týden"
+msgstr "Semana"
+
+msgid "Den"
+msgstr "Día"
+
+msgid "Název klubu / systému"
+msgstr "Nombre del club / sistema"
+
+msgid "Zobrazí se v hlavičce a v e-mailech."
+msgstr "Se muestra en el encabezado y en los correos."
+
+msgid "Kontaktní e-mail"
+msgstr "Correo de contacto"
+
+msgid "Zobrazí se na veřejné stránce a v patičce e-mailů."
+msgstr "Se muestra en la página pública y en el pie de los correos."
+
+msgid "Telefon"
+msgstr "Teléfono"
+
+msgid "Adresa klubu"
+msgstr "Dirección del club"
+
+msgid "Slogan"
+msgstr "Eslogan"
+
+msgid "Krátký text na veřejné stránce."
+msgstr "Texto breve en la página pública."
+
+msgid "Logo klubu"
+msgstr "Logotipo del club"
+
+msgid "Favicon"
+msgstr "Favicon"
+
+msgid "Odesílatel e-mailů"
+msgstr "Remitente de correos"
+
+msgid "Formát: Jméno <email@domena.cz>"
+msgstr "Formato: Nombre <email@dominio.com>"
+
+msgid "Prefix předmětu e-mailu"
+msgstr "Prefijo del asunto del correo"
+
+msgid "Podpis e-mailů"
+msgstr "Firma de correos"
+
+msgid "Venkovní sezóna od (měsíc)"
+msgstr "Temporada exterior desde (mes)"
+
+msgid "Venkovní sezóna do (měsíc)"
+msgstr "Temporada exterior hasta (mes)"
+
+msgid "Automaticky volit kurt dle sezóny"
+msgstr "Elegir pista automáticamente según temporada"
+
+msgid "Práh dluhu na dashboardu (Kč)"
+msgstr "Umbral de deuda en el panel (Kč)"
+
+msgid "0 = všichni se záporným kreditem, −1000 = dluh od 1000 Kč."
+msgstr "0 = cada deuda, −1000 = desde 1000 CZK"
+
+msgid "Zvýraznit záporný kredit v seznamu hráčů"
+msgstr "Resaltar crédito negativo en lista de jugadores"
+
+msgid "Řádků na stránku v tabulkách"
+msgstr "Filas por página en tablas"
+
+msgid "Vlastní barvy (místo palety)"
+msgstr "Colores personalizados (en lugar de paleta)"
+
+msgid "Výchozí délka tréninku"
+msgstr "Duración predeterminada del entrenamiento"
+
+msgid "Výchozí kurt"
+msgstr "Pista predeterminada"
+
+msgid "Rozvrh od (hodina)"
+msgstr "Horario desde (hora)"
+
+msgid "Rozvrh do (hodina)"
+msgstr "Horario hasta (hora)"
+
+msgid "Výchozí zobrazení rozvrhu"
+msgstr "Vista predeterminada del horario"
+
+msgid "Barevná varianta"
+msgstr "Paleta de colores"
+
+msgid "Paleta barev ve stylu Excel – mění celý vzhled systému."
+msgstr ""
+"Paletas estilo Excel – cada una cambia acentos, tablas y botones en todo el "
+"sistema."
+
+msgid "Tmavý režim"
+msgstr "Modo oscuro"
+
+msgid "Tmavé pozadí, světlý text a upravené barvy tabulek."
+msgstr "Fondo oscuro, texto claro y tablas ajustadas."
+
+msgid "Výchozí jazyk systému"
+msgstr "Idioma predeterminado del sistema"
+
+msgid "Jazyk rozhraní pro celý systém."
+msgstr "Idioma de la interfaz para todo el sistema."
+
+msgid "Nastavení systému"
+msgstr "Configuración del sistema"
+
+msgid "Trenér – sazba"
+msgstr "Entrenador – tarifa"
+
+msgid "Trenéři – sazby"
+msgstr "Autocares – tarifas"
+
+msgid "Trenér – sazba (období)"
+msgstr "Autocar – tarifa (período)"
+
+msgid "Trenéři – sazby (období)"
+msgstr "Autocares – tarifas (período)"
+
+msgid "Výplata trenérovi"
+msgstr "Pago del entrenador"
+
+msgid "Den, ke kterému se náklad vztahuje"
+msgstr "Día al que se refiere el gasto"
+
+msgid "Ostatní náklad"
+msgstr "Otros gastos"
+
+msgid "Tenis"
+msgstr "Tenis"
+
+msgid "Výchozí vzhled systému"
+msgstr "Apariencia predeterminada del sistema"
+
+msgid "Modrá"
+msgstr "Azul"
+
+msgid "Profesionální modrá paleta"
+msgstr "Paleta azul profesional"
+
+msgid "Zelená"
+msgstr "Verde"
+
+msgid "Klubová sportovní zelená"
+msgstr "Club deportivo verde"
+
+msgid "Teplá"
+msgstr "Cálido"
+
+msgid "Energetická červeno-oranžová"
+msgstr "Enérgico rojo anaranjado"
+
+msgid "Fialová"
+msgstr "Púrpura"
+
+msgid "Výrazná fialová paleta"
+msgstr "Paleta violeta atrevida"
+
+msgid "Neutrální"
+msgstr "Neutral"
+
+msgid "Stupně šedé – klidný vzhled"
+msgstr "Tonos de gris – mirada tranquila"
+
+msgid "Menu analytiky"
+msgstr "Menú de análisis"
+
+msgid "Sekce"
+msgstr "Sección"
+
+msgid "Přehled TS Čimice"
+msgstr "TS Čimice overview"
+
+msgid "Zavřít menu"
+msgstr "Menú Close"
+
+msgid "Sekce analytiky"
+msgstr "Sección de análisis"
+
+msgid "Klíčové ukazatele"
+msgstr "Métricas clave"
+
+msgid "Aktivita"
+msgstr "Actividad"
+
+msgid "Hodiny a tréninky"
+msgstr "Horarios y entrenamientos"
+
+msgid "Finance"
+msgstr "Finanzas"
+
+msgid "Naúčtování a platby"
+msgstr "Cargos y pagos"
+
+msgid "Účetnictví"
+msgstr "Contabilidad"
+
+msgid "Zisky a marže"
+msgstr "Beneficios y márgenes"
+
+msgid "Trenéři"
+msgstr "Entrenadores"
+
+msgid "Výplaty a hodiny"
+msgstr "Pagos y horas"
+
+msgid "Energie, vybavení, bonusy"
+msgstr "Energía, equipamiento, bonificaciones."
+
+msgid "Aktuální měsíc + celkem"
+msgstr "Mes actual + total"
+
+msgid "Domů › Analytika"
+msgstr "Home › Analytics"
+
+msgid "Klíčové ukazatele tenisového systému za aktuální měsíc"
+msgstr "Métricas clave del sistema de tenis para el mes actual"
+
+#, python-format
+msgid "%(count)s tréninků · tento měsíc"
+msgstr "%(count)s entrenamientos · este mes"
+
+#, python-format
+msgid "%(count)s faktur · tento měsíc"
+msgstr "%(count)s facturas · este mes"
+
+#, python-format
+msgid "%(count)s plateb · tento měsíc"
+msgstr "%(count)s pagos · este mes"
+
+msgid "Naúčtováno minus zaplaceno"
+msgstr "Cobrado menos pagado"
+
+msgid "Export přehledu"
+msgstr "Informe de exportación"
+
+msgid "Stáhněte souhrn finančních a účetních ukazatelů za vybrané období."
+msgstr ""
+"Descargue un resumen de métricas financieras y contables para el período "
+"seleccionado."
+
+msgid "Stáhnout PDF"
+msgstr "Descargar PDF"
+
+msgid "Stáhnout Excel"
+msgstr "Descargar Excel"
+
+msgid "Základní ukazatele TS"
+msgstr "TS key metrics"
+
+msgid "Rozbalit"
+msgstr "Expandir"
+
+msgid "Odehrané hodiny (měsíc)"
+msgstr "Horas jugadas (mes)"
+
+msgid "Celkem hodin / tréninků:"
+msgstr "Total de horas/formaciones:"
+
+msgid "Průměr na trénink:"
+msgstr "Promedio por entrenamiento:"
+
+msgid "-"
+msgstr "-"
+
+msgid "Naúčtováno (měsíc)"
+msgstr "Cobrado (mes)"
+
+msgid "Celkem naúčtováno:"
+msgstr "Total cobrado:"
+
+msgid "Průměr na fakturu:"
+msgstr "Promedio por factura:"
+
+msgid "Přijaté platby (měsíc)"
+msgstr "Pagos recibidos (mes)"
+
+msgid "Průměr na platbu:"
+msgstr "Promedio por pago:"
+
+msgid "Celkem dlužné částky"
+msgstr "Montos totales de la deuda"
+
+msgid "Celkem přebytky"
+msgstr "Excedentes totales"
+
+msgid "Rychlý finanční přehled"
+msgstr "Resumen financiero rápido"
+
+msgid "Zaplaceno (měsíc)"
+msgstr "Pagado (mes)"
+
+msgid "Naúčtováno (celkem)"
+msgstr "Cargado (total)"
+
+msgid "Rovnováha hráčů"
+msgstr "Saldo del jugador"
+
+msgid "Přejít na Finance"
+msgstr "Ir a Finanzas"
+
+msgid "Přejít na Hráče"
+msgstr "Ir a jugadores"
+
+msgid "Odehrané hodiny, tréninky a denní trend"
+msgstr "Horas jugadas, entrenamientos y tendencia diaria"
+
+msgid "Aktivita za posledních 7 dní"
+msgstr "Actividad en los últimos 7 días"
+
+msgid "Denní trend"
+msgstr "Tendencia diaria"
+
+msgid "Aktivita za 7 dní"
+msgstr "Actividad durante 7 días"
+
+msgid "Detail"
+msgstr "Detalle"
+
+msgid "Klikněte na den pro detail"
+msgstr "Haga clic en un día para obtener más detalles"
+
+msgid "Přehled za 6 měsíců"
+msgstr "Resumen durante 6 meses"
+
+msgid "Klikněte na měsíc pro rozpad"
+msgstr "Haga clic en un mes para ver el desglose"
+
+msgid "Přehled za 1 rok"
+msgstr "Resumen durante 1 año"
+
+msgid "12 měsíců"
+msgstr "12 meses"
+
+msgid "Přehled za celou dobu"
+msgstr "Resumen de todos los tiempos"
+
+msgid "Tréninků tento měsíc"
+msgstr "Entrenamientos este mes"
+
+msgid "Celkem tréninků"
+msgstr "entrenamientos totales"
+
+msgid "Průměr h/trénink"
+msgstr "Media h/entrenamiento"
+
+msgid "Naúčtování, platby a finanční srovnání"
+msgstr "Cargos, pagos y comparación financiera"
+
+msgid "Naúčtováno vs Zaplaceno (měsíc)"
+msgstr "Cobrado vs Pagado (mes)"
+
+msgid "Finanční srovnání – měsíc"
+msgstr "Comparación financiera – mes"
+
+msgid "Klikněte na sloupec"
+msgstr "Haga clic en una columna"
+
+msgid "Finanční přehled (měsíc)"
+msgstr "Resumen financiero (mes)"
+
+msgid "Naúčtováno vs Zaplaceno (celkem)"
+msgstr "Cobrado vs Pagado (total)"
+
+msgid "Finanční srovnání – celkem"
+msgstr "Comparación financiera – total"
+
+msgid "Finanční přehled (celkem)"
+msgstr "Resumen financiero (total)"
+
+msgid "Top přeplatky"
+msgstr "Principales sobrepagos"
+
+msgid "Žádné přeplatky"
+msgstr "Sin sobrepagos"
+
+msgid "Top dlužníci"
+msgstr "Principales deudores"
+
+msgid "Žádní dlužníci"
+msgstr "Sin deudores"
+
+msgid "Cash flow, zisky, marže a výnosy na hodinu"
+msgstr "Flujo de caja, ganancias, márgenes e ingresos por hora"
+
+msgid "Cash Flow (měsíc)"
+msgstr "Cash Flow (mes)"
+
+msgid "Přijaté platby − Trenéři − Ostatní náklady"
+msgstr "Pagos recibidos − Entrenadores − Otros gastos"
+
+msgid "Hrubý zisk (měsíc)"
+msgstr "Beneficio bruto (mes)"
+
+msgid "Naúčtováno − Náklady na trenéry"
+msgstr "Cobrado − Costos del autocar"
+
+msgid "Marže (měsíc)"
+msgstr "Margen (mes)"
+
+msgid "Hrubý zisk ÷ Naúčtováno × 100"
+msgstr "Beneficio bruto ÷ Cobrado × 100"
+
+msgid "Výnosy / hod. (měsíc)"
+msgstr "Ingresos / hora (mes)"
+
+msgid "Naúčtováno ÷ Odehrané hodiny"
+msgstr "Cargado ÷ Horas jugadas"
+
+msgid "Výplaty trenérům (celkem)"
+msgstr "Pagos del entrenador (total)"
+
+msgid "Součet všech výplat"
+msgstr "Suma de todos los pagos"
+
+msgid "Zbývá vyplatit (celkem)"
+msgstr "Queda por pagar (total)"
+
+msgid "Earned trenérů − Již vyplaceno"
+msgstr "Entrenador ganado − Ya pagado"
+
+msgid "Čistý zisk (měsíc)"
+msgstr "Beneficio neto (mes)"
+
+msgid "Přijato − Trenéři − Ostatní náklady"
+msgstr "Recibido − Entrenadores − Otros gastos"
+
+msgid "Ostatní náklady (měsíc)"
+msgstr "Otros gastos (mes)"
+
+msgid "Zadat / upravit náklady"
+msgstr "Introducir/editar gastos"
+
+msgid "Čistý zisk (celkem)"
+msgstr "Beneficio neto (total)"
+
+msgid "Ostatní náklady (celkem)"
+msgstr "Otros gastos (total)"
+
+msgid "Součet všech zadaných nákladů"
+msgstr "Suma de todos los gastos ingresados"
+
+msgid "Ø Příjem / hráč (měsíc)"
+msgstr "Ingresos medios por jugador (mes)"
+
+msgid "Naúčtováno ÷ Aktivní hráči"
+msgstr "Jugadores cargados ÷ activos"
+
+msgid "Hrubý zisk (celkem)"
+msgstr "Beneficio bruto (total)"
+
+msgid "Naúčtováno − Earned trenérů"
+msgstr "Cobrado − Entrenador ganado"
+
+msgid "Marže (celkem)"
+msgstr "Margen (total)"
+
+msgid "Výnosy / hod. (celkem)"
+msgstr "Ingresos / hora (total)"
+
+msgid "Naúčtováno ÷ Celkem hodin"
+msgstr "Cobrado ÷ Horas totales"
+
+msgid "Ø Příjem / hráč (celkem)"
+msgstr "Ingresos medios por jugador (total)"
+
+msgid "Naúčtováno ÷ Počet hráčů"
+msgstr "Cobrado ÷ Número de jugadores"
+
+msgid "Cash Flow – 6 měsíců"
+msgstr "Cash Flow – 6 meses"
+
+msgid "Klikněte na měsíc"
+msgstr "Haga clic en un mes"
+
+msgid "Hrubý zisk – 6 měsíců"
+msgstr "Beneficio bruto – 6 meses"
+
+msgid "Čistý zisk – 6 měsíců"
+msgstr "Beneficio neto – 6 meses"
+
+msgid "Výplaty trenérům – 6 měsíců"
+msgstr "Pagos del entrenador – 6 meses"
+
+msgid "Roční přehled – 12 měsíců"
+msgstr "Resumen anual – 12 meses"
+
+msgid "Hrubý zisk – 1 rok"
+msgstr "Beneficio bruto – 1 año"
+
+msgid "Čistý zisk – 1 rok"
+msgstr "Beneficio neto – 1 año"
+
+msgid "Výplaty trenérům – 1 rok"
+msgstr "Pagos del entrenador – 1 año"
+
+msgid "Čistý zisk – celá doba"
+msgstr "Beneficio neto – todos los tiempos"
+
+msgid "Výplaty trenérům – celá doba"
+msgstr "Pagos del entrenador: todo el tiempo"
+
+msgid "Kredity, dluhy a přeplatky hráčů"
+msgstr "Créditos, deudas y sobrepagos de jugadores"
+
+msgid "Celková rovnováha"
+msgstr "Saldo general"
+
+msgid "Klikněte na segment"
+msgstr "Haga clic en un segmento"
+
+msgid "Rozložení dluhů"
+msgstr "Distribución de deuda"
+
+msgid "Souhrn kreditů"
+msgstr "Resumen de crédito"
+
+msgid "Celkové dluhy"
+msgstr "Deudas totales"
+
+msgid "Celkové přebytky"
+msgstr "Excedentes totales"
+
+msgid "Top dlužníci (Hráči)"
+msgstr "Principales deudores (Jugadores)"
+
+msgid "Všichni hráči"
+msgstr "Todos los jugadores"
+
+msgid "Přeplatky (Hráči)"
+msgstr "Sobrepagos (Jugadores)"
+
+msgid "Náklady na trenéry – hodiny, nároky a výplaty"
+msgstr "Costos del entrenador: horas, reclamos y pagos"
+
+msgid "Hodiny trenérů (měsíc)"
+msgstr "Horas del entrenador (mes)"
+
+msgid "Hodiny trenérů – měsíc"
+msgstr "Horas del entrenador – mes"
+
+msgid "Klikněte na trenéra"
+msgstr "Haga clic en un entrenador"
+
+msgid "Přehled trenérů"
+msgstr "Resumen de entrenadores"
+
+msgid "K vyplacení"
+msgstr "para pagar"
+
+msgid "Žádní trenéři"
+msgstr "Sin entrenadores"
+
+msgid ""
+"Provozní náklady mimo výplaty trenérů – započítávají se do čistého zisku"
+msgstr ""
+"Costes operativos excluidos pagos a entrenadores – incluidos en el beneficio "
+"neto"
+
+msgid "Náklady tento měsíc"
+msgstr "Gastos este mes"
+
+msgid "Zadané provozní náklady"
+msgstr "Gastos operativos ingresados"
+
+msgid "Náklady celkem"
+msgstr "Gastos totales"
+
+msgid "Po trenérech i ostatních nákladech"
+msgstr "Después de entrenadores y otros gastos."
+
+msgid "Zadání nákladů za den"
+msgstr "Introduce los gastos de un día."
+
+msgid "Uloží se do čistého zisku"
+msgstr "Contado en beneficio neto"
+
+msgid "Výběr data"
+msgstr "Selección de fecha"
+
+msgid "Předchozí měsíc"
+msgstr "Mes anterior"
+
+msgid "Další měsíc"
+msgstr "Mes próximo"
+
+msgid "Po"
+msgstr "Lun"
+
+msgid "Út"
+msgstr "Mar"
+
+msgid "St"
+msgstr "Mié"
+
+msgid "Čt"
+msgstr "Jue"
+
+msgid "Pá"
+msgstr "Vie"
+
+msgid "So"
+msgstr "Sáb"
+
+msgid "Ne"
+msgstr "No"
+
+msgid "Dnes"
+msgstr "Hoy"
+
+msgid "Zadat datum ručně"
+msgstr "Introduce la fecha manualmente"
+
+msgid "Přejít"
+msgstr "Ir"
+
+msgid "Uložit náklady"
+msgstr "Ahorra gastos"
+
+msgid ""
+"Vyplňte částky v Kč pro vybraný den. Prázdné pole = kategorie se pro daný "
+"den smaže. Součet všech dnů v měsíci se odečítá od čistého zisku."
+msgstr ""
+"Introduzca importes en CZK para el día seleccionado. Campo vacío = la "
+"categoría se elimina para ese día. La suma de todos los días del mes se "
+"deduce del beneficio neto."
+
+msgid "Poznámka (volitelné)"
+msgstr "Nota (opcional)"
+
+msgid "Náklady po měsících"
+msgstr "Gastos por mes"
+
+msgid "Ostatní náklady – 12 měsíců"
+msgstr "Otros gastos – 12 meses"
+
+msgid "Klikněte na měsíc – rozpad po dnech a položkách"
+msgstr "Haga clic en un mes: desglose por días y artículos"
+
+msgid "Náklady – celá doba"
+msgstr "Gastos – todo el tiempo"
+
+msgid "Ostatní náklady – celá doba"
+msgstr "Otros gastos – todo el tiempo"
+
+msgid "Historie nákladů"
+msgstr "Historial de gastos"
+
+msgid "Zatím nejsou zadané žádné náklady"
+msgstr "Aún no se han introducido gastos"
+
+msgid "Zavřít"
+msgstr "Close"
+
+msgid "Domů"
+msgstr "Inicio"
+
+msgid "Přidat"
+msgstr "Agregar"
+
+msgid "← Nastavení"
+msgstr "← Configuración"
+
+msgid "Menu"
+msgstr "Menú"
+
+msgid "Změnit heslo"
+msgstr "Cambiar contraseña"
+
+msgid "Odhlásit se"
+msgstr "Cerrar sesión"
+
+msgid "Rozvrh"
+msgstr "Horario"
+
+msgid "Hlavní navigace"
+msgstr "Navegación principal"
+
+msgid "Hlavní menu"
+msgstr "Menú principal"
+
+msgid "Ceník Menu"
+msgstr "Menú de lista de precios"
+
+msgid ""
+"Typy tréninků v ceníku — přidání, úprava názvu nebo smazání nepoužívaných."
+msgstr ""
+"Tipos de entrenamiento en la lista de precios — añadir, renombrar o eliminar "
+"los no usados."
+
+msgid "← Zpět"
+msgstr "← Volver"
+
+msgid "Typy tréninků"
+msgstr "Tipos de entrenamiento"
+
+msgid "Uložit"
+msgstr "Guardar"
+
+msgid "Zrušit"
+msgstr "Cancelar"
+
+msgid "Smazat"
+msgstr "Eliminar"
+
+msgid "Zatím žádné typy. Přidejte první níže."
+msgstr "Aún no hay tipos. Añade el primero a continuación."
+
+msgid "Nový typ tréninku"
+msgstr "Nuevo tipo de entrenamiento"
+
+msgid "Název nového typu tréninku"
+msgstr "Nombre del nuevo tipo de formación"
+
+msgid "+ Přidat typ"
+msgstr "+ Agregar tipo"
+
+msgid "Vygenerovat vyúčtování"
+msgstr "Generar facturación"
+
+msgid "Částka k úhradě"
+msgstr "Monto adeudado"
+
+msgid "např. 5000"
+msgstr "p.ej. 5000"
+
+msgid "Otevřít vyúčtování hráče"
+msgstr "Abrir facturación de jugadores"
+
+msgid "Historie tréninků a plateb"
+msgstr "Historial de formación y pagos."
+
+msgid "Období:"
+msgstr "Período:"
+
+msgid "Filtrovat"
+msgstr "Filtrar"
+
+msgid "Skupina"
+msgstr "Grupo"
+
+msgid "Žádná data."
+msgstr "Sin datos."
+
+msgid "Součty:"
+msgstr "Totales:"
+
+msgid "Souhrn hráče"
+msgstr "Resumen del jugador"
+
+msgid "Odehrané tréninky"
+msgstr "Entrenamientos completados"
+
+msgid "Součet cen (tréninky)"
+msgstr "Suma de precios (entrenamientos)"
+
+msgid "Součet zaplaceno"
+msgstr "Suma pagada"
+
+msgid "Aktuální kredit"
+msgstr "Crédito actual"
+
+msgid "Nastavení pro hromadné vyúčtování"
+msgstr "Configuración de facturación masiva"
+
+msgid "Období od:"
+msgstr "Periodo desde:"
+
+msgid "Období do:"
+msgstr "Periodo para:"
+
+msgid "Částka k úhradě:"
+msgstr "Importe adeudado:"
+
+msgid "(nechte prázdné pro auto-výpočet)"
+msgstr "(déjelo vacío para el cálculo automático)"
+
+msgid "Tato platba bude připsána všem zaškrtnutým hráčům."
+msgstr "Este pago se acreditará a todos los jugadores marcados."
+
+msgid "Částka (Kč):"
+msgstr "Monto (CZK):"
+
+msgid "např. 2000"
+msgstr "p.ej. 2000"
+
+msgid "Ruční stržení (Mínus)"
+msgstr "Deducción manual (menos)"
+
+msgid "Poznámka:"
+msgstr "Nota:"
+
+msgid "např. Příspěvky podzim"
+msgstr "p.ej. Contribuciones de otoño"
+
+msgid "Provést platbu"
+msgstr "Procesar pago"
+
+msgid "Zpět na hráče"
+msgstr "Volver a jugadores"
+
+msgid "Vygenerovat vyúčtování rodiny"
+msgstr "Generar facturación familiar"
+
+msgid "Historie tréninků a plateb (rodina)"
+msgstr "Historial de formación y pagos (familia)"
+
+msgid "Aktuální kredit (rodina)"
+msgstr "Crédito actual (familiar)"
+
+msgid "Kopírovat z jiného dne / týdne"
+msgstr "Copiar de otro día/semana"
+
+msgid ""
+"Načtěte tréninky ze zvoleného dne nebo týdne, upravte je a uložte jako nové."
+msgstr ""
+"Cargue entrenamientos del día o semana seleccionados, edítelos y guárdelos "
+"como nuevos."
+
+msgid "Načíst tréninky"
+msgstr "Entrenamientos de carga"
+
+#, python-format
+msgid "Načteno %(count)s tréninků – zkontrolujte a uložte níže."
+msgstr ""
+"Capacitaciones %(count)s cargadas: revíselas y guárdelas a continuación."
+
+msgid "Vyplňte položky"
+msgstr "Completar elementos"
+
+msgid "Předchozí týden"
+msgstr "Semana anterior"
+
+msgid "−7 dní"
+msgstr "−7 días"
+
+msgid "Kalendář"
+msgstr "Calendario"
+
+msgid "Otevřít kalendář"
+msgstr "calendario abierto"
+
+#, python-format
+msgid "Trénink %(num)s"
+msgstr "Formación %(num)s"
+
+msgid "Smazat tento trénink"
+msgstr "Delete esta capacitación"
+
+msgid "HRÁČI"
+msgstr "PLAYERS"
+
+msgid "Vyhledat hráče…"
+msgstr "Buscar jugadores…"
+
+msgid "Vyhledat hráče"
+msgstr "Buscar jugadores"
+
+msgid "Přidat Hráče"
+msgstr "Agregar jugador"
+
+msgid "Přidat Trénink"
+msgstr "Agregar entrenamiento"
+
+msgid "Uložit: Přidat Další"
+msgstr "Guardar: agregar otro"
+
+msgid "← Předchozí"
+msgstr "← Anterior"
+
+msgid "Zobrazení"
+msgstr "Vista"
+
+msgid "Další →"
+msgstr "Siguiente →"
+
+msgid "Kopírovat den"
+msgstr "día de la copia"
+
+msgid "Kopírovat týden"
+msgstr "Copiar semana"
+
+msgid "Solo"
+msgstr "Solo"
+
+msgid "Dvojice"
+msgstr "Doubles"
+
+msgid "Trojice"
+msgstr "Triples"
+
+msgid "Čtveřice"
+msgstr "Quads"
+
+msgid "← Zpět na souhrn"
+msgstr "← Volver al resumen"
+
+msgid "Od:"
+msgstr "Desde:"
+
+msgid "Do:"
+msgstr "Hasta:"
+
+msgid "Zadat výplatu"
+msgstr "Ingresar pago"
+
+msgid "Celková odehraná částka"
+msgstr "Cantidad total jugada"
+
+#, python-format
+msgid "Aktuální měsíc (%(label)s)"
+msgstr "Mes actual (%(label)s)"
+
+msgid "Dlužná částka"
+msgstr "Monto de la deuda"
+
+msgid "Ve vybraném období:"
+msgstr "En el período seleccionado:"
+
+msgid "Částka k vyplacení po měsících"
+msgstr "Monto a pagar por mes"
+
+msgid "Měsíc"
+msgstr "Mes"
+
+msgid "Částka k vyplacení"
+msgstr "cantidad a pagar"
+
+msgid "Vyplaceno"
+msgstr "Pagado"
+
+msgid "Nová sazba od…"
+msgstr "Nueva tarifa desde…"
+
+msgid "Od data:"
+msgstr "Desde fecha:"
+
+msgid "Částka (Kč/h):"
+msgstr "Importe (CZK/h):"
+
+msgid "Nastavit sazbu"
+msgstr "Establecer tarifa"
+
+msgid "Aktuální sazba dnes:"
+msgstr "Tasa actual hoy:"
+
+msgid "Účinné sazby:"
+msgstr "Tarifas efectivas:"
+
+msgid "Kč/h"
+msgstr "CZK/h"
+
+msgid "(upravit)"
+msgstr "(editar)"
+
+msgid ""
+"Žádné záznamy sazeb. Používá se výchozí sazba z profilu (nebo 500 Kč/h)."
+msgstr ""
+"Sin registros de tarifas. Se usa la tarifa predeterminada del perfil (o 500 "
+"CZK/h)."
+
+#, python-format
+msgid "%(count)s tréninků"
+msgstr "%(count)s entrenamientos"
+
+msgid "Sazba"
+msgstr "Tarifa"
+
+msgid "Žádné tréninky."
+msgstr "Sin entrenamientos."
+
+msgid "Historie"
+msgstr "Historia"
+
+msgid "Všechna vyúčtování hráče"
+msgstr "Todas las facturaciones de jugadores"
+
+msgid "Na začátku období"
+msgstr "Al inicio del periodo"
+
+msgid "Na konci období"
+msgstr "Al final del período"
+
+msgid "Po zaplacení částky k úhradě"
+msgstr "Después de pagar el monto adeudado"
+
+msgid ""
+"Kladný kredit = přeplatek, záporný = dluh. Částka k úhradě je to, co bylo v "
+"e-mailu požadováno k zaplacení."
+msgstr ""
+"Crédito positivo = sobrepago, negativo = deuda. El importe a pagar es lo "
+"solicitado en el correo."
+
+msgid "Důvod vyúčtování"
+msgstr "Motivo de facturación"
+
+msgid ""
+"Toto je archivní záznam – čísla odpovídají stavu v okamžiku vytvoření "
+"vyúčtování."
+msgstr ""
+"Este es un registro de archivo – las cifras reflejan el estado al crear la "
+"facturación."
+
+msgid "← Zpět na seznam vyúčtování"
+msgstr "← Volver a la lista de facturación"
+
+msgid "Vyúčtování: Nastavení"
+msgstr "Facturación: Configuración"
+
+msgid ""
+"Zvolte, kdy má systém automaticky vytvořit vyúčtování a poslat e-mail, nebo "
+"vypněte automatiku a vyúčtovávejte jen ručně z profilu hráče."
+msgstr ""
+"Elija cuándo el sistema debe crear facturación y enviar correo "
+"automáticamente, o desactive la automatización y facture manualmente desde "
+"el perfil del jugador."
+
+#, python-format
+msgid "Aktuálně: %(rezim)s — %(popis)s."
+msgstr "Actualmente: %(rezim)s — %(popis)s."
+
+msgid "← Nastavení systému"
+msgstr "← Configuración del sistema"
+
+msgid "← Vyúčtování"
+msgstr "← Facturación"
+
+msgid "Nastavení nelze uložit."
+msgstr "La configuración no se puede guardar."
+
+msgid "Opravte prosím zvýrazněná pole níže."
+msgstr "Corrija los campos resaltados a continuación."
+
+msgid ""
+"Systém neposílá automatická vyúčtování. Vyúčtování vytvoříte ručně v profilu "
+"hráče nebo u rodiny."
+msgstr ""
+"El sistema no envía facturaciones automáticas. Cree la facturación "
+"manualmente en el perfil del jugador o de la familia."
+
+msgid ""
+"Po tréninku zkontroluje celkový kredit. Když klesne na zadanou částku (např. "
+"−5000 Kč), odešle e-mail s vyúčtováním."
+msgstr ""
+"Tras el entrenamiento comprueba el crédito total. Si baja al importe "
+"indicado (p. ej. −5000 CZK), envía un correo de facturación."
+
+msgid ""
+"Od zadaného dne v měsíci uzavře při dalším tréninku období a pošle "
+"vyúčtování za uplynulý měsíc."
+msgstr ""
+"Desde el día indicado del mes, el siguiente entrenamiento cierra el período "
+"y envía la facturación del mes pasado."
+
+msgid ""
+"Po zadaném počtu odehraných tréninků od poslední uzávěrky automaticky "
+"vytvoří vyúčtování."
+msgstr ""
+"Tras el número indicado de entrenamientos desde el último cierre, crea la "
+"facturación automáticamente."
+
+msgid ""
+"Po zadaném dni v měsíci se při dalším tréninku uzavře období od poslední "
+"uzávěrky."
+msgstr ""
+"Tras el día indicado del mes, el siguiente entrenamiento cierra el período "
+"desde el último cierre."
+
+msgid "E-mail a platební údaje"
+msgstr "Correo electrónico y detalles de pago"
+
+msgid ""
+"Výchozí varianta účtu v automatických e-mailech. Ruční vyúčtování z profilu "
+"hráče může zvolit jinou variantu."
+msgstr ""
+"Variante de cuenta predeterminada en correos automáticos. La facturación "
+"manual desde el perfil del jugador puede elegir otra variante."
+
+msgid "Přehled hráčů"
+msgstr "Resumen de jugadores"
+
+msgid ""
+"Všichni hráči používají stejný globální režim výše. Tabulka ukazuje stav od "
+"poslední uzávěrky."
+msgstr ""
+"Todos los jugadores usan el mismo modo global arriba. La tabla muestra el "
+"estado desde el último cierre."
+
+msgid "Otevřít všechny hráče →"
+msgstr "Abrir todos los jugadores →"
+
+msgid "Poslední uzávěrka"
+msgstr "último cierre"
+
+msgid "Tréninků od uzávěrky"
+msgstr "Entrenamientos desde el cierre"
+
+#, python-format
+msgid "Zobrazeno 20 z %(total)s hráčů."
+msgstr "Mostrando 20 de los jugadores %(total)s."
+
+msgid "Zatím žádní hráči."
+msgstr "Aún no hay jugadores."
+
+msgid "Uložit nastavení"
+msgstr "Guardar configuración"
+
+msgid "+ Nový trénink"
+msgstr "+ Nuevo entrenamiento"
+
+msgid "+ Platba od hráče"
+msgstr "+ Pago del jugador"
+
+msgid "+ Nový hráč"
+msgstr "+ Nuevo jugador"
+
+msgid "Poslední platby"
+msgstr "Pagos recientes"
+
+msgid "Žádné platby."
+msgstr "Sin pagos."
+
+msgid "Poslední tréninky"
+msgstr "Entrenamientos recientes"
+
+msgid "Top dlužníci (hráči)"
+msgstr "Principales deudores (jugadores)"
+
+msgid "Nikdo nedluží 🎉"
+msgstr "Nobody owes anything 🎉"
+
+msgid "Nic k vyplacení."
+msgstr "Nada que pagar."
+
+msgid "Home"
+msgstr "Home"
+
+msgid "Delete"
+msgstr "Delete"
+
+#, python-format
+msgid ""
+"Deleting the %(object_name)s '%(escaped_object)s' would result in deleting "
+"related objects, but your account doesn't have permission to delete the "
+"following types of objects:"
+msgstr ""
+"Eliminar %(object_name)s '%(escaped_object)s' eliminaría objetos "
+"relacionados, pero su cuenta no tiene permiso para eliminar los siguientes "
+"tipos de objetos:"
+
+#, python-format
+msgid ""
+"Deleting the %(object_name)s '%(escaped_object)s' would require deleting the "
+"following protected related objects:"
+msgstr ""
+"Eliminar %(object_name)s '%(escaped_object)s' requeriría eliminar los "
+"siguientes objetos relacionados protegidos:"
+
+#, python-format
+msgid ""
+"Are you sure you want to delete the %(object_name)s \"%(escaped_object)s\"? "
+"All of the following related items will be deleted:"
+msgstr ""
+"¿Seguro que desea eliminar %(object_name)s «%(escaped_object)s»? Se "
+"eliminarán todos los elementos relacionados siguientes:"
+
+msgid "Objects"
+msgstr "Objetos"
+
+msgid "Ano, odstranit"
+msgstr "Si, eliminar"
+
+msgid "Delete multiple objects"
+msgstr "Delete múltiples objetos"
+
+#, python-format
+msgid ""
+"Deleting the selected %(objects_name)s would result in deleting related "
+"objects, but your account doesn't have permission to delete the following "
+"types of objects:"
+msgstr ""
+"Eliminar los %(objects_name)s seleccionados eliminaría objetos relacionados, "
+"pero su cuenta no tiene permiso para eliminar los siguientes tipos de "
+"objetos:"
+
+#, python-format
+msgid ""
+"Deleting the selected %(objects_name)s would require deleting the following "
+"protected related objects:"
+msgstr ""
+"Eliminar los %(objects_name)s seleccionados requeriría eliminar los "
+"siguientes objetos relacionados protegidos:"
+
+#, python-format
+msgid ""
+"Are you sure you want to delete the selected %(objects_name)s? All of the "
+"following objects and their related items will be deleted:"
+msgstr ""
+"¿Seguro que desea eliminar los %(objects_name)s seleccionados? Se eliminarán "
+"todos los objetos siguientes y sus elementos relacionados:"
+
+msgid "Odhlášení"
+msgstr "Finalizar la sesión"
+
+msgid "Opravdu se chcete odhlásit ze systému Tenis systém Čimice?"
+msgstr "¿Está seguro de que desea cerrar sesión en Tennis System Čimice?"
+
+msgid "Ano, odhlásit se"
+msgstr "Sí, cerrar sesión"
+
+msgid "Sekce nastavení"
+msgstr "Sección de configuración"
+
+msgid "Zkontrolujte zvýrazněná pole."
+msgstr "Verifique los campos resaltados."
+
+msgid "Název klubu, kontakt a logo."
+msgstr "Nombre del club, contacto y logotipo."
+
+msgid "V hlavičce adminu a na webu"
+msgstr "En el encabezado del administrador y en el sitio web"
+
+msgid "Na úvodní stránce a v patičce"
+msgstr "En la página de destino y en el pie de página"
+
+msgid "Nepovinné"
+msgstr "Opcional"
+
+msgid "Krátký text pod názvem na webu"
+msgstr "Texto breve debajo del nombre en el sitio web"
+
+msgid "PNG nebo JPG, nejlépe čtverec"
+msgstr "PNG o JPG, preferiblemente cuadrado"
+
+msgid "Malá ikona v záložce prohlížeče"
+msgstr "Pequeño icono en la pestaña del navegador"
+
+msgid "Režim zobrazení a barevná paleta – změna se uloží hned."
+msgstr ""
+"Modo de visualización y paleta de colores: los cambios se guardan "
+"inmediatamente."
+
+msgid "Tmavé pozadí, světlý text a upravené tabulky"
+msgstr "Fondo oscuro, texto claro y tablas ajustadas."
+
+msgid ""
+"Palety ve stylu Excel – každá mění akcenty, tabulky i tlačítka v celém "
+"systému."
+msgstr ""
+"Paletas estilo Excel – cada una cambia acentos, tablas y botones en todo el "
+"sistema."
+
+msgid "Barevná paleta"
+msgstr "paleta de colores"
+
+msgid "Výchozí hodnoty pro tréninky, rozvrh a přehled vyúčtování."
+msgstr ""
+"Valores predeterminados para capacitaciones, cronograma y descripción "
+"general de facturación."
+
+msgid "Aktuální vyúčtování"
+msgstr "Facturación actual"
+
+msgid "Režim"
+msgstr "Modo"
+
+msgid "Podmínka"
+msgstr "Condición"
+
+msgid "Varianta účtu"
+msgstr "Variante de cuenta"
+
+msgid "Při přidávání nového tréninku"
+msgstr "Al agregar una nueva capacitación"
+
+msgid "Hala nebo venek u nového tréninku"
+msgstr "Interior o exterior para un nuevo entrenamiento."
+
+msgid "Výchozí pohled v kalendáři tréninků"
+msgstr "Vista predeterminada en el calendario de entrenamiento"
+
+msgid "Začátek a konec zobrazení v kalendáři tréninků"
+msgstr "Inicio y fin de visualización en el calendario de entrenamiento"
+
+msgid "Venku v letních měsících, hala v zimě"
+msgstr "Al aire libre en los meses de verano, interior en invierno."
+
+msgid "Automatický kurt"
+msgstr "Corte automática"
+
+msgid "Venkovní sezóna"
+msgstr "Temporada al aire libre"
+
+msgid "Měsíce, kdy se preferuje venkovní kurt"
+msgstr "Meses en los que se prefiere la cancha al aire libre"
+
+msgid "Detailní nastavení vyúčtování je v samostatné stránce"
+msgstr ""
+"La configuración de facturación detallada se encuentra en una página separada"
+
+msgid "Související nastavení"
+msgstr "Configuraciones relacionadas"
+
+msgid "Kdo píše vyúčtování a jak vypadá zpráva."
+msgstr "Quién escribe la facturación y cómo se ve el mensaje."
+
+msgid "Adresa, ze které se e-maily odesílají"
+msgstr "Dirección desde la que se envían los correos electrónicos"
+
+msgid "Stačí název klubu – závorky doplníme sami"
+msgstr ""
+"El nombre del club es suficiente; nosotros mismos agregaremos corchetes"
+
+msgid "Ukázka předmětu"
+msgstr "Vista previa del tema"
+
+msgid "Text na konci každého e-mailu"
+msgstr "Texto al final de cada correo electrónico"
+
+msgid "Test odeslání"
+msgstr "Enviar prueba"
+
+msgid "Testovací e-mail"
+msgstr "correo electrónico de prueba"
+
+msgid "Pošle zkušební zprávu"
+msgstr "Envía un mensaje de prueba"
+
+msgid "Odeslat"
+msgstr "Enviar"
+
+msgid "Dashboard, seznam hráčů a tabulky v adminu."
+msgstr "Dashboard, lista de jugadores y tablas en admin."
+
+msgid "0 = každý dluh, −1000 = od 1000 Kč"
+msgstr "0 = cada deuda, −1000 = desde 1000 CZK"
+
+msgid "Červeně v seznamu hráčů"
+msgstr "En rojo en la lista de jugadores."
+
+msgid "Zvýraznit záporný kredit"
+msgstr "Resaltar crédito negativo"
+
+msgid "Tréninky, platby, vyúčtování"
+msgstr "Capacitaciones, pagos, facturación."
+
+msgid "Diagnostika systému"
+msgstr "Diagnóstico del sistema"
+
+msgid "Databáze"
+msgstr "Base de datos"
+
+msgid "Chybí"
+msgstr "Desaparecido"
+
+msgid "Odesílatel"
+msgstr "Remitente"
+
+msgid "Poslední vyúčtování"
+msgstr "Última facturación"
+
+msgid "Pouze lokální SQLite – před importem se vytvoří záloha databáze."
+msgstr ""
+"Solo SQLite local: se crea una copia de seguridad de la base de datos antes "
+"de la importación."
+
+msgid "Soubor zálohy"
+msgstr "Archivo de copia de seguridad"
+
+msgid "Export z položky Export dat výše"
+msgstr "Exportar desde el elemento de exportación de datos anterior"
+
+msgid "Importovat"
+msgstr "Importar"
+
+msgid "Save as new"
+msgstr "Save as new"
+
+msgid "Save and continue editing"
+msgstr "Save and continue editing"
+
+msgid "Save and view"
+msgstr "Save and view"
+
+msgid "Close"
+msgstr "Close"
+
+msgid "Správa tenisové školy – tréninky, platby, vyúčtování trenérů."
+msgstr ""
+"Gestión de escuelas de tenis: entrenamientos, pagos, facturación a "
+"entrenadores."
+
+msgid "Správa tenisové školy"
+msgstr "Gestión de escuelas de tenis."
+
+msgid "Jazyk"
+msgstr "Idioma"
+
+msgid "Školy"
+msgstr "Escuelas"
+
+msgid "Co umí"
+msgstr "Funciones"
+
+msgid "Kontakt"
+msgstr "Contacto"
+
+msgid "Pro trenéry a tenisové akademie"
+msgstr "Para entrenadores y academias de tenis"
+
+msgid "Méně tabulek,"
+msgstr "Menos hojas de cálculo,"
+
+msgid "víc času na"
+msgstr "más tiempo en"
+
+msgid "kurtu"
+msgstr "corte"
+
+msgid ""
+"Kdo trénuje zítra, kdo má kredit a kolik patří trenérovi za měsíc — bez "
+"dalšího souboru v počítači."
+msgstr ""
+"Quién entrena mañana, quién tiene crédito y cuánto se debe al entrenador del "
+"mes — sin otro archivo en el ordenador."
+
+msgid "Vybrat školu"
+msgstr "Elige una escuela"
+
+msgid "Dnešní přehled"
+msgstr "Resumen de hoy"
+
+msgid "pondělí 7. 7."
+msgstr "Monday 7 Jul"
+
+msgid "Aktivní"
+msgstr "Activo"
+
+msgid "Tréninky dnes"
+msgstr "Entrenamientos hoy"
+
+msgid "Aktivní hráči"
+msgstr "Jugadores activos"
+
+msgid "K vyúčtování"
+msgstr "facturar"
+
+msgid "12 400 Kč"
+msgstr "12,400 CZK"
+
+msgid "Solo · venku"
+msgstr "Solo · exterior"
+
+msgid "Dvojice · venku"
+msgstr "Doubles · exterior"
+
+msgid "Skupina · hala"
+msgstr "Grupo · interior"
+
+msgid "Přihlášení do školy"
+msgstr "Iniciar sesión en la escuela"
+
+msgid "Vyberte školu, ke které patříte."
+msgstr "Seleccione la escuela a la que pertenece."
+
+msgid "Hledat školu"
+msgstr "Buscar escuela"
+
+msgid "Název nebo město…"
+msgstr "Nombre o ciudad…"
+
+msgid "Přihlásit se"
+msgstr "Acceso"
+
+msgid "brzy"
+msgstr "pronto"
+
+msgid "Připravujeme"
+msgstr "Muy pronto"
+
+msgid "Žádná škola neodpovídá hledání."
+msgstr "Ninguna escuela coincide con su búsqueda."
+
+msgid "Kalendář tréninků"
+msgstr "Calendario de entrenamiento"
+
+msgid "Solo, dvojice i skupiny — venek i hala na jedné obrazovce."
+msgstr "Solo, dobles y grupos: exterior e interior en una sola pantalla."
+
+msgid "Platby rodin"
+msgstr "Pagos familiares"
+
+msgid "Kredity, platby a vratky vždy aktuální."
+msgstr "Créditos, pagos y reembolsos siempre al día."
+
+msgid "Vyúčtování trenérů"
+msgstr "Facturación del entrenador"
+
+msgid "Hodiny, zálohy i výplata na jedno kliknutí."
+msgstr "Horarios, anticipos y pago en un clic."
+
+msgid "Chcete připojit školu?"
+msgstr "¿Quieres conectar una escuela?"
+
+msgid "Error:"
+msgstr "Error:"
+
+msgid "Documentation"
+msgstr "Documentation"
+
+msgid "Change password"
+msgstr "Cambiar la contraseña"
+
+msgid "Log out"
+msgstr "Finalizar la sesión"
+
+msgid "Password change"
+msgstr "cambio de contraseña"
+
+msgid "Please correct the error below."
+msgid_plural "Please correct the errors below."
+msgstr[0] "Corrija el error a continuación."
+msgstr[1] "Corrija el error a continuación."
+msgstr[2] "Corrija el error a continuación."
+
+msgid ""
+"Zadejte svoje současné heslo a poté dvakrát heslo nové. Omezíme tak možnost "
+"překlepu."
+msgstr ""
+"Introduzca su contraseña actual y luego la nueva dos veces. Así reducimos "
+"errores tipográficos."
+
+msgid "Change my password"
+msgstr "cambiar mi contraseña"
+
+# Doplněno z katalogu překladů
+# Doplněno z katalogu překladů
+# Doplněno z katalogu překladů
+# Doplněno z katalogu překladů
+
+# Doplněno z katalogu překladů
+
+msgid "Celoroční"
+msgstr "Todo el año"
+
+msgid "Jazyk rozhraní pro všechny uživatele (lze přepsat v hlavičce)."
+msgstr ""
+"Idioma de la interfaz para todos los usuarios (se puede anular en el e"
+"ncabezado)."
+
+msgid "Sezóny"
+msgstr "Temporadas"
+
+msgid "Trenéra"
+msgstr "Entrenador"
+
+msgid "Typu tréninku"
+msgstr "Tipo de entrenamiento"

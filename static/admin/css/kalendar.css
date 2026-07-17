@@ -1,11 +1,11 @@
 :root{
-    --bg:#f6f7fb;
-    --card:#ffffff;
-    --border:#e5e7eb;
-    --text:#111827;
-    --muted:#6b7280;
-    --brand:#f59e0b;
-    --brand-weak:#ffedd5;
+    --sched-bg:#f6f7fb;
+    --sched-card:#ffffff;
+    --sched-border:#e5e7eb;
+    --sched-text:#111827;
+    --sched-muted:#6b7280;
+    --sched-brand:#f59e0b;
+    --sched-brand-weak:#ffedd5;
 
     /* výška 1 hodiny – větší mezery mezi hodinami pro více tréninků */
     --hour-h: 115px;
@@ -18,11 +18,11 @@
   .sched-toolbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:10px 0 14px; }
   .sched-toolbar .button{ padding:8px 10px; border-radius:10px; }
   .sched-toolbar input[type="date"], .sched-toolbar select{
-    border:1px solid var(--border); border-radius:10px; padding:8px 10px; height:36px; background:#fff;
+    border:1px solid var(--sched-border); border-radius:10px; padding:8px 10px; height:36px; background:var(--sched-card);
   }
-  .sched-toolbar .seg{ display:inline-flex; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-  .sched-toolbar .seg a{ padding:8px 12px; text-decoration:none; color:var(--text); background:#fff; display:inline-block; }
-  .sched-toolbar .seg a.is-active{ background:var(--brand-weak); color:#92400e; font-weight:700; }
+  .sched-toolbar .seg{ display:inline-flex; border:1px solid var(--sched-border); border-radius:10px; overflow:hidden; }
+  .sched-toolbar .seg a{ padding:8px 12px; text-decoration:none; color:var(--sched-text); background:var(--sched-card); display:inline-block; }
+  .sched-toolbar .seg a.is-active{ background:var(--sched-brand-weak); color:#92400e; font-weight:700; }
   .sched-toolbar .add-day-copy-from-cal{
     background: #fffaf5;
     border-color: #E67817;
@@ -43,32 +43,32 @@
     .sched-scroll-inner{ min-width: 1050px; }
   }
 
-  .sched-wrap{ background:var(--card); border:1px solid var(--border); border-radius:12px; }
+  .sched-wrap{ background:var(--sched-card); border:1px solid var(--sched-border); border-radius:12px; }
 
   /* Řádek dnů zakotvený nahoře při vertikálním scrollování */
   .sched-head{
     display:grid; grid-template-columns: 52px repeat(var(--days), minmax(140px, 1fr));
-    background:#fff; border-bottom:1px solid var(--border);
+    background:var(--sched-card); border-bottom:1px solid var(--sched-border);
     position:sticky; top:0; z-index:3;
     box-shadow: 0 2px 4px rgba(0,0,0,.04);
   }
-  .sched-head div{ padding:10px 12px; font-weight:700; color:var(--text); white-space:nowrap; }
+  .sched-head div{ padding:10px 12px; font-weight:700; color:var(--sched-text); white-space:nowrap; }
   /* Rohová buňka (nad hodinami) zakotvená vlevo při horizontálním scrollování */
-  .sched-head div:first-child{ position:sticky; left:0; z-index:4; background:#fff; border-right:1px solid var(--border); padding:10px 4px !important; min-width:0; }
+  .sched-head div:first-child{ position:sticky; left:0; z-index:4; background:var(--sched-card); border-right:1px solid var(--sched-border); padding:10px 4px !important; min-width:0; }
 
-  .sched-grid{ position:relative; display:grid; grid-template-columns: 52px repeat(var(--days), minmax(140px, 1fr)); background:var(--bg); }
+  .sched-grid{ position:relative; display:grid; grid-template-columns: 52px repeat(var(--days), minmax(140px, 1fr)); background:var(--sched-bg); }
 
   /* Sloupec hodin zakotvený vlevo při horizontálním scrollování */
-  .sched-hours{ position:sticky; left:0; z-index:2; background:#fff; border-right:1px solid var(--border); }
-  .sched-hours::before{ content:""; position:absolute; inset:0; background:#fff; z-index:-1; }
+  .sched-hours{ position:sticky; left:0; z-index:2; background:var(--sched-card); border-right:1px solid var(--sched-border); }
+  .sched-hours::before{ content:""; position:absolute; inset:0; background:var(--sched-card); z-index:-1; }
   .sched-hour{
-    position:absolute; left:4px; transform:translateY(-50%); color:var(--muted); font-size:12px;
-    top: calc( (var(--h) - 6) * var(--hour-h) );
+    position:absolute; left:4px; transform:translateY(-50%); color:var(--sched-muted); font-size:12px;
+    top: calc( (var(--h) - var(--sched-start, 6)) * var(--hour-h) );
   }
 
-  .sched-day{ position:relative; background:#fff; border-right:1px solid var(--border); }
+  .sched-day{ position:relative; background:var(--sched-card); border-right:1px solid var(--sched-border); }
   .sched-day:last-child{ border-right:none; }
-  .sched-day-body{ position:relative; height: calc(16 * var(--hour-h) + var(--tail)); } /* 6→22 = 16 h + rezerva */
+  .sched-day-body{ position:relative; height: calc(var(--hour-count, 16) * var(--hour-h) + var(--tail)); }
 
   .sched-day-body::before{
     content:""; position:absolute; inset:0; background:
@@ -88,8 +88,8 @@
   /* Základ eventu – pozice podle skutečného času (minuty), ne jen celých hodin */
   .ev{
     position:absolute; box-sizing:border-box;
-    background:var(--brand-weak);
-    border:1px solid var(--brand);
+    background:var(--sched-brand-weak);
+    border:1px solid var(--sched-brand);
     border-radius:4px;
     padding:4px 6px;
     color:#7c2d12;
@@ -218,7 +218,7 @@
   .ev[class*="ev--kurt-rezervace"] { background:#ffe4e6; border-color:#e11d48; color:#9f1239; }
 
   /* legenda – barvy shodné s událostmi v kalendáři */
-  .legend{ margin-top:12px; color:var(--muted); font-size:13px; display:flex; gap:18px; flex-wrap:wrap; align-items:center; }
+  .legend{ margin-top:12px; color:var(--sched-muted); font-size:13px; display:flex; gap:18px; flex-wrap:wrap; align-items:center; }
   .legend .item{ display:flex; align-items:center; gap:8px; }
   .chip{ width:12px; height:12px; border-radius:4px; border:1px solid transparent; display:inline-block; }
   .chip--solo     { background:#ffedd5; border-color:#f59e0b; }

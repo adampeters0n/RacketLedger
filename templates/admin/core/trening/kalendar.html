@@ -1,6 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load static %}
-
+{% load static i18n %}
 {% block extrastyle %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'admin/css/kalendar.css' %}">
@@ -9,29 +8,29 @@
 {% block content %}
 <form class="sched-toolbar" method="get" action="">
   <input type="hidden" name="view" value="{{ view_mode }}">
-  <a class="button" href="?view={{ view_mode }}&amp;date={{ prev_date }}{% if selected_trainer %}&amp;trener={{ selected_trainer }}{% endif %}">← Předchozí</a>
+  <a class="button" href="?view={{ view_mode }}&amp;date={{ prev_date }}{% if selected_trainer %}&amp;trener={{ selected_trainer }}{% endif %}">{% trans "← Předchozí" %}</a>
   <input type="date" name="date" value="{{ date_value }}" onchange="this.form.submit()">
-  <div class="seg" role="tablist" aria-label="Zobrazení">
-    <a href="?view=day&amp;date={{ date_value }}{% if selected_trainer %}&amp;trener={{ selected_trainer }}{% endif %}"  class="{% if view_mode == 'day' %}is-active{% endif %}">Den</a>
-    <a href="?view=week&amp;date={{ date_value }}{% if selected_trainer %}&amp;trener={{ selected_trainer }}{% endif %}" class="{% if view_mode == 'week' %}is-active{% endif %}">Týden</a>
+  <div class="seg" role="tablist" aria-label="{% trans 'Zobrazení' %}">
+    <a href="?view=day&amp;date={{ date_value }}{% if selected_trainer %}&amp;trener={{ selected_trainer }}{% endif %}"  class="{% if view_mode == 'day' %}is-active{% endif %}">{% trans "Den" %}</a>
+    <a href="?view=week&amp;date={{ date_value }}{% if selected_trainer %}&amp;trener={{ selected_trainer }}{% endif %}" class="{% if view_mode == 'week' %}is-active{% endif %}">{% trans "Týden" %}</a>
   </div>
   <select name="trener" onchange="this.form.submit()">
-    <option value="">Všichni trenéři</option>
+    <option value="">{% trans "Všichni trenéři" %}</option>
     {% for t in trainers %}
       <option value="{{ t.id }}" {% if selected_trainer == t.id %}selected{% endif %}>{{ t.get_full_name|default:t.username }}</option>
     {% endfor %}
   </select>
-  <a class="button" href="?view={{ view_mode }}&amp;date={{ next_date }}{% if selected_trainer %}&amp;trener={{ selected_trainer }}{% endif %}">Další →</a>
-  <a class="button add-day-copy-from-cal" href="{{ copy_day_url }}">Kopírovat den</a>
+  <a class="button" href="?view={{ view_mode }}&amp;date={{ next_date }}{% if selected_trainer %}&amp;trener={{ selected_trainer }}{% endif %}">{% trans "Další →" %}</a>
+  <a class="button add-day-copy-from-cal" href="{{ copy_day_url }}">{% trans "Kopírovat den" %}</a>
   {% if view_mode == 'week' %}
-  <a class="button add-day-copy-from-cal" href="{{ copy_week_url }}">Kopírovat týden</a>
+  <a class="button add-day-copy-from-cal" href="{{ copy_week_url }}">{% trans "Kopírovat týden" %}</a>
   {% endif %}
 </form>
 
 <!-- přidáme třídu s režimem: is-day / is-week; na mobilu horizontální scroll -->
 <div class="sched-scroll">
   <div class="sched-scroll-inner">
-<div class="sched-wrap is-{{ view_mode }}" style="--days: {{ days|length }};">
+<div class="sched-wrap is-{{ view_mode }}" style="--days: {{ days|length }}; --hour-count: {{ hour_count }}; --sched-start: {{ sched_start_hour }};">
   <div class="sched-head">
     <div></div>
     {% for d in days %}<div>{{ d.label }}</div>{% endfor %}
@@ -39,7 +38,7 @@
 
   <div class="sched-grid">
     <div class="sched-hours">
-      <div style="height: calc(16 * var(--hour-h) + var(--tail)); position:relative;">
+      <div style="height: calc(var(--hour-count, 16) * var(--hour-h) + var(--tail)); position:relative;">
         {% for h in hours %}
           <div class="sched-hour" style="--h: {{ h }};">{{ h|stringformat:"02d" }}:00</div>
         {% endfor %}
@@ -74,11 +73,11 @@
 
 <!-- jednoduchá legenda barev formátů -->
 <div class="legend">
-  <span class="item"><span class="chip chip--solo"></span> Solo</span>
-  <span class="item"><span class="chip chip--dvojice"></span> Dvojice</span>
-  <span class="item"><span class="chip chip--trojice"></span> Trojice</span>
-  <span class="item"><span class="chip chip--ctverice"></span> Čtveřice</span>
-  <span class="item"><span class="chip chip--skupina"></span> Skupina</span>
+  <span class="item"><span class="chip chip--solo"></span>{% trans "Solo" %}</span>
+  <span class="item"><span class="chip chip--dvojice"></span>{% trans "Dvojice" %}</span>
+  <span class="item"><span class="chip chip--trojice"></span>{% trans "Trojice" %}</span>
+  <span class="item"><span class="chip chip--ctverice"></span>{% trans "Čtveřice" %}</span>
+  <span class="item"><span class="chip chip--skupina"></span>{% trans "Skupina" %}</span>
   <span class="item"><span class="chip chip--rezervace"></span> Rezervace kurtu</span>
 </div>
 {% endblock %}

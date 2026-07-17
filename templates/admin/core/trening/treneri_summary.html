@@ -1,6 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load static %}
-
+{% load static i18n %}
 {% block extrastyle %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'admin/css/trener.css' %}">
@@ -9,12 +8,12 @@
 {% block content %}
   <div id="content-main">
     <div class="module">
-      <h2>Trenéři – souhrn</h2>
+      <h2>{% trans "Trenéři – souhrn" %}</h2>
 
       <form method="get" class="trener-filter-form">
-        <label>Od: <input type="date" name="from" value="{{ dfrom|date:'Y-m-d' }}"></label>
-        <label>Do: <input type="date" name="to" value="{{ dto|date:'Y-m-d' }}"></label>
-        <button type="submit" class="button">Filtrovat</button>
+        <label>{% trans "Od:" %} <input type="date" name="from" value="{{ dfrom|date:'Y-m-d' }}"></label>
+        <label>{% trans "Do:" %} <input type="date" name="to" value="{{ dto|date:'Y-m-d' }}"></label>
+        <button type="submit" class="button">{% trans "Filtrovat" %}</button>
       </form>
 
       <div class="results treneri-table-wrapper">
@@ -27,10 +26,10 @@
           </colgroup>
           <thead>
             <tr>
-              <th>Trenér</th>
-              <th class="center">Počet tréninků</th>
-              <th class="center">Hodiny</th>
-              <th class="center">Částka</th>
+              <th>{% trans "Trenér" %}</th>
+              <th class="center">{% trans "Počet tréninků" %}</th>
+              <th class="center">{% trans "Hodiny" %}</th>
+              <th class="center">{% trans "Částka" %}</th>
             </tr>
           </thead>
           <tbody>
@@ -44,12 +43,12 @@
                 <td class="center nowrap"><strong>{{ r.castka }}</strong></td>
               </tr>
             {% empty %}
-              <tr><td colspan="4">Žádná data.</td></tr>
+              <tr><td colspan="4">{% trans "Žádná data." %}</td></tr>
             {% endfor %}
           </tbody>
           <tfoot>
             <tr class="totals">
-              <td class="label">Součty:</td>
+              <td class="label">{% trans "Součty:" %}</td>
               <td class="center">{{ total_pocet }}</td>
               <td class="center">{{ total_hodiny }}</td>
               <td class="center nowrap"><strong>{{ total_castka }}</strong></td>

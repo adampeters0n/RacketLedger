@@ -35,7 +35,13 @@
       font-size: 14px !important;
     }
 
-    /* Bubliny (Trener, Datum, Čas, …) – užší, neroztahují se na celé pole; border, oranžový focus */
+    body.app-core.model-trening.change-form .module.aligned .form-row > div,
+    body.app-core.model-trening.change-form .module.aligned .form-row .flex-container {
+      width: 100% !important;
+      max-width: 360px !important;
+    }
+
+    /* Bubliny (Trenér, Datum, Čas, …) – užší, neroztahují se na celé pole; border, oranžový focus */
     body.app-core.model-trening.change-form .module.aligned .form-row input:not([type="submit"]):not([type="button"]),
     body.app-core.model-trening.change-form .module.aligned .form-row select,
     body.app-core.model-trening.change-form .module.aligned .form-row textarea {
@@ -68,8 +74,12 @@
       resize: vertical !important;
     }
 
-    /* Datum/čas – stejné odsazení zleva pro obě bubliny (Datum i Čas), nadpisy nad bublinami */
-    body.app-core.model-trening.change-form .form-row.field-datum > label { display: none !important; }
+    /* Datum/čas – skrýt duplicitní popisek (widget má vlastní Datum/Čas) */
+    body.app-core.model-trening.change-form .form-row.field-datum > label,
+    body.app-core.model-trening.change-form .form-row.field-datum > div > .flex-container > label {
+      display: none !important;
+    }
+    /* Datum/čas – stejné odsazení zleva pro obě bubliny */
     /* Kontejner Datum+Čas: i v tabulce (td > div) – minimální mezera mezi řádky */
     body.app-core.model-trening.change-form .form-row.field-datum > div,
     body.app-core.model-trening.change-form .form-row.field-datum td > div,

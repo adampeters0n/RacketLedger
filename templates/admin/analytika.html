@@ -1,20 +1,21 @@
 {% extends "admin/base_site.html" %}
-{% load static %}
+{% load static i18n %}
+{% block page_styles %}
+<link rel="stylesheet" href="{% static 'admin/css/analytika.css' %}">
+{% endblock %}
 
 {% block extrahead %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'admin/css/analytika.css' %}">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-<link rel="stylesheet" href="{% static 'admin/custom.css' %}">
 {% endblock %}
 
 {% block content %}
 <div class="analytika-app" id="analytikaApp" data-section="{{ analytika_section }}">
 
   <!-- Mobilní přepínač menu -->
-  <button type="button" class="analytika-menu-toggle" id="analytikaMenuToggle" aria-label="Menu analytiky">
+  <button type="button" class="analytika-menu-toggle" id="analytikaMenuToggle" aria-label="{% trans 'Menu analytiky' %}">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-    <span>Sekce</span>
+    <span>{% trans "Sekce" %}</span>
   </button>
 
   <div class="analytika-layout">
@@ -24,70 +25,70 @@
       <div class="sidebar-brand">
         <span class="sidebar-brand-dot"></span>
         <div class="sidebar-brand-text">
-          <strong>Analytika</strong>
-          <small>Přehled TS Čimice</small>
+          <strong>{% trans "Analytika" %}</strong>
+          <small>{% trans "Přehled TS Čimice" %}</small>
         </div>
-        <button type="button" class="sidebar-close" id="analytikaSidebarClose" aria-label="Zavřít menu">
+        <button type="button" class="sidebar-close" id="analytikaSidebarClose" aria-label="{% trans 'Zavřít menu' %}">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
         </button>
       </div>
 
-      <nav class="sidebar-nav" role="navigation" aria-label="Sekce analytiky">
-        <p class="sidebar-nav-label">Sekce</p>
+      <nav class="sidebar-nav" role="navigation" aria-label="{% trans 'Sekce analytiky' %}">
+        <p class="sidebar-nav-label">{% trans "Sekce" %}</p>
         <a class="sidebar-nav-item{% if analytika_section == 'prehled' %} active{% endif %}" href="{% url 'admin:analytika_section' 'prehled' %}">
           <span class="nav-icon nav-icon--overview"></span>
           <span class="nav-text">
-            <strong>Přehled</strong>
-            <small>Klíčové ukazatele</small>
+            <strong>{% trans "Přehled" %}</strong>
+            <small>{% trans "Klíčové ukazatele" %}</small>
           </span>
         </a>
         <a class="sidebar-nav-item{% if analytika_section == 'aktivita' %} active{% endif %}" href="{% url 'admin:analytika_section' 'aktivita' %}">
           <span class="nav-icon nav-icon--activity"></span>
           <span class="nav-text">
-            <strong>Aktivita</strong>
-            <small>Hodiny a tréninky</small>
+            <strong>{% trans "Aktivita" %}</strong>
+            <small>{% trans "Hodiny a tréninky" %}</small>
           </span>
         </a>
         <a class="sidebar-nav-item{% if analytika_section == 'finance' %} active{% endif %}" href="{% url 'admin:analytika_section' 'finance' %}">
           <span class="nav-icon nav-icon--finance"></span>
           <span class="nav-text">
-            <strong>Finance</strong>
-            <small>Naúčtování a platby</small>
+            <strong>{% trans "Finance" %}</strong>
+            <small>{% trans "Naúčtování a platby" %}</small>
           </span>
         </a>
         <a class="sidebar-nav-item{% if analytika_section == 'ucetnictvi' %} active{% endif %}" href="{% url 'admin:analytika_section' 'ucetnictvi' %}">
           <span class="nav-icon nav-icon--accounting"></span>
           <span class="nav-text">
-            <strong>Účetnictví</strong>
-            <small>Zisky a marže</small>
+            <strong>{% trans "Účetnictví" %}</strong>
+            <small>{% trans "Zisky a marže" %}</small>
           </span>
         </a>
         <a class="sidebar-nav-item{% if analytika_section == 'hraci' %} active{% endif %}" href="{% url 'admin:analytika_section' 'hraci' %}">
           <span class="nav-icon nav-icon--players"></span>
           <span class="nav-text">
-            <strong>Hráči</strong>
-            <small>Kredity a dluhy</small>
+            <strong>{% trans "Hráči" %}</strong>
+            <small>{% trans "Kredity a dluhy" %}</small>
           </span>
         </a>
         <a class="sidebar-nav-item{% if analytika_section == 'treneri' %} active{% endif %}" href="{% url 'admin:analytika_section' 'treneri' %}">
           <span class="nav-icon nav-icon--coaches"></span>
           <span class="nav-text">
-            <strong>Trenéři</strong>
-            <small>Výplaty a hodiny</small>
+            <strong>{% trans "Trenéři" %}</strong>
+            <small>{% trans "Výplaty a hodiny" %}</small>
           </span>
         </a>
         <a class="sidebar-nav-item{% if analytika_section == 'naklady' %} active{% endif %}" href="{% url 'admin:analytika_section' 'naklady' %}">
           <span class="nav-icon nav-icon--costs"></span>
           <span class="nav-text">
-            <strong>Ostatní náklady</strong>
-            <small>Energie, vybavení, bonusy</small>
+            <strong>{% trans "Ostatní náklady" %}</strong>
+            <small>{% trans "Energie, vybavení, bonusy" %}</small>
           </span>
         </a>
       </nav>
 
       <div class="sidebar-footer">
-        <span class="sidebar-period-label">Období</span>
-        <span class="sidebar-period-value">Aktuální měsíc + celkem</span>
+        <span class="sidebar-period-label">{% trans "Období" %}</span>
+        <span class="sidebar-period-value">{% trans "Aktuální měsíc + celkem" %}</span>
       </div>
     </aside>
 
@@ -96,7 +97,7 @@
 
       <header class="analytika-header">
         <div>
-          <p class="analytika-breadcrumb">Domů › Analytika</p>
+          <p class="analytika-breadcrumb">{% trans "Domů › Analytika" %}</p>
           <h1 id="analytikaSectionTitle">{{ analytika_section_title }}</h1>
           <p class="analytika-subtitle" id="analytikaSectionSubtitle">{{ analytika_section_subtitle }}</p>
         </div>
@@ -104,95 +105,126 @@
 
       {% if analytika_section == 'prehled' %}
       <!-- ═══ SEKCE: PŘEHLED ═══ -->
-      <section class="analytika-section active" id="section-prehled" data-title="Přehled" data-subtitle="Klíčové ukazatele tenisového systému za aktuální měsíc">
+      <section class="analytika-section active" id="section-prehled" data-title="{% trans 'Přehled' %}" data-subtitle="{% trans 'Klíčové ukazatele tenisového systému za aktuální měsíc' %}">
 
         <div class="hero-kpi-row">
           <div class="hero-kpi">
-            <span class="hero-kpi-label">Odehrané hodiny</span>
+            <span class="hero-kpi-label">{% trans "Odehrané hodiny" %}</span>
             <span class="hero-kpi-value" id="data-hours">{{ kpis.hours }}</span>
-            <span class="hero-kpi-meta">{{ kpis.trainings_count_current }} tréninků · tento měsíc</span>
+            <span class="hero-kpi-meta">{% blocktrans with count=kpis.trainings_count_current %}{{ count }} tréninků · tento měsíc{% endblocktrans %}</span>
           </div>
           <div class="hero-kpi">
-            <span class="hero-kpi-label">Naúčtováno</span>
+            <span class="hero-kpi-label">{% trans "Naúčtováno" %}</span>
             <span class="hero-kpi-value" id="data-nauctovano">{{ kpis.nauctovano }}</span>
-            <span class="hero-kpi-meta">{{ kpis.charges_count_current }} faktur · tento měsíc</span>
+            <span class="hero-kpi-meta">{% blocktrans with count=kpis.charges_count_current %}{{ count }} faktur · tento měsíc{% endblocktrans %}</span>
           </div>
           <div class="hero-kpi">
-            <span class="hero-kpi-label">Přijaté platby</span>
+            <span class="hero-kpi-label">{% trans "Přijaté platby" %}</span>
             <span class="hero-kpi-value" id="data-platby">{{ kpis.platby }}</span>
-            <span class="hero-kpi-meta">{{ kpis.payments_count_current }} plateb · tento měsíc</span>
+            <span class="hero-kpi-meta">{% blocktrans with count=kpis.payments_count_current %}{{ count }} plateb · tento měsíc{% endblocktrans %}</span>
           </div>
           <div class="hero-kpi hero-kpi--alert">
-            <span class="hero-kpi-label">Nezaplaceno</span>
+            <span class="hero-kpi-label">{% trans "Nezaplaceno" %}</span>
             <span class="hero-kpi-value" id="data-unpaid">{{ kpis.unpaid }}</span>
-            <span class="hero-kpi-meta">Naúčtováno minus zaplaceno</span>
+            <span class="hero-kpi-meta">{% trans 'Naúčtováno minus zaplaceno' %}</span>
           </div>
         </div>
 
+        <div class="panel analytika-export-panel">
+          <div class="panel-header">
+            <div class="panel-header-left">
+              <h3>{% trans 'Export přehledu' %}</h3>
+              <span class="panel-badge panel-badge--orange">PDF / Excel</span>
+            </div>
+          </div>
+          <p class="analytika-export-desc">
+            {% trans "Stáhněte souhrn finančních a účetních ukazatelů za vybrané období." %}
+          </p>
+          <div class="analytika-export-controls">
+            <div class="analytika-export-field">
+              <label class="analytika-export-label" for="analytikaExportPeriod">{% trans 'Období' %}</label>
+              <select id="analytikaExportPeriod" class="analytika-export-select">
+                {% for slug, label in analytika_export_periods.items %}
+                <option value="{{ slug }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="analytika-export-actions">
+              <a id="analytikaExportPdf" class="analytika-export-btn analytika-export-btn--pdf" href="{{ analytika_export_urls.rok.pdf }}" download>
+                <span>{% trans "Stáhnout PDF" %}</span>
+              </a>
+              <a id="analytikaExportXlsx" class="analytika-export-btn analytika-export-btn--xlsx" href="{{ analytika_export_urls.rok.xlsx }}" download>
+                <span>{% trans "Stáhnout Excel" %}</span>
+              </a>
+            </div>
+          </div>
+          {{ analytika_export_urls|json_script:"analytika-export-urls" }}
+        </div>
+
         <div class="panel-grid panel-grid--2">
-          <div class="panel panel--expandable" data-expand-title="Základní ukazatele TS" data-expand-target="kpi-detail-grid">
+          <div class="panel panel--expandable" data-expand-title="{% trans 'Základní ukazatele TS' %}" data-expand-target="kpi-detail-grid">
             <div class="panel-header">
               <div class="panel-header-left">
-                <h3>Základní ukazatele</h3>
-                <span class="panel-badge">Přehled</span>
+                <h3>{% trans "Základní ukazatele" %}</h3>
+                <span class="panel-badge">{% trans "Přehled" %}</span>
               </div>
-              <button type="button" class="panel-expand-btn" data-panel-expand aria-label="Rozbalit detail">
-                <span>Rozbalit</span>
+              <button type="button" class="panel-expand-btn" data-panel-expand aria-label="{% trans 'Rozbalit detail' %}">
+                <span>{% trans "Rozbalit" %}</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
               </button>
             </div>
             <div class="kpi-grid kpi-grid--compact" id="kpi-detail-grid">
               <div class="kpi">
                 <div class="kpi-header">
-                  <div class="label">Odehrané hodiny (měsíc)</div>
+                  <div class="label">{% trans "Odehrané hodiny (měsíc)" %}</div>
                   <div class="value">{{ kpis.hours }}</div>
                 </div>
                 <div class="kpi-details">
-                  <div class="kpi-detail-item"><span class="kpi-detail-label">Celkem hodin / tréninků:</span><span class="kpi-detail-value">{{ kpis.total_all_hours }} / {{ kpis.total_trainings_count }}</span></div>
-                  <div class="kpi-detail-item"><span class="kpi-detail-label">Průměr na trénink:</span><span class="kpi-detail-value" id="avg-hours-per-training-month">-</span></div>
+                  <div class="kpi-detail-item"><span class="kpi-detail-label">{% trans 'Celkem hodin / tréninků:' %}</span><span class="kpi-detail-value">{{ kpis.total_all_hours }} / {{ kpis.total_trainings_count }}</span></div>
+                  <div class="kpi-detail-item"><span class="kpi-detail-label">{% trans 'Průměr na trénink:' %}</span><span class="kpi-detail-value" id="avg-hours-per-training-month">{% trans '-' %}</span></div>
                 </div>
               </div>
               <div class="kpi">
                 <div class="kpi-header">
-                  <div class="label">Naúčtováno (měsíc)</div>
+                  <div class="label">{% trans 'Naúčtováno (měsíc)' %}</div>
                   <div class="value">{{ kpis.nauctovano }}</div>
                 </div>
                 <div class="kpi-details">
-                  <div class="kpi-detail-item"><span class="kpi-detail-label">Celkem naúčtováno:</span><span class="kpi-detail-value">{{ kpis.total_all_charged }}</span></div>
-                  <div class="kpi-detail-item"><span class="kpi-detail-label">Průměr na fakturu:</span><span class="kpi-detail-value" id="avg-charge-month">-</span></div>
+                  <div class="kpi-detail-item"><span class="kpi-detail-label">{% trans 'Celkem naúčtováno:' %}</span><span class="kpi-detail-value">{{ kpis.total_all_charged }}</span></div>
+                  <div class="kpi-detail-item"><span class="kpi-detail-label">{% trans 'Průměr na fakturu:' %}</span><span class="kpi-detail-value" id="avg-charge-month">{% trans '-' %}</span></div>
                 </div>
               </div>
               <div class="kpi">
                 <div class="kpi-header">
-                  <div class="label">Přijaté platby (měsíc)</div>
+                  <div class="label">{% trans 'Přijaté platby (měsíc)' %}</div>
                   <div class="value">{{ kpis.platby }}</div>
                 </div>
                 <div class="kpi-details">
-                  <div class="kpi-detail-item"><span class="kpi-detail-label">Celkem zaplaceno:</span><span class="kpi-detail-value">{{ kpis.total_all_paid }}</span></div>
-                  <div class="kpi-detail-item"><span class="kpi-detail-label">Průměr na platbu:</span><span class="kpi-detail-value" id="avg-payment-month">-</span></div>
+                  <div class="kpi-detail-item"><span class="kpi-detail-label">{% trans "Celkem zaplaceno:" %}</span><span class="kpi-detail-value">{{ kpis.total_all_paid }}</span></div>
+                  <div class="kpi-detail-item"><span class="kpi-detail-label">{% trans 'Průměr na platbu:' %}</span><span class="kpi-detail-value" id="avg-payment-month">{% trans '-' %}</span></div>
                 </div>
               </div>
               <div class="kpi">
                 <div class="kpi-header">
-                  <div class="label">K vyplacení trenérům</div>
+                  <div class="label">{% trans 'K vyplacení trenérům' %}</div>
                   <div class="value" id="data-vyplaceni">{{ kpis.k_vyplaceni }}</div>
                 </div>
               </div>
               <div class="kpi kpi--negative">
                 <div class="kpi-header">
-                  <div class="label">Celkem dlužné částky</div>
+                  <div class="label">{% trans 'Celkem dlužné částky' %}</div>
                   <div class="value" id="data-dluhy">{{ kpis.total_debt }}</div>
                 </div>
               </div>
               <div class="kpi">
                 <div class="kpi-header">
-                  <div class="label">Celkem přebytky</div>
+                  <div class="label">{% trans 'Celkem přebytky' %}</div>
                   <div class="value" id="data-prebytky">{{ kpis.total_surplus }}</div>
                 </div>
               </div>
               <div class="kpi">
                 <div class="kpi-header">
-                  <div class="label">Finanční rovnováha</div>
+                  <div class="label">{% trans 'Finanční rovnováha' %}</div>
                   <div class="value" id="data-balance">{{ kpis.total_balance }}</div>
                 </div>
               </div>
@@ -201,37 +233,37 @@
 
           <div class="panel">
             <div class="panel-header">
-              <h3>Rychlý finanční přehled</h3>
+              <h3>{% trans 'Rychlý finanční přehled' %}</h3>
             </div>
             <div class="quick-stats">
               <div class="quick-stat">
-                <span class="quick-stat-label">Naúčtováno (měsíc)</span>
+                <span class="quick-stat-label">{% trans 'Naúčtováno (měsíc)' %}</span>
                 <span class="quick-stat-value" id="comp-nauctovano">{{ kpis.nauctovano }}</span>
               </div>
               <div class="quick-stat">
-                <span class="quick-stat-label">Zaplaceno (měsíc)</span>
+                <span class="quick-stat-label">{% trans 'Zaplaceno (měsíc)' %}</span>
                 <span class="quick-stat-value" id="comp-platby">{{ kpis.platby }}</span>
               </div>
               <div class="quick-stat">
-                <span class="quick-stat-label">Nezaplaceno</span>
+                <span class="quick-stat-label">{% trans "Nezaplaceno" %}</span>
                 <span class="quick-stat-value text-red" id="comp-unpaid">{{ kpis.unpaid }}</span>
               </div>
               <div class="quick-stat">
-                <span class="quick-stat-label">Naúčtováno (celkem)</span>
+                <span class="quick-stat-label">{% trans 'Naúčtováno (celkem)' %}</span>
                 <span class="quick-stat-value" id="data-total-nauctovano">{{ kpis.total_all_charged }}</span>
               </div>
               <div class="quick-stat">
-                <span class="quick-stat-label">Zaplaceno (celkem)</span>
+                <span class="quick-stat-label">{% trans "Zaplaceno (celkem)" %}</span>
                 <span class="quick-stat-value" id="data-total-platby">{{ kpis.total_all_paid }}</span>
               </div>
               <div class="quick-stat">
-                <span class="quick-stat-label">Rovnováha hráčů</span>
+                <span class="quick-stat-label">{% trans 'Rovnováha hráčů' %}</span>
                 <span class="quick-stat-value">{{ kpis.total_balance }}</span>
               </div>
             </div>
             <div class="panel-actions">
-              <a href="{% url 'admin:analytika_section' 'finance' %}" class="link-btn">Přejít na Finance</a>
-              <a href="{% url 'admin:analytika_section' 'hraci' %}" class="link-btn">Přejít na Hráče</a>
+              <a href="{% url 'admin:analytika_section' 'finance' %}" class="link-btn">{% trans "Přejít na Finance" %}</a>
+              <a href="{% url 'admin:analytika_section' 'hraci' %}" class="link-btn">{% trans "Přejít na Hráče" %}</a>
             </div>
           </div>
         </div>
@@ -240,91 +272,91 @@
 
       {% if analytika_section == 'aktivita' %}
       <!-- ═══ SEKCE: AKTIVITA ═══ -->
-      <section class="analytika-section active" id="section-aktivita" data-title="Aktivita" data-subtitle="Odehrané hodiny, tréninky a denní trend">
+      <section class="analytika-section active" id="section-aktivita" data-title="{% trans 'Aktivita' %}" data-subtitle="{% trans 'Odehrané hodiny, tréninky a denní trend' %}">
 
         <div class="panel">
           <div class="panel-header">
             <div class="panel-header-left">
-              <h3>Aktivita za posledních 7 dní</h3>
-              <span class="panel-badge panel-badge--orange">Denní trend</span>
+              <h3>{% trans "Aktivita za posledních 7 dní" %}</h3>
+              <span class="panel-badge panel-badge--orange">{% trans "Denní trend" %}</span>
             </div>
-            <button type="button" class="panel-expand-btn" data-chart-expand="activityChart" data-expand-title="Aktivita za 7 dní">
-              <span>Detail</span>
+            <button type="button" class="panel-expand-btn" data-chart-expand="activityChart" data-expand-title="{% trans 'Aktivita za 7 dní' %}">
+              <span>{% trans "Detail" %}</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
             </button>
           </div>
           <div class="chart-container-medium chart-wrap-interactive">
             <canvas id="activityChart"></canvas>
-            <p class="chart-hint">Klikněte na den pro detail</p>
+            <p class="chart-hint">{% trans "Klikněte na den pro detail" %}</p>
           </div>
         </div>
 
         <div class="panel">
           <div class="panel-header">
             <div class="panel-header-left">
-              <h3>Přehled za 6 měsíců</h3>
-              <span class="panel-badge">Hodiny + finance</span>
+              <h3>{% trans "Přehled za 6 měsíců" %}</h3>
+              <span class="panel-badge">{% trans "Hodiny + finance" %}</span>
             </div>
-            <button type="button" class="panel-expand-btn" data-chart-expand="financeChart" data-expand-title="Přehled za 6 měsíců">
-              <span>Detail</span>
+            <button type="button" class="panel-expand-btn" data-chart-expand="financeChart" data-expand-title="{% trans 'Přehled za 6 měsíců' %}">
+              <span>{% trans "Detail" %}</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
             </button>
           </div>
           <div class="chart-container chart-wrap-interactive">
             <canvas id="financeChart"></canvas>
-            <p class="chart-hint">Klikněte na měsíc pro rozpad</p>
+            <p class="chart-hint">{% trans "Klikněte na měsíc pro rozpad" %}</p>
           </div>
         </div>
 
         <div class="panel">
           <div class="panel-header">
             <div class="panel-header-left">
-              <h3>Přehled za 1 rok</h3>
-              <span class="panel-badge">12 měsíců</span>
+              <h3>{% trans "Přehled za 1 rok" %}</h3>
+              <span class="panel-badge">{% trans "12 měsíců" %}</span>
             </div>
-            <button type="button" class="panel-expand-btn" data-chart-expand="financeYearChart" data-expand-title="Přehled za 1 rok">
-              <span>Detail</span>
+            <button type="button" class="panel-expand-btn" data-chart-expand="financeYearChart" data-expand-title="{% trans 'Přehled za 1 rok' %}">
+              <span>{% trans "Detail" %}</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
             </button>
           </div>
           <div class="chart-container chart-wrap-interactive">
             <canvas id="financeYearChart"></canvas>
-            <p class="chart-hint">Klikněte na měsíc pro rozpad</p>
+            <p class="chart-hint">{% trans "Klikněte na měsíc pro rozpad" %}</p>
           </div>
         </div>
 
         <div class="panel">
           <div class="panel-header">
             <div class="panel-header-left">
-              <h3>Přehled za celou dobu</h3>
-              <span class="panel-badge panel-badge--orange">Celá doba</span>
+              <h3>{% trans "Přehled za celou dobu" %}</h3>
+              <span class="panel-badge panel-badge--orange">{% trans "Celá doba" %}</span>
             </div>
-            <button type="button" class="panel-expand-btn" data-chart-expand="financeAlltimeChart" data-expand-title="Přehled za celou dobu">
-              <span>Detail</span>
+            <button type="button" class="panel-expand-btn" data-chart-expand="financeAlltimeChart" data-expand-title="{% trans 'Přehled za celou dobu' %}">
+              <span>{% trans "Detail" %}</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
             </button>
           </div>
           <div class="chart-container chart-wrap-interactive">
             <canvas id="financeAlltimeChart"></canvas>
-            <p class="chart-hint">Klikněte na měsíc pro rozpad</p>
+            <p class="chart-hint">{% trans "Klikněte na měsíc pro rozpad" %}</p>
           </div>
         </div>
 
         <div class="stat-tiles">
           <div class="stat-tile">
-            <span class="stat-tile-label">Tréninků tento měsíc</span>
+            <span class="stat-tile-label">{% trans "Tréninků tento měsíc" %}</span>
             <span class="stat-tile-value">{{ kpis.trainings_count_current }}</span>
           </div>
           <div class="stat-tile">
-            <span class="stat-tile-label">Celkem tréninků</span>
+            <span class="stat-tile-label">{% trans 'Celkem tréninků' %}</span>
             <span class="stat-tile-value">{{ kpis.total_trainings_count }}</span>
           </div>
           <div class="stat-tile">
-            <span class="stat-tile-label">Hodiny celkem</span>
+            <span class="stat-tile-label">{% trans "Hodiny celkem" %}</span>
             <span class="stat-tile-value">{{ kpis.total_all_hours }}</span>
           </div>
           <div class="stat-tile">
-            <span class="stat-tile-label">Průměr h/trénink</span>
+            <span class="stat-tile-label">{% trans 'Průměr h/trénink' %}</span>
             <span class="stat-tile-value" id="avg-hours-tile">-</span>
           </div>
         </div>
@@ -333,35 +365,35 @@
 
       {% if analytika_section == 'finance' %}
       <!-- ═══ SEKCE: FINANCE ═══ -->
-      <section class="analytika-section active" id="section-finance" data-title="Finance" data-subtitle="Naúčtování, platby a finanční srovnání">
+      <section class="analytika-section active" id="section-finance" data-title="{% trans 'Finance' %}" data-subtitle="{% trans 'Naúčtování, platby a finanční srovnání' %}">
 
         <div class="panel-grid panel-grid--2-1">
           <div class="panel">
             <div class="panel-header">
-              <h3>Naúčtováno vs Zaplaceno (měsíc)</h3>
-              <button type="button" class="panel-expand-btn" data-chart-expand="comparisonChart" data-expand-title="Finanční srovnání – měsíc">
-                <span>Detail</span>
+              <h3>{% trans "Naúčtováno vs Zaplaceno (měsíc)" %}</h3>
+              <button type="button" class="panel-expand-btn" data-chart-expand="comparisonChart" data-expand-title="{% trans 'Finanční srovnání – měsíc' %}">
+                <span>{% trans "Detail" %}</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
               </button>
             </div>
             <div class="chart-container-medium chart-wrap-interactive">
               <canvas id="comparisonChart"></canvas>
-              <p class="chart-hint">Klikněte na sloupec</p>
+              <p class="chart-hint">{% trans "Klikněte na sloupec" %}</p>
             </div>
           </div>
           <div class="panel panel--accent">
-            <h3 class="panel-title-simple">Finanční přehled (měsíc)</h3>
+            <h3 class="panel-title-simple">{% trans "Finanční přehled (měsíc)" %}</h3>
             <div class="comparison-stats">
               <div class="comparison-stat comparison-stat--clickable" data-comp-idx="0">
-                <div class="comparison-stat-label">Naúčtováno</div>
+                <div class="comparison-stat-label">{% trans "Naúčtováno" %}</div>
                 <div class="comparison-stat-value">{{ kpis.nauctovano }}</div>
               </div>
               <div class="comparison-stat comparison-stat--clickable" data-comp-idx="1">
-                <div class="comparison-stat-label">Zaplaceno</div>
+                <div class="comparison-stat-label">{% trans "Zaplaceno" %}</div>
                 <div class="comparison-stat-value">{{ kpis.platby }}</div>
               </div>
               <div class="comparison-stat comparison-stat--clickable" data-comp-idx="2">
-                <div class="comparison-stat-label">Nezaplaceno</div>
+                <div class="comparison-stat-label">{% trans "Nezaplaceno" %}</div>
                 <div class="comparison-stat-value text-red">{{ kpis.unpaid }}</div>
               </div>
             </div>
@@ -371,52 +403,52 @@
         <div class="panel-grid panel-grid--2-1">
           <div class="panel">
             <div class="panel-header">
-              <h3>Naúčtováno vs Zaplaceno (celkem)</h3>
-              <button type="button" class="panel-expand-btn" data-chart-expand="comparisonChartTotal" data-expand-title="Finanční srovnání – celkem">
-                <span>Detail</span>
+              <h3>{% trans 'Naúčtováno vs Zaplaceno (celkem)' %}</h3>
+              <button type="button" class="panel-expand-btn" data-chart-expand="comparisonChartTotal" data-expand-title="{% trans 'Finanční srovnání – celkem' %}">
+                <span>{% trans "Detail" %}</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
               </button>
             </div>
             <div class="chart-container-medium chart-wrap-interactive">
               <canvas id="comparisonChartTotal"></canvas>
-              <p class="chart-hint">Klikněte na sloupec</p>
+              <p class="chart-hint">{% trans "Klikněte na sloupec" %}</p>
             </div>
           </div>
           <div class="panel">
-            <h3 class="panel-title-simple">Finanční přehled (celkem)</h3>
+            <h3 class="panel-title-simple">{% trans "Finanční přehled (celkem)" %}</h3>
             <div class="comparison-stats cols-4">
               <div class="comparison-stat comparison-stat--clickable" data-comp-idx="0">
-                <div class="comparison-stat-label">Naúčtováno</div>
+                <div class="comparison-stat-label">{% trans "Naúčtováno" %}</div>
                 <div class="comparison-stat-value">{{ kpis.total_all_charged }}</div>
               </div>
               <div class="comparison-stat comparison-stat--clickable" data-comp-idx="1">
-                <div class="comparison-stat-label">Zaplaceno</div>
+                <div class="comparison-stat-label">{% trans "Zaplaceno" %}</div>
                 <div class="comparison-stat-value">{{ kpis.total_all_paid }}</div>
               </div>
               <div class="comparison-stat comparison-stat--clickable" data-comp-idx="2">
-                <div class="comparison-stat-label">Dluhy</div>
+                <div class="comparison-stat-label">{% trans "Dluhy" %}</div>
                 <div class="comparison-stat-value text-red">{{ kpis.total_debt }}</div>
               </div>
               <div class="comparison-stat comparison-stat--clickable" data-comp-idx="3">
-                <div class="comparison-stat-label">Přebytky</div>
+                <div class="comparison-stat-label">{% trans 'Přebytky' %}</div>
                 <div class="comparison-stat-value">{{ kpis.total_surplus }}</div>
               </div>
             </div>
             <div class="comp-sub-grid">
               <div>
-                <h4>Top přeplatky</h4>
+                <h4>{% trans 'Top přeplatky' %}</h4>
                 <table class="mini-table">
                   {% for p in top_surplus %}
                   <tr><td><a href="{{ p.url }}">{{ p.name }}</a></td><td>{{ p.kredit }}</td></tr>
-                  {% empty %}<tr><td colspan="2" class="muted-inline">Žádné přeplatky</td></tr>{% endfor %}
+                  {% empty %}<tr><td colspan="2" class="muted-inline">{% trans 'Žádné přeplatky' %}</td></tr>{% endfor %}
                 </table>
               </div>
               <div>
-                <h4>Top dlužníci</h4>
+                <h4>{% trans "Top dlužníci" %}</h4>
                 <table class="mini-table">
                   {% for d in top_debtors %}
                   <tr><td><a href="{{ d.url }}">{{ d.name }}</a></td><td class="text-red">{{ d.kredit }}</td></tr>
-                  {% empty %}<tr><td colspan="2" class="muted-inline">Žádní dlužníci</td></tr>{% endfor %}
+                  {% empty %}<tr><td colspan="2" class="muted-inline">{% trans 'Žádní dlužníci' %}</td></tr>{% endfor %}
                 </table>
               </div>
             </div>
@@ -427,85 +459,85 @@
 
       {% if analytika_section == 'ucetnictvi' %}
       <!-- ═══ SEKCE: ÚČETNICTVÍ ═══ -->
-      <section class="analytika-section active" id="section-ucetnictvi" data-title="Účetnictví" data-subtitle="Cash flow, zisky, marže a výnosy na hodinu">
+      <section class="analytika-section active" id="section-ucetnictvi" data-title="{% trans 'Účetnictví' %}" data-subtitle="{% trans 'Cash flow, zisky, marže a výnosy na hodinu' %}">
 
         <div class="acc-grid">
           <div class="acc-card teal">
-            <div class="acc-label">Cash Flow (měsíc)</div>
+            <div class="acc-label">{% trans "Cash Flow (měsíc)" %}</div>
             <div class="acc-value" id="acc-cashflow-month">{{ accounting.cashflow_month }}</div>
-            <div class="acc-sub">Přijaté platby − Trenéři − Ostatní náklady</div>
+            <div class="acc-sub">{% trans 'Přijaté platby − Trenéři − Ostatní náklady' %}</div>
             <div class="acc-trend neutral" id="acc-cashflow-month-trend">—</div>
           </div>
           <div class="acc-card emerald">
-            <div class="acc-label">Hrubý zisk (měsíc)</div>
+            <div class="acc-label">{% trans 'Hrubý zisk (měsíc)' %}</div>
             <div class="acc-value" id="acc-gross-month">{{ accounting.gross_profit_month }}</div>
-            <div class="acc-sub">Naúčtováno − Náklady na trenéry</div>
+            <div class="acc-sub">{% trans 'Naúčtováno − Náklady na trenéry' %}</div>
             <div class="acc-trend neutral" id="acc-gross-month-trend">—</div>
           </div>
           <div class="acc-card sky">
-            <div class="acc-label">Marže (měsíc)</div>
+            <div class="acc-label">{% trans 'Marže (měsíc)' %}</div>
             <div class="acc-value">{{ accounting.margin_month }}</div>
-            <div class="acc-sub">Hrubý zisk ÷ Naúčtováno × 100</div>
+            <div class="acc-sub">{% trans 'Hrubý zisk ÷ Naúčtováno × 100' %}</div>
           </div>
           <div class="acc-card indigo">
-            <div class="acc-label">Výnosy / hod. (měsíc)</div>
+            <div class="acc-label">{% trans 'Výnosy / hod. (měsíc)' %}</div>
             <div class="acc-value">{{ accounting.revenue_per_hour_month }}</div>
-            <div class="acc-sub">Naúčtováno ÷ Odehrané hodiny</div>
+            <div class="acc-sub">{% trans 'Naúčtováno ÷ Odehrané hodiny' %}</div>
           </div>
           <div class="acc-card amber">
-            <div class="acc-label">Výplaty trenérům (celkem)</div>
+            <div class="acc-label">{% trans 'Výplaty trenérům (celkem)' %}</div>
             <div class="acc-value">{{ accounting.total_trener_paid }}</div>
-            <div class="acc-sub">Součet všech výplat</div>
+            <div class="acc-sub">{% trans 'Součet všech výplat' %}</div>
           </div>
           <div class="acc-card rose">
-            <div class="acc-label">Zbývá vyplatit (celkem)</div>
+            <div class="acc-label">{% trans 'Zbývá vyplatit (celkem)' %}</div>
             <div class="acc-value">{{ accounting.total_trener_remaining }}</div>
-            <div class="acc-sub">Earned trenérů − Již vyplaceno</div>
+            <div class="acc-sub">{% trans 'Earned trenérů − Již vyplaceno' %}</div>
           </div>
           <div class="acc-card lime">
-            <div class="acc-label">Čistý zisk (měsíc)</div>
+            <div class="acc-label">{% trans 'Čistý zisk (měsíc)' %}</div>
             <div class="acc-value">{{ accounting.net_profit_month }}</div>
-            <div class="acc-sub">Přijato − Trenéři − Ostatní náklady</div>
+            <div class="acc-sub">{% trans 'Přijato − Trenéři − Ostatní náklady' %}</div>
           </div>
           <div class="acc-card rose">
-            <div class="acc-label">Ostatní náklady (měsíc)</div>
+            <div class="acc-label">{% trans 'Ostatní náklady (měsíc)' %}</div>
             <div class="acc-value">{{ accounting.other_costs_month }}</div>
-            <div class="acc-sub"><a href="{% url 'admin:analytika_section' 'naklady' %}" class="acc-link">Zadat / upravit náklady</a></div>
+            <div class="acc-sub"><a href="{% url 'admin:analytika_section' 'naklady' %}" class="acc-link">{% trans "Zadat / upravit náklady" %}</a></div>
           </div>
           <div class="acc-card lime">
-            <div class="acc-label">Čistý zisk (celkem)</div>
+            <div class="acc-label">{% trans "Čistý zisk (celkem)" %}</div>
             <div class="acc-value">{{ accounting.net_profit_total }}</div>
-            <div class="acc-sub">Přijato − Trenéři − Ostatní náklady</div>
+            <div class="acc-sub">{% trans 'Přijato − Trenéři − Ostatní náklady' %}</div>
           </div>
           <div class="acc-card rose">
-            <div class="acc-label">Ostatní náklady (celkem)</div>
+            <div class="acc-label">{% trans 'Ostatní náklady (celkem)' %}</div>
             <div class="acc-value">{{ accounting.other_costs_total }}</div>
-            <div class="acc-sub">Součet všech zadaných nákladů</div>
+            <div class="acc-sub">{% trans 'Součet všech zadaných nákladů' %}</div>
           </div>
           <div class="acc-card violet">
-            <div class="acc-label">Ø Příjem / hráč (měsíc)</div>
+            <div class="acc-label">{% trans 'Ø Příjem / hráč (měsíc)' %}</div>
             <div class="acc-value">{{ accounting.avg_revenue_per_player_month }}</div>
-            <div class="acc-sub">Naúčtováno ÷ Aktivní hráči</div>
+            <div class="acc-sub">{% trans 'Naúčtováno ÷ Aktivní hráči' %}</div>
           </div>
           <div class="acc-card emerald">
-            <div class="acc-label">Hrubý zisk (celkem)</div>
+            <div class="acc-label">{% trans 'Hrubý zisk (celkem)' %}</div>
             <div class="acc-value" id="acc-gross-total">{{ accounting.gross_profit_total }}</div>
-            <div class="acc-sub">Naúčtováno − Earned trenérů</div>
+            <div class="acc-sub">{% trans 'Naúčtováno − Earned trenérů' %}</div>
           </div>
           <div class="acc-card sky">
-            <div class="acc-label">Marže (celkem)</div>
+            <div class="acc-label">{% trans 'Marže (celkem)' %}</div>
             <div class="acc-value">{{ accounting.margin_total }}</div>
-            <div class="acc-sub">Hrubý zisk ÷ Naúčtováno × 100</div>
+            <div class="acc-sub">{% trans 'Hrubý zisk ÷ Naúčtováno × 100' %}</div>
           </div>
           <div class="acc-card indigo">
-            <div class="acc-label">Výnosy / hod. (celkem)</div>
+            <div class="acc-label">{% trans 'Výnosy / hod. (celkem)' %}</div>
             <div class="acc-value">{{ accounting.revenue_per_hour_total }}</div>
-            <div class="acc-sub">Naúčtováno ÷ Celkem hodin</div>
+            <div class="acc-sub">{% trans 'Naúčtováno ÷ Celkem hodin' %}</div>
           </div>
           <div class="acc-card violet">
-            <div class="acc-label">Ø Příjem / hráč (celkem)</div>
+            <div class="acc-label">{% trans 'Ø Příjem / hráč (celkem)' %}</div>
             <div class="acc-value">{{ accounting.avg_revenue_per_player_total }}</div>
-            <div class="acc-sub">Naúčtováno ÷ Počet hráčů</div>
+            <div class="acc-sub">{% trans 'Naúčtováno ÷ Počet hráčů' %}</div>
           </div>
         </div>
 
@@ -513,54 +545,54 @@
           <div class="acc-chart-card">
             <div class="acc-chart-card-header">
               <div class="acc-chart-dot" style="background:#14b8a6"></div>
-              <h4>Cash Flow – 6 měsíců</h4>
+              <h4>{% trans 'Cash Flow – 6 měsíců' %}</h4>
               <span class="acc-sum-badge teal" id="sum-cashflow">—</span>
-              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accCashflowChart" data-expand-title="Cash Flow – 6 měsíců"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accCashflowChart" data-expand-title="{% trans 'Cash Flow – 6 měsíců' %}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
             </div>
             <div class="acc-chart-wrap chart-wrap-interactive">
               <canvas id="accCashflowChart"></canvas>
-              <p class="chart-hint">Klikněte na měsíc</p>
+              <p class="chart-hint">{% trans "Klikněte na měsíc" %}</p>
             </div>
           </div>
           <div class="acc-chart-card">
             <div class="acc-chart-card-header">
               <div class="acc-chart-dot" style="background:#10b981"></div>
-              <h4>Hrubý zisk – 6 měsíců</h4>
+              <h4>{% trans "Hrubý zisk – 6 měsíců" %}</h4>
               <span class="acc-sum-badge emerald" id="sum-gross">—</span>
-              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accGrossChart" data-expand-title="Hrubý zisk – 6 měsíců"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accGrossChart" data-expand-title="{% trans 'Hrubý zisk – 6 měsíců' %}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
             </div>
             <div class="acc-chart-wrap chart-wrap-interactive">
               <canvas id="accGrossChart"></canvas>
-              <p class="chart-hint">Klikněte na měsíc</p>
+              <p class="chart-hint">{% trans "Klikněte na měsíc" %}</p>
             </div>
           </div>
           <div class="acc-chart-card">
             <div class="acc-chart-card-header">
               <div class="acc-chart-dot" style="background:#84cc16"></div>
-              <h4>Čistý zisk – 6 měsíců</h4>
+              <h4>{% trans "Čistý zisk – 6 měsíců" %}</h4>
               <span class="acc-sum-badge lime" id="sum-net">—</span>
-              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accNetProfitChart" data-expand-title="Čistý zisk – 6 měsíců"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accNetProfitChart" data-expand-title="{% trans 'Čistý zisk – 6 měsíců' %}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
             </div>
             <div class="acc-chart-wrap chart-wrap-interactive">
               <canvas id="accNetProfitChart"></canvas>
-              <p class="chart-hint">Klikněte na měsíc</p>
+              <p class="chart-hint">{% trans "Klikněte na měsíc" %}</p>
             </div>
           </div>
           <div class="acc-chart-card">
             <div class="acc-chart-card-header">
               <div class="acc-chart-dot" style="background:#f59e0b"></div>
-              <h4>Výplaty trenérům – 6 měsíců</h4>
+              <h4>{% trans "Výplaty trenérům – 6 měsíců" %}</h4>
               <span class="acc-sum-badge amber" id="sum-trener">—</span>
-              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accTrenerPaidChart" data-expand-title="Výplaty trenérům – 6 měsíců"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accTrenerPaidChart" data-expand-title="{% trans 'Výplaty trenérům – 6 měsíců' %}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
             </div>
             <div class="acc-chart-wrap chart-wrap-interactive">
               <canvas id="accTrenerPaidChart"></canvas>
-              <p class="chart-hint">Klikněte na měsíc</p>
+              <p class="chart-hint">{% trans "Klikněte na měsíc" %}</p>
             </div>
           </div>
         </div>
 
-        <h3 class="acc-charts-group-title">Roční přehled – 12 měsíců</h3>
+        <h3 class="acc-charts-group-title">{% trans "Roční přehled – 12 měsíců" %}</h3>
         <div class="acc-charts-grid">
           <div class="acc-chart-card">
             <div class="acc-chart-card-header">
@@ -571,71 +603,71 @@
             </div>
             <div class="acc-chart-wrap chart-wrap-interactive">
               <canvas id="accYearCashflowChart"></canvas>
-              <p class="chart-hint">Klikněte na měsíc</p>
+              <p class="chart-hint">{% trans "Klikněte na měsíc" %}</p>
             </div>
           </div>
           <div class="acc-chart-card">
             <div class="acc-chart-card-header">
               <div class="acc-chart-dot" style="background:#10b981"></div>
-              <h4>Hrubý zisk – 1 rok</h4>
+              <h4>{% trans "Hrubý zisk – 1 rok" %}</h4>
               <span class="acc-sum-badge emerald" id="sum-year-gross">—</span>
-              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accYearGrossChart" data-expand-title="Hrubý zisk – 1 rok"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accYearGrossChart" data-expand-title="{% trans 'Hrubý zisk – 1 rok' %}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
             </div>
             <div class="acc-chart-wrap chart-wrap-interactive">
               <canvas id="accYearGrossChart"></canvas>
-              <p class="chart-hint">Klikněte na měsíc</p>
+              <p class="chart-hint">{% trans "Klikněte na měsíc" %}</p>
             </div>
           </div>
           <div class="acc-chart-card">
             <div class="acc-chart-card-header">
               <div class="acc-chart-dot" style="background:#84cc16"></div>
-              <h4>Čistý zisk – 1 rok</h4>
+              <h4>{% trans "Čistý zisk – 1 rok" %}</h4>
               <span class="acc-sum-badge lime" id="sum-year-net">—</span>
-              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accYearNetProfitChart" data-expand-title="Čistý zisk – 1 rok"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accYearNetProfitChart" data-expand-title="{% trans 'Čistý zisk – 1 rok' %}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
             </div>
             <div class="acc-chart-wrap chart-wrap-interactive">
               <canvas id="accYearNetProfitChart"></canvas>
-              <p class="chart-hint">Klikněte na měsíc</p>
+              <p class="chart-hint">{% trans "Klikněte na měsíc" %}</p>
             </div>
           </div>
           <div class="acc-chart-card">
             <div class="acc-chart-card-header">
               <div class="acc-chart-dot" style="background:#f59e0b"></div>
-              <h4>Výplaty trenérům – 1 rok</h4>
+              <h4>{% trans "Výplaty trenérům – 1 rok" %}</h4>
               <span class="acc-sum-badge amber" id="sum-year-trener">—</span>
-              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accYearTrenerPaidChart" data-expand-title="Výplaty trenérům – 1 rok"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accYearTrenerPaidChart" data-expand-title="{% trans 'Výplaty trenérům – 1 rok' %}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
             </div>
             <div class="acc-chart-wrap chart-wrap-interactive">
               <canvas id="accYearTrenerPaidChart"></canvas>
-              <p class="chart-hint">Klikněte na měsíc</p>
+              <p class="chart-hint">{% trans "Klikněte na měsíc" %}</p>
             </div>
           </div>
         </div>
 
-        <h3 class="acc-charts-group-title">Celá doba</h3>
+        <h3 class="acc-charts-group-title">{% trans "Celá doba" %}</h3>
         <div class="acc-charts-grid acc-charts-grid--2">
           <div class="acc-chart-card">
             <div class="acc-chart-card-header">
               <div class="acc-chart-dot" style="background:#84cc16"></div>
-              <h4>Čistý zisk – celá doba</h4>
+              <h4>{% trans "Čistý zisk – celá doba" %}</h4>
               <span class="acc-sum-badge lime" id="sum-alltime-net">—</span>
-              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accAlltimeNetProfitChart" data-expand-title="Čistý zisk – celá doba"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accAlltimeNetProfitChart" data-expand-title="{% trans 'Čistý zisk – celá doba' %}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
             </div>
             <div class="acc-chart-wrap chart-wrap-interactive">
               <canvas id="accAlltimeNetProfitChart"></canvas>
-              <p class="chart-hint">Klikněte na měsíc</p>
+              <p class="chart-hint">{% trans "Klikněte na měsíc" %}</p>
             </div>
           </div>
           <div class="acc-chart-card">
             <div class="acc-chart-card-header">
               <div class="acc-chart-dot" style="background:#f59e0b"></div>
-              <h4>Výplaty trenérům – celá doba</h4>
+              <h4>{% trans "Výplaty trenérům – celá doba" %}</h4>
               <span class="acc-sum-badge amber" id="sum-alltime-trener">—</span>
-              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accAlltimeTrenerPaidChart" data-expand-title="Výplaty trenérům – celá doba"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accAlltimeTrenerPaidChart" data-expand-title="{% trans 'Výplaty trenérům – celá doba' %}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
             </div>
             <div class="acc-chart-wrap chart-wrap-interactive">
               <canvas id="accAlltimeTrenerPaidChart"></canvas>
-              <p class="chart-hint">Klikněte na měsíc</p>
+              <p class="chart-hint">{% trans "Klikněte na měsíc" %}</p>
             </div>
           </div>
         </div>
@@ -644,39 +676,39 @@
 
       {% if analytika_section == 'hraci' %}
       <!-- ═══ SEKCE: HRÁČI ═══ -->
-      <section class="analytika-section active" id="section-hraci" data-title="Hráči" data-subtitle="Kredity, dluhy a přeplatky hráčů">
+      <section class="analytika-section active" id="section-hraci" data-title="{% trans 'Hráči' %}" data-subtitle="{% trans 'Kredity, dluhy a přeplatky hráčů' %}">
 
         <div class="panel-grid panel-grid--3">
           <div class="panel">
-            <div class="panel-header"><h3>Celková rovnováha</h3></div>
+            <div class="panel-header"><h3>{% trans "Celková rovnováha" %}</h3></div>
             <div class="chart-container-small chart-wrap-interactive">
               <canvas id="balanceChart"></canvas>
-              <p class="chart-hint">Klikněte na segment</p>
+              <p class="chart-hint">{% trans "Klikněte na segment" %}</p>
             </div>
           </div>
           <div class="panel">
             <div class="panel-header">
-              <h3>Top dlužníci</h3>
-              <button type="button" class="panel-expand-btn" data-chart-expand="debtorsChart" data-expand-title="Rozložení dluhů"><span>Detail</span></button>
+              <h3>{% trans "Top dlužníci" %}</h3>
+              <button type="button" class="panel-expand-btn" data-chart-expand="debtorsChart" data-expand-title="{% trans 'Rozložení dluhů' %}"><span>{% trans "Detail" %}</span></button>
             </div>
             <div class="chart-container-small chart-wrap-interactive">
               <canvas id="debtorsChart"></canvas>
-              <p class="chart-hint">Klikněte na segment</p>
+              <p class="chart-hint">{% trans "Klikněte na segment" %}</p>
             </div>
           </div>
           <div class="panel panel--summary">
-            <h3 class="panel-title-simple">Souhrn kreditů</h3>
+            <h3 class="panel-title-simple">{% trans "Souhrn kreditů" %}</h3>
             <div class="credit-summary">
               <div class="credit-summary-item credit-summary-item--debt">
-                <span>Celkové dluhy</span>
+                <span>{% trans "Celkové dluhy" %}</span>
                 <strong>{{ kpis.total_debt }}</strong>
               </div>
               <div class="credit-summary-item credit-summary-item--surplus">
-                <span>Celkové přebytky</span>
+                <span>{% trans 'Celkové přebytky' %}</span>
                 <strong>{{ kpis.total_surplus }}</strong>
               </div>
               <div class="credit-summary-item">
-                <span>Finanční rovnováha</span>
+                <span>{% trans 'Finanční rovnováha' %}</span>
                 <strong>{{ kpis.total_balance }}</strong>
               </div>
             </div>
@@ -686,12 +718,12 @@
         <div class="panel-grid panel-grid--2">
           <div class="panel panel--table">
             <div class="panel-header">
-              <h3>Top dlužníci (Hráči)</h3>
-              <a href="{% url 'admin:core_hrac_changelist' %}" class="view-all">Všichni hráči</a>
+              <h3>{% trans 'Top dlužníci (Hráči)' %}</h3>
+              <a href="{% url 'admin:core_hrac_changelist' %}" class="view-all">{% trans "Všichni hráči" %}</a>
             </div>
             <div class="table-wrapper">
               <table class="list data-table">
-                <thead><tr><th>Hráč</th><th class="num">Kredit</th></tr></thead>
+                <thead><tr><th>{% trans "Hráč" %}</th><th class="num">{% trans "Kredit" %}</th></tr></thead>
                 <tbody>
                 {% for r in debtors %}
                 <tr class="data-table-row" data-href="{{ r.url }}">
@@ -699,7 +731,7 @@
                   <td class="num text-red">{{ r.kredit }}</td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="2" class="muted">Žádní dlužníci</td></tr>
+                <tr><td colspan="2" class="muted">{% trans "Žádní dlužníci" %}</td></tr>
                 {% endfor %}
                 </tbody>
               </table>
@@ -707,11 +739,11 @@
           </div>
           <div class="panel panel--table">
             <div class="panel-header">
-              <h3>Přeplatky (Hráči)</h3>
+              <h3>{% trans "Přeplatky (Hráči)" %}</h3>
             </div>
             <div class="table-wrapper">
               <table class="list data-table">
-                <thead><tr><th>Hráč</th><th class="num">Kredit</th></tr></thead>
+                <thead><tr><th>{% trans "Hráč" %}</th><th class="num">{% trans "Kredit" %}</th></tr></thead>
                 <tbody>
                 {% for p in top_surplus %}
                 <tr class="data-table-row" data-href="{{ p.url }}">
@@ -719,7 +751,7 @@
                   <td class="num">{{ p.kredit }}</td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="2" class="muted">Žádné přeplatky</td></tr>
+                <tr><td colspan="2" class="muted">{% trans "Žádné přeplatky" %}</td></tr>
                 {% endfor %}
                 </tbody>
               </table>
@@ -731,46 +763,46 @@
 
       {% if analytika_section == 'treneri' %}
       <!-- ═══ SEKCE: TRENÉŘI ═══ -->
-      <section class="analytika-section active" id="section-treneri" data-title="Trenéři" data-subtitle="Náklady na trenéry – hodiny, nároky a výplaty">
+      <section class="analytika-section active" id="section-treneri" data-title="{% trans 'Trenéři' %}" data-subtitle="{% trans 'Náklady na trenéry – hodiny, nároky a výplaty' %}">
 
         <div class="panel-grid panel-grid--2">
           <div class="panel">
             <div class="panel-header">
-              <h3>Hodiny trenérů (měsíc)</h3>
-              <button type="button" class="panel-expand-btn" data-chart-expand="trenerHoursChart" data-expand-title="Hodiny trenérů – měsíc"><span>Detail</span></button>
+              <h3>{% trans "Hodiny trenérů (měsíc)" %}</h3>
+              <button type="button" class="panel-expand-btn" data-chart-expand="trenerHoursChart" data-expand-title="{% trans 'Hodiny trenérů – měsíc' %}"><span>{% trans "Detail" %}</span></button>
             </div>
             <div class="chart-container-medium chart-wrap-interactive">
               <canvas id="trenerHoursChart"></canvas>
-              <p class="chart-hint">Klikněte na trenéra</p>
+              <p class="chart-hint">{% trans "Klikněte na trenéra" %}</p>
             </div>
           </div>
           <div class="panel">
             <div class="panel-header">
-              <h3>K vyplacení trenérům</h3>
-              <button type="button" class="panel-expand-btn" data-chart-expand="trenerChart" data-expand-title="K vyplacení trenérům"><span>Detail</span></button>
+              <h3>{% trans "K vyplacení trenérům" %}</h3>
+              <button type="button" class="panel-expand-btn" data-chart-expand="trenerChart" data-expand-title="{% trans 'K vyplacení trenérům' %}"><span>{% trans "Detail" %}</span></button>
             </div>
             <div class="chart-container-medium chart-wrap-interactive">
               <canvas id="trenerChart"></canvas>
-              <p class="chart-hint">Klikněte na trenéra</p>
+              <p class="chart-hint">{% trans "Klikněte na trenéra" %}</p>
             </div>
           </div>
         </div>
 
         <div class="panel panel--table">
           <div class="panel-header">
-            <h3>Přehled trenérů</h3>
-              <a href="{% url 'admin:core_treneri_summary' %}" class="view-all">Všichni trenéři</a>
+            <h3>{% trans "Přehled trenérů" %}</h3>
+              <a href="{% url 'admin:core_treneri_summary' %}" class="view-all">{% trans "Všichni trenéři" %}</a>
           </div>
           <div class="table-wrapper">
             <table class="list data-table data-table--coaches">
               <thead>
                 <tr>
-                  <th>Trenér</th>
-                  <th class="num">Hodiny (měsíc)</th>
-                  <th class="num">Hodiny (celkem)</th>
-                  <th class="num">Tréninků (měsíc)</th>
-                  <th class="num">Nárok (měsíc)</th>
-                  <th class="num">K vyplacení</th>
+                  <th>{% trans "Trenér" %}</th>
+                  <th class="num">{% trans "Hodiny (měsíc)" %}</th>
+                  <th class="num">{% trans "Hodiny (celkem)" %}</th>
+                  <th class="num">{% trans "Tréninků (měsíc)" %}</th>
+                  <th class="num">{% trans "Nárok (měsíc)" %}</th>
+                  <th class="num">{% trans "K vyplacení" %}</th>
                 </tr>
               </thead>
               <tbody>
@@ -784,7 +816,7 @@
                 <td class="num">{{ r.balance }}</td>
               </tr>
               {% empty %}
-              <tr><td colspan="6" class="muted">Žádní trenéři</td></tr>
+              <tr><td colspan="6" class="muted">{% trans "Žádní trenéři" %}</td></tr>
               {% endfor %}
               </tbody>
             </table>
@@ -795,37 +827,37 @@
 
       {% if analytika_section == 'naklady' %}
       <!-- ═══ SEKCE: OSTATNÍ NÁKLADY ═══ -->
-      <section class="analytika-section active" id="section-naklady" data-title="Ostatní náklady" data-subtitle="Provozní náklady mimo výplaty trenérů – započítávají se do čistého zisku">
+      <section class="analytika-section active" id="section-naklady" data-title="{% trans 'Ostatní náklady' %}" data-subtitle="{% trans 'Provozní náklady mimo výplaty trenérů – započítávají se do čistého zisku' %}">
 
         <div class="hero-kpi-row hero-kpi-row--3">
           <div class="hero-kpi">
-            <span class="hero-kpi-label">Náklady tento měsíc</span>
+            <span class="hero-kpi-label">{% trans "Náklady tento měsíc" %}</span>
             <span class="hero-kpi-value">{{ accounting.other_costs_month }}</span>
-            <span class="hero-kpi-meta">Zadané provozní náklady</span>
+            <span class="hero-kpi-meta">{% trans 'Zadané provozní náklady' %}</span>
           </div>
           <div class="hero-kpi">
-            <span class="hero-kpi-label">Náklady celkem</span>
+            <span class="hero-kpi-label">{% trans 'Náklady celkem' %}</span>
             <span class="hero-kpi-value">{{ accounting.other_costs_total }}</span>
-            <span class="hero-kpi-meta">Za celou dobu evidence</span>
+            <span class="hero-kpi-meta">{% trans "Za celou dobu evidence" %}</span>
           </div>
           <div class="hero-kpi">
-            <span class="hero-kpi-label">Čistý zisk (měsíc)</span>
+            <span class="hero-kpi-label">{% trans 'Čistý zisk (měsíc)' %}</span>
             <span class="hero-kpi-value">{{ accounting.net_profit_month }}</span>
-            <span class="hero-kpi-meta">Po trenérech i ostatních nákladech</span>
+            <span class="hero-kpi-meta">{% trans 'Po trenérech i ostatních nákladech' %}</span>
           </div>
         </div>
 
         <div class="panel-grid panel-grid--2">
           <div class="panel panel--form">
             <div class="panel-header">
-              <h3>Zadání nákladů za den</h3>
-              <span class="panel-badge">Uloží se do čistého zisku</span>
+              <h3>{% trans 'Zadání nákladů za den' %}</h3>
+              <span class="panel-badge">{% trans 'Uloží se do čistého zisku' %}</span>
             </div>
             <form method="post" class="naklady-form" id="nakladyForm">
               {% csrf_token %}
               <input type="hidden" name="action" value="save_naklady">
               <div class="naklady-form-toolbar">
-                <span class="naklady-month-label">Datum</span>
+                <span class="naklady-month-label">{% trans "Datum" %}</span>
                 <div class="naklady-date-picker" id="nakladyDatePicker"
                      data-datum="{{ naklady_form_datum }}"
                      data-year-min="{{ naklady_year_choices.0 }}"
@@ -836,35 +868,35 @@
                     <svg class="naklady-date-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
                   </button>
                   <input type="hidden" name="datum" id="nakladyDatum" value="{{ naklady_form_datum }}">
-                  <div class="naklady-date-popover" id="nakladyDatePopover" role="dialog" aria-label="Výběr data" hidden>
+                  <div class="naklady-date-popover" id="nakladyDatePopover" role="dialog" aria-label="{% trans 'Výběr data' %}" hidden>
                     <div class="naklady-cal-header">
-                      <button type="button" class="naklady-cal-nav" data-cal-prev aria-label="Předchozí měsíc">‹</button>
+                      <button type="button" class="naklady-cal-nav" data-cal-prev aria-label="{% trans 'Předchozí měsíc' %}">‹</button>
                       <button type="button" class="naklady-cal-title" id="nakladyCalTitle">—</button>
-                      <button type="button" class="naklady-cal-nav" data-cal-next aria-label="Další měsíc">›</button>
+                      <button type="button" class="naklady-cal-nav" data-cal-next aria-label="{% trans 'Další měsíc' %}">›</button>
                     </div>
                     <div class="naklady-cal-weekdays" aria-hidden="true">
-                      <span>Po</span><span>Út</span><span>St</span><span>Čt</span><span>Pá</span><span>So</span><span>Ne</span>
+                      <span>{% trans "Po" %}</span><span>{% trans "Út" %}</span><span>{% trans "St" %}</span><span>{% trans "Čt" %}</span><span>{% trans "Pá" %}</span><span>{% trans "So" %}</span><span>{% trans "Ne" %}</span>
                     </div>
                     <div class="naklady-cal-days" id="nakladyCalDays"></div>
                     <div class="naklady-cal-footer">
-                      <button type="button" class="naklady-cal-today" data-cal-today>Dnes</button>
+                      <button type="button" class="naklady-cal-today" data-cal-today>{% trans "Dnes" %}</button>
                       <div class="naklady-date-manual-wrap">
-                        <input type="text" class="naklady-date-manual" id="nakladyDateManual" inputmode="numeric" placeholder="DD.MM.RRRR" aria-label="Zadat datum ručně">
-                        <button type="button" class="naklady-date-manual-btn" id="nakladyDateManualBtn">Přejít</button>
+                        <input type="text" class="naklady-date-manual" id="nakladyDateManual" inputmode="numeric" placeholder="DD.MM.RRRR" aria-label="{% trans 'Zadat datum ručně' %}">
+                        <button type="button" class="naklady-date-manual-btn" id="nakladyDateManualBtn">{% trans "Přejít" %}</button>
                       </div>
                     </div>
                   </div>
                 </div>
-                <button type="submit" class="naklady-save-btn">Uložit náklady</button>
+                <button type="submit" class="naklady-save-btn">{% trans "Uložit náklady" %}</button>
               </div>
-              <p class="naklady-form-hint">Vyplňte částky v Kč pro vybraný den. Prázdné pole = kategorie se pro daný den smaže. Součet všech dnů v měsíci se odečítá od čistého zisku.</p>
+              <p class="naklady-form-hint">{% trans "Vyplňte částky v Kč pro vybraný den. Prázdné pole = kategorie se pro daný den smaže. Součet všech dnů v měsíci se odečítá od čistého zisku." %}</p>
               <div class="naklady-grid">
                 {% for row in naklady_form_rows %}
                 <div class="naklady-row">
                   <label class="naklady-row-label" for="naklad_{{ row.key }}">{{ row.label }}</label>
                   <div class="naklady-row-inputs">
                     <input type="text" inputmode="decimal" id="naklad_{{ row.key }}" name="naklad_{{ row.key }}" class="naklady-castka" value="{{ row.castka }}" placeholder="0">
-                    <input type="text" name="poznamka_{{ row.key }}" class="naklady-poznamka" value="{{ row.poznamka }}" placeholder="Poznámka (volitelné)">
+                    <input type="text" name="poznamka_{{ row.key }}" class="naklady-poznamka" value="{{ row.poznamka }}" placeholder="{% trans 'Poznámka (volitelné)' %}">
                   </div>
                 </div>
                 {% endfor %}
@@ -875,25 +907,25 @@
           <div class="naklady-charts-stack">
             <div class="panel">
               <div class="panel-header">
-                <h3>Náklady po měsících</h3>
-                <span class="panel-badge">12 měsíců</span>
-                <button type="button" class="panel-expand-btn" data-chart-expand="nakladyChart" data-expand-title="Ostatní náklady – 12 měsíců"><span>Detail</span></button>
+                <h3>{% trans "Náklady po měsících" %}</h3>
+                <span class="panel-badge">{% trans "12 měsíců" %}</span>
+                <button type="button" class="panel-expand-btn" data-chart-expand="nakladyChart" data-expand-title="{% trans 'Ostatní náklady – 12 měsíců' %}"><span>{% trans "Detail" %}</span></button>
               </div>
               <div class="chart-container-medium chart-wrap-interactive">
                 <canvas id="nakladyChart"></canvas>
-                <p class="chart-hint">Klikněte na měsíc – rozpad po dnech a položkách</p>
+                <p class="chart-hint">{% trans "Klikněte na měsíc – rozpad po dnech a položkách" %}</p>
               </div>
             </div>
 
             <div class="panel">
               <div class="panel-header">
-                <h3>Náklady – celá doba</h3>
+                <h3>{% trans "Náklady – celá doba" %}</h3>
                 <span class="acc-sum-badge rose" id="sum-naklady-alltime">—</span>
-                <button type="button" class="panel-expand-btn" data-chart-expand="nakladyAlltimeChart" data-expand-title="Ostatní náklady – celá doba"><span>Detail</span></button>
+                <button type="button" class="panel-expand-btn" data-chart-expand="nakladyAlltimeChart" data-expand-title="{% trans 'Ostatní náklady – celá doba' %}"><span>{% trans "Detail" %}</span></button>
               </div>
               <div class="chart-container-medium chart-wrap-interactive">
                 <canvas id="nakladyAlltimeChart"></canvas>
-                <p class="chart-hint">Klikněte na měsíc – rozpad po dnech a položkách</p>
+                <p class="chart-hint">{% trans "Klikněte na měsíc – rozpad po dnech a položkách" %}</p>
               </div>
             </div>
           </div>
@@ -901,16 +933,16 @@
 
         <div class="panel panel--table">
           <div class="panel-header">
-            <h3>Historie nákladů</h3>
+            <h3>{% trans "Historie nákladů" %}</h3>
           </div>
           <div class="table-wrapper">
             <table class="list data-table data-table--naklady">
               <thead>
                 <tr>
-                  <th>Datum</th>
-                  <th>Kategorie</th>
-                  <th class="num">Částka</th>
-                  <th>Poznámka</th>
+                  <th>{% trans "Datum" %}</th>
+                  <th>{% trans "Kategorie" %}</th>
+                  <th class="num">{% trans "Částka" %}</th>
+                  <th>{% trans "Poznámka" %}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -926,7 +958,7 @@
                   <td class="muted-inline">{{ item.poznamka|default:"—" }}</td>
                   {% if forloop.first %}
                   <td rowspan="{{ block.items|length }}">
-                    <a class="naklady-edit-link" href="{% url 'admin:analytika_section' 'naklady' %}?datum={{ block.datum_value }}">Upravit</a>
+                    <a class="naklady-edit-link" href="{% url 'admin:analytika_section' 'naklady' %}?datum={{ block.datum_value }}">{% trans "Upravit" %}</a>
                   </td>
                   {% endif %}
                 </tr>
@@ -934,7 +966,7 @@
               </tbody>
               {% empty %}
               <tbody>
-                <tr><td colspan="5" class="muted">Zatím nejsou zadané žádné náklady</td></tr>
+                <tr><td colspan="5" class="muted">{% trans "Zatím nejsou zadané žádné náklady" %}</td></tr>
               </tbody>
               {% endfor %}
             </table>
@@ -973,16 +1005,20 @@
   {{ accounting_alltime_data|json_script:"accounting-alltime-data" }}
   {{ accounting_charts_data|json_script:"accounting-charts-data" }}
   {% endif %}
+  {% if analytika_section == 'prehled' or analytika_section == 'aktivita' or analytika_section == 'finance' or analytika_section == 'hraci' %}
+  {{ kpis|json_script:"kpi-data" }}
+  {% endif %}
   {% if analytika_section == 'prehled' %}
   {{ kpis.trainings_count_current|json_script:"kpi-trainings-count" }}
   {{ kpis.charges_count_current|json_script:"kpi-charges-count" }}
   {{ kpis.payments_count_current|json_script:"kpi-payments-count" }}
-  {{ kpis|json_script:"kpi-data" }}
   {% endif %}
   {% if analytika_section == 'naklady' %}
   {{ naklady_charts_data|json_script:"naklady-charts-data" }}
   {% endif %}
   {{ analytika_section_urls|json_script:"analytika-section-urls" }}
+  {{ ts_js_i18n|json_script:"ts-i18n" }}
+  {{ ts_js_locale|json_script:"ts-js-locale" }}
 
 </div>
 
@@ -991,8 +1027,8 @@
   <div class="analytika-modal-backdrop" data-modal-close></div>
   <div class="analytika-modal-dialog" role="dialog" aria-modal="true">
     <div class="analytika-modal-header">
-      <h2 id="analytikaModalTitle">Detail grafu</h2>
-      <button type="button" class="analytika-modal-close" data-modal-close aria-label="Zavřít">×</button>
+      <h2 id="analytikaModalTitle">{% trans "Detail grafu" %}</h2>
+      <button type="button" class="analytika-modal-close" data-modal-close aria-label="{% trans 'Zavřít' %}">×</button>
     </div>
     <div class="analytika-modal-body">
       <div class="analytika-modal-chart" id="analytikaModalChartWrap">

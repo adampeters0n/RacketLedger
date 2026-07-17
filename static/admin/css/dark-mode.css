@@ -1,0 +1,1359 @@
+/* ===================================================================
+   Tmavý režim – globální přizpůsobení celého adminu
+   Aktivace: html[data-mode="dark"] (nastavení systému)
+   =================================================================== */
+
+html[data-mode="dark"] {
+  color-scheme: dark;
+}
+
+/* ── Základ: pozadí, text, vynucení dark color-scheme ── */
+html[data-mode="dark"],
+html[data-mode="dark"] body,
+html[data-mode="dark"] #container,
+html[data-mode="dark"] #content,
+html[data-mode="dark"] #content-main,
+html[data-mode="dark"] .colM,
+html[data-mode="dark"] #result_list,
+html[data-mode="dark"] .results,
+html[data-mode="dark"] table,
+html[data-mode="dark"] .select2-container,
+html[data-mode="dark"] .calendarbox {
+  color-scheme: dark !important;
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] div.breadcrumbs,
+html[data-mode="dark"] .breadcrumbs,
+html[data-mode="dark"] .breadcrumbs a {
+  color: var(--muted) !important;
+  background: transparent !important;
+}
+
+/* ── Nadpisy a text ── */
+html[data-mode="dark"] #content h1,
+html[data-mode="dark"] #content-main h1,
+html[data-mode="dark"] #content h2,
+html[data-mode="dark"] #content-main h2,
+html[data-mode="dark"] #content h3,
+html[data-mode="dark"] #content-main h3,
+html[data-mode="dark"] .vyuct-header h1,
+html[data-mode="dark"] .vyuct-panel__title,
+html[data-mode="dark"] .nast-panel-head h2,
+html[data-mode="dark"] .cenik-menu-header h1,
+html[data-mode="dark"] .vyuct-set-header h1,
+html[data-mode="dark"] .nast-set-header h1,
+html[data-mode="dark"] .card h3,
+html[data-mode="dark"] .dash-wrap h1 {
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .help,
+html[data-mode="dark"] p.help,
+html[data-mode="dark"] .vyuct-lead,
+html[data-mode="dark"] .vyuct-kpi-label,
+html[data-mode="dark"] .nast-set-lead,
+html[data-mode="dark"] .nast-row-detail,
+html[data-mode="dark"] .muted,
+html[data-mode="dark"] table.list th {
+  color: var(--muted) !important;
+}
+
+html[data-mode="dark"] #content a,
+html[data-mode="dark"] #content-main a,
+html[data-mode="dark"] .module a,
+html[data-mode="dark"] .results a,
+html[data-mode="dark"] table a {
+  color: var(--text-strong) !important;
+}
+
+/* ── Moduly, karty, panely ── */
+html[data-mode="dark"] .module,
+html[data-mode="dark"] .panel,
+html[data-mode="dark"] .card,
+html[data-mode="dark"] .inline-group,
+html[data-mode="dark"] .inline-related,
+html[data-mode="dark"] fieldset.module,
+html[data-mode="dark"] .vyuct-set-card,
+html[data-mode="dark"] .nast-group,
+html[data-mode="dark"] .cenik-menu-card,
+html[data-mode="dark"] .transakce-day-trainings-card,
+html[data-mode="dark"] .trener-filter-box,
+html[data-mode="dark"] .add-day-page .module,
+html[data-mode="dark"] body.change-form .module.aligned,
+html[data-mode="dark"] body.add-form .module.aligned,
+html[data-mode="dark"] body.app-core.model-trening.change-form .module.aligned,
+html[data-mode="dark"] body.app-core.model-trening.add-form .module.aligned,
+html[data-mode="dark"] #dochazka_set-group,
+html[data-mode="dark"] #dochazky-group,
+html[data-mode="dark"] .x-dochazka-inline {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .module caption,
+html[data-mode="dark"] .module h2,
+html[data-mode="dark"] .grp-module h2,
+html[data-mode="dark"] .inline-group h2,
+html[data-mode="dark"] .vyuct-set-card > h3,
+html[data-mode="dark"] .card h3,
+html[data-mode="dark"] .cenik-menu-card > h3 {
+  background: var(--table-head) !important;
+  color: var(--text-strong) !important;
+  border-bottom-color: var(--line) !important;
+}
+
+/* ── Formulářové řádky a labely ── */
+html[data-mode="dark"] body.change-form .aligned th,
+html[data-mode="dark"] body.change-form label,
+html[data-mode="dark"] body.change-form .readonly label,
+html[data-mode="dark"] body.add-form label,
+html[data-mode="dark"] body.change-form .aligned td,
+html[data-mode="dark"] .form-row label,
+html[data-mode="dark"] .vyuct-field label,
+html[data-mode="dark"] .aligned label {
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] body.change-form .aligned tr,
+html[data-mode="dark"] body.change-form .form-row,
+html[data-mode="dark"] body.change-form .aligned th,
+html[data-mode="dark"] body.change-form .aligned td {
+  border-bottom-color: var(--line) !important;
+  background: transparent !important;
+}
+
+html[data-mode="dark"] .readonly,
+html[data-mode="dark"] .aligned .readonly,
+html[data-mode="dark"] td.readonly,
+html[data-mode="dark"] .form-row.readonly {
+  color: var(--text) !important;
+}
+
+/* ── Vstupy, selecty, textarea ── */
+html[data-mode="dark"] input:not([type="submit"]):not([type="button"]):not([type="image"]),
+html[data-mode="dark"] select,
+html[data-mode="dark"] textarea,
+html[data-mode="dark"] .vTextField,
+html[data-mode="dark"] .vyuct-field input,
+html[data-mode="dark"] .vyuct-field select,
+html[data-mode="dark"] #changelist-search input[type="text"],
+html[data-mode="dark"] .change-list .actions select {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+  -webkit-text-fill-color: var(--text) !important;
+}
+
+html[data-mode="dark"] input::placeholder,
+html[data-mode="dark"] textarea::placeholder {
+  color: var(--muted) !important;
+  opacity: 1;
+}
+
+html[data-mode="dark"] input[type="checkbox"],
+html[data-mode="dark"] input[type="radio"] {
+  accent-color: var(--brand) !important;
+}
+
+/* ── Select2 ── */
+html[data-mode="dark"] .select2-container--admin-autocomplete .select2-selection--single,
+html[data-mode="dark"] .select2-container--default .select2-selection--single {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .select2-container--admin-autocomplete .select2-selection__rendered,
+html[data-mode="dark"] .select2-selection__rendered {
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .select2-container .select2-dropdown,
+html[data-mode="dark"] .select2-dropdown {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .select2-search--dropdown .select2-search__field {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+  -webkit-text-fill-color: var(--text) !important;
+}
+
+html[data-mode="dark"] .select2-results__option {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .select2-results__option--highlighted:not([aria-selected]),
+html[data-mode="dark"] .select2-results__option--highlighted[aria-selected="false"] {
+  background: var(--table-row-hover) !important;
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .select2-results__option--highlighted[aria-selected] {
+  background: var(--brand) !important;
+  color: #fff !important;
+}
+
+/* ── Datum / čas – ikony a zkratky ── */
+html[data-mode="dark"] .datetimeshortcuts a,
+html[data-mode="dark"] .clockbox h2,
+html[data-mode="dark"] .calendarbox h2 {
+  background: var(--brand-100) !important;
+  color: var(--brand) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .datetimeshortcuts a:hover {
+  background: var(--table-row-hover) !important;
+}
+
+html[data-mode="dark"] .calendarbox,
+html[data-mode="dark"] .clockbox,
+html[data-mode="dark"] .calendarbox table,
+html[data-mode="dark"] .calendarbox .calendar td,
+html[data-mode="dark"] .calendarbox .calendar th {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .calendarbox table caption,
+html[data-mode="dark"] .calendarbox table thead th {
+  background: var(--table-head) !important;
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .calendarbox .calendar tbody td:hover {
+  background: var(--table-row-hover) !important;
+}
+
+/* ── Vyúčtování / hráč panely ── */
+html[data-mode="dark"] .vyuct-panel,
+html[data-mode="dark"] .vyuct-card,
+html[data-mode="dark"] .vyuct-kpi,
+html[data-mode="dark"] .vyuct-kpi-highlight {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .vyuct-kpi-value,
+html[data-mode="dark"] .vyuct-card dt,
+html[data-mode="dark"] .vyuct-card dd {
+  color: var(--text-strong) !important;
+}
+
+/* ── Trenéři souhrn – patička tabulky ── */
+html[data-mode="dark"] .tbl-treneri tfoot tr.totals td,
+html[data-mode="dark"] table tfoot tr td {
+  background: var(--surface) !important;
+  color: var(--text-strong) !important;
+  border-top-color: var(--brand) !important;
+}
+
+html[data-mode="dark"] .tbl-treneri tfoot tr.totals td.label {
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .trener-monthly-table,
+html[data-mode="dark"] .trener-trainings-table,
+html[data-mode="dark"] .trener-detail-table-wrapper .module {
+  background: var(--surface) !important;
+}
+
+/* ── Ledger / historie hráče ── */
+html[data-mode="dark"] table.ledger tbody tr,
+html[data-mode="dark"] table.ledger tbody td,
+html[data-mode="dark"] table.ledger tbody th {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] table.ledger thead th {
+  background: var(--table-head) !important;
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] table.ledger tbody tr:hover {
+  background: var(--table-row-hover) !important;
+}
+
+/* ── Toolbar, filtry, paginator ── */
+html[data-mode="dark"] #toolbar,
+html[data-mode="dark"] .change-list #toolbar,
+html[data-mode="dark"] #changelist #toolbar,
+html[data-mode="dark"] .change-list .actions,
+html[data-mode="dark"] #changelist-filter,
+html[data-mode="dark"] .filters {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] #changelist-filter h2 {
+  background: var(--table-head) !important;
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] #changelist-filter a,
+html[data-mode="dark"] #changelist-filter a:visited,
+html[data-mode="dark"] #changelist-filter li,
+html[data-mode="dark"] .filters a,
+html[data-mode="dark"] .filters a:visited,
+html[data-mode="dark"] .paginator,
+html[data-mode="dark"] .paginator a {
+  color: var(--text) !important;
+  text-decoration: none !important;
+}
+
+html[data-mode="dark"] .paginator a:hover {
+  background: var(--table-row-hover) !important;
+}
+
+/* ── Submit row, secondary tlačítka ── */
+html[data-mode="dark"] .submit-row,
+html[data-mode="dark"] .vyuct-set-actions,
+html[data-mode="dark"] .nast-form-footer {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] a.button.secondary,
+html[data-mode="dark"] .btn-secondary,
+html[data-mode="dark"] .button.secondary {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] a.button.secondary:hover {
+  background: var(--table-row-hover) !important;
+}
+
+/* ── Modály (hráč – platba, atd.) ── */
+html[data-mode="dark"] .modal-overlay,
+html[data-mode="dark"] .modal-backdrop {
+  background: rgba(0, 0, 0, 0.65) !important;
+}
+
+html[data-mode="dark"] .modal-content,
+html[data-mode="dark"] .modal-dialog,
+html[data-mode="dark"] .hrac-modal-box {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .modal-content h2,
+html[data-mode="dark"] .modal-content h3,
+html[data-mode="dark"] .hrac-modal-box label {
+  color: var(--text-strong) !important;
+}
+
+/* ── Add day / kopírovat tréninky ── */
+html[data-mode="dark"] .add-day-page,
+html[data-mode="dark"] #content-main.add-day-page,
+html[data-mode="dark"] body #content-main.add-day-page,
+html[data-mode="dark"] .add-day-copy-box,
+html[data-mode="dark"] .add-day-section,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-card,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-card,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-hraci-table,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-hraci-dropdown,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-training-card {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] body #content-main.add-day-page h1,
+html[data-mode="dark"] body #content-main.add-day-page h2,
+html[data-mode="dark"] body #content-main.add-day-page h3,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-card-title,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-row label {
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] body #content-main.add-day-page .add-day-hraci-title {
+  color: var(--text-strong) !important;
+  background: var(--table-head) !important;
+  border-bottom-color: var(--line) !important;
+}
+
+html[data-mode="dark"] body #content-main.add-day-page .add-day-hraci-search,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-row input,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-row select,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-card input:not([type="submit"]):not([type="button"]),
+html[data-mode="dark"] body #content-main.add-day-page .add-day-card select,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-card textarea,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-copy-fields input,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-copy-fields select,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="date"],
+html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input.add-day-datum-input,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="text"].vDateField,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-fields .add-day-row input[type="time"],
+html[data-mode="dark"] body #content-main.add-day-page .add-day-fields .add-day-row input.vTimeField,
+html[data-mode="dark"] body #content-main.add-day-page input[type="date"],
+html[data-mode="dark"] body #content-main.add-day-page input[type="time"] {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+  color-scheme: dark;
+}
+
+html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-card .add-day-datum-row label.add-day-label-inline,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-copy-help {
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] body #content-main.add-day-page .add-day-hraci-dropdown li {
+  color: var(--text) !important;
+  border-bottom-color: var(--line) !important;
+  background: var(--surface) !important;
+}
+
+html[data-mode="dark"] body #content-main.add-day-page .add-day-hraci-dropdown li.is-active,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-hraci-dropdown li:hover {
+  background: var(--table-row-hover) !important;
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-shortcuts a {
+  background: var(--brand-100) !important;
+  color: var(--brand) !important;
+}
+
+html[data-mode="dark"] .add-day-page h1,
+html[data-mode="dark"] .add-day-page h2,
+html[data-mode="dark"] .add-day-page h3 {
+  color: var(--text-strong) !important;
+}
+
+/* ── Dashboard ── */
+html[data-mode="dark"] .dash-wrap .card,
+html[data-mode="dark"] .dash-wrap .card .inner,
+html[data-mode="dark"] .dash-wrap table.list td,
+html[data-mode="dark"] .dash-wrap table.list th {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .dash-wrap .card h3,
+html[data-mode="dark"] .dash-wrap table.list thead th,
+html[data-mode="dark"] .dash-wrap table.list th {
+  background: var(--table-head) !important;
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .dash-wrap table.list tbody tr:nth-child(even) td {
+  background: var(--surface) !important;
+}
+
+/* Jednotná barva řádků tabulek – bez zebra striping */
+html[data-mode="dark"] #result_list tbody tr:nth-child(even),
+html[data-mode="dark"] #result_list tbody tr:nth-child(even) > th,
+html[data-mode="dark"] #result_list tbody tr:nth-child(even) > td,
+html[data-mode="dark"] table.payments tbody tr:nth-child(even),
+html[data-mode="dark"] .results tbody tr:nth-child(even),
+html[data-mode="dark"] table.list tbody tr:nth-child(even),
+html[data-mode="dark"] table.list tbody tr:nth-child(even) > td,
+html[data-mode="dark"] table tbody tr:nth-child(even),
+html[data-mode="dark"] table tbody tr:nth-child(even) > td {
+  background: var(--surface) !important;
+}
+
+/* ── Ceník menu ── */
+html[data-mode="dark"] .cenik-menu-row,
+html[data-mode="dark"] .cenik-menu-page .module {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .cenik-menu-name,
+html[data-mode="dark"] .cenik-menu-lead {
+  color: var(--text) !important;
+}
+
+/* ── Inline tabulky (docházka u tréninku) ── */
+html[data-mode="dark"] .tabular inline-related table tbody td,
+html[data-mode="dark"] .inline-group .tabular tr.form-row td,
+html[data-mode="dark"] #dochazka_set-group tbody td,
+html[data-mode="dark"] #dochazka_set-group tbody th,
+html[data-mode="dark"] .inline-related tbody td {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] #dochazka_set-group thead th,
+html[data-mode="dark"] .inline-group .tabular thead th {
+  background: var(--table-head) !important;
+  color: var(--text-strong) !important;
+}
+
+/* ── Error / success messages ── */
+html[data-mode="dark"] .errornote,
+html[data-mode="dark"] ul.errorlist li {
+  background: #450a0a !important;
+  color: #fecaca !important;
+  border-color: #991b1b !important;
+}
+
+html[data-mode="dark"] .success,
+html[data-mode="dark"] .messagelist .success,
+html[data-mode="dark"] .messagelist li.error,
+html[data-mode="dark"] .messagelist li.warning,
+html[data-mode="dark"] .messagelist li.info {
+  background: none !important;
+  background-image: none !important;
+  border: none !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .messagelist li a {
+  color: var(--accent) !important;
+}
+
+/* ── User tools / branding ── */
+html[data-mode="dark"] #branding .brand .brand-title,
+html[data-mode="dark"] #user-tools a,
+html[data-mode="dark"] .ts-topnav a:not(.is-active) {
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] #user-tools .schedule-icon {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+}
+
+/* ── Trénink change form (bílé moduly – vyšší specificita než trening-change-form.css) ── */
+html[data-mode="dark"] body.app-core.model-trening.change-form #content-main,
+html[data-mode="dark"] body.app-core.model-trening.add-form #content-main,
+html[data-mode="dark"] body.app-core.model-trening.change-form #content-main .module.aligned,
+html[data-mode="dark"] body.app-core.model-trening.add-form #content-main .module.aligned,
+html[data-mode="dark"] body.app-core.model-trening.change-form #content-main .inline-group,
+html[data-mode="dark"] body.app-core.model-trening.change-form #content-main fieldset.module,
+html[data-mode="dark"] body.app-core.model-trening.change-form #dochazka_set-group,
+html[data-mode="dark"] body.app-core.model-trening.change-form #dochazky-group,
+html[data-mode="dark"] body.app-core.model-trening.change-form .x-dochazka-inline,
+html[data-mode="dark"] body.app-core.model-trening.change-form #dochazka_set-group tr.add-row,
+html[data-mode="dark"] body.app-core.model-trening.change-form #dochazky-group tr.add-row,
+html[data-mode="dark"] body.app-core.model-trening.change-form .x-dochazka-inline tr.add-row {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] body.app-core.model-trening.change-form #content-main .module.aligned .form-row > label,
+html[data-mode="dark"] body.app-core.model-trening.change-form .form-row label,
+html[data-mode="dark"] body.app-core.model-trening.change-form .aligned label,
+html[data-mode="dark"] body.app-core.model-trening.change-form .aligned th,
+html[data-mode="dark"] body.app-core.model-trening.change-form .form-row.field-datum label {
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] body.app-core.model-trening.change-form #content-main .module.aligned .form-row input:not([type="submit"]):not([type="button"]),
+html[data-mode="dark"] body.app-core.model-trening.change-form #content-main .module.aligned .form-row select,
+html[data-mode="dark"] body.app-core.model-trening.change-form #content-main .module.aligned .form-row textarea,
+html[data-mode="dark"] body.app-core.model-trening.change-form .form-row.field-datum input.vDateField,
+html[data-mode="dark"] body.app-core.model-trening.change-form .form-row.field-datum input.vTimeField,
+html[data-mode="dark"] body.app-core.model-trening.change-form .form-row.field-datum input[type="text"],
+html[data-mode="dark"] body.app-core.model-trening.change-form #dochazka_set-group td:first-child select,
+html[data-mode="dark"] body.app-core.model-trening.change-form #dochazky-group td:first-child select,
+html[data-mode="dark"] body.app-core.model-trening.change-form .x-dochazka-inline td:first-child select,
+html[data-mode="dark"] body.app-core.model-trening.change-form #dochazka_set-group tbody td:last-child,
+html[data-mode="dark"] body.app-core.model-trening.change-form #dochazky-group tbody td:last-child,
+html[data-mode="dark"] body.app-core.model-trening.change-form .x-dochazka-inline tbody td:last-child {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] body.app-core.model-trening.change-form #dochazka_set-group tbody td:last-child .x-clear-hrac,
+html[data-mode="dark"] body.app-core.model-trening.change-form #dochazky-group tbody td:last-child .x-clear-hrac,
+html[data-mode="dark"] body.app-core.model-trening.change-form .x-dochazka-inline tbody td:last-child .x-clear-hrac {
+  background: var(--bg) !important;
+  color: var(--muted) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] body.app-core.model-trening.change-form .select2-container--admin-autocomplete .select2-selection--single,
+html[data-mode="dark"] body.app-core.model-trening.change-form .select2-container .select2-dropdown,
+html[data-mode="dark"] body.app-core.model-trening.change-form .select2-results__option {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] body.app-core.model-trening.change-form .select2-container--admin-autocomplete .select2-selection__rendered {
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] body.app-core.model-trening.change-form .form-row.field-datum .datetimeshortcuts a {
+  background: var(--brand-100) !important;
+  color: var(--brand) !important;
+}
+
+/* ── Hráč – vyúčtovací panel ── */
+html[data-mode="dark"] .vyuct-panel {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .vyuct-panel__title,
+html[data-mode="dark"] .vyuct-field label {
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .vyuct-field input[type="date"],
+html[data-mode="dark"] .vyuct-field input[type="number"],
+html[data-mode="dark"] .vyuct-field select {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+/* ── Ceník change form ── */
+html[data-mode="dark"] body.app-core.model-cenik.change-form .module.aligned,
+html[data-mode="dark"] body.app-core.model-cenik.add-form .module.aligned {
+  background: var(--surface) !important;
+}
+
+/* ── Transakce change form ── */
+html[data-mode="dark"] body.app-core.model-transakce.change-form .module.aligned {
+  background: var(--surface) !important;
+}
+
+html[data-mode="dark"] body.app-core.model-transakce.change-form label,
+html[data-mode="dark"] body.app-core.model-transakce.change-form .aligned th {
+  color: var(--text) !important;
+}
+
+/* ── Analytika ── */
+html[data-mode="dark"] .analytika-app {
+  --ana-bg: var(--bg);
+  --ana-surface: var(--surface);
+  --ana-border: var(--line);
+  --ana-text: var(--text);
+  --ana-muted: var(--muted);
+  --ana-brand: var(--brand);
+  --ana-brand-soft: var(--brand-100);
+  --ana-link: var(--brand);
+  --ana-danger: #f87171;
+  --ana-shadow: none;
+  --ana-bg-subtle: var(--bg);
+  --ana-bg-soft: var(--table-head);
+  --ana-sidebar-footer: var(--bg);
+  --ana-divider: var(--line);
+  --ana-nav-icon-bg: color-mix(in srgb, var(--text) 7%, var(--surface));
+  --ana-nav-icon-border: var(--line);
+  --ana-nav-icon-hover-bg: var(--table-row-hover);
+  --ana-nav-icon-active-bg: color-mix(in srgb, var(--brand) 28%, var(--surface));
+  --ana-nav-icon-active-border: color-mix(in srgb, var(--brand) 42%, var(--line));
+  --ana-nav-hover-bg: var(--table-row-hover);
+  --ana-nav-hover-border: var(--line);
+  --ana-nav-active-bg: color-mix(in srgb, var(--brand) 16%, var(--surface));
+  --ana-nav-active-border: color-mix(in srgb, var(--brand) 38%, var(--line));
+  --ana-nav-active-text: var(--text-strong);
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .analytika-sidebar,
+html[data-mode="dark"] .analytika-main,
+html[data-mode="dark"] .hero-kpi,
+html[data-mode="dark"] .kpi,
+html[data-mode="dark"] .panel,
+html[data-mode="dark"] .analytika-export-panel,
+html[data-mode="dark"] .analytika-table-wrap,
+html[data-mode="dark"] .credit-summary,
+html[data-mode="dark"] .credit-summary-item,
+html[data-mode="dark"] .quick-stat,
+html[data-mode="dark"] .stat-tile,
+html[data-mode="dark"] .comparison-stat,
+html[data-mode="dark"] .acc-card,
+html[data-mode="dark"] .analytika-app .panel--accent,
+html[data-mode="dark"] .analytika-app .panel--table .panel-header,
+html[data-mode="dark"] .analytika-app .panel-header,
+html[data-mode="dark"] .panel-expand-btn,
+html[data-mode="dark"] .naklady-row,
+html[data-mode="dark"] .naklady-date-trigger,
+html[data-mode="dark"] .naklady-date-popover,
+html[data-mode="dark"] .naklady-cal-nav,
+html[data-mode="dark"] .naklady-date-manual-btn,
+html[data-mode="dark"] .naklady-cal-year-btn,
+html[data-mode="dark"] .analytika-modal-dialog,
+html[data-mode="dark"] .analytika-modal-header,
+html[data-mode="dark"] .analytika-modal-body,
+html[data-mode="dark"] .analytika-modal-body--chart,
+html[data-mode="dark"] .analytika-modal-chart,
+html[data-mode="dark"] .analytika-modal-extra {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+  box-shadow: none !important;
+}
+
+html[data-mode="dark"] .analytika-sidebar {
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: none !important;
+}
+
+html[data-mode="dark"] .analytika-sidebar::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted) 40%, transparent) !important;
+}
+
+html[data-mode="dark"] .sidebar-brand {
+  background: color-mix(in srgb, var(--brand) 10%, var(--surface)) !important;
+  border-bottom-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .sidebar-brand-dot {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 22%, transparent) !important;
+}
+
+html[data-mode="dark"] .sidebar-brand strong,
+html[data-mode="dark"] .sidebar-nav-item.active .nav-text strong {
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .sidebar-nav-item {
+  color: var(--text) !important;
+  border-color: transparent !important;
+}
+
+html[data-mode="dark"] .sidebar-nav-item:hover {
+  background: var(--ana-nav-hover-bg) !important;
+  border-color: var(--ana-nav-hover-border) !important;
+  box-shadow: none !important;
+}
+
+html[data-mode="dark"] .sidebar-nav-item.active {
+  background: var(--ana-nav-active-bg) !important;
+  border-color: var(--ana-nav-active-border) !important;
+  box-shadow: inset 3px 0 0 var(--brand) !important;
+}
+
+html[data-mode="dark"] .analytika-app .nav-icon {
+  background-color: var(--ana-nav-icon-bg) !important;
+  border-color: var(--ana-nav-icon-border) !important;
+}
+
+html[data-mode="dark"] .analytika-app .sidebar-nav-item:hover .nav-icon {
+  background-color: var(--ana-nav-icon-hover-bg) !important;
+  border-color: var(--ana-nav-hover-border) !important;
+}
+
+html[data-mode="dark"] .analytika-app .sidebar-nav-item.active .nav-icon {
+  background-color: var(--ana-nav-icon-active-bg) !important;
+  border-color: var(--ana-nav-icon-active-border) !important;
+}
+
+/* Ikony – světlejší stroke pro tmavé pozadí */
+html[data-mode="dark"] .nav-icon--overview { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23cbd5e1' stroke-width='2'%3E%3Cpath d='M4 6h16M4 12h16M4 18h7'/%3E%3C/svg%3E"); }
+html[data-mode="dark"] .nav-icon--activity { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23cbd5e1' stroke-width='2'%3E%3Cpath d='M13 7h8m0 0v8m0-8l-8 8-4-4-6 6'/%3E%3C/svg%3E"); }
+html[data-mode="dark"] .nav-icon--finance { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23cbd5e1' stroke-width='2'%3E%3Cpath d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 12v-2'/%3E%3C/svg%3E"); }
+html[data-mode="dark"] .nav-icon--accounting { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23cbd5e1' stroke-width='2'%3E%3Cpath d='M9 7h6m-6 4h6m-6 4h4M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z'/%3E%3C/svg%3E"); }
+html[data-mode="dark"] .nav-icon--players { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23cbd5e1' stroke-width='2'%3E%3Cpath d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zm12 10v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75'/%3E%3C/svg%3E"); }
+html[data-mode="dark"] .nav-icon--coaches { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23cbd5e1' stroke-width='2'%3E%3Cpath d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'/%3E%3C/svg%3E"); }
+html[data-mode="dark"] .nav-icon--costs { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23cbd5e1' stroke-width='2'%3E%3Cpath d='M9 14l2 2 4-4M7 7h10a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2V9a2 2 0 012-2z'/%3E%3C/svg%3E"); }
+
+html[data-mode="dark"] .sidebar-nav-item.active .nav-icon--overview { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f8fafc' stroke-width='2.2'%3E%3Cpath d='M4 6h16M4 12h16M4 18h7'/%3E%3C/svg%3E"); }
+html[data-mode="dark"] .sidebar-nav-item.active .nav-icon--activity { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f8fafc' stroke-width='2.2'%3E%3Cpath d='M13 7h8m0 0v8m0-8l-8 8-4-4-6 6'/%3E%3C/svg%3E"); }
+html[data-mode="dark"] .sidebar-nav-item.active .nav-icon--finance { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f8fafc' stroke-width='2.2'%3E%3Cpath d='M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 12v-2'/%3E%3C/svg%3E"); }
+html[data-mode="dark"] .sidebar-nav-item.active .nav-icon--accounting { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f8fafc' stroke-width='2.2'%3E%3Cpath d='M9 7h6m-6 4h6m-6 4h4M5 5h14a1 1 0 011 1v13a1 1 0 01-1 1H5a1 1 0 01-1-1V6a1 1 0 011-1z'/%3E%3C/svg%3E"); }
+html[data-mode="dark"] .sidebar-nav-item.active .nav-icon--players { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f8fafc' stroke-width='2.2'%3E%3Cpath d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zm12 10v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75'/%3E%3C/svg%3E"); }
+html[data-mode="dark"] .sidebar-nav-item.active .nav-icon--coaches { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f8fafc' stroke-width='2.2'%3E%3Cpath d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'/%3E%3C/svg%3E"); }
+html[data-mode="dark"] .sidebar-nav-item.active .nav-icon--costs { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f8fafc' stroke-width='2.2'%3E%3Cpath d='M9 14l2 2 4-4M7 7h10a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2V9a2 2 0 012-2z'/%3E%3C/svg%3E"); }
+
+html[data-mode="dark"] .sidebar-footer {
+  background: var(--bg) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .sidebar-close,
+html[data-mode="dark"] .analytika-modal-close {
+  background: var(--bg) !important;
+  color: var(--muted) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .sidebar-close:hover {
+  background: var(--table-row-hover) !important;
+  border-color: var(--line) !important;
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .comparison-stat--clickable.is-active {
+  background: var(--brand-100) !important;
+  color: var(--text-strong) !important;
+  box-shadow: inset 3px 0 0 var(--brand) !important;
+}
+
+html[data-mode="dark"] .analytika-header h1,
+html[data-mode="dark"] .analytika-header .analytika-subtitle,
+html[data-mode="dark"] .hero-kpi-label,
+html[data-mode="dark"] .hero-kpi-value,
+html[data-mode="dark"] .kpi .label,
+html[data-mode="dark"] .kpi .value,
+html[data-mode="dark"] .kpi-detail-value,
+html[data-mode="dark"] .panel-header h3,
+html[data-mode="dark"] .panel-title-simple,
+html[data-mode="dark"] .analytika-export-desc,
+html[data-mode="dark"] .acc-value,
+html[data-mode="dark"] .stat-tile-value,
+html[data-mode="dark"] .quick-stat-value,
+html[data-mode="dark"] .comparison-stat-value,
+html[data-mode="dark"] .naklady-row-label,
+html[data-mode="dark"] .naklady-month-label,
+html[data-mode="dark"] .analytika-modal-header h2 {
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .hero-kpi-meta,
+html[data-mode="dark"] .analytika-breadcrumb,
+html[data-mode="dark"] .sidebar-period-label,
+html[data-mode="dark"] .sidebar-period-value,
+html[data-mode="dark"] .kpi-detail-label,
+html[data-mode="dark"] .acc-label,
+html[data-mode="dark"] .acc-sub,
+html[data-mode="dark"] .stat-tile-label,
+html[data-mode="dark"] .quick-stat-label,
+html[data-mode="dark"] .comparison-stat-label,
+html[data-mode="dark"] .chart-hint,
+html[data-mode="dark"] .naklady-form-hint,
+html[data-mode="dark"] .analytika-export-label,
+html[data-mode="dark"] .muted-inline {
+  color: var(--muted) !important;
+}
+
+html[data-mode="dark"] .analytika-app a,
+html[data-mode="dark"] .analytika-app .link-btn,
+html[data-mode="dark"] .analytika-app .acc-link,
+html[data-mode="dark"] .analytika-app .naklady-edit-link,
+html[data-mode="dark"] .analytika-app .mini-table a,
+html[data-mode="dark"] .panel-actions a {
+  color: var(--brand) !important;
+}
+
+html[data-mode="dark"] .analytika-app a:hover,
+html[data-mode="dark"] .analytika-app .link-btn:hover {
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .analytika-menu-toggle {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .analytika-app input,
+html[data-mode="dark"] .analytika-app select,
+html[data-mode="dark"] .analytika-app textarea,
+html[data-mode="dark"] .analytika-export-select,
+html[data-mode="dark"] .naklady-castka,
+html[data-mode="dark"] .naklady-poznamka,
+html[data-mode="dark"] .naklady-date-manual {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+  color-scheme: dark;
+}
+
+html[data-mode="dark"] .analytika-export-btn--xlsx {
+  background: var(--bg) !important;
+  color: #86efac !important;
+  border-color: #22c55e !important;
+}
+
+html[data-mode="dark"] .analytika-export-btn--xlsx:hover {
+  background: var(--table-row-hover) !important;
+}
+
+html[data-mode="dark"] .panel-expand-btn:hover {
+  background: var(--brand-100) !important;
+  color: var(--text-strong) !important;
+  border-color: var(--brand) !important;
+}
+
+html[data-mode="dark"] .panel-badge,
+html[data-mode="dark"] .panel-badge--orange {
+  background: var(--brand-100) !important;
+  color: var(--text-strong) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .analytika-app table th,
+html[data-mode="dark"] .analytika-app .data-table thead th {
+  background: var(--table-head) !important;
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .analytika-app table td,
+html[data-mode="dark"] .analytika-app .data-table td {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .analytika-app table tbody tr:hover td,
+html[data-mode="dark"] .analytika-app .data-table--naklady tbody.naklady-day-group:hover > tr > td {
+  background: var(--table-row-hover) !important;
+}
+
+html[data-mode="dark"] .kpi-detail-item,
+html[data-mode="dark"] .mini-table td,
+html[data-mode="dark"] .comp-sub-grid h4 {
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .acc-trend {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: var(--line) !important;
+  color: var(--muted) !important;
+}
+
+html[data-mode="dark"] .acc-trend.up {
+  background: rgba(22, 101, 52, 0.35) !important;
+  border-color: #166534 !important;
+  color: #86efac !important;
+}
+
+html[data-mode="dark"] .acc-trend.down {
+  background: rgba(127, 29, 29, 0.35) !important;
+  border-color: #991b1b !important;
+  color: #fca5a5 !important;
+}
+
+html[data-mode="dark"] .acc-trend.neutral {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: var(--line) !important;
+  color: var(--muted) !important;
+}
+
+html[data-mode="dark"] .acc-sum-badge.negative {
+  background: rgba(127, 29, 29, 0.35) !important;
+  border-color: #991b1b !important;
+  color: #fca5a5 !important;
+}
+
+html[data-mode="dark"] .analytika-modal .drill-panel,
+html[data-mode="dark"] .analytika-modal .drill-subsection,
+html[data-mode="dark"] .analytika-modal .drill-stat,
+html[data-mode="dark"] .analytika-modal .kpi-modal .drill-stat,
+html[data-mode="dark"] .analytika-modal .drill-subsection--bars {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .analytika-modal .drill-header h3,
+html[data-mode="dark"] .analytika-modal .drill-hero-value,
+html[data-mode="dark"] .analytika-modal .drill-subheading,
+html[data-mode="dark"] .analytika-modal .drill-stat-value,
+html[data-mode="dark"] .analytika-modal .kpi-modal .drill-stat-value,
+html[data-mode="dark"] .drill-note span {
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .analytika-modal .drill-header-badge,
+html[data-mode="dark"] .analytika-modal .drill-hero,
+html[data-mode="dark"] .analytika-modal .drill-stat--brand,
+html[data-mode="dark"] .analytika-modal .drill-stat--slate,
+html[data-mode="dark"] .analytika-modal .drill-stat--dark,
+html[data-mode="dark"] .analytika-modal .drill-stat--danger,
+html[data-mode="dark"] .analytika-modal .drill-stat--neutral,
+html[data-mode="dark"] .analytika-modal .drill-hero--trener,
+html[data-mode="dark"] .analytika-modal .drill-hero--hrac,
+html[data-mode="dark"] .analytika-modal .drill-hero--danger,
+html[data-mode="dark"] .drill-panel--naklady .drill-hero--danger {
+  background: var(--bg) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .analytika-modal .drill-hero-label,
+html[data-mode="dark"] .analytika-modal .drill-note,
+html[data-mode="dark"] .analytika-modal .drill-stat-label {
+  color: var(--muted) !important;
+}
+
+html[data-mode="dark"] .analytika-modal-close:hover {
+  background: var(--table-row-hover) !important;
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .naklady-cal-day.is-other {
+  color: var(--muted) !important;
+}
+
+html[data-mode="dark"] .analytika-app table.list th,
+html[data-mode="dark"] .analytika-app table.list td,
+html[data-mode="dark"] .acc-sum-badge {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .analytika-app table.list th {
+  background: var(--table-head) !important;
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .analytika-app table.list tbody tr:hover td {
+  background: var(--table-row-hover) !important;
+}
+
+html[data-mode="dark"] .acc-chart-card {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .acc-chart-card-header h4 {
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .analytika-app .chart-container,
+html[data-mode="dark"] .analytika-app .chart-container-medium,
+html[data-mode="dark"] .analytika-app .chart-container-small,
+html[data-mode="dark"] .analytika-app .acc-chart-wrap,
+html[data-mode="dark"] .analytika-modal-chart {
+  background: var(--bg) !important;
+}
+
+html[data-mode="dark"] .analytika-app canvas,
+html[data-mode="dark"] .analytika-modal-chart canvas {
+  background: transparent !important;
+}
+
+html[data-mode="dark"] .naklady-cal-title:hover,
+html[data-mode="dark"] .naklady-cal-nav:hover,
+html[data-mode="dark"] .naklady-cal-year-btn:hover,
+html[data-mode="dark"] .naklady-date-manual-btn:hover {
+  background: var(--table-row-hover) !important;
+}
+
+/* ── Nastavení stránka ── */
+html[data-mode="dark"] .nast-excel-row:hover,
+html[data-mode="dark"] .nast-excel-row:has(.nast-excel-input:checked) {
+  background: var(--table-row-hover) !important;
+}
+
+html[data-mode="dark"] .nast-row-link:hover {
+  background: var(--table-row-hover) !important;
+}
+
+html[data-mode="dark"] .nast-row-input,
+html[data-mode="dark"] .nast-app .nast-row-control select,
+html[data-mode="dark"] .nast-app .nast-row-control input,
+html[data-mode="dark"] .nast-color-hex {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+/* ── Vybrané řádky changelistu ── */
+html[data-mode="dark"] #result_list tbody tr.selected,
+html[data-mode="dark"] #result_list tbody tr.row-selected,
+html[data-mode="dark"] .results tbody tr.selected,
+html[data-mode="dark"] .results tbody tr.row-selected,
+html[data-mode="dark"] table tbody tr.selected,
+html[data-mode="dark"] table tbody tr.row-selected {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+html[data-mode="dark"] #result_list tbody tr.selected > th,
+html[data-mode="dark"] #result_list tbody tr.selected > td,
+html[data-mode="dark"] #result_list tbody tr.row-selected > th,
+html[data-mode="dark"] #result_list tbody tr.row-selected > td,
+html[data-mode="dark"] .results tbody tr.selected > th,
+html[data-mode="dark"] .results tbody tr.selected > td,
+html[data-mode="dark"] table tbody tr.selected > th,
+html[data-mode="dark"] table tbody tr.selected > td,
+html[data-mode="dark"] table tbody tr.row-selected > th,
+html[data-mode="dark"] table tbody tr.row-selected > td {
+  background: var(--table-row-hover) !important;
+  color: var(--text) !important;
+  border-top-color: var(--line) !important;
+  border-bottom-color: var(--line) !important;
+  border-left-color: var(--line) !important;
+  border-right-color: var(--line) !important;
+  box-shadow: none !important;
+}
+
+html[data-mode="dark"] #result_list tbody tr.selected:hover > th,
+html[data-mode="dark"] #result_list tbody tr.selected:hover > td,
+html[data-mode="dark"] #result_list tbody tr.row-selected:hover > th,
+html[data-mode="dark"] #result_list tbody tr.row-selected:hover > td,
+html[data-mode="dark"] table tbody tr.selected:hover > th,
+html[data-mode="dark"] table tbody tr.selected:hover > td,
+html[data-mode="dark"] table tbody tr.row-selected:hover > th,
+html[data-mode="dark"] table tbody tr.row-selected:hover > td {
+  background: var(--table-row-hover) !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] #result_list tbody tr.selected a,
+html[data-mode="dark"] #result_list tbody tr.row-selected a,
+html[data-mode="dark"] .results tbody tr.selected a,
+html[data-mode="dark"] table tbody tr.selected a,
+html[data-mode="dark"] table tbody tr.row-selected a {
+  color: var(--text-strong) !important;
+  text-decoration: none !important;
+}
+
+/* ── Trenér detail – KPI a měsíční tréninky ── */
+html[data-mode="dark"] .trener-kpi-bar {
+  background: var(--surface) !important;
+  border-bottom-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .trener-kpi-label,
+html[data-mode="dark"] .trener-trainings-month__meta,
+html[data-mode="dark"] .trener-trainings-empty,
+html[data-mode="dark"] .trener-filter-summary {
+  color: var(--muted) !important;
+}
+
+html[data-mode="dark"] .trener-kpi-value,
+html[data-mode="dark"] .trener-trainings-month__summary {
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .trener-trainings-month {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .trener-trainings-month__summary {
+  background: var(--table-head) !important;
+}
+
+html[data-mode="dark"] .trener-trainings-month[open] .trener-trainings-month__summary {
+  border-bottom-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .trener-trainings-table thead th {
+  background: var(--table-head) !important;
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .trener-trainings-table th,
+html[data-mode="dark"] .trener-trainings-table td {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .trener-monthly-table thead th {
+  background: var(--table-head) !important;
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .trener-monthly-table tbody td {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+/* ── Nativní date/time inputy ── */
+html[data-mode="dark"] input[type="date"],
+html[data-mode="dark"] input[type="time"],
+html[data-mode="dark"] input[type="datetime-local"],
+html[data-mode="dark"] input[type="month"],
+html[data-mode="dark"] input[type="week"] {
+  color-scheme: dark;
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+/* ── Rozvrh tréninků (kalendar) ── */
+html[data-mode="dark"] .sched-toolbar input[type="date"],
+html[data-mode="dark"] .sched-toolbar select {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .sched-toolbar .seg {
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .sched-toolbar .seg a {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .sched-toolbar .seg a.is-active {
+  background: color-mix(in srgb, var(--brand) 24%, var(--surface)) !important;
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .sched-toolbar .add-day-copy-from-cal {
+  background: color-mix(in srgb, var(--brand) 14%, var(--surface)) !important;
+  border-color: var(--brand) !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .sched-wrap {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .sched-head {
+  background: var(--surface) !important;
+  border-bottom-color: var(--line) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+}
+
+html[data-mode="dark"] .sched-head div {
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .sched-head div:first-child {
+  background: var(--surface) !important;
+  border-right-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .sched-grid {
+  background: var(--bg) !important;
+}
+
+html[data-mode="dark"] .sched-hours {
+  background: var(--surface) !important;
+  border-right-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .sched-hours::before {
+  background: var(--surface) !important;
+}
+
+html[data-mode="dark"] .sched-hour {
+  color: var(--muted) !important;
+}
+
+html[data-mode="dark"] .sched-day {
+  background: var(--surface) !important;
+  border-right-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .sched-day-body::before {
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--hour-h) / 2 - 1px),
+    rgba(255, 255, 255, 0.06) calc(var(--hour-h) / 2 - 1px),
+    rgba(255, 255, 255, 0.06) calc(var(--hour-h) / 2),
+    transparent calc(var(--hour-h) / 2),
+    transparent calc(var(--hour-h) - 1px),
+    rgba(255, 255, 255, 0.12) calc(var(--hour-h) - 1px),
+    rgba(255, 255, 255, 0.12) var(--hour-h)
+  ) !important;
+}
+
+html[data-mode="dark"] .ev {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35) !important;
+}
+
+html[data-mode="dark"] .ev:hover {
+  filter: brightness(1.1) !important;
+}
+
+html[data-mode="dark"] .ev-names {
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+html[data-mode="dark"] .ev-names::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+html[data-mode="dark"] .ev[class*="ev--solo"] {
+  background: rgba(180, 83, 9, 0.32) !important;
+  border-color: #d97706 !important;
+  color: #fcd34d !important;
+}
+
+html[data-mode="dark"] .ev[class*="ev--dvojice"] {
+  background: rgba(30, 64, 175, 0.35) !important;
+  border-color: #3b82f6 !important;
+  color: #93c5fd !important;
+}
+
+html[data-mode="dark"] .ev[class*="ev--trojice"],
+html[data-mode="dark"] .ev[class*="ev--trio"] {
+  background: rgba(76, 29, 149, 0.35) !important;
+  border-color: #8b5cf6 !important;
+  color: #c4b5fd !important;
+}
+
+html[data-mode="dark"] .ev[class*="ev--ctverice"],
+html[data-mode="dark"] .ev[class*="ev--ctver"],
+html[data-mode="dark"] .ev[class*="ev--ctyr"] {
+  background: rgba(20, 83, 45, 0.35) !important;
+  border-color: #22c55e !important;
+  color: #86efac !important;
+}
+
+html[data-mode="dark"] .ev[class*="ev--skupina"],
+html[data-mode="dark"] .ev[class*="ev--skup"],
+html[data-mode="dark"] .ev[class*="ev--petice"],
+html[data-mode="dark"] .ev[class*="ev--sobota"] {
+  background: rgba(17, 94, 89, 0.35) !important;
+  border-color: #14b8a6 !important;
+  color: #5eead4 !important;
+}
+
+html[data-mode="dark"] .ev.ev--kurt-tre,
+html[data-mode="dark"] .ev[class*="ev--kurt-rezervace"] {
+  background: rgba(159, 18, 57, 0.35) !important;
+  border-color: #e11d48 !important;
+  color: #fda4af !important;
+}
+
+html[data-mode="dark"] .legend {
+  color: var(--muted) !important;
+}
+
+html[data-mode="dark"] .chip--solo {
+  background: rgba(180, 83, 9, 0.55) !important;
+  border-color: #d97706 !important;
+}
+
+html[data-mode="dark"] .chip--dvojice {
+  background: rgba(30, 64, 175, 0.55) !important;
+  border-color: #3b82f6 !important;
+}
+
+html[data-mode="dark"] .chip--trojice {
+  background: rgba(76, 29, 149, 0.55) !important;
+  border-color: #8b5cf6 !important;
+}
+
+html[data-mode="dark"] .chip--ctverice {
+  background: rgba(20, 83, 45, 0.55) !important;
+  border-color: #22c55e !important;
+}
+
+html[data-mode="dark"] .chip--skupina {
+  background: rgba(17, 94, 89, 0.55) !important;
+  border-color: #14b8a6 !important;
+}
+
+html[data-mode="dark"] .chip--rezervace {
+  background: rgba(159, 18, 57, 0.55) !important;
+  border-color: #e11d48 !important;
+}
+
+html[data-mode="dark"] .kredit-zaporny {
+  color: #f87171 !important;
+}

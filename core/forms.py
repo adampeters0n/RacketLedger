@@ -5,9 +5,10 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.forms import formset_factory
 from django.forms.models import BaseInlineFormSet
+from django.utils.translation import gettext_lazy as _
 
-from .admin_utils import trener_label
-from .models import Cenik, CenikFormat, Dochazka, Hrac, TrenerPlatba, VyuctovaniNastaveni
+from .admin_utils import get_month_choices, trener_label
+from .models import Cenik, CenikFormat, Dochazka, Hrac, SystemNastaveni, TrenerPlatba, VyuctovaniNastaveni
 
 User = get_user_model()
 
@@ -109,13 +110,13 @@ class AddDayForm(forms.Form):
 
     trener = TrenerModelChoiceField(
         queryset=User.objects.order_by("username"),
-        label="Trenér",
+        label=_("Trenér"),
         required=True,
         empty_label="------",
     )
 
     datum = forms.DateField(
-        label="Datum dne",
+        label=_("Datum dne"),
         widget=forms.DateInput(attrs={"type": "date", "class": "add-day-datum-input"}),
     )
 
@@ -126,36 +127,36 @@ class CopyTrainingsForm(forms.Form):
     SCOPE_DAY = "day"
     SCOPE_WEEK = "week"
     SCOPE_CHOICES = [
-        (SCOPE_DAY, "Jeden den"),
-        (SCOPE_WEEK, "Celý týden"),
+        (SCOPE_DAY, _("Jeden den")),
+        (SCOPE_WEEK, _("Celý týden")),
     ]
 
     source_date = forms.DateField(
-        label="Kopírovat z",
+        label=_("Kopírovat z"),
         widget=forms.DateInput(attrs={"type": "date", "class": "add-day-datum-input"}),
     )
     target_date = forms.DateField(
-        label="Přidat do",
+        label=_("Přidat do"),
         widget=forms.DateInput(attrs={"type": "date", "class": "add-day-datum-input"}),
     )
     scope = forms.ChoiceField(
-        label="Rozsah",
+        label=_("Rozsah"),
         choices=SCOPE_CHOICES,
         initial=SCOPE_DAY,
         widget=forms.Select(attrs={"class": "add-day-copy-scope"}),
     )
     trener = TrenerModelChoiceField(
         queryset=User.objects.order_by("username"),
-        label="Trenér",
+        label=_("Trenér"),
         required=False,
-        empty_label="Všichni trenéři",
+        empty_label=_("Všichni trenéři"),
     )
 
 
 class TrainingSlotForm(forms.Form):
     """Jeden „slot“ tréninku: čas, délka, formát, kurt, hráči."""
     cas = forms.TimeField(
-        label="Čas",
+        label=_("Čas"),
         required=False,
         # Textové pole kvůli volnému zadávání (např. "13" → 13:00).
         # Normalizaci na HH:MM řeší JavaScript v add_form šabloně.
@@ -169,38 +170,29 @@ class TrainingSlotForm(forms.Form):
         ),
     )
     delka_minut = forms.TypedChoiceField(
-        label="Délka (hodiny)",
+        label=_("Délka (hodiny)"),
         coerce=int,
-        # 1 h jako výchozí – proto je první v seznamu
-        choices=[
-            (60, "1 h"),
-            (30, "30 min"),
-            (45, "45 min"),
-            (90, "1,5 h"),
-            (120, "2 h"),
-            (150, "2,5 h"),
-            (180, "3 h"),
-        ],
+        choices=list(SystemNastaveni.DELKA_MINUT_CHOICES),
         initial=60,
     )
     format = forms.ChoiceField(
-        label="Typ tréninku",
+        label=_("Typ tréninku"),
         choices=[("", "------")],
         required=False,
         widget=forms.Select(attrs={"class": "vTextField"}),
     )
     kurt = forms.ChoiceField(
-        label="Kurt",
+        label=_("Kurt"),
         choices=[("", "------")] + list(Cenik.Kurt.choices),
         required=False,
     )
     poznamka = forms.CharField(
-        label="Poznámka",
+        label=_("Poznámka"),
         required=False,
         widget=forms.TextInput(attrs={"class": "vTextField", "placeholder": "", "maxlength": 240}),
     )
     slot_datum = forms.DateField(
-        label="Datum",
+        label=_("Datum"),
         required=False,
         input_formats=["%Y-%m-%d"],
         widget=forms.DateInput(
@@ -210,13 +202,13 @@ class TrainingSlotForm(forms.Form):
     )
     trener = TrenerModelChoiceField(
         queryset=User.objects.order_by("username"),
-        label="Trenér",
+        label=_("Trenér"),
         required=False,
-        empty_label="—— stejný jako nahoře ——",
+        empty_label=_("—— stejný jako nahoře ——"),
     )
     hraci = forms.ModelMultipleChoiceField(
         queryset=Hrac.objects.order_by("prijmeni", "jmeno"),
-        label="Hráči",
+        label=_("Hráči"),
         required=False,
         widget=forms.SelectMultiple(
             attrs={
@@ -231,6 +223,23 @@ class TrainingSlotForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["format"].choices = [("", "------")] + CenikFormat.choices()
+        if not self.is_bound:
+            try:
+                for_date = None
+                if self.initial.get("slot_datum"):
+                    for_date = self.initial["slot_datum"]
+                elif self.data.get(self.add_prefix("slot_datum")):
+                    from datetime import datetime
+                    raw = self.data.get(self.add_prefix("slot_datum"))
+                    try:
+                        for_date = datetime.strptime(raw, "%Y-%m-%d").date()
+                    except (ValueError, TypeError):
+                        pass
+                defaults = SystemNastaveni.training_defaults(for_date=for_date)
+                self.fields["delka_minut"].initial = defaults["delka_minut"]
+                self.fields["kurt"].initial = defaults["kurt"]
+            except Exception:
+                pass
 
 
 class TrainingSlotFormSetBase(forms.BaseFormSet):
@@ -265,7 +274,7 @@ TrainingSlotFormSet = formset_factory(
 class TrenerPlatbaForm(forms.ModelForm):
     user = TrenerModelChoiceField(
         queryset=User.objects.order_by("username"),
-        label="Trenér",
+        label=_("Trenér"),
         empty_label="------",
     )
 
@@ -273,9 +282,9 @@ class TrenerPlatbaForm(forms.ModelForm):
         model = TrenerPlatba
         fields = ("user", "castka", "poznamka", "vytvoreno")
         labels = {
-            "castka": "Částka",
-            "poznamka": "Poznámka",
-            "vytvoreno": "Datum",
+            "castka": _("Částka"),
+            "poznamka": _("Poznámka"),
+            "vytvoreno": _("Datum"),
         }
         widgets = {
             "castka": forms.NumberInput(attrs={"class": "vTextField", "step": "0.01"}),
@@ -286,8 +295,8 @@ class TrenerPlatbaForm(forms.ModelForm):
 class VyuctovaniNastaveniForm(forms.ModelForm):
     aplikovat_na_vsechny = forms.BooleanField(
         required=False,
-        label="Synchronizovat režim u všech stávajících hráčů",
-        help_text="Přepíše u všech hráčů režim, počet tréninků a limit kreditu podle nastavení výše.",
+        label=_("Synchronizovat režim u všech stávajících hráčů"),
+        help_text=_("Přepíše u všech hráčů režim, počet tréninků a limit kreditu podle nastavení výše."),
     )
 
     class Meta:
@@ -300,8 +309,11 @@ class VyuctovaniNastaveniForm(forms.ModelForm):
             "mesicni_den",
             "auto_posilat_email",
             "email_variant",
+            "ucet_nazev_1",
+            "ucet_nazev_2",
             "ucet_varianta_1",
             "ucet_varianta_2",
+            "variabilni_symbol_popis",
         ]
         widgets = {
             "auto_rezim": forms.RadioSelect,
@@ -310,15 +322,20 @@ class VyuctovaniNastaveniForm(forms.ModelForm):
             "auto_pocet_treninku": forms.NumberInput(attrs={"class": "vTextField", "min": "1"}),
             "mesicni_den": forms.NumberInput(attrs={"class": "vTextField", "min": "1", "max": "28"}),
             "email_variant": forms.Select(attrs={"class": "vTextField"}),
+            "ucet_nazev_1": forms.TextInput(attrs={"class": "vTextField"}),
+            "ucet_nazev_2": forms.TextInput(attrs={"class": "vTextField"}),
             "ucet_varianta_1": forms.TextInput(attrs={"class": "vTextField"}),
             "ucet_varianta_2": forms.TextInput(attrs={"class": "vTextField"}),
+            "variabilni_symbol_popis": forms.TextInput(attrs={"class": "vTextField"}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["auto_rezim"].label = "Způsob vyúčtování"
+        self.fields["auto_rezim"].label = _("Způsob vyúčtování")
         for name in ("auto_limit", "auto_castka_k_uhrade", "auto_pocet_treninku", "mesicni_den"):
             self.fields[name].required = False
+        if self.instance and self.instance.pk:
+            self.fields["email_variant"].choices = self.instance.email_variant_choices()
 
     def _preserve_hidden_fields(self, cleaned):
         """Skrytá pole nejsou v POST – ponechat stávající hodnoty z DB."""
@@ -350,3 +367,123 @@ class VyuctovaniNastaveniForm(forms.ModelForm):
             if not pocet or pocet < 1:
                 self.add_error("auto_pocet_treninku", "Zadejte počet tréninků alespoň 1.")
         return cleaned
+
+
+class SystemNastaveniForm(forms.ModelForm):
+    email_jmeno = forms.CharField(
+        label=_("Jméno odesílatele"),
+        required=False,
+        widget=forms.TextInput(
+            attrs={"class": "vTextField nast-row-input", "placeholder": "TenisSystém"}
+        ),
+    )
+    email_adresa = forms.EmailField(
+        label=_("E-mail odesílatele"),
+        required=False,
+        widget=forms.EmailInput(
+            attrs={"class": "vTextField nast-row-input", "placeholder": "info@tenissystem.cz"}
+        ),
+    )
+    email_oznaceni = forms.CharField(
+        label=_("Označení klubu v předmětu"),
+        required=False,
+        widget=forms.TextInput(
+            attrs={"class": "vTextField nast-row-input", "placeholder": "TenisSystém"}
+        ),
+    )
+    vyuctovani_rezim = forms.ChoiceField(
+        label=_("Režim vyúčtování"),
+        choices=VyuctovaniNastaveni.AutoRezim.choices,
+        required=False,
+        widget=forms.Select(attrs={"class": "vTextField nast-row-input"}),
+    )
+
+    class Meta:
+        model = SystemNastaveni
+        fields = [
+            "nazev_klubu",
+            "slogan",
+            "logo",
+            "favicon",
+            "kontakt_email",
+            "kontakt_telefon",
+            "kontakt_adresa",
+            "vychozi_jazyk",
+            "email_podpis",
+            "tmavy_rezim",
+            "barevna_varianta",
+            "vychozi_delka_minut",
+            "vychozi_kurt",
+            "sezona_automaticky_kurt",
+            "sezona_venek_od",
+            "sezona_venek_do",
+            "rozvrh_od_hodina",
+            "rozvrh_do_hodina",
+            "vychozi_zobrazeni_rozvrhu",
+            "prah_dluhu_dashboard",
+            "zvyraznit_zaporny_kredit",
+            "radku_na_stranku",
+        ]
+        widgets = {
+            "nazev_klubu": forms.TextInput(attrs={"class": "vTextField nast-row-input"}),
+            "slogan": forms.TextInput(attrs={"class": "vTextField nast-row-input"}),
+            "logo": forms.ClearableFileInput(attrs={"class": "nast-file-native", "accept": "image/png,image/jpeg,image/webp"}),
+            "favicon": forms.ClearableFileInput(attrs={"class": "nast-file-native", "accept": "image/png,image/jpeg,image/webp,.ico"}),
+            "kontakt_email": forms.EmailInput(attrs={"class": "vTextField nast-row-input"}),
+            "kontakt_telefon": forms.TextInput(attrs={"class": "vTextField nast-row-input"}),
+            "kontakt_adresa": forms.TextInput(attrs={"class": "vTextField nast-row-input"}),
+            "vychozi_jazyk": forms.Select(attrs={"class": "vTextField nast-row-input"}),
+            "email_podpis": forms.Textarea(attrs={"class": "vTextField nast-row-input", "rows": 4}),
+            "tmavy_rezim": forms.CheckboxInput(attrs={"class": "nast-switch-input"}),
+            "barevna_varianta": forms.RadioSelect,
+            "vychozi_delka_minut": forms.Select(attrs={"class": "vTextField nast-row-input"}),
+            "vychozi_kurt": forms.Select(attrs={"class": "vTextField nast-row-input"}),
+            "sezona_automaticky_kurt": forms.CheckboxInput(attrs={"class": "nast-switch-input"}),
+            "sezona_venek_od": forms.Select(attrs={"class": "vTextField nast-row-input"}),
+            "sezona_venek_do": forms.Select(attrs={"class": "vTextField nast-row-input"}),
+            "rozvrh_od_hodina": forms.NumberInput(attrs={"class": "vTextField nast-row-input", "min": 0, "max": 23}),
+            "rozvrh_do_hodina": forms.NumberInput(attrs={"class": "vTextField nast-row-input", "min": 1, "max": 23}),
+            "vychozi_zobrazeni_rozvrhu": forms.Select(attrs={"class": "vTextField nast-row-input"}),
+            "prah_dluhu_dashboard": forms.NumberInput(attrs={"class": "vTextField nast-row-input", "step": "1"}),
+            "zvyraznit_zaporny_kredit": forms.CheckboxInput(attrs={"class": "nast-switch-input"}),
+            "radku_na_stranku": forms.Select(attrs={"class": "vTextField nast-row-input"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        vyuct_rezim = kwargs.pop("vyuct_rezim_initial", None)
+        super().__init__(*args, **kwargs)
+        month_choices = get_month_choices()
+        self.fields["sezona_venek_od"].choices = month_choices
+        self.fields["sezona_venek_do"].choices = month_choices
+        self.fields["vychozi_kurt"].choices = [
+            (Cenik.Kurt.VENEK, _("Venku")),
+            (Cenik.Kurt.HALA, _("Hala")),
+        ]
+        if vyuct_rezim is not None:
+            self.fields["vyuctovani_rezim"].initial = vyuct_rezim
+        if self.instance and self.instance.pk and not self.is_bound:
+            jmeno, adresa = self.instance.from_email_parts()
+            self.fields["email_jmeno"].initial = jmeno
+            self.fields["email_adresa"].initial = adresa
+            self.fields["email_oznaceni"].initial = self.instance.subject_tag_display()
+
+    def clean(self):
+        cleaned = super().clean()
+        start = cleaned.get("rozvrh_od_hodina")
+        end = cleaned.get("rozvrh_do_hodina")
+        if start is not None and end is not None and end <= start:
+            self.add_error("rozvrh_do_hodina", "Konec rozvrhu musí být po začátku.")
+        return cleaned
+
+    def save(self, commit=True):
+        obj = super().save(commit=False)
+        obj.email_odesilatel = SystemNastaveni.compose_from_email(
+            self.cleaned_data.get("email_jmeno", ""),
+            self.cleaned_data.get("email_adresa", ""),
+        )
+        obj.email_predmet_prefix = SystemNastaveni.compose_subject_prefix(
+            self.cleaned_data.get("email_oznaceni", ""),
+        )
+        if commit:
+            obj.save(sync_colors=True)
+        return obj

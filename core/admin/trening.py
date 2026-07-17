@@ -1,4 +1,5 @@
 """Trening admin."""
+from ..admin_mixins import ConfigurableListPerPageMixin
 from collections import defaultdict
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime, time, timedelta
@@ -10,18 +11,20 @@ from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Sum
+from django.db.models import Prefetch, Sum
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
+from django.utils.translation import gettext_lazy as _
 from django.utils import timezone as dj_tz
 from django.utils.html import format_html, escape
 from django.utils.safestring import mark_safe
 from django import forms
 from django.forms import formset_factory
 
-from ..admin_utils import CZECH_MONTHS_NOMINATIVE, format_czech_datetime, month_range, parse_czech_date_parts, pretty_username, trener_label
+from ..analytika_data import TrenerRateLookup
+from ..admin_utils import format_czech_datetime, format_month_year, month_range, parse_czech_date_parts, pretty_username, trener_label, filter_queryset_by_parsed_date
 from ..forms import (
     AddDayForm,
     AdminSplitDateTimeWithDatalist,
@@ -29,7 +32,7 @@ from ..forms import (
     TrainingSlotForm,
     TrainingSlotFormSet,
 )
-from ..models import Cenik, CenikFormat, Dochazka, Hrac, TrenerPlatba, TrenerSazba, Trening, sazba_trenera_k_datu
+from ..models import Cenik, CenikFormat, Dochazka, Hrac, SystemNastaveni, TrenerPlatba, TrenerSazba, Trening
 from .inlines import DochazkaInline
 
 User = get_user_model()
@@ -52,21 +55,40 @@ def _period_from_request(request):
     return dfrom, dto
 
 
-def _training_row_dict(user, training):
+def _dochazka_prefetch():
+    return Prefetch(
+        "dochazky",
+        queryset=Dochazka.objects.filter(prisel=True).select_related("hrac"),
+    )
+
+
+def _hraci_from_training(training):
+    """Hráči z prefetchnutých docházek – bez dalšího dotazu."""
+    names = [
+        d.hrac.cele_jmeno
+        for d in training.dochazky.all()
+        if d.prisel and d.hrac_id
+    ]
+    return ", ".join(names) or "—"
+
+
+def _format_name_map() -> dict[str, str]:
+    names = dict(CenikFormat.VYCHOZI_KODY)
+    names.update(CenikFormat.objects.values_list("kod", "nazev"))
+    return names
+
+
+def _training_row_dict(user, training, rate_lookup: TrenerRateLookup, format_names: dict[str, str]):
     dt = dj_tz.localtime(training.datum) if dj_tz.is_aware(training.datum) else training.datum
     hours = (Decimal(training.delka_minut) / Decimal(60)).quantize(Decimal("0.01"))
-    rate = sazba_trenera_k_datu(user, dt)
+    rate = rate_lookup.for_user_date(user.id, dt)
     castka = (hours * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-    hraci = ", ".join(
-        d.hrac.cele_jmeno
-        for d in training.dochazky.select_related("hrac").filter(prisel=True)
-    ) or "—"
     return {
         "datum": dt.strftime("%d.%m.%Y"),
         "cas": dt.strftime("%H:%M"),
-        "format": training.get_format_display(),
+        "format": format_names.get(training.format, training.format),
         "kurt": training.get_kurt_display(),
-        "hraci": hraci,
+        "hraci": _hraci_from_training(training),
         "hodiny": f"{hours:.2f}",
         "sazba": f"{rate:.0f} Kč/h",
         "castka": f"{castka:.0f} Kč",
@@ -75,29 +97,72 @@ def _training_row_dict(user, training):
     }
 
 
-def _group_trainings_by_month(user, trainings):
-    """Seskupí tréninky po měsících; aktuální měsíc (nebo nejnovější) je rozbalený."""
+def _build_trener_training_stats(user, trainings, rate_lookup: TrenerRateLookup):
+    """Součty, měsíční rozpis a seskupení tréninků v jedné iteraci."""
+    format_names = _format_name_map()
+    total_min = 0
+    total_castka = Decimal("0.00")
+    pocet = 0
+    monthly = defaultdict(lambda: {"pocet": 0, "minuty": 0, "castka": Decimal("0.00")})
     groups = defaultdict(list)
+
     for t in trainings:
-        row = _training_row_dict(user, t)
-        groups[row["month_key"]].append(row)
+        dt = dj_tz.localtime(t.datum) if dj_tz.is_aware(t.datum) else t.datum
+        rate = rate_lookup.for_user_date(user.id, dt)
+        hours_val = (Decimal(t.delka_minut) / Decimal(60)).quantize(Decimal("0.01"))
+        castka = (hours_val * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        pocet += 1
+        total_min += t.delka_minut
+        total_castka += castka
+
+        key = (dt.year, dt.month)
+        monthly[key]["pocet"] += 1
+        monthly[key]["minuty"] += t.delka_minut
+        monthly[key]["castka"] += castka
+        groups[key].append(_training_row_dict(user, t, rate_lookup, format_names))
+
+    hodiny = (Decimal(total_min) / Decimal(60)).quantize(Decimal("0.01"))
+    mesice = []
+    for (year, month), data in sorted(monthly.items(), reverse=True):
+        m_hours = (Decimal(data["minuty"]) / Decimal(60)).quantize(Decimal("0.01"))
+        m_castka = data["castka"].quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        mesice.append({
+            "label": format_month_year(year, month),
+            "year": year,
+            "month": month,
+            "pocet": data["pocet"],
+            "hodiny": f"{m_hours:.2f}",
+            "castka": f"{m_castka:.0f} Kč",
+            "castka_raw": m_castka,
+        })
+
+    stats = {
+        "pocet": pocet,
+        "hodiny": f"{hodiny:.2f}",
+        "castka": f"{total_castka.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP):.0f} Kč",
+        "castka_raw": total_castka,
+        "hodiny_raw": hodiny,
+        "mesice": mesice,
+        "monthly_raw": {k: v["castka"] for k, v in monthly.items()},
+    }
 
     today = dj_tz.localdate()
     current_key = (today.year, today.month)
     sorted_keys = sorted(groups.keys(), reverse=True)
     open_key = current_key if current_key in groups else (sorted_keys[0] if sorted_keys else None)
 
-    months = []
+    training_months = []
     for key in sorted_keys:
         year, month = key
         rows = groups[key]
-        months.append({
-            "label": f"{CZECH_MONTHS_NOMINATIVE[month]} {year}",
+        training_months.append({
+            "label": format_month_year(year, month),
             "rows": rows,
             "pocet": len(rows),
             "is_open": key == open_key,
         })
-    return months
+
+    return stats, training_months
 
 
 def _all_trener_ids():
@@ -108,8 +173,10 @@ def _all_trener_ids():
     return ids
 
 
-def _aggregate_trener_trainings(user, trainings):
+def _aggregate_trener_trainings(user, trainings, rate_lookup: TrenerRateLookup | None = None):
     """Součty a měsíční rozpis z iterable tréninků jednoho trenéra."""
+    if rate_lookup is None:
+        rate_lookup = TrenerRateLookup([user.id])
     total_min = 0
     total_castka = Decimal("0.00")
     pocet = 0
@@ -117,7 +184,7 @@ def _aggregate_trener_trainings(user, trainings):
 
     for t in trainings:
         dt = dj_tz.localtime(t.datum) if dj_tz.is_aware(t.datum) else t.datum
-        rate = sazba_trenera_k_datu(user, dt)
+        rate = rate_lookup.for_user_date(user.id, dt)
         hours_val = (Decimal(t.delka_minut) / Decimal(60)).quantize(Decimal("0.01"))
         castka = (hours_val * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         pocet += 1
@@ -135,7 +202,7 @@ def _aggregate_trener_trainings(user, trainings):
         m_hours = (Decimal(data["minuty"]) / Decimal(60)).quantize(Decimal("0.01"))
         m_castka = data["castka"].quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         mesice.append({
-            "label": f"{CZECH_MONTHS_NOMINATIVE[month]} {year}",
+            "label": format_month_year(year, month),
             "year": year,
             "month": month,
             "pocet": data["pocet"],
@@ -159,16 +226,26 @@ def _format_kc(value: Decimal) -> str:
     return f"{value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP):.0f} Kč"
 
 
-def _trener_financial_overview(user):
+def _trener_financial_overview(user, rate_lookup: TrenerRateLookup, stats: dict | None = None):
     """Celková odehraná částka, aktuální měsíc a dlužná částka (bez filtru období)."""
-    all_trainings = list(Trening.objects.filter(trener=user).order_by("datum"))
-    all_stats = _aggregate_trener_trainings(user, all_trainings)
-    celkem = all_stats["castka_raw"]
+    if stats is not None:
+        celkem = stats["castka_raw"]
+        monthly_raw = stats["monthly_raw"]
+    else:
+        monthly_raw: dict = defaultdict(lambda: Decimal("0.00"))
+        celkem = Decimal("0.00")
+        for row in Trening.objects.filter(trener=user).values("datum", "delka_minut"):
+            dt = row["datum"]
+            if dj_tz.is_aware(dt):
+                dt = dj_tz.localtime(dt)
+            rate = rate_lookup.for_user_date(user.id, dt)
+            hours_val = (Decimal(row["delka_minut"]) / Decimal(60)).quantize(Decimal("0.01"))
+            castka = (hours_val * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            celkem += castka
+            monthly_raw[(dt.year, dt.month)] += castka
 
     today = dj_tz.localdate()
-    mesic_castka = all_stats["monthly_raw"].get(
-        (today.year, today.month), Decimal("0.00")
-    )
+    mesic_castka = monthly_raw.get((today.year, today.month), Decimal("0.00"))
 
     zaplaceno = Decimal(
         TrenerPlatba.objects.filter(user=user).aggregate(s=Sum("castka"))["s"] or 0
@@ -177,7 +254,7 @@ def _trener_financial_overview(user):
 
     return {
         "celkova_castka": _format_kc(celkem),
-        "mesic_label": f"{CZECH_MONTHS_NOMINATIVE[today.month]} {today.year}",
+        "mesic_label": format_month_year(today.year, today.month),
         "mesic_castka": _format_kc(mesic_castka),
         "dluzna_castka": _format_kc(dluzna),
         "dluzna_raw": dluzna,
@@ -305,7 +382,7 @@ def _training_formset_from_request(post_data=None, initial_slots=None):
 
 
 class TrenerListFilter(admin.SimpleListFilter):
-    title = "Trenéra"
+    title = _("Trenér")
     parameter_name = "trener"
 
     def lookups(self, request, model_admin):
@@ -328,7 +405,7 @@ class TrenerListFilter(admin.SimpleListFilter):
 
 
 class TreningFormatFilter(admin.SimpleListFilter):
-    title = "Typu tréninku"
+    title = _("Typ tréninku")
     parameter_name = "format"
 
     def lookups(self, request, model_admin):
@@ -342,13 +419,13 @@ class TreningFormatFilter(admin.SimpleListFilter):
 
 
 class SezonaListFilter(admin.SimpleListFilter):
-    title = "Sezóny"
+    title = _("Sezóna")
     parameter_name = "sezona"
 
     def lookups(self, request, model_admin):
         return [
-            (Cenik.Kurt.VENEK, "Léto"),
-            (Cenik.Kurt.HALA, "Zima"),
+            (Cenik.Kurt.VENEK, _("Léto")),
+            (Cenik.Kurt.HALA, _("Zima")),
         ]
 
     def queryset(self, request, queryset):
@@ -361,15 +438,15 @@ class SezonaListFilter(admin.SimpleListFilter):
 class TreningDatumFilter(admin.DateFieldListFilter):
     def __init__(self, field, request, params, model, model_admin, field_path):
         super().__init__(field, request, params, model, model_admin, field_path)
-        self.title = "Data"
+        self.title = _("Datum")
         if self.links:
             links = list(self.links)
-            links[0] = ("Vše", links[0][1])
+            links[0] = (_("Vše"), links[0][1])
             self.links = links
 
 
 @admin.register(Trening)
-class TreningAdmin(admin.ModelAdmin):
+class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
     change_form_template = "admin/core/trening/change_form.html"
     add_form_template = "admin/core/trening/add_form.html"
     change_list_template = "admin/core/trening/change_list.html"
@@ -384,18 +461,44 @@ class TreningAdmin(admin.ModelAdmin):
         "trener__username", "trener__first_name", "trener__last_name",
         "poznamka", "dochazky__hrac__jmeno", "dochazky__hrac__prijmeni"
     )
-    list_per_page = 50
+    list_per_page_default = 50
     inlines = [DochazkaInline]
     actions = ["znovu_zpracovat_uctovani"]
+    fields = ("trener", "datum", "delka_minut", "format", "kurt", "poznamka")
 
     def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
-        form.base_fields["format"] = forms.ChoiceField(
-            label="Typ tréninku",
-            choices=CenikFormat.choices(),
-            widget=forms.Select(attrs={"class": "vTextField"}),
-        )
-        return form
+        Form = super().get_form(request, obj, **kwargs)
+        if "format" in Form.base_fields:
+            Form.base_fields["format"] = forms.ChoiceField(
+                label=_("Formát"),
+                choices=CenikFormat.choices(),
+                widget=forms.Select(attrs={"class": "vTextField"}),
+            )
+        if "delka_minut" in Form.base_fields:
+            field = Form.base_fields["delka_minut"]
+            field.label = _("Délka (hodiny)")
+            field.widget = forms.Select(choices=list(SystemNastaveni.DELKA_MINUT_CHOICES))
+            field.help_text = ""
+            if obj is None:
+                try:
+                    defaults = SystemNastaveni.training_defaults()
+                    field.initial = defaults["delka_minut"]
+                except Exception:
+                    field.initial = 60
+        if "trener" in Form.base_fields:
+            Form.base_fields["trener"].label = "Trenér"
+        if "datum" in Form.base_fields:
+            Form.base_fields["datum"].label = ""
+        if "kurt" in Form.base_fields:
+            Form.base_fields["kurt"].label = "Kurt"
+            if obj is None:
+                try:
+                    Form.base_fields["kurt"].initial = SystemNastaveni.training_defaults()["kurt"]
+                except Exception:
+                    pass
+        if "poznamka" in Form.base_fields:
+            Form.base_fields["poznamka"].label = "Poznámka"
+        return Form
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "trener":
@@ -465,17 +568,6 @@ class TreningAdmin(admin.ModelAdmin):
         else:
             super().save_formset(request, form, formset, change)
 
-    def get_form(self, request, obj=None, **kwargs):
-        Form = super().get_form(request, obj, **kwargs)
-        if "delka_minut" in Form.base_fields:
-            field = Form.base_fields["delka_minut"]
-            field.label = "Délka (hodiny)"
-            CHOICES = [(30, "30 min"), (45, "45 min"), (60, "1 h"), (90, "1,5 h"), (120, "2 h"), (150, "2,5 h"), (180, "3 h")]
-            field.widget = forms.Select(choices=CHOICES)
-            field.help_text = ""
-            if obj is None: field.initial = 60
-        return Form
-
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "datum":
             # Na stránce Přidat trénink funkčně stejné buňky jako add-day: type=date + type=time (nativní pickery)
@@ -523,7 +615,7 @@ class TreningAdmin(admin.ModelAdmin):
                 })
         return {
             **self.admin_site.each_context(request),
-            "title": "Trénink: přidat",
+            "title": _("Trénink: přidat"),
             "opts": self.model._meta,
             "day_form": day_form,
             "formset": formset,
@@ -550,7 +642,7 @@ class TreningAdmin(admin.ModelAdmin):
             if day_form.is_valid() and formset.is_valid():
                 default_trener = day_form.cleaned_data.get("trener")
                 if not default_trener:
-                    messages.error(request, "Vyberte trenéra pro celý den.")
+                    messages.error(request, _("Vyberte trenéra pro celý den."))
                 else:
                     default_datum = day_form.cleaned_data["datum"]
                     created = 0
@@ -567,12 +659,13 @@ class TreningAdmin(admin.ModelAdmin):
                             dt = datetime.combine(slot_datum, cd["cas"])
                             if settings.USE_TZ:
                                 dt = dj_tz.make_aware(dt, dj_tz.get_current_timezone())
+                            defaults = SystemNastaveni.training_defaults(for_date=slot_datum)
                             trening = Trening.objects.create(
                                 trener=slot_trener,
                                 datum=dt,
-                                delka_minut=cd["delka_minut"],
+                                delka_minut=cd.get("delka_minut") or defaults["delka_minut"],
                                 format=cd["format"] or CenikFormat.default_kod(),
-                                kurt=cd["kurt"] or Cenik.Kurt.HALA,
+                                kurt=cd["kurt"] or defaults["kurt"],
                                 poznamka=(cd.get("poznamka") or "")[:240],
                             )
                             hraci = cd.get("hraci") or []
@@ -711,19 +804,10 @@ class TreningAdmin(admin.ModelAdmin):
     def get_search_results(self, request, queryset, search_term):
         parts = parse_czech_date_parts(search_term)
         if parts:
-            if parts.year is not None:
-                return queryset.filter(
-                    datum__year=parts.year,
-                    datum__month=parts.month,
-                    datum__day=parts.day,
-                ), False
-            return queryset.filter(
-                datum__month=parts.month,
-                datum__day=parts.day,
-            ), False
+            return filter_queryset_by_parsed_date(queryset, parts, "datum"), False
         return super().get_search_results(request, queryset, search_term)
 
-    @admin.display(description="Datum", ordering="datum")
+    @admin.display(description=_("Datum"), ordering="datum")
     def datum_display(self, obj):
         dt = dj_tz.localtime(obj.datum) if dj_tz.is_aware(obj.datum) else obj.datum
         date_str, time_str = format_czech_datetime(dt)
@@ -737,22 +821,22 @@ class TreningAdmin(admin.ModelAdmin):
             time_str,
         )
 
+    @admin.display(description=_("Hráč(i)"))
     def hraci_jmena(self, obj):
         names = [d.hrac.cele_jmeno for d in obj.dochazky.select_related("hrac").filter(prisel=True)]
         return ", ".join(names) if names else "—"
-    hraci_jmena.short_description = "Hráč(i)"
 
+    @admin.display(description=_("Trenér"))
     def trener_jmeno(self, obj):
         return trener_label(obj.trener)
-    trener_jmeno.short_description = "Trenér"
 
+    @admin.display(description=_("Typ tréninku"))
     def format_display(self, obj):
         return obj.get_format_display()
-    format_display.short_description = "Typ tréninku"
 
+    @admin.display(description=_("Částka / hráč"))
     def castka_na_hrace_kc(self, obj):
         return f"{obj.cena_na_hrace()} Kč"
-    castka_na_hrace_kc.short_description = "Částka / hráč"
 
     def response_add(self, request, obj, post_url_continue=None):
         local_dt = dj_tz.localtime(obj.datum) if dj_tz.is_aware(obj.datum) else obj.datum
@@ -895,7 +979,16 @@ class TreningAdmin(admin.ModelAdmin):
         except Exception:
             base_date = dj_tz.localdate()
 
-        mode = q.get("view", "week")
+        try:
+            nast = SystemNastaveni.load()
+        except Exception:
+            nast = None
+
+        default_view = nast.vychozi_zobrazeni_rozvrhu if nast else "week"
+        mode = q.get("view") or default_view
+        if mode not in ("day", "week"):
+            mode = default_view
+
         start_day = base_date if mode == "day" else (base_date - timedelta(days=base_date.weekday()))
         end_day = start_day if mode == "day" else (start_day + timedelta(days=6))
 
@@ -913,8 +1006,9 @@ class TreningAdmin(admin.ModelAdmin):
         if trainer_id:
             qs = qs.filter(trener_id=trainer_id)
 
-        day_start_min = 6 * 60
-        hours = list(range(6, 23))
+        hours = nast.schedule_hours() if nast else list(range(6, 23))
+        day_start_min = hours[0] * 60 if hours else 6 * 60
+        hour_count = len(hours) if hours else 16
 
         day_count = (end_day - start_day).days + 1
         days = []
@@ -1032,6 +1126,8 @@ class TreningAdmin(admin.ModelAdmin):
             "copy_week_url": copy_week_url,
             "hours": hours,
             "day_start_min": day_start_min,
+            "hour_count": hour_count,
+            "sched_start_hour": hours[0] if hours else 6,
             "days": days,
         })
         return TemplateResponse(request, "admin/core/trening/kalendar.html", ctx)
@@ -1051,6 +1147,7 @@ class TreningAdmin(admin.ModelAdmin):
                 "last_name", "first_name", "username"
             )
         }
+        rate_lookup = TrenerRateLookup(list(users.keys()))
 
         rows = []
         total_pocet = 0
@@ -1060,9 +1157,9 @@ class TreningAdmin(admin.ModelAdmin):
         for uid in sorted(users.keys(), key=lambda i: (users[i].get_full_name() or users[i].username).lower()):
             u = users[uid]
             tqs = list(
-                base_qs.filter(trener_id=uid).order_by("datum").prefetch_related("dochazky__hrac")
+                base_qs.filter(trener_id=uid).order_by("datum").prefetch_related(_dochazka_prefetch())
             )
-            stats = _aggregate_trener_trainings(u, tqs)
+            stats = _aggregate_trener_trainings(u, tqs, rate_lookup)
             total_pocet += stats["pocet"]
             total_hodiny += stats["hodiny_raw"]
             total_castka += stats["castka_raw"]
@@ -1084,7 +1181,7 @@ class TreningAdmin(admin.ModelAdmin):
 
         ctx = dict(
             self.admin_site.each_context(request),
-            title="Trenéři – souhrn",
+            title=_("Trenéři – souhrn"),
             rows=rows,
             total_pocet=total_pocet,
             total_hodiny=f"{total_hodiny:.2f}",
@@ -1104,7 +1201,7 @@ class TreningAdmin(admin.ModelAdmin):
             try:
                 eff_from = datetime.strptime(date_raw, "%Y-%m-%d").date()
             except Exception:
-                messages.error(request, "Neplatné datum 'Od'.")
+                messages.error(request, _("Neplatné datum 'Od'."))
                 return redirect(request.get_full_path())
 
             try:
@@ -1112,7 +1209,7 @@ class TreningAdmin(admin.ModelAdmin):
                 if amount <= 0:
                     raise ValueError()
             except Exception:
-                messages.error(request, "Neplatná částka sazby.")
+                messages.error(request, _("Neplatná částka sazby."))
                 return redirect(request.get_full_path())
 
             try:
@@ -1128,18 +1225,26 @@ class TreningAdmin(admin.ModelAdmin):
 
         dfrom = _parse_admin_date(request.GET.get("from", ""))
         dto = _parse_admin_date(request.GET.get("to", ""))
+        has_filter = bool(dfrom or dto)
+
+        rate_lookup = TrenerRateLookup([u.id])
 
         tqs = Trening.objects.filter(trener=u)
         if dfrom:
             tqs = tqs.filter(datum__date__gte=dfrom)
         if dto:
             tqs = tqs.filter(datum__date__lte=dto)
-        tqs = list(tqs.prefetch_related("dochazky__hrac").order_by("-datum"))
+        trainings = list(
+            tqs.prefetch_related(_dochazka_prefetch()).order_by("-datum")
+        )
 
-        stats = _aggregate_trener_trainings(u, tqs)
-        training_months = _group_trainings_by_month(u, tqs)
+        stats, training_months = _build_trener_training_stats(u, trainings, rate_lookup)
+        if has_filter:
+            finance = _trener_financial_overview(u, rate_lookup)
+        else:
+            finance = _trener_financial_overview(u, rate_lookup, stats=stats)
 
-        rate_today = sazba_trenera_k_datu(u, dj_tz.now())
+        rate_today = rate_lookup.for_user_date(u.id, dj_tz.now())
         rate_today_amount = f"{rate_today:.0f}"
         rate_today_date = dj_tz.localdate().strftime("%Y-%m-%d")
         rate_form_initial_date = rate_today_date
@@ -1148,7 +1253,6 @@ class TreningAdmin(admin.ModelAdmin):
             TrenerSazba.objects.filter(user=u).order_by("-platnost_od")
             .values("id", "platnost_od", "platnost_do", "sazba_za_hodinu")
         )
-        finance = _trener_financial_overview(u)
         mesice = _enrich_mesice_with_payments(u, stats["mesice"])
 
         platba_add_url = reverse("admin:core_trenerplatba_add")
@@ -1159,7 +1263,7 @@ class TreningAdmin(admin.ModelAdmin):
 
         ctx = dict(
             self.admin_site.each_context(request),
-            title=f"Trenér – {u.get_full_name() or u.username}",
+            title=_("Trenér – %(name)s") % {"name": u.get_full_name() or u.username},
             trener=u,
             pocet=stats["pocet"],
             total_hours=f"{stats['hodiny']} h",

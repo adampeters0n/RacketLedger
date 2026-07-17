@@ -16,7 +16,10 @@ from django.dispatch import receiver
 from django.utils import timezone as dj_tz # Ponechávám dj_tz pro zkrácený zápis
 from django.utils import timezone           # Ponechávám timezone pro default=timezone.now
 from django.utils.html import escape, format_html
+from django.utils.translation import gettext_lazy as _
 import logging
+from .i18n_config import DEFAULT_LANGUAGE, SYSTEM_LANGUAGES
+from .system_theme import DEFAULT_THEME, THEME_CHOICES
 logger = logging.getLogger(__name__)
 
 _auto_vyuctovani_queued: set[int] = set()
@@ -66,8 +69,8 @@ class Rodina(models.Model):
     poznamka = models.TextField(blank=True, default="")
 
     class Meta:
-        verbose_name = "Rodina"
-        verbose_name_plural = "Rodiny"
+        verbose_name = _("Rodina")
+        verbose_name_plural = _("Rodiny")
         ordering = ("nazev", "id")   
 
     def __str__(self):
@@ -79,12 +82,12 @@ class Rodina(models.Model):
 # =========================
 class Hrac(models.Model):
     class RezimVyuctovani(models.TextChoices):
-        MESICNE = "MESICNE", "Měsíčně"
-        N_TRENINGU = "N_TRENINGU", "Po N trénincích"
-        CASTKA = "CASTKA", "Limit kreditu"
+        MESICNE = "MESICNE", _("Měsíčně")
+        N_TRENINGU = "N_TRENINGU", _("Po N trénincích")
+        CASTKA = "CASTKA", _("Limit kreditu")
 
-    jmeno = models.CharField("Jméno", max_length=120)
-    prijmeni = models.CharField("Příjmení", max_length=120, db_index=True, blank=True, default="")
+    jmeno = models.CharField(_("Jméno"), max_length=120)
+    prijmeni = models.CharField(_("Příjmení"), max_length=120, db_index=True, blank=True, default="")
     email = models.EmailField(blank=True, null=True)
 
     # vazba na rodinu (nové)
@@ -104,8 +107,8 @@ class Hrac(models.Model):
     pocet_treninku_od_vyuctovani = models.PositiveIntegerField(default=0)
 
     class Meta:
-        verbose_name = "Hráč"
-        verbose_name_plural = "Hráči"
+        verbose_name = _("Hráč")
+        verbose_name_plural = _("Hráči")
         ordering = ("prijmeni", "jmeno")
 
     def __str__(self) -> str:
@@ -337,15 +340,21 @@ class Hrac(models.Model):
                 amount_display_str = f"{amount_due:.0f} Kč"
 
             # --- Číslo účtu ---
-            nast = VyuctovaniNastaveni.load()
+            vyuct_nast = VyuctovaniNastaveni.load()
+            sys_nast = SystemNastaveni.load()
             if email_variant == "2":
-                cislo_uctu_text = nast.ucet_varianta_2
-                cislo_uctu_html = f"<strong>{escape(nast.ucet_varianta_2)}</strong>"
+                cislo_uctu_text = vyuct_nast.ucet_varianta_2
+                cislo_uctu_html = f"<strong>{escape(vyuct_nast.ucet_varianta_2)}</strong>"
             else:
-                cislo_uctu_text = nast.ucet_varianta_1
-                cislo_uctu_html = f"<strong>{escape(nast.ucet_varianta_1)}</strong>"
+                cislo_uctu_text = vyuct_nast.ucet_varianta_1
+                cislo_uctu_html = f"<strong>{escape(vyuct_nast.ucet_varianta_1)}</strong>"
+            vs_popis = (vyuct_nast.variabilni_symbol_popis or "").strip() or "Jméno hráče"
 
-            subject = f"Přehled tréninků a vyúčtování – {self.cele_jmeno}"
+            subject = sys_nast.format_email_subject(
+                f"Přehled tréninků a vyúčtování – {self.cele_jmeno}"
+            )
+            podpis = sys_nast.effective_podpis()
+            podpis_html = sys_nast.podpis_html()
 
             text_body = (
                 f"Zasílám přehled tréninků a vyúčtování za období od {period_from.strftime('%d.%m.%Y') if period_from else 'začátku'} do {display_period_to.strftime('%d.%m.%Y')}.\n\n"
@@ -358,15 +367,13 @@ class Hrac(models.Model):
                 f"Částka k zaplacení: **{amount_display_str}**\n\n"
                 "Platební údaje:\n"
                 f"Číslo účtu: **{cislo_uctu_text}**\n"
-                "Variabilní symbol: **Jméno hráče**\n\n"
+                f"Variabilní symbol: **{vs_popis}**\n\n"
                 f"Po připsání platby bude stav kreditu: {kredit_po_uhrade:.0f} Kč\n"
                 "---\n\n"
                 "Detailní rozpis tréninků:\n\n"
                 f"{table_txt}\n\n"
                 "Děkuji.\n\n"
-                "S pozdravem,\n\n"
-                "Kateřina Peterková\n"
-                "Tenis Čimice"
+                f"{podpis}"
             )
 
             html_body = f"""
@@ -395,7 +402,7 @@ class Hrac(models.Model):
                 </div>
                 <div style="line-height: 1.7;">
                   Platební údaje:<br>
-                  Číslo účtu: {cislo_uctu_html}<br> Variabilní symbol: <strong>Jméno hráče</strong> 
+                  Číslo účtu: {cislo_uctu_html}<br> Variabilní symbol: <strong>{escape(vs_popis)}</strong> 
                 </div>
               </div>
               
@@ -421,18 +428,9 @@ class Hrac(models.Model):
               </table>
 
               <p style="margin-top:20px;">Děkuji.</p>
-              <p style="margin-top:16px;">S pozdravem,<br><br>Kateřina Peterková<br>Tenis Čimice</p>
+              <p style="margin-top:16px;">{podpis_html}</p>
             </div>
             """
-
-            # --- DEBUG VÝPIS DO TERMINÁLU ---
-            print("\n" + "="*60)
-            print(f"ODESÍLÁM EMAIL: {billing_email}")
-            print(f"PŘEDMĚT: {subject}")
-            print("-" * 20)
-            print(text_body)
-            print("="*60 + "\n")
-            # --------------------------------
 
             ok_send, ok_archive = send_and_append_to_sent(
                 subject=subject,
@@ -618,8 +616,8 @@ class CenikFormat(models.Model):
     DEFAULT_KOD = "DVOJICE_C"
 
     class Meta:
-        verbose_name = "Formát ceníku"
-        verbose_name_plural = "Formáty ceníku"
+        verbose_name = _("Formát ceníku")
+        verbose_name_plural = _("Formáty ceníku")
         ordering = ("poradi", "nazev")
 
     def __str__(self) -> str:
@@ -700,16 +698,16 @@ class Cenik(models.Model):
         choices = tuple(CenikFormat.VYCHOZI_KODY.items())
 
     class Kurt(models.TextChoices):
-        VENEK = "VENEK", "Venku"
-        HALA = "HALA", "Hala"
-        SLUZBA = "SLUZBA", "Služba (neplatí pro kurt)"
+        VENEK = "VENEK", _("Venku")
+        HALA = "HALA", _("Hala")
+        SLUZBA = "SLUZBA", _("Služba (neplatí pro kurt)")
 
-    format = models.CharField("Formát", max_length=15)
-    kurt = models.CharField(max_length=8, choices=Kurt.choices) 
-    cena_za_hodinu = models.DecimalField(max_digits=8, decimal_places=2)
+    format = models.CharField(_("Formát"), max_length=15)
+    kurt = models.CharField(_("Kurt"), max_length=8, choices=Kurt.choices)
+    cena_za_hodinu = models.DecimalField(_("Cena za hodinu"), max_digits=8, decimal_places=2)
 
-    platnost_od = models.DateField(default=timezone.now)
-    platnost_do = models.DateField(blank=True, null=True)
+    platnost_od = models.DateField(_("Platnost od"), default=timezone.now)
+    platnost_do = models.DateField(_("Platnost do"), blank=True, null=True)
 
     def get_format_display(self) -> str:
         return CenikFormat.nazev_pro(self.format)
@@ -745,8 +743,8 @@ class Cenik(models.Model):
     # --- KONEC PŘIDANÉHO KÓDU ---
 
     class Meta:
-        verbose_name = "Ceník"
-        verbose_name_plural = "Ceník"
+        verbose_name = _("Ceník")
+        verbose_name_plural = _("Ceník")
         indexes = [models.Index(fields=["format", "kurt", "platnost_od", "platnost_do"])]
 
     def __str__(self) -> str:
@@ -761,8 +759,8 @@ class Trening(models.Model):
     datum = models.DateTimeField()
     delka_minut = models.PositiveIntegerField(default=60)
 
-    format = models.CharField("Formát", max_length=15)
-    kurt = models.CharField(max_length=8, choices=Cenik.Kurt.choices)
+    format = models.CharField(_("Formát"), max_length=15)
+    kurt = models.CharField(_("Kurt"), max_length=8, choices=Cenik.Kurt.choices)
 
     poznamka = models.CharField(max_length=240, blank=True)
 
@@ -780,8 +778,8 @@ class Trening(models.Model):
         )
 
     class Meta:
-        verbose_name = "Trénink"
-        verbose_name_plural = "Tréninky"
+        verbose_name = _("Trénink")
+        verbose_name_plural = _("Tréninky")
 
     @property
     def hodiny(self) -> Decimal:
@@ -791,11 +789,13 @@ class Trening(models.Model):
     @property
     def sezona_display(self) -> str:
         """Vypočítá sezónu na základě kurtu."""
+        from django.utils.translation import gettext as _gettext
+
         if self.kurt == Cenik.Kurt.VENEK:
-            return "Léto"
+            return _gettext("Léto")
         elif self.kurt == Cenik.Kurt.HALA:
-            return "Zima"
-        return "Celoroční"
+            return _gettext("Zima")
+        return _gettext("Celoroční")
 
     def aktualni_cenik(self) -> "Cenik | None":
         d = self.datum.date()
@@ -841,7 +841,7 @@ class Dochazka(models.Model):
 
     class Meta:
         unique_together = ("trening", "hrac")
-        verbose_name_plural = "Hráči"
+        verbose_name_plural = _("Hráči")
 
     def __str__(self) -> str:
         return f"{self.hrac.cele_jmeno} @ {self.trening}"
@@ -853,22 +853,22 @@ class Dochazka(models.Model):
 class Transakce(models.Model):
 # ... zbytek je v pořádku ...
     class Typ(models.TextChoices):
-        NAUCTOVANO = "NAUCTOVANO", "Naúčtováno"
-        PLATBA = "PLATBA", "Platba"
-        VRATKA = "VRATKA", "Vrácení/bonifikace"
-        UPRAVA = "UPRAVA", "Úprava"
+        NAUCTOVANO = "NAUCTOVANO", _("Naúčtováno")
+        PLATBA = "PLATBA", _("Platba")
+        VRATKA = "VRATKA", _("Vrácení/bonifikace")
+        UPRAVA = "UPRAVA", _("Úprava")
 
-    hrac = models.ForeignKey(Hrac, related_name="transakce", on_delete=models.CASCADE)
-    typ = models.CharField(max_length=12, choices=Typ.choices)
-    castka = models.DecimalField(max_digits=10, decimal_places=2)  # KLADNÁ částka
-    popis = models.CharField(max_length=240, blank=True)
+    hrac = models.ForeignKey(Hrac, related_name="transakce", on_delete=models.CASCADE, verbose_name=_("Hráč"))
+    typ = models.CharField(max_length=12, choices=Typ.choices, verbose_name=_("Typ"))
+    castka = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=_("Částka"))
+    popis = models.CharField(max_length=240, blank=True, verbose_name=_("Poznámka"))
     trening = models.ForeignKey(Trening, null=True, blank=True, on_delete=models.CASCADE)
-    vytvoreno = models.DateTimeField("Datum platby", default=timezone.now)
+    vytvoreno = models.DateTimeField(_("Datum platby"), default=timezone.now)
 
     class Meta:
         ordering = ["-vytvoreno"]
-        verbose_name = "Platba"
-        verbose_name_plural = "Platby"
+        verbose_name = _("Platba")
+        verbose_name_plural = _("Platby")
 
     def __str__(self) -> str:
         sign = "+" if self.typ in [self.Typ.PLATBA, self.Typ.VRATKA] else "-"
@@ -880,37 +880,37 @@ class Transakce(models.Model):
 # =========================
 class Vyuctovani(models.Model):
     class Reason(models.TextChoices):
-        MANUAL = "manual", "Ručně"
-        MESICNE = "MESICNE", "Měsíčně"
-        N_TRENINGU = "N_TRENINGU", "Po N trénincích"
-        CASTKA = "CASTKA", "Limit kreditu"
-        AUTO = "AUTO", "Automaticky (limit kreditu)"
-        RODINA = "rodina", "Rodina"
+        MANUAL = "manual", _("Ručně")
+        MESICNE = "MESICNE", _("Měsíčně")
+        N_TRENINGU = "N_TRENINGU", _("Po N trénincích")
+        CASTKA = "CASTKA", _("Limit kreditu")
+        AUTO = "AUTO", _("Automaticky (limit kreditu)")
+        RODINA = "rodina", _("Rodina")
 
-    hrac = models.ForeignKey(Hrac, on_delete=models.CASCADE, related_name="vyuctovani", verbose_name="Hráč")
-    period_from = models.DateTimeField("Období od", null=True, blank=True)
-    period_to = models.DateTimeField("Období do")
-    sessions_count = models.PositiveIntegerField("Počet tréninků", default=0)
+    hrac = models.ForeignKey(Hrac, on_delete=models.CASCADE, related_name="vyuctovani", verbose_name=_("Hráč"))
+    period_from = models.DateTimeField(_("Období od"), null=True, blank=True)
+    period_to = models.DateTimeField(_("Období do"))
+    sessions_count = models.PositiveIntegerField(_("Počet tréninků"), default=0)
 
-    charges_total = models.DecimalField("Naúčtováno", max_digits=10, decimal_places=2, default=Decimal("0.00"))
-    payments_total = models.DecimalField("Platby a vratky", max_digits=10, decimal_places=2, default=Decimal("0.00"))
-    amount_due = models.DecimalField("K úhradě", max_digits=10, decimal_places=2)
+    charges_total = models.DecimalField(_("Naúčtováno"), max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    payments_total = models.DecimalField(_("Platby a vratky"), max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    amount_due = models.DecimalField(_("K úhradě"), max_digits=10, decimal_places=2)
 
-    credit_start = models.DecimalField("Kredit na začátku", max_digits=10, decimal_places=2, default=Decimal("0.00"))
-    credit_end = models.DecimalField("Kredit na konci", max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    credit_start = models.DecimalField(_("Kredit na začátku"), max_digits=10, decimal_places=2, default=Decimal("0.00"))
+    credit_end = models.DecimalField(_("Kredit na konci"), max_digits=10, decimal_places=2, default=Decimal("0.00"))
 
-    reason = models.CharField("Důvod", max_length=32, default="manual")
+    reason = models.CharField(_("Důvod"), max_length=32, default="manual")
     snapshot_transakce_pk = models.PositiveIntegerField(
-        "Poslední transakce v uzávěrce",
+        _("Poslední transakce v uzávěrce"),
         default=0,
-        help_text="Interní ukotvení pro detekci opakovaného vyúčtování.",
+        help_text=_("Interní ukotvení pro detekci opakovaného vyúčtování."),
     )
-    created_at = models.DateTimeField("Vytvořeno", auto_now_add=True)
+    created_at = models.DateTimeField(_("Vytvořeno"), auto_now_add=True)
 
     class Meta:
         ordering = ["-created_at"]
-        verbose_name = "Vyúčtování"
-        verbose_name_plural = "Vyúčtování"
+        verbose_name = _("Vyúčtování")
+        verbose_name_plural = _("Vyúčtování")
 
     def __str__(self) -> str:
         frm = self.period_from.strftime("%Y-%m-%d %H:%M") if self.period_from else "—"
@@ -953,83 +953,110 @@ class Vyuctovani(models.Model):
 
 
 # =========================
-#  Nastavení vyúčtování (singleton)
+#  Nastavení vyúčtování (dnes singleton; po tenantech 1 řádek = 1 klub)
 # =========================
 class VyuctovaniNastaveni(models.Model):
+    """Platební a auto-vyúčtovací politika klubu (per-tenant).
+
+    Patří sem: režim uzávěrky, limity, čísla účtů, názvy variant e-mailu, VS text.
+    Nepatří sem: SMTP credentials (platforma), jazyk/vzhled (SystemNastaveni).
+    """
+
     class AutoRezim(models.TextChoices):
-        CASTKA = "CASTKA", "Limit kreditu"
-        MESICNE = "MESICNE", "Měsíčně"
-        N_TRENINGU = "N_TRENINGU", "Dle odehraných tréninků"
-        MANUAL = "MANUAL", "Pouze manuálně"
+        CASTKA = "CASTKA", _("Limit kreditu")
+        MESICNE = "MESICNE", _("Měsíčně")
+        N_TRENINGU = "N_TRENINGU", _("Dle odehraných tréninků")
+        MANUAL = "MANUAL", _("Pouze manuálně")
 
     class EmailVarianta(models.TextChoices):
-        UCET_1 = "1", "Účet 1 AJ Sport"
-        UCET_2 = "2", "Účet 2 Káťa"
+        UCET_1 = "1", _("Účet 1")
+        UCET_2 = "2", _("Účet 2")
 
     auto_rezim = models.CharField(
-        "Způsob vyúčtování",
+        _("Způsob vyúčtování"),
         max_length=16,
         choices=AutoRezim.choices,
         default=AutoRezim.CASTKA,
     )
     auto_limit = models.DecimalField(
-        "Limit kreditu (Kč)",
+        _("Limit kreditu (Kč)"),
         max_digits=10,
         decimal_places=2,
         default=Decimal("5000.00"),
-        help_text="Vyúčtování se vytvoří, když kredit hráče klesne na tuto zápornou částku nebo níže (např. −5000 Kč).",
+        help_text=_("Vyúčtování se vytvoří, když kredit hráče klesne na tuto zápornou částku nebo níže (např. −5000 Kč)."),
     )
     auto_castka_k_uhrade = models.DecimalField(
-        "Částka k zaplacení v e-mailu (Kč)",
+        _("Částka k zaplacení v e-mailu (Kč)"),
         max_digits=10,
         decimal_places=2,
         default=Decimal("5000.00"),
-        help_text="Částka zobrazená v e-mailu jako požadavek k úhradě. Ponechte 0 pro automatický výpočet z období.",
+        help_text=_("Částka zobrazená v e-mailu jako požadavek k úhradě. Ponechte 0 pro automatický výpočet z období."),
     )
     auto_pocet_treninku = models.PositiveIntegerField(
-        "Počet tréninků",
+        _("Počet tréninků"),
         default=10,
-        help_text="Po tolika odehraných trénincích od poslední uzávěrky se vyúčtuje.",
+        help_text=_("Po tolika odehraných trénincích od poslední uzávěrky se vyúčtuje."),
     )
     mesicni_den = models.PositiveSmallIntegerField(
-        "Den v měsíci",
+        _("Den v měsíci"),
         default=1,
-        help_text="Od tohoto dne v měsíci (po dalším tréninku) proběhne měsíční uzávěrka.",
+        help_text=_("Od tohoto dne v měsíci (po dalším tréninku) proběhne měsíční uzávěrka."),
     )
     auto_posilat_email = models.BooleanField(
-        "Posílat e-mail při automatickém vyúčtování",
+        _("Posílat e-mail při automatickém vyúčtování"),
         default=True,
     )
     email_variant = models.CharField(
-        "Výchozí varianta e-mailu",
+        _("Výchozí varianta e-mailu"),
         max_length=1,
         choices=EmailVarianta.choices,
         default=EmailVarianta.UCET_1,
     )
+    ucet_nazev_1 = models.CharField(
+        _("Název účtu – varianta 1"),
+        max_length=64,
+        default="Účet 1",
+        help_text=_("Zobrazí se ve výběru varianty e-mailu (např. hlavní účet klubu)."),
+    )
+    ucet_nazev_2 = models.CharField(
+        _("Název účtu – varianta 2"),
+        max_length=64,
+        default="Účet 2",
+    )
     ucet_varianta_1 = models.CharField(
-        "Číslo účtu – varianta 1",
+        _("Číslo účtu – varianta 1"),
         max_length=32,
-        default="2102303853/2700",
+        blank=True,
+        default="",
     )
     ucet_varianta_2 = models.CharField(
-        "Číslo účtu – varianta 2",
+        _("Číslo účtu – varianta 2"),
         max_length=32,
-        default="2108539314/2700",
+        blank=True,
+        default="",
+    )
+    variabilni_symbol_popis = models.CharField(
+        _("Variabilní symbol (text v e-mailu)"),
+        max_length=120,
+        default="Jméno hráče",
+        help_text=_("Text zobrazený u VS v e-mailu vyúčtování."),
     )
 
     class Meta:
-        verbose_name = "Nastavení vyúčtování"
-        verbose_name_plural = "Nastavení vyúčtování"
+        verbose_name = _("Nastavení vyúčtování")
+        verbose_name_plural = _("Nastavení vyúčtování")
 
     def __str__(self) -> str:
-        return "Nastavení vyúčtování"
+        return str(_("Nastavení vyúčtování"))
 
     def save(self, *args, **kwargs):
+        # Singleton do zavedení tenantů; potom: unikátní řádek per tenant.
         self.pk = 1
         super().save(*args, **kwargs)
 
     @classmethod
     def load(cls) -> "VyuctovaniNastaveni":
+        """Vrátí nastavení klubu. Po tenantech: load(tenant=…)."""
         defaults = {
             "auto_rezim": cls.AutoRezim.CASTKA,
             "auto_limit": Decimal(str(getattr(settings, "VYUCTOVANI_AUTO_LIMIT", "5000"))),
@@ -1039,15 +1066,29 @@ class VyuctovaniNastaveni(models.Model):
         obj, _ = cls.objects.get_or_create(pk=1, defaults=defaults)
         return obj
 
+    def email_variant_label(self, variant: str) -> str:
+        if str(variant) == "2":
+            return (self.ucet_nazev_2 or "").strip() or str(_("Účet 2"))
+        return (self.ucet_nazev_1 or "").strip() or str(_("Účet 1"))
+
+    def email_variant_choices(self) -> list[tuple[str, str]]:
+        return [
+            ("1", self.email_variant_label("1")),
+            ("2", self.email_variant_label("2")),
+        ]
+
+    def get_email_variant_display(self) -> str:
+        return self.email_variant_label(self.email_variant)
+
     def popis_rezimu(self) -> str:
         if self.auto_rezim == self.AutoRezim.MANUAL:
-            return "Vyúčtování pouze ručně z profilu hráče"
+            return _("Vyúčtování pouze ručně z profilu hráče")
         if self.auto_rezim == self.AutoRezim.CASTKA:
-            return f"Při kreditu −{self.auto_limit:.0f} Kč nebo níže"
+            return _("Při kreditu −%(limit)s Kč nebo níže") % {"limit": f"{self.auto_limit:.0f}"}
         if self.auto_rezim == self.AutoRezim.N_TRENINGU:
-            return f"Po {self.auto_pocet_treninku} odehraných trénincích"
+            return _("Po %(count)s odehraných trénincích") % {"count": self.auto_pocet_treninku}
         if self.auto_rezim == self.AutoRezim.MESICNE:
-            return f"Každý měsíc od {self.mesicni_den}. dne (po tréninku)"
+            return _("Každý měsíc od %(day)s. dne (po tréninku)") % {"day": self.mesicni_den}
         return "—"
 
     def spustit_mesicni_vyuctovani_vsem(self) -> int:
@@ -1063,6 +1104,350 @@ class VyuctovaniNastaveni(models.Model):
         return count
 
 
+# =========================
+#  Nastavení systému (dnes singleton; po tenantech 1 řádek = 1 klub)
+# =========================
+class SystemNastaveni(models.Model):
+    """Branding a provozní preference klubu (per-tenant).
+
+    Patří sem: název, logo, kontakt, jazyk, vzhled, e-mail From/prefix/podpis,
+    výchozí trénink/rozvrh, práh dluhu, stránkování.
+    Nepatří sem: čísla účtů (VyuctovaniNastaveni), SMTP heslo (env / platforma).
+    """
+
+    DELKA_MINUT_CHOICES = (
+        (30, "30 min"),
+        (45, "45 min"),
+        (60, "1 h"),
+        (90, "1,5 h"),
+        (120, "2 h"),
+        (150, "2,5 h"),
+        (180, "3 h"),
+    )
+
+    class RozvrhZobrazeni(models.TextChoices):
+        TYDEN = "week", _("Týden")
+        DEN = "day", _("Den")
+
+    nazev_klubu = models.CharField(
+        _("Název klubu / systému"),
+        max_length=120,
+        default="TenisSystém",
+        help_text=_("Zobrazí se v hlavičce a v e-mailech."),
+    )
+    kontakt_email = models.EmailField(
+        _("Kontaktní e-mail"),
+        max_length=254,
+        blank=True,
+        default="",
+        help_text=_("Zobrazí se na veřejné stránce a v patičce e-mailů."),
+    )
+    kontakt_telefon = models.CharField(
+        _("Telefon"),
+        max_length=32,
+        blank=True,
+        default="",
+    )
+    kontakt_adresa = models.CharField(
+        _("Adresa klubu"),
+        max_length=200,
+        blank=True,
+        default="",
+    )
+    slogan = models.CharField(
+        _("Slogan"),
+        max_length=160,
+        blank=True,
+        default="",
+        help_text=_("Krátký text na veřejné stránce."),
+    )
+    logo = models.ImageField(
+        _("Logo klubu"),
+        upload_to="club/",
+        blank=True,
+        null=True,
+    )
+    favicon = models.ImageField(
+        _("Favicon"),
+        upload_to="club/",
+        blank=True,
+        null=True,
+    )
+    email_odesilatel = models.CharField(
+        _("Odesílatel e-mailů"),
+        max_length=120,
+        blank=True,
+        default="",
+        help_text=_("Formát: Jméno <email@domena.cz>"),
+    )
+    email_predmet_prefix = models.CharField(
+        _("Prefix předmětu e-mailu"),
+        max_length=60,
+        blank=True,
+        default="[TenisSystém] ",
+    )
+    email_podpis = models.TextField(
+        _("Podpis e-mailů"),
+        blank=True,
+        default="S pozdravem,\n\nTenisSystém",
+    )
+    sezona_venek_od = models.PositiveSmallIntegerField(
+        _("Venkovní sezóna od (měsíc)"),
+        default=4,
+    )
+    sezona_venek_do = models.PositiveSmallIntegerField(
+        _("Venkovní sezóna do (měsíc)"),
+        default=10,
+    )
+    sezona_automaticky_kurt = models.BooleanField(
+        _("Automaticky volit kurt dle sezóny"),
+        default=True,
+    )
+    prah_dluhu_dashboard = models.DecimalField(
+        _("Práh dluhu na dashboardu (Kč)"),
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        help_text=_("0 = všichni se záporným kreditem, −1000 = dluh od 1000 Kč."),
+    )
+    zvyraznit_zaporny_kredit = models.BooleanField(
+        _("Zvýraznit záporný kredit v seznamu hráčů"),
+        default=True,
+    )
+    radku_na_stranku = models.PositiveSmallIntegerField(
+        _("Řádků na stránku v tabulkách"),
+        default=50,
+        choices=((25, "25"), (50, "50"), (100, "100")),
+    )
+    vlastni_barvy = models.BooleanField(
+        _("Vlastní barvy (místo palety)"),
+        default=False,
+    )
+    vychozi_delka_minut = models.PositiveSmallIntegerField(
+        _("Výchozí délka tréninku"),
+        default=60,
+        choices=DELKA_MINUT_CHOICES,
+    )
+    vychozi_kurt = models.CharField(
+        _("Výchozí kurt"),
+        max_length=8,
+        choices=Cenik.Kurt.choices,
+        default=Cenik.Kurt.HALA,
+    )
+    rozvrh_od_hodina = models.PositiveSmallIntegerField(
+        _("Rozvrh od (hodina)"),
+        default=6,
+    )
+    rozvrh_do_hodina = models.PositiveSmallIntegerField(
+        _("Rozvrh do (hodina)"),
+        default=22,
+    )
+    vychozi_zobrazeni_rozvrhu = models.CharField(
+        _("Výchozí zobrazení rozvrhu"),
+        max_length=8,
+        choices=RozvrhZobrazeni.choices,
+        default=RozvrhZobrazeni.TYDEN,
+    )
+    barevna_varianta = models.CharField(
+        _("Barevná varianta"),
+        max_length=16,
+        choices=THEME_CHOICES,
+        default=DEFAULT_THEME,
+        help_text=_("Paleta barev ve stylu Excel – mění celý vzhled systému."),
+    )
+    tmavy_rezim = models.BooleanField(
+        _("Tmavý režim"),
+        default=False,
+        help_text=_("Tmavé pozadí, světlý text a upravené barvy tabulek."),
+    )
+    barva_brand = models.CharField("Primární akcent", max_length=7, blank=True, default="")
+    barva_brand_600 = models.CharField("Akcent tlačítek", max_length=7, blank=True, default="")
+    barva_brand_100 = models.CharField("Světlé pozadí akcentu", max_length=7, blank=True, default="")
+    barva_pozadi = models.CharField("Pozadí stránky", max_length=7, blank=True, default="")
+    barva_plochy = models.CharField("Karty a formuláře", max_length=7, blank=True, default="")
+    barva_text = models.CharField("Text", max_length=7, blank=True, default="")
+    barva_text_silny = models.CharField("Tučný text", max_length=7, blank=True, default="")
+    barva_tabulka_hlava = models.CharField("Hlavička tabulek", max_length=7, blank=True, default="")
+    barva_tabulka_radek = models.CharField("Střídavý řádek tabulky", max_length=7, blank=True, default="")
+    barva_tabulka_hover = models.CharField("Hover řádku tabulky", max_length=7, blank=True, default="")
+    barva_ohraniceni = models.CharField("Ohraničení", max_length=7, blank=True, default="")
+    vychozi_jazyk = models.CharField(
+        _("Výchozí jazyk systému"),
+        max_length=10,
+        choices=SYSTEM_LANGUAGES,
+        default=DEFAULT_LANGUAGE,
+        help_text=_("Jazyk rozhraní pro celý systém."),
+    )
+
+    class Meta:
+        verbose_name = _("Nastavení systému")
+        verbose_name_plural = _("Nastavení systému")
+
+    def __str__(self) -> str:
+        return "Nastavení systému"
+
+    def save(self, *args, **kwargs):
+        sync_colors = kwargs.pop("sync_colors", True)
+        if sync_colors:
+            from .system_theme import MODEL_FIELD_MAP, preset_colors
+
+            colors = preset_colors(self.barevna_varianta or DEFAULT_THEME, dark=self.tmavy_rezim)
+            for key, field in MODEL_FIELD_MAP.items():
+                setattr(self, field, colors[key])
+        # Singleton do zavedení tenantů; potom: unikátní řádek per tenant.
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls) -> "SystemNastaveni":
+        """Vrátí nastavení klubu. Po tenantech: load(tenant=…)."""
+        obj, _ = cls.objects.get_or_create(
+            pk=1,
+            defaults={
+                "nazev_klubu": "TenisSystém",
+                "barevna_varianta": DEFAULT_THEME,
+                "tmavy_rezim": False,
+            },
+        )
+        return obj
+
+    def effective_colors(self) -> dict[str, str]:
+        from .system_theme import resolve_theme_colors
+
+        return resolve_theme_colors(self)
+
+    def schedule_hours(self) -> list[int]:
+        """Hodiny zobrazené v týdenním rozvrhu (včetně konce)."""
+        start = max(0, min(int(self.rozvrh_od_hodina), 23))
+        end = max(start + 1, min(int(self.rozvrh_do_hodina), 23))
+        return list(range(start, end + 1))
+
+    @property
+    def schedule_hour_count(self) -> int:
+        return len(self.schedule_hours())
+
+    @classmethod
+    def training_defaults(cls, for_date=None) -> dict:
+        """Výchozí délka a kurt pro nové tréninky."""
+        try:
+            nast = cls.load()
+            if for_date is None:
+                for_date = dj_tz.localdate()
+            elif hasattr(for_date, "date"):
+                for_date = dj_tz.localtime(for_date).date() if dj_tz.is_aware(for_date) else for_date.date()
+            kurt = nast.kurt_pro_datum(for_date)
+            return {
+                "delka_minut": int(nast.vychozi_delka_minut or 60),
+                "kurt": kurt,
+            }
+        except Exception:
+            return {"delka_minut": 60, "kurt": Cenik.Kurt.HALA}
+
+    def kurt_pro_datum(self, datum) -> str:
+        """Navrhne kurt podle sezóny nebo výchozího nastavení."""
+        if not self.sezona_automaticky_kurt:
+            return self.vychozi_kurt or Cenik.Kurt.HALA
+        month = datum.month if hasattr(datum, "month") else int(datum)
+        od = int(self.sezona_venek_od or 4)
+        do = int(self.sezona_venek_do or 10)
+        if od <= do:
+            outdoor = od <= month <= do
+        else:
+            outdoor = month >= od or month <= do
+        return Cenik.Kurt.VENEK if outdoor else Cenik.Kurt.HALA
+
+    def from_email_parts(self) -> tuple[str, str]:
+        """Rozdělí uloženého odesílatele na jméno a adresu."""
+        raw = (self.email_odesilatel or "").strip()
+        if not raw:
+            return "", ""
+        m = re.match(r"^(.+?)\s*<([^>]+)>$", raw)
+        if m:
+            return m.group(1).strip().strip('"'), m.group(2).strip()
+        if "@" in raw:
+            return "", raw
+        return raw, ""
+
+    @classmethod
+    def compose_from_email(cls, jmeno: str, adresa: str) -> str:
+        jmeno = (jmeno or "").strip()
+        adresa = (adresa or "").strip()
+        if jmeno and adresa:
+            return f"{jmeno} <{adresa}>"
+        return adresa or jmeno
+
+    def subject_tag_display(self) -> str:
+        """Text pro formulář – bez hranatých závorek."""
+        val = (self.email_predmet_prefix or "").strip()
+        if val.startswith("[") and "]" in val:
+            return val[1 : val.index("]")].strip()
+        return val.rstrip()
+
+    @classmethod
+    def compose_subject_prefix(cls, oznaceni: str) -> str:
+        oznaceni = (oznaceni or "").strip()
+        if not oznaceni:
+            return ""
+        if oznaceni.startswith("[") and oznaceni.endswith("]"):
+            oznaceni = oznaceni[1:-1].strip()
+        return f"[{oznaceni}] "
+
+    def effective_from_email(self) -> str:
+        from django.conf import settings
+
+        val = (self.email_odesilatel or "").strip()
+        return val or getattr(settings, "DEFAULT_FROM_EMAIL", "")
+
+    def effective_subject_prefix(self) -> str:
+        val = (self.email_predmet_prefix or "").strip()
+        if not val:
+            return ""
+        if not val.startswith("["):
+            val = self.compose_subject_prefix(val)
+        return val
+
+    def effective_podpis(self) -> str:
+        val = (self.email_podpis or "").strip()
+        return val or "S pozdravem,"
+
+    def format_email_subject(self, subject: str) -> str:
+        prefix = self.effective_subject_prefix()
+        if not prefix or subject.startswith(prefix):
+            return subject
+        if not prefix.endswith(" "):
+            prefix = prefix + " "
+        return f"{prefix}{subject}"
+
+    def email_subject_preview(self) -> str:
+        return self.format_email_subject("Přehled tréninků – Jméno hráče")
+
+    def podpis_html(self) -> str:
+        from django.utils.html import escape
+
+        return escape(self.effective_podpis()).replace("\n", "<br>")
+
+    def debt_filter_q(self):
+        """Podmínka pro výběr dlužníků podle prahu (vyžaduje anotaci _kredit_calculated)."""
+        prah = Decimal(self.prah_dluhu_dashboard or 0)
+        if prah >= 0:
+            return Q(_kredit_calculated__lt=Decimal("0"))
+        return Q(_kredit_calculated__lte=prah)
+
+    def filter_debtors(self, qs):
+        """Omezí queryset hráčů podle prahu dluhu."""
+        return qs.filter(self.debt_filter_q())
+
+    def sync_colors_from_preset(self, *, commit: bool = False) -> None:
+        """Vyplní barevná pole podle zvolené palety a režimu."""
+        from .system_theme import MODEL_FIELD_MAP, preset_colors
+
+        colors = preset_colors(self.barevna_varianta, dark=self.tmavy_rezim)
+        for key, field in MODEL_FIELD_MAP.items():
+            setattr(self, field, colors[key])
+        if commit:
+            self.save()
+
+
 # =========================================================
 #  INTELIGENTNÍ SYNC DOCHÁZKY A TRANSAKCÍ (VYLEPŠENO)
 # =========================================================
@@ -1072,9 +1457,12 @@ def auto_naucet_pri_dochazce(sender, instance: "Dochazka", created: bool, **kwar
     """
     Řeší vytvoření ALE I AKTUALIZACI transakce při změně docházky.
     """
+    if kwargs.get("raw"):
+        return
+
     # 1. Pokud hráč "nepřišel", smažeme případnou existující transakci
     if not instance.prisel:
-        if instance.transakce_nauc:
+        if instance.transakce_nauc_id:
             instance.transakce_nauc.delete()
             instance.transakce_nauc = None
             instance.castka_nauc = None
@@ -1098,7 +1486,7 @@ def auto_naucet_pri_dochazce(sender, instance: "Dochazka", created: bool, **kwar
     )
 
     # 3. Pokud transakce už existuje -> AKTUALIZUJEME JI (To vám chybělo)
-    if instance.transakce_nauc:
+    if instance.transakce_nauc_id:
         tx = instance.transakce_nauc
         zmena = False
         
@@ -1172,7 +1560,9 @@ def smaz_transakci_pri_smazani_dochazky(sender, instance, **kwargs):
     Když v adminu kliknete na 'Odstranit' u hráče (nebo celý trénink),
     musí zmizet i peněžní transakce.
     """
-    if instance.transakce_nauc:
+    if kwargs.get("raw"):
+        return
+    if instance.transakce_nauc_id:
         instance.transakce_nauc.delete()
 
 
@@ -1183,7 +1573,7 @@ def aktualizuj_transakce_pri_zmene_treningu(sender, instance, created, **kwargs)
     Když změníte DATUM, DÉLKU nebo TYP tréninku, tento signál projde
     všechny přihlášené hráče a přepočítá jim cenu/datum v transakcích.
     """
-    if created:
+    if kwargs.get("raw") or created:
         return
 
     # Projdeme všechny docházky tohoto tréninku
@@ -1200,8 +1590,8 @@ class TrenerProfil(models.Model):
     sazba_za_hodinu = models.DecimalField(max_digits=9, decimal_places=2, default=Decimal("500.00"))
 
     class Meta:
-        verbose_name = "Trenér – sazba"
-        verbose_name_plural = "Trenéři – sazby"
+        verbose_name = _("Trenér – sazba")
+        verbose_name_plural = _("Trenéři – sazby")
 
     def __str__(self):
         jmeno = self.user.get_full_name() or self.user.username
@@ -1210,8 +1600,9 @@ class TrenerProfil(models.Model):
 
 @receiver(post_save, sender=User)
 def _ensure_trener_profil(sender, instance, created, **kwargs):
-    if created:
-        TrenerProfil.objects.create(user=instance)
+    if kwargs.get("raw") or not created:
+        return
+    TrenerProfil.objects.create(user=instance)
 
 
 # ===== Datumově účinné sazby trenéra =====
@@ -1223,8 +1614,8 @@ class TrenerSazba(models.Model):
     sazba_za_hodinu = models.DecimalField(max_digits=9, decimal_places=2)
 
     class Meta:
-        verbose_name = "Trenér – sazba (období)"
-        verbose_name_plural = "Trenéři – sazby (období)"
+        verbose_name = _("Trenér – sazba (období)")
+        verbose_name_plural = _("Trenéři – sazby (období)")
         ordering = ("-platnost_od",)
         indexes = [models.Index(fields=["user", "platnost_od", "platnost_do"])]
 
@@ -1300,8 +1691,8 @@ class TrenerPlatba(models.Model):
 
     class Meta:
         ordering = ["-vytvoreno"]
-        verbose_name = "Výplata trenérovi"
-        verbose_name_plural = "Výplaty trenérům"
+        verbose_name = _("Výplata trenérovi")
+        verbose_name_plural = _("Výplaty trenérům")
         indexes = [models.Index(fields=["user", "vytvoreno"])]
 
     def __str__(self) -> str:
@@ -1324,15 +1715,15 @@ class OstatniNaklad(models.Model):
         ADMIN = "ADMIN", "Administrativa"
         OSTATNI = "OSTATNI", "Ostatní"
 
-    mesic = models.DateField("Datum", help_text="Den, ke kterému se náklad vztahuje")
+    mesic = models.DateField(_("Datum"), help_text=_("Den, ke kterému se náklad vztahuje"))
     kategorie = models.CharField("Kategorie", max_length=20, choices=Kategorie.choices)
     castka = models.DecimalField("Částka", max_digits=12, decimal_places=2, default=Decimal("0.00"))
     poznamka = models.CharField("Poznámka", max_length=240, blank=True, default="")
     vytvoreno = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "Ostatní náklad"
-        verbose_name_plural = "Ostatní náklady"
+        verbose_name = _("Ostatní náklad")
+        verbose_name_plural = _("Ostatní náklady")
         ordering = ["-mesic", "kategorie"]
         constraints = [
             models.UniqueConstraint(fields=["mesic", "kategorie"], name="uniq_ostatni_naklad_mesic_kat"),
@@ -1380,7 +1771,7 @@ def sazba_trenera_k_datu(user: User, dt) -> Decimal:
 @receiver(pre_save, sender=Hrac)
 def hrac_vyuctovani_defaults(sender, instance: Hrac, **kwargs):
     """Novým hráčům nastaví režim vyúčtování podle globálního nastavení."""
-    if instance.pk:
+    if kwargs.get("raw") or instance.pk:
         return
     nast = VyuctovaniNastaveni.load()
     instance.vyuctovani_rezim = nast.auto_rezim

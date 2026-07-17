@@ -4,6 +4,7 @@ from decimal import Decimal
 from django import forms
 from django.contrib import admin
 from django.utils import timezone as dj_tz
+from django.utils.translation import gettext_lazy as _
 
 from ..forms import DochazkaFormSet, DochazkaInlineForm
 from ..models import Dochazka
@@ -13,7 +14,9 @@ class DochazkaInline(admin.TabularInline):
     model = Dochazka
     form = DochazkaInlineForm
     formset = DochazkaFormSet
-    extra = 1
+    extra = 0
+    verbose_name = "Docházka"
+    verbose_name_plural = "Hráči"
     autocomplete_fields = ("hrac",)
     
     fields = ("hrac", "cena_preview", "castka_nauc_display", "nauceno_kdy_display")
@@ -33,27 +36,30 @@ class DochazkaInline(admin.TabularInline):
         return field
 
     def get_extra(self, request, obj=None, **kwargs):
-        """Při přidávání tréninku (add_form) jeden řádek – další přidá uživatel tlačítkem jako v add_day."""
+        """Při přidávání tréninku jeden řádek; při úpravě žádný – nový až po kliknutí na Přidat."""
         if obj is None:
             return 1
-        return self.extra
+        return 0
 
     def get_formset(self, request, obj=None, **kwargs):
         self.parent_obj = obj
         formset = super().get_formset(request, obj, **kwargs)
         form = formset.form
         if "hrac" in form.base_fields:
-            form.base_fields["hrac"].label = "Hráči"
+            form.base_fields["hrac"].label = _("Hráč")
         return formset
 
+    @admin.display(description=_("Cena"))
     def cena_preview(self, obj):
         tr = obj.trening if getattr(obj, "trening_id", None) else getattr(self, "parent_obj", None)
         return f"{tr.cena_na_hrace():.0f} Kč" if tr else "—"
 
+    @admin.display(description=_("Naúčtováno"))
     def castka_nauc_display(self, obj):
         val = getattr(obj, "castka_nauc", None)
         return f"{Decimal(val):.0f} Kč" if val is not None else "—"
 
+    @admin.display(description=_("Kdy naúčtováno"))
     def nauceno_kdy_display(self, obj):
         dt = getattr(obj, "nauceno_kdy", None)
         if not dt: return "—"

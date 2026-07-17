@@ -26,7 +26,7 @@
 
 .trener-vyplata-link:hover {
   color: var(--brand, #E67817);
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .trener-vyplaceno-empty {

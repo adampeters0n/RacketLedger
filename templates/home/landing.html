@@ -1,13 +1,14 @@
-{% load static %}
+{% load static i18n %}
 {% static 'home/tennisballimage.png' as stage_photo %}
 <!doctype html>
-<html lang="cs">
+<html lang="{{ LANGUAGE_CODE|default:'cs' }}">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="Správa tenisové školy – tréninky, platby, vyúčtování trenérů." />
+  <meta name="description" content="{% trans 'Správa tenisové školy – tréninky, platby, vyúčtování trenérů.' %}" />
 
-  <title>{{ product_name }} – Správa tenisové školy</title>
+  <title>{{ product_name }} – {% trans "Správa tenisové školy" %}</title>
+  {% if favicon_url %}<link rel="icon" href="{{ favicon_url }}" type="image/png">{% endif %}
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,13 +19,28 @@
   <div class="page">
     <header class="nav">
       <a class="nav__brand" href="{% url 'home' %}">
+        {% if logo_url %}
+        <img class="nav__logo" src="{{ logo_url }}" alt="">
+        {% else %}
         <span class="nav__dot" aria-hidden="true"></span>
+        {% endif %}
         {{ product_name }}
       </a>
       <nav class="nav__links">
-        <a class="nav__pill" href="#skoly">Školy</a>
-        <a href="#funkce">Co umí</a>
-        <a href="mailto:{{ contact_email }}">Kontakt</a>
+        <form class="nav__lang" action="{% url 'set_language' %}" method="post">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <select name="language" class="nav__lang-select" onchange="this.form.submit()" aria-label="{% trans 'Jazyk' %}">
+            {% get_current_language as CURRENT_LANG %}
+            {% get_available_languages as AVAILABLE_LANGUAGES %}
+            {% for lang_code, lang_name in AVAILABLE_LANGUAGES %}
+            <option value="{{ lang_code }}"{% if lang_code == CURRENT_LANG %} selected{% endif %}>{{ lang_name }}</option>
+            {% endfor %}
+          </select>
+        </form>
+        <a class="nav__pill" href="#skoly">{% trans "Školy" %}</a>
+        <a href="#funkce">{% trans "Co umí" %}</a>
+        <a href="{% if contact_email %}mailto:{{ contact_email }}{% else %}#kontakt{% endif %}">{% trans "Kontakt" %}</a>
       </nav>
     </header>
 
@@ -36,12 +52,12 @@
       </div>
 
       <div class="stage__copy">
-        <p class="stage__eyebrow">Pro trenéry a tenisové akademie</p>
-        <h1>Méně tabulek,<br>víc času na <em>kurtu</em></h1>
+        <p class="stage__eyebrow">{% if slogan %}{{ slogan }}{% else %}{% trans "Pro trenéry a tenisové akademie" %}{% endif %}</p>
+        <h1>{% trans "Méně tabulek," %}<br>{% trans "víc času na" %} <em>{% trans "kurtu" %}</em></h1>
         <p class="stage__lead">
-          Kdo trénuje zítra, kdo má kredit a kolik patří trenérovi za měsíc — bez dalšího souboru v počítači.
+          {% trans "Kdo trénuje zítra, kdo má kredit a kolik patří trenérovi za měsíc — bez dalšího souboru v počítači." %}
         </p>
-        <a class="stage__cta" href="#skoly">Vybrat školu</a>
+        <a class="stage__cta" href="#skoly">{% trans "Vybrat školu" %}</a>
       </div>
 
       <div class="showcase" aria-hidden="true">
@@ -59,29 +75,29 @@
             <div class="showcase__content">
               <header class="showcase__top">
                 <div>
-                  <small>Dnešní přehled</small>
-                  <strong>pondělí 7. 7.</strong>
+                  <small>{% trans "Dnešní přehled" %}</small>
+                  <strong>{% trans "pondělí 7. 7." %}</strong>
                 </div>
-                <span class="status-pill"><i></i> Aktivní</span>
+                <span class="status-pill"><i></i> {% trans "Aktivní" %}</span>
               </header>
               <div class="showcase__stats">
                 <div class="stat-card stat-card--accent">
-                  <span>Tréninky dnes</span>
+                  <span>{% trans "Tréninky dnes" %}</span>
                   <b>6</b>
                 </div>
                 <div class="stat-card">
-                  <span>Aktivní hráči</span>
+                  <span>{% trans "Aktivní hráči" %}</span>
                   <b>84</b>
                 </div>
                 <div class="stat-card">
-                  <span>K vyúčtování</span>
-                  <b>12 400 Kč</b>
+                  <span>{% trans "K vyúčtování" %}</span>
+                  <b>{% trans "12 400 Kč" %}</b>
                 </div>
               </div>
               <div class="showcase__schedule">
-                <div class="sched-row"><time>08:00</time><span>Solo · venku</span></div>
-                <div class="sched-row"><time>13:00</time><span>Dvojice · venku</span></div>
-                <div class="sched-row"><time>18:00</time><span>Skupina · hala</span></div>
+                <div class="sched-row"><time>08:00</time><span>{% trans "Solo · venku" %}</span></div>
+                <div class="sched-row"><time>13:00</time><span>{% trans "Dvojice · venku" %}</span></div>
+                <div class="sched-row"><time>18:00</time><span>{% trans "Skupina · hala" %}</span></div>
               </div>
             </div>
           </div>
@@ -92,18 +108,18 @@
     <section class="panel" id="skoly">
       <div class="panel__inner">
         <header class="panel__head">
-          <h2>Přihlášení do školy</h2>
-          <p>Vyberte školu, ke které patříte.</p>
+          <h2>{% trans "Přihlášení do školy" %}</h2>
+          <p>{% trans "Vyberte školu, ke které patříte." %}</p>
         </header>
 
         {% if schools|length > 1 %}
         <div class="search">
-          <label class="sr-only" for="school-search">Hledat školu</label>
+          <label class="sr-only" for="school-search">{% trans "Hledat školu" %}</label>
           <input
             type="search"
             id="school-search"
             class="search__input"
-            placeholder="Název nebo město…"
+            placeholder="{% trans 'Název nebo město…' %}"
             autocomplete="off"
           >
         </div>
@@ -119,7 +135,7 @@
               <strong>{{ school.name }}</strong>
               <span>{{ school.city }}{% if school.region %}, {{ school.region }}{% endif %}</span>
             </div>
-            <a class="btn" href="{{ school.admin_url }}">Přihlásit se</a>
+            <a class="btn" href="{{ school.admin_url }}">{% trans "Přihlásit se" %}</a>
           </li>
           {% endfor %}
 
@@ -130,14 +146,14 @@
           >
             <div class="school-item__info">
               <strong>{{ school.name }}</strong>
-              <span>{{ school.city }}{% if school.region %}, {{ school.region }}{% endif %} · brzy</span>
+              <span>{{ school.city }}{% if school.region %}, {{ school.region }}{% endif %} · {% trans "brzy" %}</span>
             </div>
-            <span class="btn btn--ghost btn--off">Připravujeme</span>
+            <span class="btn btn--ghost btn--off">{% trans "Připravujeme" %}</span>
           </li>
           {% endfor %}
         </ul>
 
-        <p class="school-empty" id="school-empty" hidden>Žádná škola neodpovídá hledání.</p>
+        <p class="school-empty" id="school-empty" hidden>{% trans "Žádná škola neodpovídá hledání." %}</p>
       </div>
     </section>
 
@@ -145,25 +161,37 @@
       <div class="features__inner">
         <article>
           <span class="features__num">01</span>
-          <h3>Kalendář tréninků</h3>
-          <p>Solo, dvojice i skupiny — venek i hala na jedné obrazovce.</p>
+          <h3>{% trans "Kalendář tréninků" %}</h3>
+          <p>{% trans "Solo, dvojice i skupiny — venek i hala na jedné obrazovce." %}</p>
         </article>
         <article>
           <span class="features__num">02</span>
-          <h3>Platby rodin</h3>
-          <p>Kredity, platby a vratky vždy aktuální.</p>
+          <h3>{% trans "Platby rodin" %}</h3>
+          <p>{% trans "Kredity, platby a vratky vždy aktuální." %}</p>
         </article>
         <article>
           <span class="features__num">03</span>
-          <h3>Vyúčtování trenérů</h3>
-          <p>Hodiny, zálohy i výplata na jedno kliknutí.</p>
+          <h3>{% trans "Vyúčtování trenérů" %}</h3>
+          <p>{% trans "Hodiny, zálohy i výplata na jedno kliknutí." %}</p>
         </article>
       </div>
     </section>
 
-    <footer class="foot">
+    <footer class="foot" id="kontakt">
       <span>© {{ now|date:"Y" }} {{ product_name }}</span>
-      <p>Chcete připojit školu? <a href="mailto:{{ contact_email }}">{{ contact_email }}</a></p>
+      <p>
+        {% trans "Chcete připojit školu?" %}
+        {% if contact_email %}
+          <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+        {% endif %}
+        {% if contact_phone %}
+          {% if contact_email %} · {% endif %}
+          <a href="tel:{{ contact_phone|cut:' ' }}">{{ contact_phone }}</a>
+        {% endif %}
+        {% if contact_address %}
+          <br><span>{{ contact_address }}</span>
+        {% endif %}
+      </p>
     </footer>
   </div>
 

@@ -15,6 +15,31 @@ def _admin_url(name: str) -> str:
 
 
 def home(request):
+    from .models import SystemNastaveni
+
+    contact_email = settings.CONTACT_EMAIL
+    contact_phone = ""
+    contact_address = ""
+    slogan = ""
+    logo_url = ""
+    favicon_url = ""
+    product_name = settings.PRODUCT_NAME
+    try:
+        nast = SystemNastaveni.load()
+        if nast.nazev_klubu:
+            product_name = nast.nazev_klubu
+        if nast.kontakt_email:
+            contact_email = nast.kontakt_email
+        contact_phone = nast.kontakt_telefon or ""
+        contact_address = nast.kontakt_adresa or ""
+        slogan = nast.slogan or ""
+        if nast.logo:
+            logo_url = nast.logo.url
+        if nast.favicon:
+            favicon_url = nast.favicon.url
+    except Exception:
+        pass
+
     schools = []
     for school in settings.TENNIS_SCHOOLS:
         admin_url = school.get("admin_url") or _admin_url("index")
@@ -24,11 +49,16 @@ def home(request):
     upcoming_schools = [s for s in schools if not s.get("active", True)]
 
     ctx = {
-        "product_name": settings.PRODUCT_NAME,
+        "product_name": product_name,
         "schools": schools,
         "active_schools": active_schools,
         "upcoming_schools": upcoming_schools,
-        "contact_email": settings.CONTACT_EMAIL,
+        "contact_email": contact_email,
+        "contact_phone": contact_phone,
+        "contact_address": contact_address,
+        "slogan": slogan,
+        "logo_url": logo_url,
+        "favicon_url": favicon_url,
         "now": timezone.now(),
     }
     return render(request, "home/landing.html", ctx)

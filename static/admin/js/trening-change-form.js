@@ -17,14 +17,22 @@
         if (isFirstRun) {
           var thead = group.querySelector('thead');
           if (thead) {
-            var ths = thead.querySelectorAll('th');
-            for (var i = 0; i < ths.length; i++) {
-              var txt = (ths[i].textContent || '').toUpperCase();
-              if (txt.indexOf('HRAC') !== -1 || txt.indexOf('HRÁČ') !== -1) {
-                ths[i].textContent = 'Hráči';
-                break;
+            var headerMap = [
+              [/hrac|hráč/i, 'Hráč'],
+              [/cena/i, 'Cena'],
+              [/castka|na[uú]ct|naúčt/i, 'Naúčtováno'],
+              [/nauceno|naúčteno|kdy/i, 'Kdy naúčtováno'],
+            ];
+            thead.querySelectorAll('th').forEach(function (th) {
+              var raw = (th.textContent || '').trim();
+              if (!raw || raw.length < 2) return;
+              for (var j = 0; j < headerMap.length; j++) {
+                if (headerMap[j][0].test(raw)) {
+                  th.textContent = headerMap[j][1];
+                  break;
+                }
               }
-            }
+            });
           }
           var h2 = group.querySelector('h2');
           if (h2) h2.style.display = 'none';
@@ -33,7 +41,7 @@
           var addRow = group.querySelector('.add-row');
           if (addRow) {
             var a = addRow.querySelector('a');
-            if (a) a.textContent = 'Přidat hráče';
+            if (a) a.textContent = 'Přidat docházku';
             addRow.style.display = '';
             addRow.style.visibility = '';
           }
@@ -146,13 +154,33 @@
         }
       }
 
+      function hideEmptyDochazkaRows(ctx) {
+        var group = ctx.querySelector('#dochazka_set-group') || ctx.querySelector('#dochazky-group');
+        if (!group) return;
+        group.querySelectorAll('tbody tr.form-row').forEach(function (tr) {
+          if (tr.classList.contains('empty-form')) return;
+          var sel = tr.querySelector('select[name$="-hrac"]');
+          if (!sel || sel.value) return;
+          tr.style.display = 'none';
+          tr.setAttribute('data-x-empty-hrac', '1');
+        });
+      }
+
       function boot() {
         wireDochazka(document);
         ensureCasNadBublinou();
+        hideEmptyDochazkaRows(document);
       }
       document.addEventListener('DOMContentLoaded', boot);
       window.addEventListener('load', boot);
-      document.addEventListener('formset:added', boot);
+      document.addEventListener('formset:added', function (ev) {
+        boot();
+        var row = ev.target && ev.target.closest && ev.target.closest('tr.form-row');
+        if (row) {
+          row.style.display = '';
+          row.removeAttribute('data-x-empty-hrac');
+        }
+      });
       setTimeout(boot, 0);
       setTimeout(boot, 120);
     })();

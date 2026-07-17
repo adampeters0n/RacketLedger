@@ -3,7 +3,9 @@ import re
 from dataclasses import dataclass
 from datetime import date, datetime
 
+from django.utils import formats
 from django.utils import timezone as dj_tz
+from django.utils.translation import gettext_lazy as _
 
 
 CZECH_MONTHS_GENITIVE = (
@@ -81,12 +83,20 @@ class ParsedDateParts:
 
 def parse_czech_date_parts(value: str) -> ParsedDateParts | None:
     """
-    Rozparsuje dotaz jako datum, např. '1.7.', '13. srpna', '01.07.2026'.
+    Rozparsuje dotaz jako datum, např. '1.7.', '13. srpna', '01.07.2026', '2026-07-01'.
     Bez roku vrátí year=None (filtrovat den + měsíc napříč roky).
     """
     raw = (value or "").strip()
     if not raw:
         return None
+
+    iso = re.match(r"^(\d{4})-(\d{2})-(\d{2})\s*$", raw)
+    if iso:
+        year = int(iso.group(1))
+        month = int(iso.group(2))
+        day = int(iso.group(3))
+        d = _safe_date(year, month, day)
+        return ParsedDateParts(day=d.day, month=d.month, year=d.year) if d else None
 
     numeric = re.match(
         r"^(\d{1,2})\.\s*(\d{1,2})\.?(?:\s*(\d{4}))?\s*$",
@@ -127,6 +137,25 @@ def parse_czech_date_parts(value: str) -> ParsedDateParts | None:
     return None
 
 
+def filter_queryset_by_parsed_date(queryset, parts: ParsedDateParts, *fields: str):
+    """Omezí queryset na záznamy, kde některé z datetime polí spadá na daný den."""
+    from django.db.models import Q
+
+    q = Q()
+    for field in fields:
+        if parts.year is not None:
+            q |= Q(
+                **{
+                    f"{field}__year": parts.year,
+                    f"{field}__month": parts.month,
+                    f"{field}__day": parts.day,
+                }
+            )
+        else:
+            q |= Q(**{f"{field}__month": parts.month, f"{field}__day": parts.day})
+    return queryset.filter(q)
+
+
 def parse_czech_date_query(value: str, *, default_year: int | None = None) -> date | None:
     """Zpětná kompatibilita – vrátí konkrétní datum (bez roku = aktuální rok)."""
     parts = parse_czech_date_parts(value)
@@ -136,16 +165,25 @@ def parse_czech_date_query(value: str, *, default_year: int | None = None) -> da
     return _safe_date(year, parts.month, parts.day)
 
 
+def format_month_year(year: int, month: int) -> str:
+    """Název měsíce a rok dle aktivního jazyka (např. červenec 2026 / July 2026)."""
+    return formats.date_format(date(year, month, 1), "F Y")
+
+
 def format_czech_date(value, *, include_year: bool = True) -> str:
     if isinstance(value, datetime):
         value = dj_tz.localtime(value) if dj_tz.is_aware(value) else value
         value = value.date()
     if not isinstance(value, date):
         return str(value)
-    month = CZECH_MONTHS_GENITIVE[value.month]
     if include_year:
-        return f"{value.day}. {month} {value.year}"
-    return f"{value.day}. {month}"
+        return formats.date_format(value, "j. F Y")
+    return formats.date_format(value, "j. F")
+
+
+def get_month_choices():
+    """Seznam měsíců dle aktivního jazyka."""
+    return [(month, formats.date_format(date(2000, month, 1), "F")) for month in range(1, 13)]
 
 
 def format_czech_datetime(value) -> tuple[str, str]:

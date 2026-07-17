@@ -1,27 +1,52 @@
 """Custom admin site views (dashboard, analytika)."""
+import json
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from datetime import date, datetime, time, timedelta
 
+from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.db.models import Sum, Case, When, F, Value, DecimalField, Q
 from django.db.models.functions import TruncMonth
-from django.http import Http404
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils import timezone as dj_tz
+from django.utils.translation import gettext as _, gettext_lazy as _lazy
 
 from .admin_utils import month_range
 from .analytika_data import build_analytika_context
+from .analytika_export import (
+    EXPORT_PERIODS,
+    build_financial_report,
+    export_filename,
+    render_report_excel,
+    render_report_pdf,
+)
 from .models import (
     Dochazka,
     Hrac,
     OstatniNaklad,
+    SystemNastaveni,
     TrenerPlatba,
     Transakce,
     Trening,
+    Vyuctovani,
+    VyuctovaniNastaveni,
     sazba_trenera_k_datu,
+)
+from .forms import SystemNastaveniForm
+from .js_i18n import get_analytika_js_i18n, get_js_locale, get_nastaveni_js_i18n
+from .middleware import set_language_cookie
+from .system_theme import (
+    DEFAULT_THEME,
+    THEME_VARIANTS,
+    css_vars_style_block,
+    presets_for_js,
+    resolve_theme_colors,
+    theme_options_for_template,
 )
 
 User = get_user_model()
@@ -37,13 +62,13 @@ ANALYTIKA_SECTIONS = (
 )
 
 ANALYTIKA_SECTION_META = {
-    "prehled": ("Přehled", "Klíčové ukazatele tenisového systému za aktuální měsíc"),
-    "aktivita": ("Aktivita", "Odehrané hodiny, tréninky a denní trend"),
-    "finance": ("Finance", "Naúčtování, platby a finanční srovnání"),
-    "ucetnictvi": ("Účetnictví", "Cash flow, zisky, marže a výnosy na hodinu"),
-    "hraci": ("Hráči", "Kredity, dluhy a přeplatky hráčů"),
-    "treneri": ("Trenéři", "Náklady na trenéry – hodiny, nároky a výplaty"),
-    "naklady": ("Ostatní náklady", "Provozní náklady mimo výplaty trenérů – započítávají se do čistého zisku"),
+    "prehled": (_lazy("Přehled"), _lazy("Klíčové ukazatele tenisového systému za aktuální měsíc")),
+    "aktivita": (_lazy("Aktivita"), _lazy("Odehrané hodiny, tréninky a denní trend")),
+    "finance": (_lazy("Finance"), _lazy("Naúčtování, platby a finanční srovnání")),
+    "ucetnictvi": (_lazy("Účetnictví"), _lazy("Cash flow, zisky, marže a výnosy na hodinu")),
+    "hraci": (_lazy("Hráči"), _lazy("Kredity, dluhy a přeplatky hráčů")),
+    "treneri": (_lazy("Trenéři"), _lazy("Náklady na trenéry – hodiny, nároky a výplaty")),
+    "naklady": (_lazy("Ostatní náklady"), _lazy("Provozní náklady mimo výplaty trenérů – započítávají se do čistého zisku")),
 }
 
 
@@ -187,7 +212,7 @@ def _parse_naklad_datum(raw: str) -> date | None:
 def _save_ostatni_naklady(request) -> bool:
     den = _parse_naklad_datum(request.POST.get("datum") or request.POST.get("mesic", ""))
     if not den:
-        messages.error(request, "Neplatné datum nákladů.")
+        messages.error(request, _("Neplatné datum nákladů."))
         return False
 
     saved = 0
@@ -208,9 +233,17 @@ def _save_ostatni_naklady(request) -> bool:
         saved += 1
 
     if saved:
-        messages.success(request, f"Náklady za {den:%d.%m.%Y} uloženy ({saved} kategorií).")
+        messages.success(
+            request,
+            _("Náklady za %(date)s uloženy (%(count)s kategorií).")
+            % {"date": den.strftime("%d.%m.%Y"), "count": saved},
+        )
     else:
-        messages.info(request, f"Náklady za {den:%d.%m.%Y} vymazány – nebyla zadána žádná částka.")
+        messages.info(
+            request,
+            _("Náklady za %(date)s vymazány – nebyla zadána žádná částka.")
+            % {"date": den.strftime("%d.%m.%Y")},
+        )
     return True
 
 
@@ -449,10 +482,21 @@ def admin_analytika_view(request, section="prehled"):
             return redirect(url)
 
     section_title, section_subtitle = ANALYTIKA_SECTION_META[section]
+    extra_ctx = {}
+    if section == "prehled":
+        extra_ctx["analytika_export_periods"] = EXPORT_PERIODS
+        extra_ctx["analytika_export_urls"] = {
+            p: {
+                "pdf": reverse("admin:analytika_export", kwargs={"period": p, "fmt": "pdf"}),
+                "xlsx": reverse("admin:analytika_export", kwargs={"period": p, "fmt": "xlsx"}),
+            }
+            for p in EXPORT_PERIODS
+        }
     ctx = dict(
         admin.site.each_context(request),
-        title="Analytika",
+        title=_("Analytika"),
         **build_analytika_context(section, request),
+        **extra_ctx,
         analytika_section=section,
         analytika_section_title=section_title,
         analytika_section_subtitle=section_subtitle,
@@ -460,9 +504,33 @@ def admin_analytika_view(request, section="prehled"):
             slug: reverse("admin:analytika_section", kwargs={"section": slug})
             for slug in ANALYTIKA_SECTIONS
         },
+        ts_js_i18n=get_analytika_js_i18n(),
+        ts_js_locale=get_js_locale(),
     )
     return TemplateResponse(request, "admin/analytika.html", ctx)
 
+
+def admin_analytika_export_view(request, period: str, fmt: str):
+    """Stažení finančního přehledu (PDF / Excel)."""
+    if period not in EXPORT_PERIODS:
+        raise Http404
+    if fmt not in {"pdf", "xlsx"}:
+        raise Http404
+
+    report = build_financial_report(period)
+    filename = export_filename(report, fmt)
+
+    if fmt == "xlsx":
+        content = render_report_excel(report)
+        content_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    else:
+        content = render_report_pdf(report)
+        content_type = "application/pdf"
+
+    from django.http import HttpResponse
+    response = HttpResponse(content, content_type=content_type)
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response
 
 
 def admin_dashboard_view(request):
@@ -511,7 +579,7 @@ def admin_dashboard_view(request):
         )
     ).filter(_kredit_calculated__isnull=False)
 
-    debtors_qs = hraci_s_kreditem.filter(_kredit_calculated__lt=0).order_by("_kredit_calculated")[:8]
+    debtors_qs = SystemNastaveni.load().filter_debtors(hraci_s_kreditem).order_by("_kredit_calculated")[:8]
     debtors = [{
         "name": h.cele_jmeno,
         "kredit": f"{(h._kredit_calculated or 0):.0f} Kč",
@@ -540,7 +608,7 @@ def admin_dashboard_view(request):
 
     ctx = dict(
         admin.site.each_context(request),
-        title="Přehled",
+        title=_("Přehled"),
         quick={
             "add_training": reverse("admin:core_trening_add"),
             "add_payment": reverse("admin:core_transakce_add"),
@@ -553,3 +621,432 @@ def admin_dashboard_view(request):
         posledni_treninky=posledni_treninky,
     )
     return TemplateResponse(request, "admin/dashboard.html", ctx)
+
+
+REZIM_LABELS = dict(VyuctovaniNastaveni.AutoRezim.choices)
+
+
+def _build_diagnostika_context():
+    """Statistiky systému pro záložku Nástroje."""
+    from django.conf import settings as dj_settings
+
+    nast = SystemNastaveni.load()
+    posledni_vyuct = (
+        Vyuctovani.objects.order_by("-created_at")
+        .values_list("created_at", "hrac__prijmeni", "hrac__jmeno")
+        .first()
+    )
+    posledni_vyuct_label = None
+    if posledni_vyuct:
+        dt = posledni_vyuct[0]
+        if dj_tz.is_aware(dt):
+            dt = dj_tz.localtime(dt)
+        jmeno = " ".join(p for p in (posledni_vyuct[1], posledni_vyuct[2]) if p).strip()
+        posledni_vyuct_label = f"{dt.strftime('%d.%m.%Y %H:%M')} – {jmeno or '—'}"
+
+    email_host = getattr(dj_settings, "EMAIL_HOST", "") or ""
+    email_configured = bool(email_host and getattr(dj_settings, "EMAIL_HOST_USER", ""))
+
+    return {
+        "hraci_pocet": Hrac.objects.count(),
+        "treningy_pocet": Trening.objects.count(),
+        "platby_pocet": Transakce.objects.filter(
+            typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA]
+        ).count(),
+        "email_configured": email_configured,
+        "email_from": nast.effective_from_email(),
+        "email_host": email_host or "—",
+        "posledni_vyuctovani": posledni_vyuct_label or _("Zatím žádné"),
+        "db_engine": dj_settings.DATABASES["default"]["ENGINE"].rsplit(".", 1)[-1],
+    }
+
+
+def admin_nastaveni_view(request):
+    """Centrální stránka nastavení systému."""
+    if not request.user.is_staff:
+        raise Http404
+
+    nastaveni = SystemNastaveni.load()
+    vyuct_nast = VyuctovaniNastaveni.load()
+
+    if request.method == "POST":
+        action = (request.POST.get("_action") or "save").strip()
+
+        if action == "test_email":
+            test_to = (request.POST.get("test_email_to") or request.user.email or "").strip()
+            if not test_to:
+                messages.error(request, _("Zadejte e-mail pro testovací zprávu."))
+            else:
+                try:
+                    from core.utils.email_archive import send_and_append_to_sent
+
+                    subject = nastaveni.format_email_subject("Test e-mailu z nastavení")
+                    body = (
+                        "Toto je testovací zpráva z tenisového systému.\n\n"
+                        f"{nastaveni.effective_podpis()}"
+                    )
+                    send_and_append_to_sent(subject=subject, body=body, to=test_to)
+                    messages.success(
+                        request,
+                        _("Testovací e-mail odeslán na %(email)s.") % {"email": test_to},
+                    )
+                except Exception as exc:
+                    messages.error(
+                        request,
+                        _("Odeslání testovacího e-mailu selhalo: %(error)s") % {"error": exc},
+                    )
+            return redirect("admin:nastaveni")
+
+        form = SystemNastaveniForm(
+            request.POST,
+            request.FILES,
+            instance=nastaveni,
+            vyuct_rezim_initial=vyuct_nast.auto_rezim,
+        )
+        if form.is_valid():
+            _apply_system_nastaveni_form(form, vyuct_nast)
+            nastaveni.refresh_from_db()
+            messages.success(request, _("Nastavení systému uloženo."))
+            response = redirect("admin:nastaveni")
+            set_language_cookie(response, nastaveni.vychozi_jazyk)
+            return response
+        messages.error(request, _("Nastavení se nepodařilo uložit. Zkontrolujte zvýrazněná pole."))
+    else:
+        form = SystemNastaveniForm(
+            instance=nastaveni,
+            vyuct_rezim_initial=vyuct_nast.auto_rezim,
+        )
+
+    theme_options = theme_options_for_template()
+
+    uzivatele_pocet = User.objects.filter(is_staff=True).count()
+    skupiny_pocet = Group.objects.count()
+
+    sidebar_panels = [
+        {"id": "obecne", "label": _("Obecné"), "type": "form"},
+        {"id": "vzhled", "label": _("Vzhled"), "type": "form"},
+        {"id": "provoz", "label": _("Provoz"), "type": "form"},
+        {"id": "emaily", "label": _("E-maily"), "type": "form"},
+        {"id": "upozorneni", "label": _("Upozornění"), "type": "form"},
+        {
+            "id": "uzivatele",
+            "label": _("Uživatelé"),
+            "type": "links",
+            "items": [
+                {
+                    "label": _("Uživatelé"),
+                    "detail": _("%(count)s účtů · %(staff)s s přístupem")
+                    % {"count": User.objects.count(), "staff": uzivatele_pocet},
+                    "url": reverse("admin:auth_user_changelist"),
+                },
+                {
+                    "label": _("Skupiny"),
+                    "detail": _("%(count)s skupin oprávnění") % {"count": skupiny_pocet},
+                    "url": reverse("admin:auth_group_changelist"),
+                },
+                {
+                    "label": _("Změna hesla"),
+                    "detail": request.user.get_username(),
+                    "url": reverse("admin:password_change"),
+                },
+            ],
+        },
+        {
+            "id": "nastroje",
+            "label": _("Nástroje"),
+            "type": "mixed",
+        },
+    ]
+
+    provoz_links = [
+        {
+            "label": _("Nastavení vyúčtování"),
+            "detail": REZIM_LABELS.get(vyuct_nast.auto_rezim, vyuct_nast.auto_rezim),
+            "url": reverse("admin:core_vyuctovani_nastaveni"),
+        },
+        {
+            "label": _("Ceník menu"),
+            "detail": _("Typy a formáty tréninků"),
+            "url": reverse("admin:core_cenik_formaty"),
+        },
+        {
+            "label": _("Rodiny"),
+            "detail": _("Rodinné skupiny hráčů"),
+            "url": reverse("admin:core_hrac_rodina_changelist"),
+        },
+    ]
+
+    vyuct_summary = {
+        "rezim": REZIM_LABELS.get(vyuct_nast.auto_rezim, vyuct_nast.auto_rezim),
+        "popis": vyuct_nast.popis_rezimu(),
+        "email": _("Zapnuto") if vyuct_nast.auto_posilat_email else _("Vypnuto"),
+        "email_variant": vyuct_nast.get_email_variant_display(),
+    }
+
+    nastroje_links = [
+        {
+            "label": _("Analytika"),
+            "detail": _("Přehledy a exporty"),
+            "url": reverse("admin:analytika"),
+        },
+        {
+            "label": _("Rozvrh tréninků"),
+            "detail": _("Týdenní kalendář"),
+            "url": reverse("admin:core_trening_schedule"),
+        },
+    ]
+
+    from core.data_import import is_sqlite_database
+    from core.roles import can_export_data, can_import_data, can_manage_users
+
+    show_data_export = can_export_data(request.user)
+    show_data_import = can_import_data(request.user) and is_sqlite_database()
+    if show_data_export:
+        nastroje_links.append(
+            {
+                "label": _("Export dat (JSON)"),
+                "detail": _("Záloha hráčů, tréninků a plateb"),
+                "url": reverse("admin:nastaveni_export"),
+            }
+        )
+
+    if not can_manage_users(request.user):
+        for panel in sidebar_panels:
+            if panel["id"] == "uzivatele":
+                panel["items"] = [
+                    item for item in panel["items"]
+                    if item["url"] == reverse("admin:password_change")
+                ]
+
+    ctx = {
+        **admin.site.each_context(request),
+        "title": _("Nastavení"),
+        "form": form,
+        "theme_options": theme_options,
+        "theme_presets": presets_for_js(),
+        "nastaveni_config": {
+            "vzhledUrl": reverse("admin:nastaveni_vzhled"),
+            "saveUrl": reverse("admin:nastaveni_autosave"),
+            "barevnaVarianta": nastaveni.barevna_varianta or DEFAULT_THEME,
+        },
+        "aktualni_varianta": nastaveni.barevna_varianta,
+        "sidebar_panels": sidebar_panels,
+        "provoz_links": provoz_links,
+        "vyuct_summary": vyuct_summary,
+        "nastroje_links": nastroje_links,
+        "show_data_export": show_data_export,
+        "show_data_import": show_data_import,
+        "diagnostika": _build_diagnostika_context(),
+        "test_email_default": request.user.email or "",
+        "email_predmet_nahled": nastaveni.email_subject_preview(),
+        "email_odesilatel_nahled": nastaveni.effective_from_email(),
+        "ts_js_i18n": get_nastaveni_js_i18n(),
+        "ts_js_locale": get_js_locale(),
+    }
+    return TemplateResponse(request, "admin/nastaveni.html", ctx)
+
+
+def admin_nastaveni_import_view(request):
+    """Import JSON zálohy – jen platform admin + SQLite."""
+    from core.roles import can_import_data
+
+    if not can_import_data(request.user):
+        raise Http404
+    if request.method != "POST":
+        return redirect("admin:nastaveni")
+
+    upload = request.FILES.get("import_file")
+    if not upload:
+        messages.error(request, _("Vyberte JSON soubor k importu."))
+        return redirect("admin:nastaveni")
+
+    import tempfile
+    from pathlib import Path
+
+    from core.data_import import ImportNotAllowed, import_dump_file
+
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp:
+            for chunk in upload.chunks():
+                tmp.write(chunk)
+            tmp_path = Path(tmp.name)
+        backup = import_dump_file(tmp_path, backup=True)
+        msg = _("Data naimportována.")
+        if backup:
+            msg += " " + _("Záloha DB: %(name)s") % {"name": backup.name}
+        messages.success(request, msg)
+    except ImportNotAllowed as exc:
+        messages.error(request, str(exc))
+    except Exception as exc:
+        messages.error(request, _("Import selhal: %(error)s") % {"error": exc})
+    finally:
+        if tmp_path and tmp_path.exists():
+            tmp_path.unlink(missing_ok=True)
+
+    return redirect("admin:nastaveni")
+
+
+def _apply_system_nastaveni_form(form, vyuct_nast) -> None:
+    form.save()
+    rezim = form.cleaned_data.get("vyuctovani_rezim")
+    if rezim and rezim != vyuct_nast.auto_rezim:
+        vyuct_nast.auto_rezim = rezim
+        vyuct_nast.save()
+    from .admin_urls import refresh_admin_branding
+    refresh_admin_branding()
+
+
+def _merge_nastaveni_autosave_post(post, nastaveni: SystemNastaveni, vyuct_nast: VyuctovaniNastaveni):
+    """Doplní chybějící pole pro AJAX autosave z aktuální instance."""
+    merged = post.copy()
+    boolean_fields = {
+        "tmavy_rezim",
+        "sezona_automaticky_kurt",
+        "zvyraznit_zaporny_kredit",
+    }
+    scalar_fields = [
+        "nazev_klubu",
+        "slogan",
+        "kontakt_email",
+        "kontakt_telefon",
+        "kontakt_adresa",
+        "vychozi_jazyk",
+        "email_podpis",
+        "barevna_varianta",
+        "vychozi_delka_minut",
+        "vychozi_kurt",
+        "sezona_venek_od",
+        "sezona_venek_do",
+        "rozvrh_od_hodina",
+        "rozvrh_do_hodina",
+        "vychozi_zobrazeni_rozvrhu",
+        "prah_dluhu_dashboard",
+        "radku_na_stranku",
+    ]
+    for field in scalar_fields:
+        if field not in merged:
+            merged[field] = getattr(nastaveni, field)
+    for field in boolean_fields:
+        if field not in merged:
+            if getattr(nastaveni, field):
+                merged[field] = "on"
+    if "vyuctovani_rezim" not in merged:
+        merged["vyuctovani_rezim"] = vyuct_nast.auto_rezim
+    if "email_jmeno" not in merged:
+        jmeno, _adresa = nastaveni.from_email_parts()
+        merged["email_jmeno"] = jmeno
+    if "email_adresa" not in merged:
+        _jmeno, adresa = nastaveni.from_email_parts()
+        merged["email_adresa"] = adresa
+    if "email_oznaceni" not in merged:
+        merged["email_oznaceni"] = nastaveni.subject_tag_display()
+    return merged
+
+
+def _nastaveni_autosave_payload(nastaveni: SystemNastaveni, *, language_changed: bool = False) -> dict:
+    payload = {
+        "ok": True,
+        "nazev_klubu": nastaveni.nazev_klubu or "",
+        "vychozi_jazyk": nastaveni.vychozi_jazyk or settings.LANGUAGE_CODE,
+        "language_changed": language_changed,
+    }
+    if nastaveni.logo:
+        payload["logo_url"] = nastaveni.logo.url
+    if nastaveni.favicon:
+        payload["favicon_url"] = nastaveni.favicon.url
+    return payload
+
+
+def admin_nastaveni_autosave_view(request):
+    """Okamžité uložení nastavení (AJAX)."""
+    if not request.user.is_staff:
+        return JsonResponse({"ok": False, "error": "Forbidden"}, status=403)
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "Method not allowed"}, status=405)
+
+    nastaveni = SystemNastaveni.load()
+    vyuct_nast = VyuctovaniNastaveni.load()
+    old_lang = nastaveni.vychozi_jazyk
+
+    post_data = _merge_nastaveni_autosave_post(request.POST, nastaveni, vyuct_nast)
+    form = SystemNastaveniForm(
+        post_data,
+        request.FILES,
+        instance=nastaveni,
+        vyuct_rezim_initial=vyuct_nast.auto_rezim,
+    )
+    if not form.is_valid():
+        errors = {field: [str(msg) for msg in msgs] for field, msgs in form.errors.items()}
+        return JsonResponse({"ok": False, "errors": errors}, status=400)
+
+    _apply_system_nastaveni_form(form, vyuct_nast)
+    nastaveni.refresh_from_db()
+    language_changed = nastaveni.vychozi_jazyk != old_lang
+    response = JsonResponse(
+        _nastaveni_autosave_payload(nastaveni, language_changed=language_changed)
+    )
+    set_language_cookie(response, nastaveni.vychozi_jazyk)
+    return response
+
+
+def admin_nastaveni_vzhled_view(request):
+    """Okamžité uložení palety a tmavého režimu (AJAX)."""
+    if not request.user.is_staff:
+        return JsonResponse({"ok": False, "error": "Forbidden"}, status=403)
+    if request.method != "POST":
+        return JsonResponse({"ok": False, "error": "Method not allowed"}, status=405)
+
+    nast = SystemNastaveni.load()
+
+    variant = (request.POST.get("barevna_varianta") or "").strip()
+    if variant and variant in THEME_VARIANTS:
+        nast.barevna_varianta = variant
+    elif variant:
+        return JsonResponse({"ok": False, "error": "Neplatná paleta."}, status=400)
+
+    if "tmavy_rezim" in request.POST:
+        val = request.POST.get("tmavy_rezim", "")
+        nast.tmavy_rezim = val in ("1", "true", "on", "True")
+
+    nast.save(sync_colors=True)
+
+    from .admin_urls import refresh_admin_branding
+    refresh_admin_branding()
+
+    colors = resolve_theme_colors(nast)
+    tmavy = bool(nast.tmavy_rezim)
+    variant = nast.barevna_varianta or DEFAULT_THEME
+    return JsonResponse(
+        {
+            "ok": True,
+            "barevna_varianta": variant,
+            "tmavy_rezim": tmavy,
+            "theme": variant,
+            "palette": variant,
+            "mode": "dark" if tmavy else "light",
+            "colors": colors,
+            "theme_style": css_vars_style_block(colors, dark=tmavy),
+        }
+    )
+
+
+def admin_nastaveni_export_view(request):
+    """Stažení JSON zálohy dat – jen platform admin."""
+    from core.roles import can_export_data
+
+    if not can_export_data(request.user):
+        raise Http404
+
+    from core.data_export import build_production_dump_json
+
+    try:
+        raw = build_production_dump_json()
+    except Exception as exc:
+        messages.error(request, _("Export dat se nezdařil: %(error)s") % {"error": exc})
+        return redirect("admin:nastaveni")
+
+    filename = f"tennis_export_{dj_tz.localdate():%Y%m%d}.json"
+    response = HttpResponse(raw, content_type="application/json; charset=utf-8")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    return response

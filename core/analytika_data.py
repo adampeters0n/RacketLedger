@@ -16,6 +16,7 @@ from .models import (
     Dochazka,
     Hrac,
     OstatniNaklad,
+    SystemNastaveni,
     TrenerPlatba,
     TrenerProfil,
     TrenerSazba,
@@ -689,11 +690,14 @@ def build_analytika_context(section: str, request) -> dict:
 
         ctx["kpis"] = {
             "hours": f"{hours_current:.2f} h",
+            "hours_value": float(hours_current),
             "nauctovano": f"{nac_current:.0f} Kč",
             "platby": f"{pays_current:.0f} Kč",
             "k_vyplaceni": f"{total_trener_to_pay_now:.0f} Kč",
             "total_debt": f"{total_debt:.0f} Kč",
             "total_surplus": f"{total_surplus:.0f} Kč",
+            "total_debt_value": float(abs(total_debt)),
+            "total_surplus_value": float(total_surplus),
             "total_balance": f"{total_balance:.0f} Kč",
             "unpaid": f"{unpaid_amount:.0f} Kč",
             "nauctovano_value": float(nac_current),
@@ -722,7 +726,7 @@ def build_analytika_context(section: str, request) -> dict:
             "kredit": f"{(h._kredit_calculated or 0):.0f} Kč",
             "url": reverse("admin:core_hrac_change", args=[h.id]),
             "kredit_value": float(h._kredit_calculated or 0),
-        } for h in hraci_qs.filter(_kredit_calculated__lt=0).order_by("_kredit_calculated")]
+        } for h in SystemNastaveni.load().filter_debtors(hraci_qs).order_by("_kredit_calculated")]
         ctx["debtors"] = debtors
         ctx["top_debtors"] = debtors[:5]
         ctx["top_surplus"] = [{

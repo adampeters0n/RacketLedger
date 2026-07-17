@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
       ['nav-hraci',      /^\/admin\/core\/hrac(\/|$)/],
       ['nav-platby',     /^\/admin\/core\/transakce(\/|$)/],
       ['nav-vyuctovani', /^\/admin\/core\/vyuctovani(\/|$)/],
-      ['nav-uzivatele',  /^\/admin\/auth\/(?:user|group)(\/|$)/],
+      ['nav-nastaveni',  /^\/admin\/(?:nastaveni|auth\/(?:user|group))(\/|$)/],
     ];
     for (const [id, re] of tests) {
       if (re.test(path)) {

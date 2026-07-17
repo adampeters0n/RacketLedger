@@ -1,6 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load static %}
-
+{% load static i18n %}
 {% block extrastyle %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'admin/css/trener.css' %}">
@@ -9,14 +8,14 @@
 {% block content %}
 <div id="content-main">
   <div class="module">
-    <h2>Trenér – {{ trener.get_full_name|default:trener.username }}</h2>
+    <h2>{% trans "Trenér" %} – {{ trener.get_full_name|default:trener.username }}</h2>
 
     <form method="get" class="trener-filter-form">
-      <a class="button secondary" href="{{ summary_url }}">← Zpět na souhrn</a>
-      <label>Od: <input type="date" name="from" value="{{ dfrom|date:'Y-m-d' }}"></label>
-      <label>Do: <input type="date" name="to" value="{{ dto|date:'Y-m-d' }}"></label>
-      <button type="submit" class="button">Filtrovat</button>
-      <a class="button trener-btn-platba" href="{{ platba_add_url }}">Zadat výplatu</a>
+      <a class="button secondary" href="{{ summary_url }}">{% trans "← Zpět na souhrn" %}</a>
+      <label>{% trans "Od:" %} <input type="date" name="from" value="{{ dfrom|date:'Y-m-d' }}"></label>
+      <label>{% trans "Do:" %} <input type="date" name="to" value="{{ dto|date:'Y-m-d' }}"></label>
+      <button type="submit" class="button">{% trans "Filtrovat" %}</button>
+      <a class="button trener-btn-platba" href="{{ platba_add_url }}">{% trans "Zadat výplatu" %}</a>
     </form>
 
     <div class="trener-detail-layout">
@@ -24,39 +23,39 @@
 
         <div class="trener-summary-bar trener-kpi-bar">
           <div class="trener-kpi">
-            <span class="trener-kpi-label">Celková odehraná částka</span>
+            <span class="trener-kpi-label">{% trans "Celková odehraná částka" %}</span>
             <strong class="trener-kpi-value">{{ celkova_castka }}</strong>
           </div>
           <div class="trener-kpi">
-            <span class="trener-kpi-label">Aktuální měsíc ({{ mesic_label }})</span>
+            <span class="trener-kpi-label">{% blocktrans with label=mesic_label %}Aktuální měsíc ({{ label }}){% endblocktrans %}</span>
             <strong class="trener-kpi-value">{{ mesic_castka }}</strong>
           </div>
           <div class="trener-kpi trener-kpi-debt">
-            <span class="trener-kpi-label">Dlužná částka</span>
+            <span class="trener-kpi-label">{% trans 'Dlužná částka' %}</span>
             <strong class="trener-kpi-value">{{ dluzna_castka }}</strong>
           </div>
         </div>
 
         {% if dfrom or dto %}
         <div class="trener-filter-summary">
-          Ve vybraném období:
-          Počet tréninků <strong>{{ pocet }}</strong> |
-          Hodiny <strong>{{ total_hours }}</strong> |
-          Částka <strong>{{ total_castka }}</strong>
+          {% trans "Ve vybraném období:" %}
+          {% trans "Počet tréninků" %} <strong>{{ pocet }}</strong> |
+          {% trans "Hodiny" %} <strong>{{ total_hours }}</strong> |
+          {% trans "Částka" %} <strong>{{ total_castka }}</strong>
         </div>
         {% endif %}
 
         {% if mesice %}
         <div class="results trener-detail-table-wrapper trener-section">
-          <h3 class="trener-section-heading">Částka k vyplacení po měsících</h3>
+          <h3 class="trener-section-heading">{% trans "Částka k vyplacení po měsících" %}</h3>
           <table class="trener-monthly-table">
             <thead>
               <tr>
-                <th>Měsíc</th>
-                <th class="center">Tréninky</th>
-                <th class="center">Hodiny</th>
-                <th class="center">Částka k vyplacení</th>
-                <th class="center">Vyplaceno</th>
+                <th>{% trans "Měsíc" %}</th>
+                <th class="center">{% trans "Tréninky" %}</th>
+                <th class="center">{% trans "Hodiny" %}</th>
+                <th class="center">{% trans "Částka k vyplacení" %}</th>
+                <th class="center">{% trans "Vyplaceno" %}</th>
               </tr>
             </thead>
             <tbody>
@@ -85,63 +84,61 @@
         <div class="trener-rate-box trener-rate-box-spaced">
           <form method="post" class="module trener-rate-form">
             {% csrf_token %}
-            <h3 class="trener-rate-heading">Nová sazba od…</h3>
+            <h3 class="trener-rate-heading">{% trans "Nová sazba od…" %}</h3>
             <p>
-              <label>Od data:
+              <label>{% trans "Od data:" %}
                 <input type="date" name="rate_from" value="{{ rate_form_initial_date }}">
               </label>
             </p>
             <p>
-              <label>Částka (Kč/h):
-                <input type="number" step="1" min="1" name="rate_amount" value="{{ rate_today_amount }}">
+              <label>{% trans "Částka (Kč/h):" %}<input type="number" step="1" min="1" name="rate_amount" value="{{ rate_today_amount }}">
               </label>
             </p>
             <p>
-              <button class="button" type="submit" name="_nastavit_sazbu">Nastavit sazbu</button>
+              <button class="button" type="submit" name="_nastavit_sazbu">{% trans "Nastavit sazbu" %}</button>
             </p>
-            <p class="trener-rate-hint">
-              Aktuální sazba dnes: <strong>{{ rate_today_amount }} Kč/h</strong>
+            <p class="trener-rate-hint">{% trans "Aktuální sazba dnes:" %}<strong>{{ rate_today_amount }} Kč/h</strong>
             </p>
           </form>
         </div>
 
         <div class="trener-sazby-section">
-          <strong>Účinné sazby:</strong>
+          <strong>{% trans "Účinné sazby:" %}</strong>
           <ul class="trener-sazby-list">
             {% for s in sazby %}
               <li>
                 {{ s.platnost_od|date:"d.m.Y" }} – {{ s.platnost_do|default:"—"|date:"d.m.Y" }}:
-                {{ s.sazba_za_hodinu }} Kč/h
-                &nbsp;<a href="{% url 'admin:core_trenersazba_change' s.id %}">(upravit)</a>
+                {{ s.sazba_za_hodinu }} {% trans "Kč/h" %}
+                &nbsp;<a href="{% url 'admin:core_trenersazba_change' s.id %}">{% trans "(upravit)" %}</a>
               </li>
             {% empty %}
-              <li>Žádné záznamy sazeb. Používá se výchozí sazba z profilu (nebo 500 Kč/h).</li>
+              <li>{% trans "Žádné záznamy sazeb. Používá se výchozí sazba z profilu (nebo 500 Kč/h)." %}</li>
             {% endfor %}
           </ul>
         </div>
 
         <div class="results trener-detail-table-wrapper trener-section">
-          <h3 class="trener-section-heading">Odehrané tréninky</h3>
+          <h3 class="trener-section-heading">{% trans "Odehrané tréninky" %}</h3>
 
           {% if training_months %}
             {% for month in training_months %}
               <details class="trener-trainings-month"{% if month.is_open %} open{% endif %}>
                 <summary class="trener-trainings-month__summary">
                   <span class="trener-trainings-month__label">{{ month.label }}</span>
-                  <span class="trener-trainings-month__meta">{{ month.pocet }} tréninků</span>
+                  <span class="trener-trainings-month__meta">{% blocktrans with count=month.pocet %}{{ count }} tréninků{% endblocktrans %}</span>
                 </summary>
                 <div class="trener-trainings-month__body">
                   <table class="trener-trainings-table">
                     <thead>
                       <tr>
-                        <th>Datum</th>
-                        <th>Čas</th>
-                        <th>Formát</th>
-                        <th>Kurt</th>
-                        <th>Hráči</th>
-                        <th>Hodiny</th>
-                        <th>Sazba</th>
-                        <th>Částka</th>
+                        <th>{% trans "Datum" %}</th>
+                        <th>{% trans "Čas" %}</th>
+                        <th>{% trans "Formát" %}</th>
+                        <th>{% trans "Kurt" %}</th>
+                        <th>{% trans "Hráči" %}</th>
+                        <th>{% trans "Hodiny" %}</th>
+                        <th>{% trans "Sazba" %}</th>
+                        <th>{% trans "Částka" %}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -163,7 +160,7 @@
               </details>
             {% endfor %}
           {% else %}
-            <p class="trener-trainings-empty">Žádné tréninky.</p>
+            <p class="trener-trainings-empty">{% trans "Žádné tréninky." %}</p>
           {% endif %}
         </div>
       </div>

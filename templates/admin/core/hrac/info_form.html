@@ -1,6 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load static %}
-
+{% load static i18n %}
 {% block content %}
   <div id="content" class="colM">
     <h1>{{ title }}</h1>
@@ -12,8 +11,8 @@
       </div>
 
       <div class="submit-row">
-        <input type="submit" value="Uložit" class="default" name="_save">
-        <a class="button" href="{% url 'admin:core_hrac_change' original.pk %}">Zpět na hráče</a>
+        <input type="submit" value="{% trans 'Uložit' %}" class="default" name="_save">
+        <a class="button" href="{% url 'admin:core_hrac_change' original.pk %}">{% trans "Zpět na hráče" %}</a>
       </div>
     </form>
   </div>

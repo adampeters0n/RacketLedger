@@ -1,9 +1,9 @@
 {% load i18n admin_urls %}
 <div class="submit-row">
 {% block submit-row %}
-{% if show_save %}<input type="submit" value="Uložit" class="default" name="_save">{% endif %}
+{% if show_save %}<input type="submit" value="{% trans 'Uložit' %}" class="default" name="_save">{% endif %}
 {% if show_save_as_new %}<input type="submit" value="{% translate 'Save as new' %}" name="_saveasnew">{% endif %}
-{% if show_save_and_add_another %}<input type="submit" value="Uložit: Přidat Další" name="_addanother">{% endif %}
+{% if show_save_and_add_another %}<input type="submit" value="{% trans 'Uložit: Přidat Další' %}" name="_addanother">{% endif %}
 {% if show_save_and_continue %}<input type="submit" value="{% if can_change %}{% translate 'Save and continue editing' %}{% else %}{% translate 'Save and view' %}{% endif %}" name="_continue">{% endif %}
 {% if show_close %}
     {% url opts|admin_urlname:'changelist' as changelist_url %}

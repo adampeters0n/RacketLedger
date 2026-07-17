@@ -1,6 +1,5 @@
 {% extends "admin/base_site.html" %}
-{% load static %}
-
+{% load static i18n %}
 {% block extrastyle %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'admin/css/dashboard.css' %}">
@@ -16,14 +15,19 @@
 <div id="content-main" class="vyuct-set dash-wrap">
   <div class="vyuct-set-header">
     <div>
-      <h1>Nastavení vyúčtování</h1>
+      <h1>{% trans "Nastavení vyúčtování" %}</h1>
       <p class="vyuct-set-lead">
+        {% blocktrans trimmed %}
         Zvolte, kdy má systém automaticky vytvořit vyúčtování a poslat e-mail,
         nebo vypněte automatiku a vyúčtovávejte jen ručně z profilu hráče.
-        Aktuálně: <strong>{{ aktualni_rezim }}</strong> — {{ aktualni_popis }}.
+        {% endblocktrans %}
+        {% blocktrans with rezim=aktualni_rezim popis=aktualni_popis %}Aktuálně: {{ rezim }} — {{ popis }}.{% endblocktrans %}
       </p>
     </div>
-    <a href="{{ changelist_url }}" class="button">← Zpět na vyúčtování</a>
+    <div class="vyuct-set-header-actions">
+      <a href="{% url 'admin:nastaveni' %}" class="button secondary">{% trans "← Nastavení systému" %}</a>
+      <a href="{{ changelist_url }}" class="button">{% trans "← Vyúčtování" %}</a>
+    </div>
   </div>
 
   <form method="post" novalidate class="vyuct-set-form">
@@ -31,7 +35,7 @@
 
     {% if form.errors %}
     <div class="errornote vyuct-set-errors">
-      <p><strong>Nastavení nelze uložit.</strong> Opravte prosím zvýrazněná pole níže.</p>
+      <p><strong>{% trans "Nastavení nelze uložit." %}</strong>{% trans "Opravte prosím zvýrazněná pole níže." %}</p>
       {% if form.non_field_errors %}
       <ul>{% for err in form.non_field_errors %}<li>{{ err }}</li>{% endfor %}</ul>
       {% endif %}
@@ -39,7 +43,7 @@
     {% endif %}
 
     <section class="card vyuct-set-card">
-      <h3>Způsob vyúčtování</h3>
+      <h3>{% trans "Způsob vyúčtování" %}</h3>
       <div class="inner">
         <fieldset class="vyuct-rezim-fieldset">
           <legend class="visually-hidden">{{ form.auto_rezim.label }}</legend>
@@ -52,13 +56,13 @@
                 <span class="vyuct-rezim-body">
                   <span class="vyuct-rezim-text">{{ radio.choice_label }}</span>
                   {% if radio.data.value == "MANUAL" %}
-                  <span class="vyuct-rezim-hint">Systém neposílá automatická vyúčtování. Vyúčtování vytvoříte ručně v profilu hráče nebo u rodiny.</span>
+                  <span class="vyuct-rezim-hint">{% trans "Systém neposílá automatická vyúčtování. Vyúčtování vytvoříte ručně v profilu hráče nebo u rodiny." %}</span>
                   {% elif radio.data.value == "CASTKA" %}
-                  <span class="vyuct-rezim-hint">Po tréninku zkontroluje celkový kredit. Když klesne na zadanou částku (např. −5000 Kč), odešle e-mail s vyúčtováním.</span>
+                  <span class="vyuct-rezim-hint">{% trans "Po tréninku zkontroluje celkový kredit. Když klesne na zadanou částku (např. −5000 Kč), odešle e-mail s vyúčtováním." %}</span>
                   {% elif radio.data.value == "MESICNE" %}
-                  <span class="vyuct-rezim-hint">Od zadaného dne v měsíci uzavře při dalším tréninku období a pošle vyúčtování za uplynulý měsíc.</span>
+                  <span class="vyuct-rezim-hint">{% trans "Od zadaného dne v měsíci uzavře při dalším tréninku období a pošle vyúčtování za uplynulý měsíc." %}</span>
                   {% elif radio.data.value == "N_TRENINGU" %}
-                  <span class="vyuct-rezim-hint">Po zadaném počtu odehraných tréninků od poslední uzávěrky automaticky vytvoří vyúčtování.</span>
+                  <span class="vyuct-rezim-hint">{% trans "Po zadaném počtu odehraných tréninků od poslední uzávěrky automaticky vytvoří vyúčtování." %}</span>
                   {% endif %}
                 </span>
               </label>
@@ -91,7 +95,7 @@
             {{ form.mesicni_den }}
             {% if form.mesicni_den.help_text %}<p class="help">{{ form.mesicni_den.help_text }}</p>{% endif %}
             {{ form.mesicni_den.errors }}
-            <p class="help">Po zadaném dni v měsíci se při dalším tréninku uzavře období od poslední uzávěrky.</p>
+            <p class="help">{% trans "Po zadaném dni v měsíci se při dalším tréninku uzavře období od poslední uzávěrky." %}</p>
           </div>
         </div>
 
@@ -111,21 +115,32 @@
     </section>
 
     <section class="card vyuct-set-card">
-      <h3>E-mail a platební údaje</h3>
+      <h3>{% trans "E-mail a platební údaje" %}</h3>
       <div class="inner">
-        <p class="vyuct-set-intro">
-          Výchozí varianta účtu v automatických e-mailech. Ruční vyúčtování z profilu hráče může zvolit jinou variantu.
-        </p>
+        <p class="vyuct-set-intro">{% trans "Výchozí varianta účtu v automatických e-mailech. Ruční vyúčtování z profilu hráče může zvolit jinou variantu." %}</p>
         <div class="vyuct-set-fields vyuct-set-fields-2col">
           <div class="vyuct-field">
             <label for="{{ form.email_variant.id_for_label }}">{{ form.email_variant.label }}</label>
             {{ form.email_variant }}
           </div>
           <div class="vyuct-field">
+            <label for="{{ form.variabilni_symbol_popis.id_for_label }}">{{ form.variabilni_symbol_popis.label }}</label>
+            {{ form.variabilni_symbol_popis }}
+            {% if form.variabilni_symbol_popis.help_text %}<p class="help">{{ form.variabilni_symbol_popis.help_text }}</p>{% endif %}
+          </div>
+          <div class="vyuct-field">
+            <label for="{{ form.ucet_nazev_1.id_for_label }}">{{ form.ucet_nazev_1.label }}</label>
+            {{ form.ucet_nazev_1 }}
+          </div>
+          <div class="vyuct-field">
             <label for="{{ form.ucet_varianta_1.id_for_label }}">{{ form.ucet_varianta_1.label }}</label>
             {{ form.ucet_varianta_1 }}
           </div>
-          <div class="vyuct-field vyuct-field-full">
+          <div class="vyuct-field">
+            <label for="{{ form.ucet_nazev_2.id_for_label }}">{{ form.ucet_nazev_2.label }}</label>
+            {{ form.ucet_nazev_2 }}
+          </div>
+          <div class="vyuct-field">
             <label for="{{ form.ucet_varianta_2.id_for_label }}">{{ form.ucet_varianta_2.label }}</label>
             {{ form.ucet_varianta_2 }}
           </div>
@@ -134,19 +149,17 @@
     </section>
 
     <section class="card vyuct-set-card">
-      <h3>Přehled hráčů</h3>
+      <h3>{% trans "Přehled hráčů" %}</h3>
       <div class="inner">
-        <p class="vyuct-set-intro">
-          Všichni hráči používají stejný globální režim výše. Tabulka ukazuje stav od poslední uzávěrky.
-          <a href="{{ hraci_url }}">Otevřít všechny hráče →</a>
+        <p class="vyuct-set-intro">{% trans "Všichni hráči používají stejný globální režim výše. Tabulka ukazuje stav od poslední uzávěrky." %}<a href="{{ hraci_url }}">{% trans "Otevřít všechny hráče →" %}</a>
         </p>
         {% if hraci_prehled %}
         <table class="list vyuct-set-table">
           <thead>
             <tr>
-              <th>Hráč</th>
-              <th>Poslední uzávěrka</th>
-              <th>Tréninků od uzávěrky</th>
+              <th>{% trans "Hráč" %}</th>
+              <th>{% trans "Poslední uzávěrka" %}</th>
+              <th>{% trans "Tréninků od uzávěrky" %}</th>
             </tr>
           </thead>
           <tbody>
@@ -160,18 +173,18 @@
           </tbody>
         </table>
         {% if hraci_celkem > 20 %}
-        <p class="help muted">Zobrazeno 20 z {{ hraci_celkem }} hráčů.</p>
+        <p class="help muted">{% blocktrans with total=hraci_celkem %}Zobrazeno 20 z {{ total }} hráčů.{% endblocktrans %}</p>
         {% endif %}
         {% else %}
-        <p class="help muted">Zatím žádní hráči.</p>
+        <p class="help muted">{% trans "Zatím žádní hráči." %}</p>
         {% endif %}
       </div>
     </section>
 
     <div class="vyuct-set-actions card">
       <div class="inner">
-        <button type="submit" class="button default">Uložit nastavení</button>
-        <a href="{{ changelist_url }}" class="button secondary">Zrušit</a>
+        <button type="submit" class="button default">{% trans "Uložit nastavení" %}</button>
+        <a href="{{ changelist_url }}" class="button secondary">{% trans "Zrušit" %}</a>
       </div>
     </div>
   </form>

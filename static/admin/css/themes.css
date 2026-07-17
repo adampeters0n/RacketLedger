@@ -1,0 +1,326 @@
+/* Dynamické přepisy – doplňuje custom.css přes CSS proměnné */
+
+/* ── Navigace: bez bílého boxu, ploché aktivní tlačítko ── */
+#header {
+  background: var(--bg) !important;
+  border-bottom-color: var(--brand) !important;
+  color: var(--text) !important;
+}
+
+.ts-topnav,
+.topnav {
+  background: transparent !important;
+}
+
+.ts-topnav a.is-active,
+.topnav a.active {
+  background: var(--brand) !important;
+  border-color: var(--brand) !important;
+  box-shadow: none !important;
+  color: #fff !important;
+}
+
+html[data-mode="dark"] #header,
+html[data-mode="dark"] .ts-drawer-panel {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .ts-topnav a.is-active,
+html[data-mode="dark"] .topnav a.active {
+  color: #fff !important;
+}
+
+html[data-mode="dark"] .ts-topnav a:hover,
+html[data-mode="dark"] .topnav a:hover {
+  background: var(--brand-100) !important;
+  color: var(--text-strong) !important;
+}
+
+/* ── Tabulky – jednotná barva hlavičky ve všech sloupcích ── */
+#result_list thead th,
+#result_list thead th.sorted,
+#result_list thead th.sortable,
+#result_list thead th.action-checkbox-column,
+.module table thead th,
+.results thead th,
+table.list thead th,
+#changelist table thead th,
+table thead th,
+table thead th a {
+  background: var(--table-head) !important;
+  background-color: var(--table-head) !important;
+  background-image: none !important;
+  color: var(--text-strong) !important;
+  border-color: var(--line) !important;
+  box-shadow: none !important;
+}
+
+#result_list thead tr:hover th,
+#result_list thead tr:hover th a,
+.module table thead tr:hover th,
+.results thead tr:hover th,
+table thead tr:hover th,
+table thead tr:hover th a {
+  background: var(--table-head) !important;
+  background-color: var(--table-head) !important;
+  color: var(--text-strong) !important;
+}
+
+#changelist-filter h2,
+.module caption,
+.grp-module h2,
+.module h2 {
+  background: var(--table-head) !important;
+  color: var(--text-strong) !important;
+}
+
+#changelist-filter a,
+#changelist-filter a:visited,
+.filters a,
+.filters a:visited {
+  text-decoration: none !important;
+}
+
+#changelist-filter a:hover,
+.filters a:hover {
+  text-decoration: none !important;
+  color: var(--brand) !important;
+}
+
+#result_list tbody tr:nth-child(even),
+#result_list tbody tr:nth-child(even) > th,
+#result_list tbody tr:nth-child(even) > td,
+table.payments tbody tr:nth-child(even),
+.results tbody tr:nth-child(even),
+table.list tbody tr:nth-child(even),
+table.list tbody tr:nth-child(even) > td,
+table tbody tr:nth-child(even),
+table tbody tr:nth-child(even) > th,
+table tbody tr:nth-child(even) > td {
+  background: var(--surface) !important;
+}
+
+#result_list tbody tr:nth-child(odd),
+#result_list tbody tr:nth-child(odd) > th,
+#result_list tbody tr:nth-child(odd) > td,
+table tbody tr:nth-child(odd),
+table tbody tr:nth-child(odd) > th,
+table tbody tr:nth-child(odd) > td {
+  background: var(--surface) !important;
+}
+
+#result_list tbody tr:hover > td,
+#result_list tbody tr:hover > th,
+table.payments tbody tr:hover,
+.results tbody tr:hover,
+table.list tbody tr:hover,
+table tbody tr:hover > td,
+table tbody tr:hover > th {
+  background: var(--table-row-hover) !important;
+}
+
+table tbody tr,
+table tbody td,
+table tbody th {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+}
+
+/* Vybrané řádky – celý řádek bez ohraničení */
+#result_list tbody tr.selected,
+#result_list tbody tr.row-selected,
+.results tbody tr.selected,
+.results tbody tr.row-selected,
+table tbody tr.selected,
+table tbody tr.row-selected {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+#result_list tbody tr.selected > th,
+#result_list tbody tr.selected > td,
+#result_list tbody tr.row-selected > th,
+#result_list tbody tr.row-selected > td,
+.results tbody tr.selected > th,
+.results tbody tr.selected > td,
+.results tbody tr.row-selected > th,
+.results tbody tr.row-selected > td,
+table tbody tr.selected > th,
+table tbody tr.selected > td,
+table tbody tr.row-selected > th,
+table tbody tr.row-selected > td {
+  background: var(--table-row-hover) !important;
+  color: var(--text) !important;
+  border-top-color: var(--line) !important;
+  border-bottom-color: var(--line) !important;
+  border-left-color: var(--line) !important;
+  border-right-color: var(--line) !important;
+  box-shadow: none !important;
+}
+
+#result_list tbody tr.selected:hover > th,
+#result_list tbody tr.selected:hover > td,
+#result_list tbody tr.row-selected:hover > th,
+#result_list tbody tr.row-selected:hover > td,
+.results tbody tr.selected:hover > th,
+.results tbody tr.selected:hover > td,
+table tbody tr.selected:hover > th,
+table tbody tr.selected:hover > td,
+table tbody tr.row-selected:hover > th,
+table tbody tr.row-selected:hover > td {
+  background: var(--table-row-hover) !important;
+  color: var(--text) !important;
+}
+
+#result_list tbody tr.selected a,
+#result_list tbody tr.row-selected a,
+.results tbody tr.selected a,
+table tbody tr.selected a,
+table tbody tr.row-selected a {
+  color: var(--text-strong) !important;
+  text-decoration: none !important;
+}
+
+/* Karty a moduly */
+.card,
+.module,
+.dashboard .module,
+.nastaveni-card,
+.vyuct-set-card {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+.card h3,
+.nastaveni-card > h3,
+.vyuct-set-card > h3 {
+  background: var(--brand-100) !important;
+  color: var(--text-strong) !important;
+  border-bottom-color: var(--line) !important;
+}
+
+/* Tmavý režim – vstupy a breadcrumbs */
+html[data-mode="dark"] input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]),
+html[data-mode="dark"] select,
+html[data-mode="dark"] textarea {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] div.breadcrumbs,
+html[data-mode="dark"] .breadcrumbs {
+  background: transparent !important;
+  color: var(--muted, var(--text)) !important;
+}
+
+html[data-mode="dark"] .nastaveni-link-card,
+html[data-mode="dark"] .theme-option-label,
+html[data-mode="dark"] .nast-set-preview {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .nastaveni-link-card strong,
+html[data-mode="dark"] .nast-set-preview-title {
+  color: var(--text-strong) !important;
+}
+
+/* ── Tabulky – odkazy bez podtržení, jemné oddělovače řádků ── */
+#result_list a,
+.results a,
+.module table a,
+#content-main table a,
+#content table a,
+table.list a,
+table.ledger a,
+table.payments a,
+.analytika-table a,
+.mini-table a,
+.dashboard-table a,
+.trener-monthly-table a {
+  text-decoration: none !important;
+}
+
+#result_list a:hover,
+.results a:hover,
+.module table a:hover,
+#content-main table a:hover,
+#content table a:hover,
+table.list a:hover,
+table.ledger a:hover,
+table.payments a:hover,
+.analytika-table a:hover,
+.mini-table a:hover,
+.dashboard-table a:hover,
+.trener-monthly-table a:hover {
+  text-decoration: none !important;
+  color: var(--brand) !important;
+}
+
+#result_list tbody td,
+#result_list tbody th,
+.results tbody td,
+.results tbody th,
+.module table tbody td,
+.module table tbody th,
+#content-main table tbody td,
+#content-main table tbody th,
+#content table tbody td,
+#content table tbody th,
+table.list tbody td,
+table.list tbody th,
+table.ledger tbody td,
+table.ledger tbody th,
+table.payments tbody td,
+table.payments tbody th,
+.analytika-table tbody td,
+.analytika-table tbody th,
+.mini-table tbody td,
+.mini-table tbody th,
+.dashboard-table tbody td,
+.dashboard-table tbody th,
+.trener-monthly-table tbody td,
+.trener-monthly-table tbody th {
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+
+.calendarbox table tbody td,
+.calendarbox table tbody th,
+.clockbox table tbody td,
+.clockbox table tbody th {
+  border: revert !important;
+}
+
+#result_list thead th,
+.results thead th,
+.module table thead th,
+#content-main table thead th,
+#content table thead th,
+table.list thead th,
+table.ledger thead th,
+table.payments thead th,
+.analytika-table thead th,
+.mini-table thead th,
+.dashboard-table thead th,
+.trener-monthly-table thead th {
+  border-bottom: 1px solid var(--line) !important;
+}
+
+/* Respektovat nastavení místo OS dark mode */
+@media (prefers-color-scheme: dark) {
+  :root,
+  html,
+  body,
+  #header,
+  #content {
+    background: var(--bg) !important;
+    color: var(--text) !important;
+  }
+}

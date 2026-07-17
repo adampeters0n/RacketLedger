@@ -1,8 +1,20 @@
 {% extends "admin/change_list.html" %}
 
+{% load i18n %}
 {% block object-tools-items %}
+  <li>
+    <a href="{% url 'admin:nastaveni' %}" class="viewsitelink">{% trans "← Nastavení" %}</a>
+  </li>
   {{ block.super }}
   <li>
-    <a href="{% url 'admin:auth_group_changelist' %}" class="addlink">Skupiny</a>
+    <a href="{% url 'admin:auth_group_changelist' %}" class="addlink">{% trans "Skupiny" %}</a>
   </li>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% trans "Domů" %}</a>
+  &rsaquo; <a href="{% url 'admin:nastaveni' %}">{% trans "Nastavení" %}</a>
+  &rsaquo; {% trans "Uživatelé" %}
+</div>
 {% endblock %}

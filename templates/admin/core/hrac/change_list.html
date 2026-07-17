@@ -1,6 +1,5 @@
 {% extends "admin/change_list.html" %}
-{% load static %}
-
+{% load static i18n %}
 {% block extrahead %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'admin/css/hrac-change-list.css' %}">
@@ -13,9 +12,7 @@
 {% block object-tools-items %}
   {{ block.super }}
   <li>
-    <a href="{% url 'admin:core_rodina_changelist' %}" class="viewsitelink" style="background:#fff; color:#333; border:1px solid #ccc;">
-      Rodiny
-    </a>
+    <a href="{% url 'admin:core_hrac_rodina_changelist' %}" class="viewsitelink" style="background:#fff; color:#333; border: 1px solid #ccc;">{% trans "Rodiny" %}</a>
   </li>
 {% endblock %}
 
@@ -26,30 +23,30 @@
 
   <div id="vyuctovani-modal" class="modal-overlay">
     <div class="modal-content">
-      <h3>Nastavení pro hromadné vyúčtování</h3>
+      <h3>{% trans "Nastavení pro hromadné vyúčtování" %}</h3>
       
       <div class="modal-fields">
-        <label for="id_modal_vyuct_from">Období od:</label>
+        <label for="id_modal_vyuct_from">{% trans "Období od:" %}</label>
         <input type="date" id="id_modal_vyuct_from">
         
-        <label for="id_modal_vyuct_to">Období do:</label>
+        <label for="id_modal_vyuct_to">{% trans "Období do:" %}</label>
         <input type="date" id="id_modal_vyuct_to">
         
-        <label for="id_modal_castka_k_uhrazeni">Částka k úhradě:</label>
+        <label for="id_modal_castka_k_uhrazeni">{% trans "Částka k úhradě:" %}</label>
         <div>
-            <input type="number" id="id_modal_castka_k_uhrazeni" step="1" min="0" placeholder="např. 5000">
-            <small style="color:#666; display:block; margin-top:4px;">(nechte prázdné pro auto-výpočet)</small>
+            <input type="number" id="id_modal_castka_k_uhrazeni" step="1" min="0" placeholder="{% trans 'např. 5000' %}">
+            <small style="color:#666; display:block; margin-top:4px;">{% trans "(nechte prázdné pro auto-výpočet)" %}</small>
         </div>
 
         <label for="id_modal_email_variant">Varianta e-mailu:</label>
         <select id="id_modal_email_variant">
-            <option value="1" selected>Účet 1 AJ Sport</option>
-            <option value="2">Účet 2 Káťa</option>
+            <option value="1" selected>{{ email_variant_label_1 }}</option>
+            <option value="2">{{ email_variant_label_2 }}</option>
         </select>
       </div>
 
       <div class="modal-actions">
-        <button type="button" id="modal-cancel-button" class="button secondary">Zrušit</button>
+        <button type="button" id="modal-cancel-button" class="button secondary">{% trans "Zrušit" %}</button>
         <button type="button" id="modal-confirm-button" class="button default">Vygenerovat a odeslat</button>
       </div>
     </div>
@@ -57,32 +54,30 @@
 
   <div id="platba-modal" class="modal-overlay">
     <div class="modal-content">
-      <h3>Zadat platbu vybraným hráčům</h3>
-      <p style="margin-top:-10px; margin-bottom:20px; color:#666; font-size:13px;">
-          Tato platba bude připsána všem zaškrtnutým hráčům.
-      </p>
+      <h3>{% trans "Zadat platbu vybraným hráčům" %}</h3>
+      <p style="margin-top:-10px; margin-bottom:20px; color:#666; font-size:13px;">{% trans "Tato platba bude připsána všem zaškrtnutým hráčům." %}</p>
       
       <div class="modal-fields">
-        <label>Částka (Kč):</label> 
-        <input type="number" id="id_modal_payment_amount" step="1" placeholder="např. 2000" style="font-weight:bold;">
+        <label>{% trans "Částka (Kč):" %}</label> 
+        <input type="number" id="id_modal_payment_amount" step="1" placeholder="{% trans 'např. 2000' %}" style="font-weight:bold;">
         
         <label>Typ:</label>
         <select id="id_modal_payment_type">
             <option value="PLATBA" selected>Platba (Vklad)</option>
             <option value="VRATKA">Vratka / Bonifikace</option>
-            <option value="NAUCTOVANO">Ruční stržení (Mínus)</option>
+            <option value="NAUCTOVANO">{% trans "Ruční stržení (Mínus)" %}</option>
         </select>
 
         <label>Datum:</label> 
         <input type="date" id="id_modal_payment_date">
 
-        <label>Poznámka:</label> 
-        <input type="text" id="id_modal_payment_note" placeholder="např. Příspěvky podzim">
+        <label>{% trans "Poznámka:" %}</label> 
+        <input type="text" id="id_modal_payment_note" placeholder="{% trans 'např. Příspěvky podzim' %}">
       </div>
 
       <div class="modal-actions">
-        <button type="button" id="platba-cancel-button" class="button secondary">Zrušit</button>
-        <button type="button" id="platba-confirm-button" class="button default" style="background:#10b981; border-color:#059669;">Provést platbu</button>
+        <button type="button" id="platba-cancel-button" class="button secondary">{% trans "Zrušit" %}</button>
+        <button type="button" id="platba-confirm-button" class="button default" style="background:#10b981; border-color:#059669;">{% trans "Provést platbu" %}</button>
       </div>
     </div>
   </div>

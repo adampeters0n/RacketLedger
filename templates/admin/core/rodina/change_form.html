@@ -1,6 +1,5 @@
 {% extends "admin/change_form.html" %}
-{% load static %}
-
+{% load static i18n %}
 {% block extrastyle %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'admin/css/rodina-change-form.css' %}">
@@ -13,18 +12,16 @@
   <div class="actions-row">
     <form method="post" style="display:flex; gap:8px; align-items:center;">
       {% csrf_token %}
-      <label for="id_vyuct_from">Období</label>
+      <label for="id_vyuct_from">{% trans "Období" %}</label>
       <input type="date" name="_vyuct_from" id="id_vyuct_from">
       <span>–</span>
       <input type="date" name="_vyuct_to" id="id_vyuct_to">
 
-      <label for="id_castka_k_uhrazeni" style="margin-left:10px;">Částka k úhradě</label>
+      <label for="id_castka_k_uhrazeni" style="margin-left:10px;">{% trans "Částka k úhradě" %}</label>
       <input type="number" name="_castka_k_uhrazeni" id="id_castka_k_uhrazeni"
-             step="1" min="0" placeholder="např. 5000" style="width:120px;">
+             step="1" min="0" placeholder="{% trans 'např. 5000' %}" style="width:120px;">
 
-      <button type="submit" name="_vyuctovat_rodinu" class="button default">
-        Vygenerovat vyúčtování rodiny
-      </button>
+      <button type="submit" name="_vyuctovat_rodinu" class="button default">{% trans "Vygenerovat vyúčtování rodiny" %}</button>
     </form>
   </div>
 {% endblock %}
@@ -32,16 +29,16 @@
 
 {% block after_related_objects %}
   <div class="ledger-card">
-    <h2 class="ledger-title">Historie tréninků a plateb (rodina)</h2>
+    <h2 class="ledger-title">{% trans "Historie tréninků a plateb (rodina)" %}</h2>
 
     <form method="get" class="ledger-filter" style="display:flex; gap:8px; align-items:center; margin:6px 0 10px;">
-      <label>Období:</label>
+      <label>{% trans "Období:" %}</label>
       <input type="date" name="from" value="{{ filter_from|date:'Y-m-d' }}">
       <span>–</span>
       <input type="date" name="to"   value="{{ filter_to|date:'Y-m-d' }}">
-      <button class="button">Filtrovat</button>
+      <button class="button">{% trans "Filtrovat" %}</button>
       {% if filter_from or filter_to %}
-        <a class="button" href="{{ request.path }}">Zrušit</a>
+        <a class="button" href="{{ request.path }}">{% trans "Zrušit" %}</a>
       {% endif %}
     </form>
 
@@ -49,16 +46,16 @@
       <table class="ledger">
         <thead>
           <tr>
-            <th>Datum</th>
-            <th>Čas</th>
-            <th>Hráč</th>
-            <th>Hodiny</th>
-            <th>Skupina</th>
-            <th>Sezóna</th>
-            <th>Cena</th>
-            <th>Zaplaceno</th>
-            <th>Kredit</th>
-            <th>Akce</th>
+            <th>{% trans "Datum" %}</th>
+            <th>{% trans "Čas" %}</th>
+            <th>{% trans "Hráč" %}</th>
+            <th>{% trans "Hodiny" %}</th>
+            <th>{% trans "Skupina" %}</th>
+            <th>{% trans "Sezóna" %}</th>
+            <th>{% trans "Cena" %}</th>
+            <th>{% trans "Zaplaceno" %}</th>
+            <th>{% trans "Kredit" %}</th>
+            <th>{% trans "Akce" %}</th>
           </tr>
         </thead>
         <tbody>
@@ -70,28 +67,28 @@
               <td>{{ r.hodiny }}</td>
               <td>{{ r.skupina }}</td>
               <td>{{ r.sezona }}</td>
-              <td>{% if r.cena %}{{ r.cena }} Kč{% endif %}</td>
-              <td>{% if r.zaplaceno %}{{ r.zaplaceno }} Kč{% endif %}</td>
-              <td>{{ r.kredit }} Kč</td>
+              <td>{% if r.cena %}{{ r.cena }} {% trans "Kč" %}{% endif %}</td>
+              <td>{% if r.zaplaceno %}{{ r.zaplaceno }} {% trans "Kč" %}{% endif %}</td>
+              <td>{{ r.kredit }} {% trans "Kč" %}</td>
               <td>{{ r.akce|safe }}</td>
             </tr>
           {% empty %}
-            <tr><td colspan="10" style="text-align:center;">Žádná data.</td></tr>
+            <tr><td colspan="10" style="text-align:center;">{% trans "Žádná data." %}</td></tr>
           {% endfor %}
         </tbody>
 
         {% if ledger_totals %}
         <tfoot>
           <tr class="totals">
-            <td class="totals-label">Součty:</td>
+            <td class="totals-label">{% trans "Součty:" %}</td>
             <td></td>
             <td></td>
             <td class="totals-value tot-hodiny">{{ ledger_totals.hodiny }}</td>
             <td></td>
             <td></td>
-            <td class="totals-value">{{ ledger_totals.cena }} Kč</td>
-            <td class="totals-value">{{ ledger_totals.zaplaceno }} Kč</td>
-            <td class="totals-value">{{ ledger_totals.credit }} Kč</td>
+            <td class="totals-value">{{ ledger_totals.cena }} {% trans "Kč" %}</td>
+            <td class="totals-value">{{ ledger_totals.zaplaceno }} {% trans "Kč" %}</td>
+            <td class="totals-value">{{ ledger_totals.credit }} {% trans "Kč" %}</td>
             <td></td>
           </tr>
         </tfoot>
@@ -103,19 +100,19 @@
   {% if family_summary %}
   <div class="player-summary" aria-label="Souhrn rodiny">
     <div class="ps-item">
-      <span class="ps-label">Odehrané tréninky</span>
+      <span class="ps-label">{% trans "Odehrané tréninky" %}</span>
       <span class="ps-value">{{ family_summary.trainings_count }}</span>
     </div>
     <div class="ps-item">
-      <span class="ps-label">Součet cen (tréninky)</span>
+      <span class="ps-label">{% trans 'Součet cen (tréninky)' %}</span>
       <span class="ps-value">{{ family_summary.trainings_sum }}</span>
     </div>
     <div class="ps-item">
-      <span class="ps-label">Součet zaplaceno</span>
+      <span class="ps-label">{% trans 'Součet zaplaceno' %}</span>
       <span class="ps-value">{{ family_summary.payments_sum }}</span>
     </div>
     <div class="ps-item ps-credit {% if family_summary.credit_raw >= 0 %}is-positive{% else %}is-negative{% endif %}">
-      <span class="ps-label">Aktuální kredit (rodina)</span>
+      <span class="ps-label">{% trans "Aktuální kredit (rodina)" %}</span>
       <span class="ps-value">{{ family_summary.credit }}</span>
     </div>
   </div>

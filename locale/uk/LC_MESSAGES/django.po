@@ -1,0 +1,2363 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-14 23:23+0200\n"
+"PO-Revision-Date: 2026-07-14 22:12\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: uk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+msgid "Typ tréninku"
+msgstr "Тип тренування"
+
+msgid "— Nový typ tréninku —"
+msgstr "— Новий тип тренування —"
+
+msgid "Nejdříve zadejte název nového typu tréninku, nebo vyberte existující."
+msgstr "Введіть назву нового типу тренування."
+
+msgid "Zadejte název nového typu tréninku."
+msgstr "Введіть назву нового типу тренування."
+
+msgid "Typ tréninku nebyl nalezen."
+msgstr "Тип тренування не знайдено."
+
+msgid "Zadejte název typu tréninku."
+msgstr "Введіть назву типу тренування."
+
+msgid "Název typu tréninku byl upraven."
+msgstr "Назву типу тренування змінено."
+
+msgid "Jméno"
+msgstr "Ім'я"
+
+msgid "Kredit"
+msgstr "Кредит"
+
+msgid "Rodina"
+msgstr "Сім'я"
+
+msgid "Vygenerovat vyúčtování (poslat e-mail)"
+msgstr "Згенерувати розрахунок (надіслати e-mail)"
+
+msgid "Zadat platbu vybraným hráčům"
+msgstr "Ввести платіж для обраних гравців"
+
+msgid "Hráč"
+msgstr "гравець"
+
+msgid "Cena"
+msgstr "Ціна"
+
+msgid "Naúčtováno"
+msgstr "Нараховано"
+
+msgid "Kdy naúčtováno"
+msgstr "Коли нараховано"
+
+msgid "Typ"
+msgstr "Тип"
+
+msgid "Datum"
+msgstr "Дата"
+
+msgid "Částka"
+msgstr "Сума"
+
+msgid "Poznámka"
+msgstr "Примітка"
+
+msgid "Akce"
+msgstr "Дії"
+
+msgid "Trenér"
+msgstr "Тренер"
+
+msgid "Sezóna"
+msgstr "Сезон"
+
+msgid "Léto"
+msgstr "Літо"
+
+msgid "Zima"
+msgstr "Зима"
+
+msgid "Vše"
+msgstr "Усе"
+
+msgid "Formát"
+msgstr "Формат"
+
+msgid "Délka (hodiny)"
+msgstr "Тривалість (години)"
+
+msgid "Trénink: přidat"
+msgstr "Тренування: додати"
+
+msgid "Vyberte trenéra pro celý den."
+msgstr "Виберіть тренера на весь день."
+
+msgid "Hráč(i)"
+msgstr "Гравець(і)"
+
+msgid "Částka / hráč"
+msgstr "Сума / гравець"
+
+msgid "Trenéři – souhrn"
+msgstr "Тренери – підсумок"
+
+msgid "Neplatné datum 'Od'."
+msgstr "Недійсна дата «Від»."
+
+msgid "Neplatná částka sazby."
+msgstr "Недійсна сума ставки."
+
+#, python-format
+msgid "Trenér – %(name)s"
+msgstr "Тренер – %(name)s"
+
+msgid "Ručně z adminu"
+msgstr "Вручну з адмінки"
+
+msgid "Měsíčně"
+msgstr "Щомісяця"
+
+msgid "Po N trénincích"
+msgstr "Після N тренувань"
+
+msgid "Limit kreditu"
+msgstr "Ліміт кредиту"
+
+msgid "Automaticky (limit kreditu)"
+msgstr "Автоматично (ліміт кредиту)"
+
+msgid "Vyúčtování rodiny"
+msgstr "Розрахунок сім'ї"
+
+msgid "Data"
+msgstr "Дати"
+
+#, python-format
+msgid "Nastavení uloženo. Režim synchronizován u %(updated)s hráčů."
+msgstr "Налаштування збережено. Режим синхронізовано у %(updated)s гравців."
+
+msgid "Nastavení vyúčtování uloženo."
+msgstr "Налаштування виставлення рахунків збережено."
+
+msgid "Nastavení se nepodařilo uložit. Zkontrolujte zvýrazněná pole."
+msgstr "Не вдалося зберегти налаштування. Перевірте виділені поля."
+
+msgid "Nastavení vyúčtování"
+msgstr "Налаштування платежів"
+
+msgid "Období"
+msgstr "Період"
+
+msgid "Platby/vratky"
+msgstr "Платежі/повернення"
+
+msgid "K úhradě"
+msgstr "До сплати"
+
+msgid "Kredit po úhradě"
+msgstr "Кредит після оплати"
+
+msgid "Přehled"
+msgstr "Огляд"
+
+msgid "Neplatné datum nákladů."
+msgstr "Недійсна дата витрат."
+
+#, python-format
+msgid "Náklady za %(date)s uloženy (%(count)s kategorií)."
+msgstr "Витрати за %(date)s зекономлені (категорії %(count)s)."
+
+#, python-format
+msgid "Náklady za %(date)s vymazány – nebyla zadána žádná částka."
+msgstr "Витрати за %(date)s очищено – суми не введено."
+
+msgid "Analytika"
+msgstr "Аналітика"
+
+msgid "Zatím žádné"
+msgstr "Поки немає"
+
+msgid "Zadejte e-mail pro testovací zprávu."
+msgstr "Введіть адресу електронної пошти для тестового повідомлення."
+
+#, python-format
+msgid "Testovací e-mail odeslán na %(email)s."
+msgstr "Тестовий електронний лист надіслано на %(email)s."
+
+#, python-format
+msgid "Odeslání testovacího e-mailu selhalo: %(error)s"
+msgstr "Не вдалося надіслати тестовий електронний лист: %(error)s"
+
+msgid "Nastavení systému uloženo."
+msgstr "Налаштування системи збережено."
+
+msgid "Obecné"
+msgstr "Загальні"
+
+msgid "Vzhled"
+msgstr "Зовнішній вигляд"
+
+msgid "Provoz"
+msgstr "Експлуатація"
+
+msgid "E-maily"
+msgstr "Ел. пошта"
+
+msgid "Upozornění"
+msgstr "Сповіщення"
+
+msgid "Uživatelé"
+msgstr "Користувачі"
+
+#, python-format
+msgid "%(count)s účtů · %(staff)s s přístupem"
+msgstr "Облікові записи %(count)s · %(staff)s з доступом"
+
+msgid "Skupiny"
+msgstr "Групи"
+
+#, python-format
+msgid "%(count)s skupin oprávnění"
+msgstr "%(count)s групи дозволів"
+
+msgid "Změna hesla"
+msgstr "Змінити пароль"
+
+msgid "Nástroje"
+msgstr "Інструменти"
+
+msgid "Ceník menu"
+msgstr "Меню прайс-лист"
+
+msgid "Typy a formáty tréninků"
+msgstr "Види та формати навчання"
+
+msgid "Rodiny"
+msgstr "Сім'ї"
+
+msgid "Rodinné skupiny hráčů"
+msgstr "Сімейні групи гравців"
+
+msgid "Zapnuto"
+msgstr "Увімкнено"
+
+msgid "Vypnuto"
+msgstr "Вимкнено"
+
+msgid "Přehledy a exporty"
+msgstr "Звіти та експорт"
+
+msgid "Rozvrh tréninků"
+msgstr "Розклад тренувань"
+
+msgid "Týdenní kalendář"
+msgstr "Тижневий календар"
+
+msgid "Export dat (JSON)"
+msgstr "Експорт даних (JSON)"
+
+msgid "Záloha hráčů, tréninků a plateb"
+msgstr "Резервне копіювання гравців, тренувань і платежів"
+
+msgid "Nastavení"
+msgstr "Налаштування"
+
+msgid "Vyberte JSON soubor k importu."
+msgstr "Виберіть файл JSON для імпорту."
+
+msgid "Data naimportována."
+msgstr "Дані імпортовано."
+
+#, python-format
+msgid "Záloha DB: %(name)s"
+msgstr "Резервне копіювання БД: %(name)s"
+
+#, python-format
+msgid "Import selhal: %(error)s"
+msgstr "Помилка імпорту: %(error)s"
+
+#, python-format
+msgid "Export dat se nezdařil: %(error)s"
+msgstr "Помилка експорту даних: %(error)s"
+
+msgid "Poslední rok"
+msgstr "Останній рік"
+
+msgid "Poslední půlrok"
+msgstr "Останнє півріччя"
+
+msgid "Celá doba"
+msgstr "Весь час"
+
+msgid "Datum dne"
+msgstr "Дата дня"
+
+msgid "Jeden den"
+msgstr "Один день"
+
+msgid "Celý týden"
+msgstr "Весь тиждень"
+
+msgid "Kopírovat z"
+msgstr "Копіювати з"
+
+msgid "Přidat do"
+msgstr "Додати до"
+
+msgid "Rozsah"
+msgstr "Обсяг"
+
+msgid "Všichni trenéři"
+msgstr "Усі тренери"
+
+msgid "Čas"
+msgstr "Час"
+
+msgid "Kurt"
+msgstr "Корт"
+
+msgid "—— stejný jako nahoře ——"
+msgstr "—— те саме, що вище ——"
+
+msgid "Hráči"
+msgstr "Гравці"
+
+msgid "Synchronizovat režim u všech stávajících hráčů"
+msgstr "Синхронізувати режим для всіх існуючих гравців"
+
+msgid ""
+"Přepíše u všech hráčů režim, počet tréninků a limit kreditu podle nastavení "
+"výše."
+msgstr ""
+"Перезапише режим, кількість тренувань і ліміт кредиту для всіх гравців "
+"згідно з налаштуваннями вище."
+
+msgid "Způsob vyúčtování"
+msgstr "Спосіб розрахунку"
+
+msgid "Jméno odesílatele"
+msgstr "Відправник"
+
+msgid "E-mail odesílatele"
+msgstr "Відправник"
+
+msgid "Označení klubu v předmětu"
+msgstr "Позначення клубу в темі"
+
+msgid "Režim vyúčtování"
+msgstr "Виставляти рахунок"
+
+msgid "Venku"
+msgstr "На вулиці"
+
+msgid "Hala"
+msgstr "Зал"
+
+msgid "Hledat"
+msgstr "Пошук"
+
+msgid "Zaplaceno"
+msgstr "Сплачено"
+
+msgid "Nezaplaceno"
+msgstr "Не сплачено"
+
+msgid "Hodiny"
+msgstr "Години"
+
+msgid "Dluh"
+msgstr "Борг"
+
+msgid "Dluhy"
+msgstr "Борги"
+
+msgid "Přebytky"
+msgstr "Надлишки"
+
+msgid "Detail grafu"
+msgstr "Деталі графіка"
+
+msgid "Zaplaceno (celkem)"
+msgstr "Сплачено (всього)"
+
+msgid "Celkem zaplaceno:"
+msgstr "Всього сплачено:"
+
+msgid "Hodiny + finance"
+msgstr "Години + фінанси"
+
+msgid "Hodiny celkem"
+msgstr "Годин всього"
+
+msgid "Hodiny (celkem)"
+msgstr "Години (всього)"
+
+msgid "Kredity a dluhy"
+msgstr "Кредити та борги"
+
+msgid "Kategorie"
+msgstr "Категорія"
+
+msgid "Upravit"
+msgstr "Редагувати"
+
+msgid "Informace"
+msgstr "Інформація"
+
+msgid "Platby a vratky"
+msgstr "Платежі та повернення"
+
+msgid "Za celou dobu evidence"
+msgstr "За весь період обліку"
+
+msgid "Rozbalit detail"
+msgstr "Розгорнути деталі"
+
+msgid "Uložení se nezdařilo."
+msgstr "Не вдалося зберегти."
+
+msgid "Chybí CSRF token – obnovte stránku"
+msgstr "Відсутній маркер CSRF – оновіть сторінку"
+
+msgid "Nastavení uloženo"
+msgstr "Налаштування збережено"
+
+msgid "Vzhled uložen"
+msgstr "Зовнішній вигляд збережено"
+
+msgid "Uložení vzhledu se nezdařilo."
+msgstr "Не вдалося зберегти вигляд."
+
+msgid "Přehled tréninků – Jméno hráče"
+msgstr "Огляд тренувань – ім’я гравця"
+
+msgid "Vybrat soubor"
+msgstr "Вибрати файл"
+
+msgid "Soubor nevybrán"
+msgstr "Файл не вибрано"
+
+msgid "Kč"
+msgstr "CZK"
+
+msgid "% z naúčtováno"
+msgstr "% від нарахованого"
+
+msgid "Graf se nepodařilo vykreslit:"
+msgstr "Не вдалося відобразити діаграму:"
+
+msgid "Otevřít detail"
+msgstr "Відкрита деталь"
+
+msgid "Měsíční rozpad"
+msgstr "Розбивка по місяцях"
+
+msgid "Odehrané hodiny"
+msgstr "Години гри"
+
+msgid "Úhrada"
+msgstr "Оплата"
+
+msgid "Hrubý zisk"
+msgstr "Валовий прибуток"
+
+msgid "Čistý zisk"
+msgstr "Чистий прибуток"
+
+msgid "Výplaty trenérům"
+msgstr "Оплата тренера"
+
+msgid "Ostatní náklady"
+msgstr "Інші витрати"
+
+msgid "Účetní detail"
+msgstr "Бухгалтерська деталізація"
+
+msgid "Přijato"
+msgstr "Отримано"
+
+msgid "Náklady trenérů"
+msgstr "Вартість тренера"
+
+msgid "Denní aktivita"
+msgstr "Щоденна активність"
+
+msgid "Rozložení dne"
+msgstr "Розподіл дня"
+
+msgid "měsíc"
+msgstr "місяць"
+
+msgid "celkem"
+msgstr "всього"
+
+msgid "100 % (základ)"
+msgstr "100% (база)"
+
+msgid "Finanční srovnání –"
+msgstr "Фінансове порівняння –"
+
+msgid "Podíl"
+msgstr "Поділіться"
+
+msgid "Otevřít profil"
+msgstr "Відкрити профіль"
+
+msgid "Aktivita – tento měsíc"
+msgstr "Активність – цей місяць"
+
+msgid "Počet tréninků"
+msgstr "Кількість тренувань"
+
+msgid "Průměr na trénink"
+msgstr "Середнє за тренування"
+
+msgid "Finance – tento měsíc"
+msgstr "Фінанси – цього місяця"
+
+msgid "Přijaté platby"
+msgstr "Отримані платежі"
+
+msgid "Průměr na fakturu"
+msgstr "У середньому по рахунку-фактурі"
+
+msgid "Průměr na platbu"
+msgstr "У середньому за платіж"
+
+msgid "Počet faktur"
+msgstr "Кількість рахунків-фактур"
+
+msgid "Celkové souhrny"
+msgstr "Загальні підсумки"
+
+msgid "Tréninků celkem"
+msgstr "Всього тренувань"
+
+msgid "Naúčtováno celkem"
+msgstr "Всього стягнуто"
+
+msgid "K vyplacení trenérům"
+msgstr "Щоб заплатити тренерам"
+
+msgid "Dlužné částky"
+msgstr "Суми боргу"
+
+msgid "Bilance hráčů"
+msgstr "Баланс гравця"
+
+msgid "Finanční rovnováha"
+msgstr "Фінансовий баланс"
+
+msgid "Základní ukazatele"
+msgstr "Ключові показники"
+
+msgid "Kladný"
+msgstr "Позитивний"
+
+msgid "Záporný"
+msgstr "Негативний"
+
+msgid "Nulový"
+msgstr "Нуль"
+
+msgid "Měsíc:"
+msgstr "Місяць:"
+
+msgid "Kumulativně:"
+msgstr "Сукупний:"
+
+msgid "Žádné položky"
+msgstr "Немає елементів"
+
+msgid "Měsíční rozpad po dnech"
+msgstr "Розбивка по місяцях по днях"
+
+msgid "Náklady:"
+msgstr "Витрати:"
+
+msgid "Dluhy hráčů"
+msgstr "Борги гравців"
+
+msgid "Přebytky hráčů"
+msgstr "Надлишки гравців"
+
+msgid "Rozložení bilance"
+msgstr "Розподіл балансу"
+
+msgid "Hráč – dlužník"
+msgstr "Гравець – боржник"
+
+msgid "Profil hráče"
+msgstr "Профіль гравця"
+
+msgid "Podíl z celkových dluhů"
+msgstr "Частка загальних боргів"
+
+msgid "Detail trenéra"
+msgstr "Деталь тренера"
+
+msgid "Hodiny (měsíc)"
+msgstr "години (місяць)"
+
+msgid "Nárok (měsíc)"
+msgstr "Претензія (місяць)"
+
+msgid "Tréninků (měsíc)"
+msgstr "Тренування (місяць)"
+
+msgid "Trenér – aktivita"
+msgstr "Тренер – діяльність"
+
+msgid "Tento měsíc"
+msgstr "Цей місяць"
+
+msgid "Porovnání"
+msgstr "Порівняння"
+
+msgid "Vyberte rok"
+msgstr "Виберіть рік"
+
+msgid "Leden"
+msgstr "Січень"
+
+msgid "Únor"
+msgstr "Лютий"
+
+msgid "Březen"
+msgstr "Березень"
+
+msgid "Duben"
+msgstr "Квітень"
+
+msgid "Květen"
+msgstr "Травень"
+
+msgid "Červen"
+msgstr "Червень"
+
+msgid "Červenec"
+msgstr "Липень"
+
+msgid "Srpen"
+msgstr "Серпень"
+
+msgid "Září"
+msgstr "Вересень"
+
+msgid "Říjen"
+msgstr "Жовтень"
+
+msgid "Listopad"
+msgstr "Листопад"
+
+msgid "Prosinec"
+msgstr "Грудень"
+
+msgid "Příjmení"
+msgstr "Прізвище"
+
+msgid "Formát ceníku"
+msgstr "Формат прайс-листа"
+
+msgid "Formáty ceníku"
+msgstr "Формати прайс-листів"
+
+msgid "Služba (neplatí pro kurt)"
+msgstr "Послуга (не корт)"
+
+msgid "Cena za hodinu"
+msgstr "Ціна за годину"
+
+msgid "Platnost od"
+msgstr "Дійсний з"
+
+msgid "Platnost do"
+msgstr "Дійсний до"
+
+msgid "Ceník"
+msgstr "Прайс-лист"
+
+msgid "Trénink"
+msgstr "Навчання"
+
+msgid "Tréninky"
+msgstr "Тренування"
+
+msgid "Platba"
+msgstr "Оплата"
+
+msgid "Vrácení/bonifikace"
+msgstr "Повернення/бонус"
+
+msgid "Úprava"
+msgstr "Коригування"
+
+msgid "Datum platby"
+msgstr "Дата платежу"
+
+msgid "Platby"
+msgstr "Платежі"
+
+msgid "Ručně"
+msgstr "Вручну"
+
+msgid "Období od"
+msgstr "Період з"
+
+msgid "Období do"
+msgstr "Період до"
+
+msgid "Kredit na začátku"
+msgstr "Кредит на початку"
+
+msgid "Kredit na konci"
+msgstr "Кредит в кінці"
+
+msgid "Důvod"
+msgstr "Причина"
+
+msgid "Poslední transakce v uzávěrce"
+msgstr "Остання транзакція в закритті"
+
+msgid "Interní ukotvení pro detekci opakovaného vyúčtování."
+msgstr "Внутрішнє закріплення для виявлення повторного розрахунку."
+
+msgid "Vytvořeno"
+msgstr "Створено"
+
+msgid "Vyúčtování"
+msgstr "Розрахунки"
+
+msgid "Dle odehraných tréninků"
+msgstr "За відіграними тренуваннями"
+
+msgid "Pouze manuálně"
+msgstr "Лише вручну"
+
+msgid "Účet 1 AJ Sport"
+msgstr "Рахунок 1 AJ Sport"
+
+msgid "Účet 2 Káťa"
+msgstr "Рахунок 2 Káťa"
+
+msgid "Limit kreditu (Kč)"
+msgstr "Ліміт кредиту (Kč)"
+
+msgid ""
+"Vyúčtování se vytvoří, když kredit hráče klesne na tuto zápornou částku nebo "
+"níže (např. −5000 Kč)."
+msgstr ""
+"Виручання створюється, коли кредит гравця падає до цієї від'ємної суми"
+" або нижче (напр. −5000 Kč)."
+
+msgid "Částka k zaplacení v e-mailu (Kč)"
+msgstr "Сума до оплати"
+
+msgid ""
+"Částka zobrazená v e-mailu jako požadavek k úhradě. Ponechte 0 pro "
+"automatický výpočet z období."
+msgstr ""
+"Сума в листі як вимога до оплати. Залиште 0 для автоматичного розрахун"
+"ку за період."
+
+msgid "Po tolika odehraných trénincích od poslední uzávěrky se vyúčtuje."
+msgstr ""
+"Після заданої кількості тренувань від останнього закриття автоматично "
+"створює розрахунок."
+
+msgid "Den v měsíci"
+msgstr "Цей місяць"
+
+msgid "Od tohoto dne v měsíci (po dalším tréninku) proběhne měsíční uzávěrka."
+msgstr ""
+"Після вказаного дня місяця наступне тренування закриває період від "
+"останнього закриття."
+
+msgid "Posílat e-mail při automatickém vyúčtování"
+msgstr "Надсилати e-mail при автоматичному розрахунку"
+
+msgid "Výchozí varianta e-mailu"
+msgstr "Варіант e-mail за замовчуванням"
+
+msgid "Číslo účtu – varianta 1"
+msgstr "Номер рахунку – варіант 1"
+
+msgid "Číslo účtu – varianta 2"
+msgstr "Номер рахунку – варіант 2"
+
+msgid "Vyúčtování pouze ručně z profilu hráče"
+msgstr "Розрахунок лише вручну з профілю гравця"
+
+#, python-format
+msgid "Při kreditu −%(limit)s Kč nebo níže"
+msgstr "Коли кредит −%(limit)s Kč або нижче"
+
+#, python-format
+msgid "Po %(count)s odehraných trénincích"
+msgstr "Після %(count)s відіграних тренувань"
+
+#, python-format
+msgid "Každý měsíc od %(day)s. dne (po tréninku)"
+msgstr "Щомісяця з %(day)s-го числа (після тренування)"
+
+msgid "Týden"
+msgstr "Тиждень"
+
+msgid "Den"
+msgstr "День"
+
+msgid "Název klubu / systému"
+msgstr "Назва клубу / системи"
+
+msgid "Zobrazí se v hlavičce a v e-mailech."
+msgstr "Відображається в заголовку та в листах."
+
+msgid "Kontaktní e-mail"
+msgstr "Контактний e-mail"
+
+msgid "Zobrazí se na veřejné stránce a v patičce e-mailů."
+msgstr "Відображається на публічній сторінці та в підвалах листів."
+
+msgid "Telefon"
+msgstr "Телефон"
+
+msgid "Adresa klubu"
+msgstr "Адреса клубу"
+
+msgid "Slogan"
+msgstr "Слоган"
+
+msgid "Krátký text na veřejné stránce."
+msgstr "Короткий текст на публічній сторінці."
+
+msgid "Logo klubu"
+msgstr "Логотип клубу"
+
+msgid "Favicon"
+msgstr "Favicon"
+
+msgid "Odesílatel e-mailů"
+msgstr "Відправник листів"
+
+msgid "Formát: Jméno <email@domena.cz>"
+msgstr "Формат: Ім'я <email@domain.com>"
+
+msgid "Prefix předmětu e-mailu"
+msgstr "Префікс теми листа"
+
+msgid "Podpis e-mailů"
+msgstr "Підпис листів"
+
+msgid "Venkovní sezóna od (měsíc)"
+msgstr "Вуличний сезон з (місяць)"
+
+msgid "Venkovní sezóna do (měsíc)"
+msgstr "Вуличний сезон до (місяць)"
+
+msgid "Automaticky volit kurt dle sezóny"
+msgstr "Автоматично обирати корт за сезоном"
+
+msgid "Práh dluhu na dashboardu (Kč)"
+msgstr "Поріг боргу на панелі (Kč)"
+
+msgid "0 = všichni se záporným kreditem, −1000 = dluh od 1000 Kč."
+msgstr "0 = кожен борг, −1000 = від 1000 CZK"
+
+msgid "Zvýraznit záporný kredit v seznamu hráčů"
+msgstr "Виділяти від'ємний кредит у списку гравців"
+
+msgid "Řádků na stránku v tabulkách"
+msgstr "Рядків на сторінку в таблицях"
+
+msgid "Vlastní barvy (místo palety)"
+msgstr "Власні кольори (замість палітри)"
+
+msgid "Výchozí délka tréninku"
+msgstr "Тривалість тренування за замовчуванням"
+
+msgid "Výchozí kurt"
+msgstr "Корт за замовчуванням"
+
+msgid "Rozvrh od (hodina)"
+msgstr "Розклад з (година)"
+
+msgid "Rozvrh do (hodina)"
+msgstr "Розклад до (година)"
+
+msgid "Výchozí zobrazení rozvrhu"
+msgstr "Вигляд розкладу за замовчуванням"
+
+msgid "Barevná varianta"
+msgstr "Кольорова палітра"
+
+msgid "Paleta barev ve stylu Excel – mění celý vzhled systému."
+msgstr ""
+"Палітри в стилі Excel – кожна змінює акценти, таблиці та кнопки в усьому "
+"системі."
+
+msgid "Tmavý režim"
+msgstr "Темний режим"
+
+msgid "Tmavé pozadí, světlý text a upravené barvy tabulek."
+msgstr "Темний фон, світлий текст і скориговані таблиці"
+
+msgid "Výchozí jazyk systému"
+msgstr "Мова системи за замовчуванням"
+
+msgid "Jazyk rozhraní pro celý systém."
+msgstr "Мова інтерфейсу для всієї системи."
+
+msgid "Nastavení systému"
+msgstr "Налаштування системи"
+
+msgid "Trenér – sazba"
+msgstr "Тренер – ставка"
+
+msgid "Trenéři – sazby"
+msgstr "Тренери – ставки"
+
+msgid "Trenér – sazba (období)"
+msgstr "Тренер – ставка (період)"
+
+msgid "Trenéři – sazby (období)"
+msgstr "Тренери – ставки (період)"
+
+msgid "Výplata trenérovi"
+msgstr "Оплата тренера"
+
+msgid "Den, ke kterému se náklad vztahuje"
+msgstr "День, до якого стосується витрата"
+
+msgid "Ostatní náklad"
+msgstr "Інші витрати"
+
+msgid "Tenis"
+msgstr "теніс"
+
+msgid "Výchozí vzhled systému"
+msgstr "Зовнішній вигляд системи за замовчуванням"
+
+msgid "Modrá"
+msgstr "Синій"
+
+msgid "Profesionální modrá paleta"
+msgstr "Професійна синя палітра"
+
+msgid "Zelená"
+msgstr "Зелений"
+
+msgid "Klubová sportovní zelená"
+msgstr "Клуб спортивний зелений"
+
+msgid "Teplá"
+msgstr "Теплий"
+
+msgid "Energetická červeno-oranžová"
+msgstr "Енергійний червоно-помаранчевий"
+
+msgid "Fialová"
+msgstr "Фіолетовий"
+
+msgid "Výrazná fialová paleta"
+msgstr "Смілива фіолетова палітра"
+
+msgid "Neutrální"
+msgstr "Нейтральний"
+
+msgid "Stupně šedé – klidný vzhled"
+msgstr "Відтінки сірого – спокійний вигляд"
+
+msgid "Menu analytiky"
+msgstr "Меню аналітики"
+
+msgid "Sekce"
+msgstr "Розділ"
+
+msgid "Přehled TS Čimice"
+msgstr "TS Čimice overview"
+
+msgid "Zavřít menu"
+msgstr "Close меню"
+
+msgid "Sekce analytiky"
+msgstr "Розділ аналітики"
+
+msgid "Klíčové ukazatele"
+msgstr "Ключові показники"
+
+msgid "Aktivita"
+msgstr "діяльність"
+
+msgid "Hodiny a tréninky"
+msgstr "Години та тренування"
+
+msgid "Finance"
+msgstr "Фінанси"
+
+msgid "Naúčtování a platby"
+msgstr "Нарахування та платежі"
+
+msgid "Účetnictví"
+msgstr "Бухгалтерський облік"
+
+msgid "Zisky a marže"
+msgstr "Прибуток і маржа"
+
+msgid "Trenéři"
+msgstr "Тренери"
+
+msgid "Výplaty a hodiny"
+msgstr "Оплата та години"
+
+msgid "Energie, vybavení, bonusy"
+msgstr "Енергія, обладнання, бонуси"
+
+msgid "Aktuální měsíc + celkem"
+msgstr "Поточний місяць + всього"
+
+msgid "Domů › Analytika"
+msgstr "Home › Analytics"
+
+msgid "Klíčové ukazatele tenisového systému za aktuální měsíc"
+msgstr "Основні показники тенісної системи на поточний місяць"
+
+#, python-format
+msgid "%(count)s tréninků · tento měsíc"
+msgstr "%(count)s тренінги · цього місяця"
+
+#, python-format
+msgid "%(count)s faktur · tento měsíc"
+msgstr "%(count)s рахунків-фактур · цього місяця"
+
+#, python-format
+msgid "%(count)s plateb · tento měsíc"
+msgstr "%(count)s платежі · цього місяця"
+
+msgid "Naúčtováno minus zaplaceno"
+msgstr "Нараховано мінус оплачено"
+
+msgid "Export přehledu"
+msgstr "Звіт про експорт"
+
+msgid "Stáhněte souhrn finančních a účetních ukazatelů za vybrané období."
+msgstr ""
+"Завантажити зведення фінансових і бухгалтерських показників за обраний "
+"період."
+
+msgid "Stáhnout PDF"
+msgstr "Завантажити PDF"
+
+msgid "Stáhnout Excel"
+msgstr "Завантажити Excel"
+
+msgid "Základní ukazatele TS"
+msgstr "TS key metrics"
+
+msgid "Rozbalit"
+msgstr "Розгорнути"
+
+msgid "Odehrané hodiny (měsíc)"
+msgstr "Кількість зіграних годин (місяць)"
+
+msgid "Celkem hodin / tréninků:"
+msgstr "Всього годин / тренінгів:"
+
+msgid "Průměr na trénink:"
+msgstr "Середнє за тренування:"
+
+msgid "-"
+msgstr "-"
+
+msgid "Naúčtováno (měsíc)"
+msgstr "Стягнено (місяць)"
+
+msgid "Celkem naúčtováno:"
+msgstr "Всього стягнуто:"
+
+msgid "Průměr na fakturu:"
+msgstr "Середня сума за фактурою:"
+
+msgid "Přijaté platby (měsíc)"
+msgstr "Отримані платежі (місяць)"
+
+msgid "Průměr na platbu:"
+msgstr "Середня сума за платіж:"
+
+msgid "Celkem dlužné částky"
+msgstr "Загальна сума боргу"
+
+msgid "Celkem přebytky"
+msgstr "Загальні надлишки"
+
+msgid "Rychlý finanční přehled"
+msgstr "Швидкий фінансовий огляд"
+
+msgid "Zaplaceno (měsíc)"
+msgstr "Оплачено (місяць)"
+
+msgid "Naúčtováno (celkem)"
+msgstr "Стягнено (усього)"
+
+msgid "Rovnováha hráčů"
+msgstr "Баланс гравця"
+
+msgid "Přejít na Finance"
+msgstr "Перейдіть до Фінансів"
+
+msgid "Přejít na Hráče"
+msgstr "Перейдіть до гравців"
+
+msgid "Odehrané hodiny, tréninky a denní trend"
+msgstr "Години гри, тренування та щоденна тенденція"
+
+msgid "Aktivita za posledních 7 dní"
+msgstr "Активність за останні 7 днів"
+
+msgid "Denní trend"
+msgstr "Щоденний тренд"
+
+msgid "Aktivita za 7 dní"
+msgstr "Активність протягом 7 днів"
+
+msgid "Detail"
+msgstr "Деталь"
+
+msgid "Klikněte na den pro detail"
+msgstr "Натисніть на день, щоб дізнатися більше"
+
+msgid "Přehled za 6 měsíců"
+msgstr "Огляд за 6 міс"
+
+msgid "Klikněte na měsíc pro rozpad"
+msgstr "Натисніть на місяць для розбивки"
+
+msgid "Přehled za 1 rok"
+msgstr "Огляд за 1 рік"
+
+msgid "12 měsíců"
+msgstr "12 місяців"
+
+msgid "Přehled za celou dobu"
+msgstr "Огляд за весь час"
+
+msgid "Tréninků tento měsíc"
+msgstr "Тренування цього місяця"
+
+msgid "Celkem tréninků"
+msgstr "Всього тренувань"
+
+msgid "Průměr h/trénink"
+msgstr "Середня година/тренування"
+
+msgid "Naúčtování, platby a finanční srovnání"
+msgstr "Нарахування, платежі та фінансове порівняння"
+
+msgid "Naúčtováno vs Zaplaceno (měsíc)"
+msgstr "Стягнено та оплачено (місяць)"
+
+msgid "Finanční srovnání – měsíc"
+msgstr "Фінансове порівняння – місяць"
+
+msgid "Klikněte na sloupec"
+msgstr "Натисніть стовпець"
+
+msgid "Finanční přehled (měsíc)"
+msgstr "Фінансовий огляд (місяць)"
+
+msgid "Naúčtováno vs Zaplaceno (celkem)"
+msgstr "Стягнено та оплачено (усього)"
+
+msgid "Finanční srovnání – celkem"
+msgstr "Фінансове порівняння – всього"
+
+msgid "Finanční přehled (celkem)"
+msgstr "Фінансовий огляд (загалом)"
+
+msgid "Top přeplatky"
+msgstr "Топ переплат"
+
+msgid "Žádné přeplatky"
+msgstr "Без переплат"
+
+msgid "Top dlužníci"
+msgstr "Найбільші боржники"
+
+msgid "Žádní dlužníci"
+msgstr "Без боржників"
+
+msgid "Cash flow, zisky, marže a výnosy na hodinu"
+msgstr "Грошовий потік, прибутки, маржа та дохід за годину"
+
+msgid "Cash Flow (měsíc)"
+msgstr "Cash Flow (місяць)"
+
+msgid "Přijaté platby − Trenéři − Ostatní náklady"
+msgstr "Отримані платежі − Тренери − Інші витрати"
+
+msgid "Hrubý zisk (měsíc)"
+msgstr "Валовий прибуток (місяць)"
+
+msgid "Naúčtováno − Náklady na trenéry"
+msgstr "Стягнуто – витрати на автобус"
+
+msgid "Marže (měsíc)"
+msgstr "Маржа (місяць)"
+
+msgid "Hrubý zisk ÷ Naúčtováno × 100"
+msgstr "Валовий прибуток ÷ Нараховано × 100"
+
+msgid "Výnosy / hod. (měsíc)"
+msgstr "Дохід/год (місяць)"
+
+msgid "Naúčtováno ÷ Odehrané hodiny"
+msgstr "Заряджено ÷ Відіграні години"
+
+msgid "Výplaty trenérům (celkem)"
+msgstr "Оплата тренера (усього)"
+
+msgid "Součet všech výplat"
+msgstr "Сума всіх платежів"
+
+msgid "Zbývá vyplatit (celkem)"
+msgstr "Залишилося до оплати (всього)"
+
+msgid "Earned trenérů − Již vyplaceno"
+msgstr "Тренер заробив − Вже заплатив"
+
+msgid "Čistý zisk (měsíc)"
+msgstr "Чистий прибуток (місяць)"
+
+msgid "Přijato − Trenéři − Ostatní náklady"
+msgstr "Отримано − Тренери − Інші витрати"
+
+msgid "Ostatní náklady (měsíc)"
+msgstr "Інші витрати (місяць)"
+
+msgid "Zadat / upravit náklady"
+msgstr "Введення / редагування витрат"
+
+msgid "Čistý zisk (celkem)"
+msgstr "Чистий прибуток (разом)"
+
+msgid "Ostatní náklady (celkem)"
+msgstr "Інші витрати (разом)"
+
+msgid "Součet všech zadaných nákladů"
+msgstr "Сума всіх введених витрат"
+
+msgid "Ø Příjem / hráč (měsíc)"
+msgstr "Середній дохід/гравець (місяць)"
+
+msgid "Naúčtováno ÷ Aktivní hráči"
+msgstr "Заряджені ÷ Активні гравці"
+
+msgid "Hrubý zisk (celkem)"
+msgstr "Валовий прибуток (усього)"
+
+msgid "Naúčtováno − Earned trenérů"
+msgstr "Стягнуто − тренер зароблено"
+
+msgid "Marže (celkem)"
+msgstr "Маржа (загальна)"
+
+msgid "Výnosy / hod. (celkem)"
+msgstr "Дохід/год (загальний)"
+
+msgid "Naúčtováno ÷ Celkem hodin"
+msgstr "Нараховано ÷ Загальна кількість годин"
+
+msgid "Ø Příjem / hráč (celkem)"
+msgstr "Середній дохід/гравець (загальний)"
+
+msgid "Naúčtováno ÷ Počet hráčů"
+msgstr "Зараховано ÷ Кількість гравців"
+
+msgid "Cash Flow – 6 měsíců"
+msgstr "Cash Flow – 6 міс"
+
+msgid "Klikněte na měsíc"
+msgstr "Натисніть місяць"
+
+msgid "Hrubý zisk – 6 měsíců"
+msgstr "Валовий прибуток – 6 міс"
+
+msgid "Čistý zisk – 6 měsíců"
+msgstr "Чистий прибуток – 6 міс"
+
+msgid "Výplaty trenérům – 6 měsíců"
+msgstr "Виплата тренера – 6 місяців"
+
+msgid "Roční přehled – 12 měsíců"
+msgstr "Річний огляд – 12 місяців"
+
+msgid "Hrubý zisk – 1 rok"
+msgstr "Валовий прибуток – 1 рік"
+
+msgid "Čistý zisk – 1 rok"
+msgstr "Чистий прибуток – 1 рік"
+
+msgid "Výplaty trenérům – 1 rok"
+msgstr "Оплата тренера – 1 рік"
+
+msgid "Čistý zisk – celá doba"
+msgstr "Чистий прибуток – весь час"
+
+msgid "Výplaty trenérům – celá doba"
+msgstr "Оплата тренера – весь час"
+
+msgid "Kredity, dluhy a přeplatky hráčů"
+msgstr "Кредити гравців, борги та переплати"
+
+msgid "Celková rovnováha"
+msgstr "Загальний баланс"
+
+msgid "Klikněte na segment"
+msgstr "Натисніть сегмент"
+
+msgid "Rozložení dluhů"
+msgstr "Розподіл боргу"
+
+msgid "Souhrn kreditů"
+msgstr "Резюме кредиту"
+
+msgid "Celkové dluhy"
+msgstr "Загальна заборгованість"
+
+msgid "Celkové přebytky"
+msgstr "Загальні надлишки"
+
+msgid "Top dlužníci (Hráči)"
+msgstr "Найбільші боржники (гравці)"
+
+msgid "Všichni hráči"
+msgstr "Всі гравці"
+
+msgid "Přeplatky (Hráči)"
+msgstr "Переплата (гравці)"
+
+msgid "Náklady na trenéry – hodiny, nároky a výplaty"
+msgstr "Витрати на тренера – години, претензії та платежі"
+
+msgid "Hodiny trenérů (měsíc)"
+msgstr "Години роботи автобуса (місяць)"
+
+msgid "Hodiny trenérů – měsíc"
+msgstr "Час роботи тренера – місяць"
+
+msgid "Klikněte na trenéra"
+msgstr "Натисніть тренера"
+
+msgid "Přehled trenérů"
+msgstr "Огляд тренерів"
+
+msgid "K vyplacení"
+msgstr "Щоб заплатити"
+
+msgid "Žádní trenéři"
+msgstr "Немає тренерів"
+
+msgid ""
+"Provozní náklady mimo výplaty trenérů – započítávají se do čistého zisku"
+msgstr ""
+"Операційні витрати без виплат тренерам – враховуються в чистому прибутку"
+
+msgid "Náklady tento měsíc"
+msgstr "Витрати цього місяця"
+
+msgid "Zadané provozní náklady"
+msgstr "Внесені операційні витрати"
+
+msgid "Náklady celkem"
+msgstr "Загальні витрати"
+
+msgid "Po trenérech i ostatních nákladech"
+msgstr "Після тренерів та інших витрат"
+
+msgid "Zadání nákladů za den"
+msgstr "Введіть витрати за день"
+
+msgid "Uloží se do čistého zisku"
+msgstr "Враховується в чистий прибуток"
+
+msgid "Výběr data"
+msgstr "Вибір дати"
+
+msgid "Předchozí měsíc"
+msgstr "Попередній місяць"
+
+msgid "Další měsíc"
+msgstr "Наступного місяця"
+
+msgid "Po"
+msgstr "Пн"
+
+msgid "Út"
+msgstr "Вт"
+
+msgid "St"
+msgstr "Ср"
+
+msgid "Čt"
+msgstr "Чт"
+
+msgid "Pá"
+msgstr "Пт"
+
+msgid "So"
+msgstr "Сб"
+
+msgid "Ne"
+msgstr "немає"
+
+msgid "Dnes"
+msgstr "Сьогодні"
+
+msgid "Zadat datum ručně"
+msgstr "Введіть дату вручну"
+
+msgid "Přejít"
+msgstr "Іди"
+
+msgid "Uložit náklady"
+msgstr "Економте витрати"
+
+msgid ""
+"Vyplňte částky v Kč pro vybraný den. Prázdné pole = kategorie se pro daný "
+"den smaže. Součet všech dnů v měsíci se odečítá od čistého zisku."
+msgstr ""
+"Введіть суми в CZK за обраний день. Порожнє поле = категорію видалено на цей "
+"день. Сума всіх днів місяця віднімається від чистого прибутку."
+
+msgid "Poznámka (volitelné)"
+msgstr "Примітка (необов'язково)"
+
+msgid "Náklady po měsících"
+msgstr "Витрати по місяцях"
+
+msgid "Ostatní náklady – 12 měsíců"
+msgstr "Інші витрати – 12 міс"
+
+msgid "Klikněte na měsíc – rozpad po dnech a položkách"
+msgstr "Натисніть місяць – розбивка по днях і пунктах"
+
+msgid "Náklady – celá doba"
+msgstr "Витрати – весь час"
+
+msgid "Ostatní náklady – celá doba"
+msgstr "Інші витрати – весь час"
+
+msgid "Historie nákladů"
+msgstr "Історія витрат"
+
+msgid "Zatím nejsou zadané žádné náklady"
+msgstr "Витрати ще не введено"
+
+msgid "Zavřít"
+msgstr "Close"
+
+msgid "Domů"
+msgstr "Головна"
+
+msgid "Přidat"
+msgstr "додати"
+
+msgid "← Nastavení"
+msgstr "← Налаштування"
+
+msgid "Menu"
+msgstr "Меню"
+
+msgid "Změnit heslo"
+msgstr "Змінити пароль"
+
+msgid "Odhlásit se"
+msgstr "Вийти"
+
+msgid "Rozvrh"
+msgstr "Розклад"
+
+msgid "Hlavní navigace"
+msgstr "Основна навігація"
+
+msgid "Hlavní menu"
+msgstr "Головне меню"
+
+msgid "Ceník Menu"
+msgstr "Прайс-лист Меню"
+
+msgid ""
+"Typy tréninků v ceníku — přidání, úprava názvu nebo smazání nepoužívaných."
+msgstr ""
+"Типи тренувань у прайс-листі — додавання, перейменування або видалення "
+"невикористаних."
+
+msgid "← Zpět"
+msgstr "← Назад"
+
+msgid "Typy tréninků"
+msgstr "Види навчання"
+
+msgid "Uložit"
+msgstr "Зберегти"
+
+msgid "Zrušit"
+msgstr "Скасувати"
+
+msgid "Smazat"
+msgstr "Видалити"
+
+msgid "Zatím žádné typy. Přidejte první níže."
+msgstr "Типів ще немає. Додайте перший нижче."
+
+msgid "Nový typ tréninku"
+msgstr "Новий тип навчання"
+
+msgid "Název nového typu tréninku"
+msgstr "Назва нового типу навчання"
+
+msgid "+ Přidat typ"
+msgstr "+ Додати тип"
+
+msgid "Vygenerovat vyúčtování"
+msgstr "Згенерувати білінг"
+
+msgid "Částka k úhradě"
+msgstr "Сума до сплати"
+
+msgid "např. 5000"
+msgstr "напр. 5000"
+
+msgid "Otevřít vyúčtování hráče"
+msgstr "Відкрити білінг гравців"
+
+msgid "Historie tréninků a plateb"
+msgstr "Історія навчання та платежів"
+
+msgid "Období:"
+msgstr "Період:"
+
+msgid "Filtrovat"
+msgstr "фільтр"
+
+msgid "Skupina"
+msgstr "Група"
+
+msgid "Žádná data."
+msgstr "Немає даних."
+
+msgid "Součty:"
+msgstr "Усього:"
+
+msgid "Souhrn hráče"
+msgstr "Підсумок гравця"
+
+msgid "Odehrané tréninky"
+msgstr "Пройшли тренінги"
+
+msgid "Součet cen (tréninky)"
+msgstr "Сума цін (тренінгів)"
+
+msgid "Součet zaplaceno"
+msgstr "Виплачена сума"
+
+msgid "Aktuální kredit"
+msgstr "Поточний кредит"
+
+msgid "Nastavení pro hromadné vyúčtování"
+msgstr "Налаштування групових платежів"
+
+msgid "Období od:"
+msgstr "Період з:"
+
+msgid "Období do:"
+msgstr "Період до:"
+
+msgid "Částka k úhradě:"
+msgstr "Сума до сплати:"
+
+msgid "(nechte prázdné pro auto-výpočet)"
+msgstr "(залиште порожнім для автоматичного розрахунку)"
+
+msgid "Tato platba bude připsána všem zaškrtnutým hráčům."
+msgstr "Цей платіж буде зараховано всім зареєстрованим гравцям."
+
+msgid "Částka (Kč):"
+msgstr "Сума (CZK):"
+
+msgid "např. 2000"
+msgstr "напр. 2000 рік"
+
+msgid "Ruční stržení (Mínus)"
+msgstr "Відрахування вручну (мінус)"
+
+msgid "Poznámka:"
+msgstr "Примітка:"
+
+msgid "např. Příspěvky podzim"
+msgstr "напр. Осінні внески"
+
+msgid "Provést platbu"
+msgstr "Обробити платіж"
+
+msgid "Zpět na hráče"
+msgstr "Повернемося до гравців"
+
+msgid "Vygenerovat vyúčtování rodiny"
+msgstr "Створення сімейних платежів"
+
+msgid "Historie tréninků a plateb (rodina)"
+msgstr "Історія навчання та платежів (сімейна)"
+
+msgid "Aktuální kredit (rodina)"
+msgstr "Поточний кредит (сімейний)"
+
+msgid "Kopírovat z jiného dne / týdne"
+msgstr "Копіювати з іншого дня/тижня"
+
+msgid ""
+"Načtěte tréninky ze zvoleného dne nebo týdne, upravte je a uložte jako nové."
+msgstr ""
+"Завантажте тренування за обраний день або тиждень, відредагуйте та збережіть "
+"як нові."
+
+msgid "Načíst tréninky"
+msgstr "Навантажувальні тренування"
+
+#, python-format
+msgid "Načteno %(count)s tréninků – zkontrolujte a uložte níže."
+msgstr "Завантажені тренінги %(count)s – перегляньте та збережіть нижче."
+
+msgid "Vyplňte položky"
+msgstr "Заповніть елементи"
+
+msgid "Předchozí týden"
+msgstr "Попередній тиждень"
+
+msgid "−7 dní"
+msgstr "−7 днів"
+
+msgid "Kalendář"
+msgstr "Календар"
+
+msgid "Otevřít kalendář"
+msgstr "Відкрити календар"
+
+#, python-format
+msgid "Trénink %(num)s"
+msgstr "Навчання %(num)s"
+
+msgid "Smazat tento trénink"
+msgstr "Delete цей тренінг"
+
+msgid "HRÁČI"
+msgstr "PLAYERS"
+
+msgid "Vyhledat hráče…"
+msgstr "Пошук гравців…"
+
+msgid "Vyhledat hráče"
+msgstr "Пошук гравців"
+
+msgid "Přidat Hráče"
+msgstr "Додати гравця"
+
+msgid "Přidat Trénink"
+msgstr "Додати навчання"
+
+msgid "Uložit: Přidat Další"
+msgstr "Зберегти: додати інший"
+
+msgid "← Předchozí"
+msgstr "← Попередній"
+
+msgid "Zobrazení"
+msgstr "Переглянути"
+
+msgid "Další →"
+msgstr "Далі →"
+
+msgid "Kopírovat den"
+msgstr "День копіювання"
+
+msgid "Kopírovat týden"
+msgstr "Копіювати тиждень"
+
+msgid "Solo"
+msgstr "Solo"
+
+msgid "Dvojice"
+msgstr "Doubles"
+
+msgid "Trojice"
+msgstr "Triples"
+
+msgid "Čtveřice"
+msgstr "Quads"
+
+msgid "← Zpět na souhrn"
+msgstr "← Повернутися до резюме"
+
+msgid "Od:"
+msgstr "З:"
+
+msgid "Do:"
+msgstr "До:"
+
+msgid "Zadat výplatu"
+msgstr "Введіть оплату"
+
+msgid "Celková odehraná částka"
+msgstr "Загальна зіграна сума"
+
+#, python-format
+msgid "Aktuální měsíc (%(label)s)"
+msgstr "Поточний місяць (%(label)s)"
+
+msgid "Dlužná částka"
+msgstr "Сума боргу"
+
+msgid "Ve vybraném období:"
+msgstr "У вибраний період:"
+
+msgid "Částka k vyplacení po měsících"
+msgstr "Сума оплати по місяцях"
+
+msgid "Měsíc"
+msgstr "місяць"
+
+msgid "Částka k vyplacení"
+msgstr "Сума до оплати"
+
+msgid "Vyplaceno"
+msgstr "Виплачено"
+
+msgid "Nová sazba od…"
+msgstr "Новий тариф від…"
+
+msgid "Od data:"
+msgstr "З дати:"
+
+msgid "Částka (Kč/h):"
+msgstr "Кількість (CZK/год):"
+
+msgid "Nastavit sazbu"
+msgstr "Встановити ставку"
+
+msgid "Aktuální sazba dnes:"
+msgstr "Поточний курс на сьогодні:"
+
+msgid "Účinné sazby:"
+msgstr "Ефективні ставки:"
+
+msgid "Kč/h"
+msgstr "CZK/год"
+
+msgid "(upravit)"
+msgstr "(редагувати)"
+
+msgid ""
+"Žádné záznamy sazeb. Používá se výchozí sazba z profilu (nebo 500 Kč/h)."
+msgstr ""
+"Немає записів ставок. Використовується ставка за замовчуванням з профілю "
+"(або 500 CZK/год)."
+
+#, python-format
+msgid "%(count)s tréninků"
+msgstr "%(count)s тренінги"
+
+msgid "Sazba"
+msgstr "Ставка"
+
+msgid "Žádné tréninky."
+msgstr "Без тренувань."
+
+msgid "Historie"
+msgstr "історія"
+
+msgid "Všechna vyúčtování hráče"
+msgstr "Усі рахунки гравців"
+
+msgid "Na začátku období"
+msgstr "На початку менструації"
+
+msgid "Na konci období"
+msgstr "Наприкінці періоду"
+
+msgid "Po zaplacení částky k úhradě"
+msgstr "Після сплати належної суми"
+
+msgid ""
+"Kladný kredit = přeplatek, záporný = dluh. Částka k úhradě je to, co bylo v "
+"e-mailu požadováno k zaplacení."
+msgstr ""
+"Додатний кредит = переплата, від'ємний = борг. Сума до сплати — те, що було "
+"запитано в листі."
+
+msgid "Důvod vyúčtování"
+msgstr "Причина виставлення рахунка"
+
+msgid ""
+"Toto je archivní záznam – čísla odpovídají stavu v okamžiku vytvoření "
+"vyúčtování."
+msgstr ""
+"Це архівний запис – цифри відповідають стану на момент створення розрахунку."
+
+msgid "← Zpět na seznam vyúčtování"
+msgstr "← Назад до списку виставлення рахунків"
+
+msgid "Vyúčtování: Nastavení"
+msgstr "Платежі: налаштування"
+
+msgid ""
+"Zvolte, kdy má systém automaticky vytvořit vyúčtování a poslat e-mail, nebo "
+"vypněte automatiku a vyúčtovávejte jen ručně z profilu hráče."
+msgstr ""
+"Оберіть, коли система має автоматично створювати розрахунок і надсилати "
+"лист, або вимкніть автоматику й виставляйте рахунки вручну з профілю гравця."
+
+#, python-format
+msgid "Aktuálně: %(rezim)s — %(popis)s."
+msgstr "Зараз: %(rezim)s — %(popis)s."
+
+msgid "← Nastavení systému"
+msgstr "← Системні налаштування"
+
+msgid "← Vyúčtování"
+msgstr "← Платежі"
+
+msgid "Nastavení nelze uložit."
+msgstr "Налаштування не можна зберегти."
+
+msgid "Opravte prosím zvýrazněná pole níže."
+msgstr "Будь ласка, виправте виділені поля нижче."
+
+msgid ""
+"Systém neposílá automatická vyúčtování. Vyúčtování vytvoříte ručně v profilu "
+"hráče nebo u rodiny."
+msgstr ""
+"Система не надсилає автоматичні розрахунки. Створіть розрахунок вручну в "
+"профілі гравця або родини."
+
+msgid ""
+"Po tréninku zkontroluje celkový kredit. Když klesne na zadanou částku (např. "
+"−5000 Kč), odešle e-mail s vyúčtováním."
+msgstr ""
+"Після тренування перевіряє загальний кредит. Коли він падає до заданої суми "
+"(напр. −5000 CZK), надсилає лист з розрахунком."
+
+msgid ""
+"Od zadaného dne v měsíci uzavře při dalším tréninku období a pošle "
+"vyúčtování za uplynulý měsíc."
+msgstr ""
+"Від зазначеного дня місяця наступне тренування закриває період і надсилає "
+"розрахунок за минулий місяць."
+
+msgid ""
+"Po zadaném počtu odehraných tréninků od poslední uzávěrky automaticky "
+"vytvoří vyúčtování."
+msgstr ""
+"Після заданої кількості тренувань від останнього закриття автоматично "
+"створює розрахунок."
+
+msgid ""
+"Po zadaném dni v měsíci se při dalším tréninku uzavře období od poslední "
+"uzávěrky."
+msgstr ""
+"Після вказаного дня місяця наступне тренування закриває період від "
+"останнього закриття."
+
+msgid "E-mail a platební údaje"
+msgstr "Електронна пошта та платіжні реквізити"
+
+msgid ""
+"Výchozí varianta účtu v automatických e-mailech. Ruční vyúčtování z profilu "
+"hráče může zvolit jinou variantu."
+msgstr ""
+"Варіант рахунку за замовчуванням в автоматичних листах. Ручний розрахунок з "
+"профілю гравця може обрати інший варіант."
+
+msgid "Přehled hráčů"
+msgstr "Огляд гравців"
+
+msgid ""
+"Všichni hráči používají stejný globální režim výše. Tabulka ukazuje stav od "
+"poslední uzávěrky."
+msgstr ""
+"Усі гравці використовують той самий глобальний режим вище. Таблиця показує "
+"стан від останнього закриття."
+
+msgid "Otevřít všechny hráče →"
+msgstr "Відкрити всіх гравців →"
+
+msgid "Poslední uzávěrka"
+msgstr "Останнє закриття"
+
+msgid "Tréninků od uzávěrky"
+msgstr "Тренування з моменту закриття"
+
+#, python-format
+msgid "Zobrazeno 20 z %(total)s hráčů."
+msgstr "Показано 20 гравців %(total)s."
+
+msgid "Zatím žádní hráči."
+msgstr "Ще немає гравців."
+
+msgid "Uložit nastavení"
+msgstr "Зберегти налаштування"
+
+msgid "+ Nový trénink"
+msgstr "+ Нове тренування"
+
+msgid "+ Platba od hráče"
+msgstr "+ Платіж гравця"
+
+msgid "+ Nový hráč"
+msgstr "+ Новий гравець"
+
+msgid "Poslední platby"
+msgstr "Останні платежі"
+
+msgid "Žádné platby."
+msgstr "Жодних платежів."
+
+msgid "Poslední tréninky"
+msgstr "Останні тренінги"
+
+msgid "Top dlužníci (hráči)"
+msgstr "Найбільші боржники (гравці)"
+
+msgid "Nikdo nedluží 🎉"
+msgstr "Nobody owes anything 🎉"
+
+msgid "Nic k vyplacení."
+msgstr "Нічим платити."
+
+msgid "Home"
+msgstr "Home"
+
+msgid "Delete"
+msgstr "Delete"
+
+#, python-format
+msgid ""
+"Deleting the %(object_name)s '%(escaped_object)s' would result in deleting "
+"related objects, but your account doesn't have permission to delete the "
+"following types of objects:"
+msgstr ""
+"Видалення %(object_name)s '%(escaped_object)s' призведе до видалення "
+"пов'язаних об'єктів, але ваш обліковий запис не має дозволу видаляти такі "
+"типи об'єктів:"
+
+#, python-format
+msgid ""
+"Deleting the %(object_name)s '%(escaped_object)s' would require deleting the "
+"following protected related objects:"
+msgstr ""
+"Видалення %(object_name)s '%(escaped_object)s' вимагатиме видалення таких "
+"захищених пов'язаних об'єктів:"
+
+#, python-format
+msgid ""
+"Are you sure you want to delete the %(object_name)s \"%(escaped_object)s\"? "
+"All of the following related items will be deleted:"
+msgstr ""
+"Видалити %(object_name)s «%(escaped_object)s»? Будуть видалені всі наступні "
+"пов’язані елементи:"
+
+msgid "Objects"
+msgstr "Об'єкти"
+
+msgid "Ano, odstranit"
+msgstr "Так, видалити"
+
+msgid "Delete multiple objects"
+msgstr "Delete кілька об'єктів"
+
+#, python-format
+msgid ""
+"Deleting the selected %(objects_name)s would result in deleting related "
+"objects, but your account doesn't have permission to delete the following "
+"types of objects:"
+msgstr ""
+"Видалення вибраних %(objects_name)s призведе до видалення пов'язаних "
+"об'єктів, але ваш обліковий запис не має дозволу видаляти такі типи об'єктів:"
+
+#, python-format
+msgid ""
+"Deleting the selected %(objects_name)s would require deleting the following "
+"protected related objects:"
+msgstr ""
+"Видалення вибраних %(objects_name)s вимагатиме видалення таких захищених "
+"пов'язаних об'єктів:"
+
+#, python-format
+msgid ""
+"Are you sure you want to delete the selected %(objects_name)s? All of the "
+"following objects and their related items will be deleted:"
+msgstr ""
+"Видалити вибрані %(objects_name)s? Будуть видалені всі наступні об’єкти та "
+"пов’язані елементи:"
+
+msgid "Odhlášení"
+msgstr "Вийти"
+
+msgid "Opravdu se chcete odhlásit ze systému Tenis systém Čimice?"
+msgstr "Ви впевнені, що бажаєте вийти з Tennis System Čimice?"
+
+msgid "Ano, odhlásit se"
+msgstr "Так, вийти"
+
+msgid "Sekce nastavení"
+msgstr "Розділ налаштувань"
+
+msgid "Zkontrolujte zvýrazněná pole."
+msgstr "Перевірте виділені поля."
+
+msgid "Název klubu, kontakt a logo."
+msgstr "Назва клубу, контакти та логотип."
+
+msgid "V hlavičce adminu a na webu"
+msgstr "В адмінці та на сайті"
+
+msgid "Na úvodní stránce a v patičce"
+msgstr "На цільовій сторінці та в нижньому колонтитулі"
+
+msgid "Nepovinné"
+msgstr "Додатково"
+
+msgid "Krátký text pod názvem na webu"
+msgstr "Короткий текст під назвою на сайті"
+
+msgid "PNG nebo JPG, nejlépe čtverec"
+msgstr "PNG або JPG, бажано квадрат"
+
+msgid "Malá ikona v záložce prohlížeče"
+msgstr "Маленький значок у вкладці браузера"
+
+msgid "Režim zobrazení a barevná paleta – změna se uloží hned."
+msgstr "Режим відображення та колірна палітра – зміни зберігаються негайно."
+
+msgid "Tmavé pozadí, světlý text a upravené tabulky"
+msgstr "Темний фон, світлий текст і скориговані таблиці"
+
+msgid ""
+"Palety ve stylu Excel – každá mění akcenty, tabulky i tlačítka v celém "
+"systému."
+msgstr ""
+"Палітри в стилі Excel – кожна змінює акценти, таблиці та кнопки в усьому "
+"системі."
+
+msgid "Barevná paleta"
+msgstr "Колірна палітра"
+
+msgid "Výchozí hodnoty pro tréninky, rozvrh a přehled vyúčtování."
+msgstr ""
+"Стандартні значення для тренінгів, розкладу та огляду виставлення рахунків."
+
+msgid "Aktuální vyúčtování"
+msgstr "Поточна оплата"
+
+msgid "Režim"
+msgstr "Режим"
+
+msgid "Podmínka"
+msgstr "Хвороба"
+
+msgid "Varianta účtu"
+msgstr "Варіант рахунку"
+
+msgid "Při přidávání nového tréninku"
+msgstr "При додаванні нового навчання"
+
+msgid "Hala nebo venek u nového tréninku"
+msgstr "У приміщенні або на вулиці для нових тренувань"
+
+msgid "Výchozí pohled v kalendáři tréninků"
+msgstr "Перегляд за замовчуванням у календарі тренувань"
+
+msgid "Začátek a konec zobrazení v kalendáři tréninků"
+msgstr "Початок і кінець відображення в календарі тренувань"
+
+msgid "Venku v letních měsících, hala v zimě"
+msgstr "На вулиці в літні місяці, в приміщенні взимку"
+
+msgid "Automatický kurt"
+msgstr "Автоматичний суд"
+
+msgid "Venkovní sezóna"
+msgstr "Відкритий сезон"
+
+msgid "Měsíce, kdy se preferuje venkovní kurt"
+msgstr "Місяці, коли надається перевага відкритому корту"
+
+msgid "Detailní nastavení vyúčtování je v samostatné stránce"
+msgstr "Детальні налаштування розрахунків знаходяться на окремій сторінці"
+
+msgid "Související nastavení"
+msgstr "Пов'язані налаштування"
+
+msgid "Kdo píše vyúčtování a jak vypadá zpráva."
+msgstr "Хто пише біллінг і як виглядає повідомлення."
+
+msgid "Adresa, ze které se e-maily odesílají"
+msgstr "Адреса, з якої надсилаються листи"
+
+msgid "Stačí název klubu – závorky doplníme sami"
+msgstr "Достатньо назви клубу – ми самі додамо дужки"
+
+msgid "Ukázka předmětu"
+msgstr "Предметний попередній перегляд"
+
+msgid "Text na konci každého e-mailu"
+msgstr "Текст у кінці кожного електронного листа"
+
+msgid "Test odeslání"
+msgstr "Надіслати тест"
+
+msgid "Testovací e-mail"
+msgstr "Тестовий електронний лист"
+
+msgid "Pošle zkušební zprávu"
+msgstr "Надсилає пробне повідомлення"
+
+msgid "Odeslat"
+msgstr "Надіслати"
+
+msgid "Dashboard, seznam hráčů a tabulky v adminu."
+msgstr "Dashboard, список гравців і таблиці в адмін."
+
+msgid "0 = každý dluh, −1000 = od 1000 Kč"
+msgstr "0 = кожен борг, −1000 = від 1000 CZK"
+
+msgid "Červeně v seznamu hráčů"
+msgstr "Червоним у списку гравців"
+
+msgid "Zvýraznit záporný kredit"
+msgstr "Виділіть негативний кредит"
+
+msgid "Tréninky, platby, vyúčtování"
+msgstr "Навчання, оплата, білінг"
+
+msgid "Diagnostika systému"
+msgstr "Системна діагностика"
+
+msgid "Databáze"
+msgstr "База даних"
+
+msgid "Chybí"
+msgstr "Відсутня"
+
+msgid "Odesílatel"
+msgstr "Відправник"
+
+msgid "Poslední vyúčtování"
+msgstr "Останній рахунок"
+
+msgid "Pouze lokální SQLite – před importem se vytvoří záloha databáze."
+msgstr ""
+"Лише локальний SQLite – перед імпортом створюється резервна копія бази даних."
+
+msgid "Soubor zálohy"
+msgstr "Файл резервної копії"
+
+msgid "Export z položky Export dat výše"
+msgstr "Експорт із пункту Експорт даних вище"
+
+msgid "Importovat"
+msgstr "Імпорт"
+
+msgid "Save as new"
+msgstr "Save as new"
+
+msgid "Save and continue editing"
+msgstr "Save and continue editing"
+
+msgid "Save and view"
+msgstr "Save and view"
+
+msgid "Close"
+msgstr "Close"
+
+msgid "Správa tenisové školy – tréninky, platby, vyúčtování trenérů."
+msgstr "Управління тенісною школою – тренування, оплата, оплата тренера."
+
+msgid "Správa tenisové školy"
+msgstr "Керівництво тенісної школи"
+
+msgid "Jazyk"
+msgstr "Мова"
+
+msgid "Školy"
+msgstr "Школи"
+
+msgid "Co umí"
+msgstr "Можливості"
+
+msgid "Kontakt"
+msgstr "Контакт"
+
+msgid "Pro trenéry a tenisové akademie"
+msgstr "Для тренерів і тенісних академій"
+
+msgid "Méně tabulek,"
+msgstr "Менше електронних таблиць,"
+
+msgid "víc času na"
+msgstr "більше часу на"
+
+msgid "kurtu"
+msgstr "суд"
+
+msgid ""
+"Kdo trénuje zítra, kdo má kredit a kolik patří trenérovi za měsíc — bez "
+"dalšího souboru v počítači."
+msgstr ""
+"Хто тренується завтра, хто має кредит і скільки належить тренеру за місяць — "
+"без зайвого файлу на комп’ютері."
+
+msgid "Vybrat školu"
+msgstr "Виберіть школу"
+
+msgid "Dnešní přehled"
+msgstr "Сьогоднішній огляд"
+
+msgid "pondělí 7. 7."
+msgstr "Monday 7 Jul"
+
+msgid "Aktivní"
+msgstr "Активний"
+
+msgid "Tréninky dnes"
+msgstr "Тренування сьогодні"
+
+msgid "Aktivní hráči"
+msgstr "Активні гравці"
+
+msgid "K vyúčtování"
+msgstr "Виставляти рахунок"
+
+msgid "12 400 Kč"
+msgstr "12,400 CZK"
+
+msgid "Solo · venku"
+msgstr "Solo · відкритий"
+
+msgid "Dvojice · venku"
+msgstr "Doubles · відкритий"
+
+msgid "Skupina · hala"
+msgstr "Груповий · закритий"
+
+msgid "Přihlášení do školy"
+msgstr "Вхід до школи"
+
+msgid "Vyberte školu, ke které patříte."
+msgstr "Виберіть школу, до якої ви належите."
+
+msgid "Hledat školu"
+msgstr "Пошук школи"
+
+msgid "Název nebo město…"
+msgstr "Назва чи місто…"
+
+msgid "Přihlásit se"
+msgstr "авторизуватися"
+
+msgid "brzy"
+msgstr "скоро"
+
+msgid "Připravujeme"
+msgstr "Скоро буде"
+
+msgid "Žádná škola neodpovídá hledání."
+msgstr "Жодна школа не відповідає вашому запиту."
+
+msgid "Kalendář tréninků"
+msgstr "Календар тренувань"
+
+msgid "Solo, dvojice i skupiny — venek i hala na jedné obrazovce."
+msgstr "Solo, парні та групові — на вулиці та в приміщенні на одному екрані."
+
+msgid "Platby rodin"
+msgstr "Сімейні виплати"
+
+msgid "Kredity, platby a vratky vždy aktuální."
+msgstr "Кредити, платежі та відшкодування завжди актуальні."
+
+msgid "Vyúčtování trenérů"
+msgstr "Оплата тренера"
+
+msgid "Hodiny, zálohy i výplata na jedno kliknutí."
+msgstr "Години, аванси та оплата в один клік."
+
+msgid "Chcete připojit školu?"
+msgstr "Хочете підключити школу?"
+
+msgid "Error:"
+msgstr "Помилка:"
+
+msgid "Documentation"
+msgstr "Documentation"
+
+msgid "Change password"
+msgstr "Змінити пароль"
+
+msgid "Log out"
+msgstr "Вийти"
+
+msgid "Password change"
+msgstr "Зміна пароля"
+
+msgid "Please correct the error below."
+msgid_plural "Please correct the errors below."
+msgstr[0] "Виправте помилку нижче."
+msgstr[1] "Виправте помилку нижче."
+msgstr[2] "Виправте помилку нижче."
+msgstr[3] "Виправте помилку нижче."
+
+msgid ""
+"Zadejte svoje současné heslo a poté dvakrát heslo nové. Omezíme tak možnost "
+"překlepu."
+msgstr ""
+"Введіть поточний пароль, потім новий двічі. Так ми зменшимо ризик помилки."
+
+msgid "Change my password"
+msgstr "Змінити мій пароль"
+
+# Doplněno z katalogu překladů
+# Doplněno z katalogu překladů
+# Doplněno z katalogu překladů
+# Doplněno z katalogu překladů
+
+# Doplněno z katalogu překladů
+
+msgid "Celoroční"
+msgstr "Цілорічно"
+
+msgid "Jazyk rozhraní pro všechny uživatele (lze přepsat v hlavičce)."
+msgstr "Мова інтерфейсу для всіх користувачів (можна змінити в заголовку)."
+
+msgid "Sezóny"
+msgstr "Сезони"
+
+msgid "Trenéra"
+msgstr "Тренера"
+
+msgid "Typu tréninku"
+msgstr "Типу тренування"

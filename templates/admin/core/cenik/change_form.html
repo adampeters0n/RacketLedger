@@ -1,6 +1,5 @@
 {% extends "admin/change_form.html" %}
-{% load static %}
-
+{% load static i18n %}
 {% block extrastyle %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'admin/css/cenik-change-form.css' %}">
@@ -15,7 +14,7 @@
 {% block form_top %}
 {% if not original %}
 <div class="cenik-menu-bar">
-  <a href="{{ formaty_url }}?next={{ request.get_full_path|urlencode }}" class="button">Ceník Menu</a>
+  <a href="{{ formaty_url }}?next={{ request.get_full_path|urlencode }}" class="button">{% trans "Ceník Menu" %}</a>
 </div>
 {% endif %}
 {% endblock %}
@@ -23,7 +22,7 @@
 {% block object-tools-items %}
 {% if original %}
 <li>
-  <a href="{{ formaty_url }}?next={{ request.get_full_path|urlencode }}">Ceník Menu</a>
+  <a href="{{ formaty_url }}?next={{ request.get_full_path|urlencode }}">{% trans "Ceník Menu" %}</a>
 </li>
 {% endif %}
 {{ block.super }}

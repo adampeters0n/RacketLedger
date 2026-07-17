@@ -39,9 +39,9 @@ DEBUG = _get_bool("DEBUG", True)
 _default_hosts = ["127.0.0.1", "localhost"]
 ALLOWED_HOSTS = [h for h in os.getenv("ALLOWED_HOSTS", ",".join(_default_hosts)).split(",") if h]
 
-# Produkční domény (doplňuje ALLOWED_HOSTS z env)
+# Produkční domény (doplňuje ALLOWED_HOSTS z env) – bez hardcoded klubu
 ALLOWED_HOSTS.extend([
-    h for h in os.getenv("EXTRA_ALLOWED_HOSTS", "tscimice.cz,www.tscimice.cz").split(",") if h
+    h for h in os.getenv("EXTRA_ALLOWED_HOSTS", "").split(",") if h
 ])
 
 # CSRF důvěryhodné originy (z env, čárkami oddělené; musí mít https:// prefixy)
@@ -49,10 +49,7 @@ CSRF_TRUSTED_ORIGINS = [o for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split("
 
 # Produkční CSRF originy (doplňuje CSRF_TRUSTED_ORIGINS z env)
 CSRF_TRUSTED_ORIGINS.extend([
-    o for o in os.getenv(
-        "EXTRA_CSRF_TRUSTED_ORIGINS",
-        "https://tscimice.cz,https://www.tscimice.cz",
-    ).split(",") if o
+    o for o in os.getenv("EXTRA_CSRF_TRUSTED_ORIGINS", "").split(",") if o
 ])
 
 # =====================================
@@ -78,6 +75,8 @@ MIDDLEWARE = [
     # WhiteNoise musí být hned po SecurityMiddleware
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
+    "core.middleware.SystemLanguageMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -102,8 +101,10 @@ TEMPLATES = [
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.request",
+                "django.template.context_processors.i18n",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "core.context_processors.system_nastaveni",
             ],
         },
     },
@@ -151,9 +152,14 @@ AUTH_PASSWORD_VALIDATORS = [
 # =====================================
 # LOKALIZACE
 # =====================================
-LANGUAGE_CODE = "cs"
+from core.i18n_config import DEFAULT_LANGUAGE, SYSTEM_LANGUAGES  # noqa: E402
+
+LANGUAGE_CODE = DEFAULT_LANGUAGE
+LANGUAGES = SYSTEM_LANGUAGES
+LOCALE_PATHS = [BASE_DIR / "locale"]
 TIME_ZONE = "Europe/Prague"
 USE_I18N = True
+USE_L10N = True
 USE_TZ = True
 
 # =====================================
@@ -184,7 +190,7 @@ USE_SMTP = (not DEBUG) or (_get_bool("EMAIL_FORCE_SMTP", False))
 
 if USE_SMTP:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-    EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.volny.cz")
+    EMAIL_HOST = os.getenv("EMAIL_HOST", "")
 
     # Výchozí režim: SSL (465). TLS vypnuté.
     EMAIL_USE_SSL = _get_bool("EMAIL_USE_SSL", True)
@@ -197,18 +203,18 @@ if USE_SMTP:
     # Port z env, jinak 465 pro SSL nebo 587 pro TLS
     EMAIL_PORT = int(os.getenv("EMAIL_PORT", "465" if EMAIL_USE_SSL else "587"))
 
-    EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "kptenis@volny.cz")
+    EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
     EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
     EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "30"))
 
-    DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "Tenis Čimice <kptenis@volny.cz>")
-    SERVER_EMAIL = os.getenv("SERVER_EMAIL", "kptenis@volny.cz")
-    EMAIL_SUBJECT_PREFIX = os.getenv("EMAIL_SUBJECT_PREFIX", "[Tenis Čimice] ")
+    DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "TenisSystém <noreply@tenissystem.cz>")
+    SERVER_EMAIL = os.getenv("SERVER_EMAIL", "noreply@tenissystem.cz")
+    EMAIL_SUBJECT_PREFIX = os.getenv("EMAIL_SUBJECT_PREFIX", "[TenisSystém] ")
 else:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-    DEFAULT_FROM_EMAIL = "Tenis Čimice <kptenis@volny.cz>"
-    SERVER_EMAIL = "kptenis@volny.cz"
-    EMAIL_SUBJECT_PREFIX = "[Tenis Čimice] "
+    DEFAULT_FROM_EMAIL = "TenisSystém <noreply@tenissystem.cz>"
+    SERVER_EMAIL = "noreply@tenissystem.cz"
+    EMAIL_SUBJECT_PREFIX = "[TenisSystém] "
 
 # Automatické vyúčtování – po naúčtování tréninku, když dluh od poslední uzávěrky
 # dosáhne této částky (Kč), systém vytvoří vyúčtování a pošle e-mail.

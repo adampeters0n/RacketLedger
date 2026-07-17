@@ -4,17 +4,28 @@ from email.utils import formatdate, make_msgid
 import imaplib, datetime, os
 
 
-def send_and_append_to_sent(subject, body, to, html_body=None, cc=None, bcc=None, attachments=None):
-    # 1) Bezpečné FROM: EMAIL_FROM -> DEFAULT_FROM_EMAIL -> EMAIL_HOST_USER
-    from_email = (
+def _resolve_from_email():
+    """Odesílatel: SystemNastaveni → env → Django settings."""
+    try:
+        from core.models import SystemNastaveni
+
+        val = SystemNastaveni.load().effective_from_email()
+        if val:
+            return val
+    except Exception:
+        pass
+    return (
         os.environ.get("EMAIL_FROM")
         or os.environ.get("DEFAULT_FROM_EMAIL")
         or os.environ.get("EMAIL_HOST_USER")
     )
-    if not from_email:
-        raise RuntimeError("Chybí EMAIL_FROM/DEFAULT_FROM_EMAIL/EMAIL_HOST_USER v prostředí.")
 
-    # 2) Sestavení a odeslání přes SMTP (Django)
+
+def send_and_append_to_sent(subject, body, to, html_body=None, cc=None, bcc=None, attachments=None):
+    from_email = _resolve_from_email()
+    if not from_email:
+        raise RuntimeError("Chybí odesílatel e-mailu – nastavte ho v Nastavení nebo v prostředí.")
+
     msg = EmailMessage(
         subject=subject,
         body=html_body or body,
@@ -29,17 +40,19 @@ def send_and_append_to_sent(subject, body, to, html_body=None, cc=None, bcc=None
     for att in (attachments or []):
         msg.attach(*att)
 
-    msg.send(fail_silently=False)  # pokud selže, vyhodí výjimku -> 500 dá smysl
+    msg.send(fail_silently=False)
 
-    # 3) Uložení kopie do Odeslané přes IMAP (best-effort)
     raw_bytes = msg.message().as_bytes()
-    host = os.environ.get("IMAP_HOST", "imap.volny.cz")
+    host = os.environ.get("IMAP_HOST", "").strip()
     port = int(os.environ.get("IMAP_PORT", "993"))
     user = os.environ.get("EMAIL_HOST_USER")
     pwd  = os.environ.get("EMAIL_HOST_PASSWORD")
-    preferred = os.environ.get("IMAP_SENT_MAILBOX")  # <<< ručně zadaná schránka
+    preferred = os.environ.get("IMAP_SENT_MAILBOX")
 
     ok_archive = False
+    if not host or not user or not pwd:
+        return True, False
+
     try:
         M = imaplib.IMAP4_SSL(host, port)
         try:
@@ -47,12 +60,10 @@ def send_and_append_to_sent(subject, body, to, html_body=None, cc=None, bcc=None
 
             sent_box = None
 
-            # 0) preferuj ručně zadanou schránku (ASCII název)
             if preferred:
                 if M.select(f'"{preferred}"')[0] == "OK":
                     sent_box = preferred
 
-            # 1) zkus \Sent z LISTu
             if not sent_box:
                 typ, boxes = M.list()
                 if typ == "OK" and boxes:
@@ -64,14 +75,12 @@ def send_and_append_to_sent(subject, body, to, html_body=None, cc=None, bcc=None
                                 sent_box = name
                                 break
 
-            # 2) obvyklé ASCII názvy (bez diakritiky)
             if not sent_box:
                 for name in ["INBOX.Sent", "Sent", "Sent Items", "INBOX.Sent Items", "Sent Messages"]:
                     if M.select(f'"{name}"')[0] == "OK":
                         sent_box = name
                         break
 
-            # 3) fallback – vytvoř vlastní ASCII složku
             if not sent_box:
                 for name in ["INBOX.Sent Messages", "Sent Messages", "INBOX.Sent", "Sent"]:
                     try:
@@ -82,7 +91,6 @@ def send_and_append_to_sent(subject, body, to, html_body=None, cc=None, bcc=None
                         sent_box = name
                         break
 
-            # 4) APPEND – aware UTC čas + správné flagy
             aware_utc = datetime.datetime.now(datetime.timezone.utc)
             M.append(f'"{sent_box}"', '(\\Seen)', imaplib.Time2Internaldate(aware_utc), raw_bytes)
             ok_archive = True
@@ -96,4 +104,3 @@ def send_and_append_to_sent(subject, body, to, html_body=None, cc=None, bcc=None
         ok_archive = False
 
     return True, ok_archive
-

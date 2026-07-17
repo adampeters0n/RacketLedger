@@ -7,20 +7,23 @@ from django.http import JsonResponse
 from django.urls import path, reverse
 from django.utils import timezone as dj_tz
 from django.utils.html import format_html
+from django.utils.translation import gettext_lazy as _
 
 from ..admin_utils import (
     CZECH_MONTHS_GENITIVE,
     ParsedDateParts,
     format_czech_date,
     format_czech_datetime,
+    filter_queryset_by_parsed_date,
     parse_czech_date_parts,
     trener_label,
 )
+from ..admin_mixins import ConfigurableListPerPageMixin
 from ..models import Transakce, Trening
 
 
 class OnlyPaymentsFilter(admin.SimpleListFilter):
-    title = "Typu"
+    title = _("Typ")
     parameter_name = "typ"
 
     def lookups(self, request, model_admin):
@@ -39,16 +42,16 @@ class OnlyPaymentsFilter(admin.SimpleListFilter):
 class TransakceDatumFilter(admin.DateFieldListFilter):
     def __init__(self, field, request, params, model, model_admin, field_path):
         super().__init__(field, request, params, model, model_admin, field_path)
-        self.title = "Data"
+        self.title = _("Datum")
 
 
 @admin.register(Transakce)
-class TransakceAdmin(admin.ModelAdmin):
+class TransakceAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
     list_display = ("datum_display", "hrac_link", "castka_display", "typ_display", "poznamka", "akce_smazat")
     list_filter = (OnlyPaymentsFilter, ("vytvoreno", TransakceDatumFilter))
     search_fields = ("hrac__jmeno", "hrac__prijmeni", "popis")
     actions = ["delete_selected"]
-    list_per_page = 50
+    list_per_page_default = 50
     
     change_list_template = "admin/core/transakce/change_list.html"
     
@@ -61,19 +64,10 @@ class TransakceAdmin(admin.ModelAdmin):
     def get_search_results(self, request, queryset, search_term):
         parts = parse_czech_date_parts(search_term)
         if parts:
-            if parts.year is not None:
-                return queryset.filter(
-                    vytvoreno__year=parts.year,
-                    vytvoreno__month=parts.month,
-                    vytvoreno__day=parts.day,
-                ), False
-            return queryset.filter(
-                vytvoreno__month=parts.month,
-                vytvoreno__day=parts.day,
-            ), False
+            return filter_queryset_by_parsed_date(queryset, parts, "vytvoreno"), False
         return super().get_search_results(request, queryset, search_term)
 
-    @admin.display(description="Datum", ordering="vytvoreno")
+    @admin.display(description=_("Datum"), ordering="vytvoreno")
     def datum_display(self, obj):
         if not obj.vytvoreno:
             return "-"
@@ -87,13 +81,13 @@ class TransakceAdmin(admin.ModelAdmin):
             time_str,
         )
 
-    @admin.display(description="Hráč", ordering="hrac__prijmeni")
+    @admin.display(description=_("Hráč"), ordering="hrac__prijmeni")
     def hrac_link(self, obj):
         if not obj.hrac: return "-"
         url = reverse("admin:core_hrac_change", args=[obj.hrac.id])
         return format_html('<a href="{}" style="font-weight:600;">{}</a>', url, obj.hrac.cele_jmeno)
 
-    @admin.display(description="Částka", ordering="castka")
+    @admin.display(description=_("Částka"), ordering="castka")
     def castka_display(self, obj):
         color = "green" if obj.castka >= 0 else "red"
         sign = "+" if obj.castka > 0 else ""
@@ -104,15 +98,15 @@ class TransakceAdmin(admin.ModelAdmin):
             color, sign, formatted_val
         )
 
-    @admin.display(description="Typ", ordering="typ")
+    @admin.display(description=_("Typ"), ordering="typ")
     def typ_display(self, obj):
         return obj.get_typ_display()
 
-    @admin.display(description="Poznámka")
+    @admin.display(description=_("Poznámka"))
     def poznamka(self, obj):
         return obj.popis or ""
 
-    @admin.display(description="Akce")
+    @admin.display(description=_("Akce"))
     def akce_smazat(self, obj):
         url = reverse("admin:core_transakce_delete", args=[obj.id])
         return format_html('<a class="deletelink" href="{}"></a>', url)

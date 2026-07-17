@@ -1,0 +1,17 @@
+{% extends "admin/change_form.html" %}
+{% load static i18n %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% trans "Domů" %}</a>
+  &rsaquo; <a href="{% url 'admin:nastaveni' %}">{% trans "Nastavení" %}</a>
+  &rsaquo; <a href="{% url 'admin:auth_user_changelist' %}">{% trans "Uživatelé" %}</a>
+  &rsaquo; {% if add %}{% trans "Přidat" %}{% else %}{% if original %}{{ original }}{% else %}{% trans "Upravit" %}{% endif %}{% endif %}
+</div>
+{% endblock %}
+
+{% block content_subtitle %}{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'admin/css/user-change-form.css' %}">
+{% endblock %}
