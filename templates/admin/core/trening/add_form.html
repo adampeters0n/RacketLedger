@@ -50,7 +50,7 @@
         </p>
       </div>
       <div class="add-day-copy-actions">
-        <button type="submit" class="add-day-btn-save add-day-btn-copy-load">{% trans "Načíst tréninky" %}</button>
+        <input type="submit" class="add-day-btn-save add-day-btn-copy-load" value="{% trans 'Načíst tréninky' %}">
         {% if copy_loaded %}
         <span class="add-day-copy-status">{% blocktrans with count=copy_slot_count %}Načteno {{ count }} tréninků – zkontrolujte a uložte níže.{% endblocktrans %}</span>
         {% endif %}
@@ -101,7 +101,7 @@
       {% with form=slot.form %}
       <div class="slot-card add-day-card" data-slot-index="{{ slot.index }}" {% if slot.hidden %}style="display:none;"{% endif %}>
         <h2 class="add-day-card-title add-day-slot-title-row">
-          <span class="add-day-slot-title-text">{% blocktrans with num=slot.index|add:1 %}Trénink {{ num }}{% endblocktrans %}</span>
+          <span class="add-day-slot-title-text" hidden aria-hidden="true">{% blocktrans with num=slot.index|add:1 %}Trénink {{ num }}{% endblocktrans %}</span>
           {% if copy_loaded or slot.index > 0 %}
           <button type="button" class="add-day-slot-close" title="{% trans 'Smazat tento trénink' %}" aria-label="{% trans 'Smazat tento trénink' %}">×</button>
           {% endif %}
@@ -139,10 +139,16 @@
           {% if form.delka_minut.errors %}<ul class="errorlist">{{ form.delka_minut.errors }}</ul>{% endif %}
 
           <p class="add-day-row">
-            <label for="id_slots-{{ slot.index }}-format">{% trans "Formát" %}</label>
+            <label for="id_slots-{{ slot.index }}-format">{% trans "Typ tréninku" %}</label>
             {{ form.format }}
           </p>
           {% if form.format.errors %}<ul class="errorlist">{{ form.format.errors }}</ul>{% endif %}
+
+          <p class="add-day-row">
+            <label for="id_slots-{{ slot.index }}-sezona">{% trans "Sezóna" %}</label>
+            {{ form.sezona }}
+          </p>
+          {% if form.sezona.errors %}<ul class="errorlist">{{ form.sezona.errors }}</ul>{% endif %}
 
           <p class="add-day-row">
             <label for="id_slots-{{ slot.index }}-kurt">{% trans "Kurt" %}</label>
@@ -150,11 +156,7 @@
           </p>
           {% if form.kurt.errors %}<ul class="errorlist">{{ form.kurt.errors }}</ul>{% endif %}
 
-          <p class="add-day-row">
-            <label for="id_slots-{{ slot.index }}-poznamka">{% trans "Poznámka" %}</label>
-            {{ form.poznamka }}
-          </p>
-          {% if form.poznamka.errors %}<ul class="errorlist">{{ form.poznamka.errors }}</ul>{% endif %}
+          {{ form.poznamka.as_hidden }}
         </div>
 
         <div class="add-day-hraci-wrap">
@@ -168,7 +170,7 @@
                     <input type="text" class="add-day-hraci-search" value="{{ h.cele_jmeno }}" placeholder="{% trans 'Vyhledat hráče…' %}" autocomplete="off" aria-label="{% trans 'Vyhledat hráče' %}">
                     <ul class="add-day-hraci-dropdown" role="listbox" aria-hidden="true"></ul>
                   </div>
-                  <button type="button" class="btn-remove" aria-label="Odstranit">×</button>
+                  <button type="button" class="btn-remove" aria-label="{% trans 'Odstranit' %}">×</button>
                 </div>
                 {% endfor %}
               {% else %}
@@ -177,7 +179,7 @@
                   <input type="text" class="add-day-hraci-search" placeholder="{% trans 'Vyhledat hráče…' %}" autocomplete="off" aria-label="{% trans 'Vyhledat hráče' %}">
                   <ul class="add-day-hraci-dropdown" role="listbox" aria-hidden="true"></ul>
                 </div>
-                <button type="button" class="btn-remove" aria-label="Odstranit">×</button>
+                <button type="button" class="btn-remove" aria-label="{% trans 'Odstranit' %}">×</button>
               </div>
               {% endif %}
             </div>
@@ -214,8 +216,8 @@
     </div>
 
     <div class="add-day-submit-row">
-      <input type="submit" value="{% trans 'Uložit' %}" name="_save" class="add-day-btn-save">
-      <button type="submit" name="_addanother" value="1" class="add-day-btn-save-addanother">{% trans "Uložit: Přidat Další" %}</button>
+      <input type="submit" value="{% trans 'Uložit' %}" name="_save" class="default add-day-btn-save">
+      <input type="submit" value="{% trans 'Uložit: Přidat Další' %}" name="_addanother" class="default add-day-btn-save-addanother">
     </div>
   </form>
 </div>

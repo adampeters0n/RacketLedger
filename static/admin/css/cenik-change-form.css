@@ -1,225 +1,100 @@
-/* Ceník – formulář přidat/upravit */
+/* Ceník – bubliny stejné jako Hráč (globální input styly);
+   jen měna vedle ceny, bez zásahu do výšky polí */
 
-.cenik-menu-bar {
-  display: flex;
-  justify-content: flex-end;
-  margin: 0 0 14px;
-  padding: 0 2px;
+body.app-core.model-cenik.change-form .cena-mena-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  vertical-align: middle;
 }
 
-/* Pole Typ tréninku */
-.form-row.field-format .cenik-typ-wrap {
-  width: 100%;
-  max-width: 420px;
-}
-
-.form-row.field-format select.cenik-typ-select {
-  width: 100%;
-  max-width: 420px;
-}
-
-.cenik-typ-create {
-  margin-top: 10px;
-  padding: 14px 16px;
-  background: #fff;
-  border: 1px solid var(--line, #e2e5ea);
-  border-radius: var(--field-radius, 8px);
+body.app-core.model-cenik.change-form .cena-mena-wrap .cena-mena-suffix {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--muted, #64748b);
+  white-space: nowrap;
+  background: none;
+  border: none;
   box-shadow: none;
 }
 
-.cenik-typ-create[hidden] {
-  display: none !important;
-}
-
-.cenik-typ-create-label {
-  display: block;
-  margin: 0 0 10px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text, #1f2937);
-}
-
-.cenik-typ-create-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-
-.cenik-typ-create-input {
-  flex: 1;
-  min-width: 160px;
-  min-height: 36px !important;
-  padding: 8px 12px !important;
-  border: 1px solid var(--line-200, #929aa4) !important;
+/* Datumy – stejná bublina jako textová pole (ne menší) */
+body.app-core.model-cenik.change-form .form-row.field-platnost_od input.vDateField,
+body.app-core.model-cenik.change-form .form-row.field-platnost_do input.vDateField,
+body.app-core.model-cenik.change-form .form-row.field-platnost_od input[type="text"],
+body.app-core.model-cenik.change-form .form-row.field-platnost_do input[type="text"] {
+  height: auto !important;
+  min-height: unset !important;
+  padding: 5px 6px !important;
+  font-size: inherit !important;
+  box-sizing: border-box !important;
   border-radius: var(--field-radius, 8px) !important;
-  background: #fff !important;
+  border: 1px solid var(--line-200, #929aa4) !important;
+  background: var(--surface, #fff) !important;
+  color: var(--text, #111) !important;
+}
+
+/* Přidat do kalendáře – barva z nastavení (--brand) */
+body.app-core.model-cenik.change-form .form-row.field-v_kalendari input[type="checkbox"],
+body.app-core.model-cenik.change-form #id_v_kalendari {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  margin: 2px 8px 0 0 !important;
+  padding: 0 !important;
+  flex-shrink: 0 !important;
+  border: 2px solid color-mix(in srgb, var(--brand, #c62828) 45%, #94a3b8) !important;
+  border-radius: 5px !important;
+  background-color: var(--surface, #fff) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  accent-color: var(--brand, #c62828) !important;
+  vertical-align: middle !important;
+}
+
+body.app-core.model-cenik.change-form .form-row.field-v_kalendari input[type="checkbox"]:hover,
+body.app-core.model-cenik.change-form #id_v_kalendari:hover {
+  border-color: var(--brand, #c62828) !important;
   box-shadow: none !important;
 }
 
-.cenik-typ-create-input:focus {
-  border-color: var(--brand, #e67817) !important;
+body.app-core.model-cenik.change-form .form-row.field-v_kalendari input[type="checkbox"]:focus,
+body.app-core.model-cenik.change-form .form-row.field-v_kalendari input[type="checkbox"]:focus-visible,
+body.app-core.model-cenik.change-form #id_v_kalendari:focus,
+body.app-core.model-cenik.change-form #id_v_kalendari:focus-visible {
   outline: none !important;
-  box-shadow: 0 0 0 2px var(--brand-100, #fff1de) !important;
+  border-color: var(--brand, #c62828) !important;
+  box-shadow: none !important;
 }
 
-.cenik-typ-create-error {
-  display: none;
-  margin: 10px 0 0;
-  padding: 0;
-  font-size: 0.85rem;
-  color: var(--danger, #d92d20);
-  background: none;
-  border: none;
+body.app-core.model-cenik.change-form .form-row.field-v_kalendari input[type="checkbox"]:checked,
+body.app-core.model-cenik.change-form #id_v_kalendari:checked {
+  background-color: var(--brand, #c62828) !important;
+  border-color: var(--brand, #c62828) !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23ffffff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.5l3 3 6-6'/%3E%3C/svg%3E") !important;
+  background-size: 12px 12px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
 }
 
-.cenik-typ-create-error:not([hidden]) {
-  display: block;
+body.app-core.model-cenik.change-form .form-row.field-v_kalendari .vCheckboxLabel,
+body.app-core.model-cenik.change-form .form-row.field-v_kalendari label {
+  font-weight: 600 !important;
+  color: var(--text, #111) !important;
+  cursor: pointer !important;
 }
 
-/* Stránka Ceník Menu */
-.cenik-menu-page {
-  max-width: 720px;
-}
-
-.cenik-menu-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
-}
-
-.cenik-menu-header h1 {
-  margin: 0 0 6px;
-  font-size: 1.45rem;
-  font-weight: 700;
-  color: #0b1220;
-}
-
-.cenik-menu-lead {
-  margin: 0;
-  color: #666;
-  font-size: 0.95rem;
-  line-height: 1.5;
-  max-width: 100%;
-}
-
-.cenik-menu-card {
-  margin: 0;
-  overflow: visible;
-}
-
-.cenik-menu-card > h3 {
-  background: var(--amber-100, #fff9ec);
-}
-
-.cenik-menu-list {
-  list-style: none;
-  margin: 0 0 16px;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.cenik-menu-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 10px 12px;
-  border: 1px solid var(--line, #e2e5ea);
-  border-radius: var(--field-radius, 8px);
-  background: #fff;
-}
-
-.cenik-menu-name {
-  font-weight: 600;
-  color: #0b1220;
-  flex: 1;
-  min-width: 160px;
-}
-
-.cenik-menu-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.cenik-menu-btn,
-.cenik-menu-delete-btn {
-  padding: 6px 12px !important;
-  font-size: 0.85rem !important;
-  line-height: 1.2 !important;
-}
-
-.cenik-menu-delete-btn {
-  background: #fff !important;
-  color: #b91c1c !important;
-  border: 1px solid #fecaca !important;
-}
-
-.cenik-menu-delete-btn:hover {
-  background: #fef2f2 !important;
-}
-
-.cenik-menu-delete-form {
-  margin: 0;
-  display: inline;
-}
-
-.cenik-menu-edit-form,
-.cenik-menu-add-form {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  width: 100%;
-}
-
-.cenik-menu-edit-form input[type="text"],
-.cenik-menu-add-form input[type="text"] {
-  flex: 1;
-  min-width: 180px;
-  min-height: 36px !important;
-  padding: 8px 12px !important;
-  border: 1px solid var(--line-200, #929aa4) !important;
-  border-radius: var(--field-radius, 8px) !important;
-}
-
-.cenik-menu-add-form {
-  margin-top: 4px;
-  padding-top: 14px;
-  border-top: 1px solid #eee;
-}
-
-.cenik-menu-empty {
-  margin: 0 0 12px;
-  color: #666;
-}
-
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
-}
-
-@media (max-width: 640px) {
-  .cenik-menu-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .cenik-menu-actions {
-    justify-content: flex-end;
-  }
+body.app-core.model-cenik.change-form .form-row.field-v_kalendari .help,
+body.app-core.model-cenik.change-form .form-row.field-v_kalendari .helptext {
+  color: var(--muted, #64748b) !important;
+  font-size: 12px !important;
 }

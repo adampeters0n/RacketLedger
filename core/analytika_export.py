@@ -12,6 +12,7 @@ from django.db.models import Q, Sum
 from django.utils import timezone as dj_tz
 from django.utils.translation import gettext_lazy as _
 
+from core.money import format_castka, get_mena_symbol
 from .analytika_data import (
     TrenerRateLookup,
     charges_sum_between,
@@ -57,7 +58,7 @@ def period_bounds(period: str, today: date | None = None) -> tuple[date, date, s
 
 
 def _money(v: Decimal | float | int) -> str:
-    return f"{Decimal(v).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP):,.0f} Kč".replace(",", "\u00a0")
+    return format_castka(v, thousands=True, nbsp=True)
 
 
 def _pct(v: Decimal) -> str:
@@ -231,7 +232,7 @@ def render_report_excel(report: dict) -> bytes:
     thin = Side(style="thin", color="E2E8F0")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    money_fmt = '#,##0 "Kč"'
+    money_fmt = f'#,##0 "{get_mena_symbol()}"'
     hours_fmt = '#,##0.0" h"'
     count_fmt = '#,##0'
 

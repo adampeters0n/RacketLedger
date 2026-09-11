@@ -55,6 +55,7 @@
     }
     if (palette) {
       root.dataset.palette = palette;
+      root.dataset.theme = palette;
     }
   }
 

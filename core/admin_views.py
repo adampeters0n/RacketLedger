@@ -1,6 +1,7 @@
 """Custom admin site views (dashboard, analytika)."""
 import json
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
+from core.money import format_castka
 from datetime import date, datetime, time, timedelta
 
 from django.conf import settings
@@ -33,6 +34,7 @@ from .models import (
     TrenerPlatba,
     Transakce,
     Trening,
+    UserPreference,
     Vyuctovani,
     VyuctovaniNastaveni,
     sazba_trenera_k_datu,
@@ -45,6 +47,7 @@ from .system_theme import (
     THEME_VARIANTS,
     css_vars_style_block,
     presets_for_js,
+    resolve_effective_theme,
     resolve_theme_colors,
     theme_options_for_template,
 )
@@ -271,7 +274,7 @@ def _naklady_day_items(den: date):
             "kategorie": item["kategorie"],
             "label": kat_labels.get(item["kategorie"], item["kategorie"]),
             "castka": item["castka"],
-            "castka_fmt": f"{Decimal(item['castka']):.0f} Kč",
+            "castka_fmt": format_castka(Decimal(item['castka'])),
             "poznamka": item["poznamka"],
         }
         for item in OstatniNaklad.objects.filter(mesic=den).order_by("kategorie").values(
@@ -290,7 +293,7 @@ def _naklady_day_block(den: date):
         "label": den.strftime("%d.%m.%Y"),
         "weekday": weekdays[den.weekday()],
         "total": total,
-        "total_fmt": f"{total:.0f} Kč",
+        "total_fmt": format_castka(total),
         "items": items,
     }
 
@@ -561,7 +564,7 @@ def admin_dashboard_view(request):
 
         trener_rows.append({
             "name": u.get_full_name() or u.username,
-            "balance": f"{balance:.0f} Kč",
+            "balance": format_castka(balance),
             "url": reverse("admin:core_treneri_detail", args=[u.id]),
         })
     
@@ -582,7 +585,7 @@ def admin_dashboard_view(request):
     debtors_qs = SystemNastaveni.load().filter_debtors(hraci_s_kreditem).order_by("_kredit_calculated")[:8]
     debtors = [{
         "name": h.cele_jmeno,
-        "kredit": f"{(h._kredit_calculated or 0):.0f} Kč",
+        "kredit": format_castka((h._kredit_calculated or 0)),
         "url": reverse("admin:core_hrac_change", args=[h.id]),
     } for h in debtors_qs]
 
@@ -590,7 +593,7 @@ def admin_dashboard_view(request):
         {
             "when": (dj_tz.localtime(p.vytvoreno) if dj_tz.is_aware(p.vytvoreno) else p.vytvoreno).strftime("%d.%m.%Y %H:%M"),
             "hrac": p.hrac.cele_jmeno,
-            "castka": f"{Decimal(p.castka):.0f} Kč",
+            "castka": format_castka(Decimal(p.castka)),
             "url": reverse("admin:core_transakce_change", args=[p.id]),
         }
         for p in Transakce.objects.filter(typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA]).select_related("hrac").order_by("-vytvoreno")[:5]
@@ -704,7 +707,9 @@ def admin_nastaveni_view(request):
             vyuct_rezim_initial=vyuct_nast.auto_rezim,
         )
         if form.is_valid():
-            _apply_system_nastaveni_form(form, vyuct_nast)
+            _apply_system_nastaveni_form(
+                form, vyuct_nast, user=request.user, update_user_theme=True
+            )
             nastaveni.refresh_from_db()
             messages.success(request, _("Nastavení systému uloženo."))
             response = redirect("admin:nastaveni")
@@ -716,6 +721,15 @@ def admin_nastaveni_view(request):
             instance=nastaveni,
             vyuct_rezim_initial=vyuct_nast.auto_rezim,
         )
+
+    user_variant, user_dark, _colors = resolve_effective_theme(
+        user=request.user, nastaveni=nastaveni
+    )
+    form.initial = {
+        **form.initial,
+        "barevna_varianta": user_variant,
+        "tmavy_rezim": user_dark,
+    }
 
     theme_options = theme_options_for_template()
 
@@ -765,9 +779,9 @@ def admin_nastaveni_view(request):
             "url": reverse("admin:core_vyuctovani_nastaveni"),
         },
         {
-            "label": _("Ceník menu"),
-            "detail": _("Typy a formáty tréninků"),
-            "url": reverse("admin:core_cenik_formaty"),
+            "label": _("Ceník"),
+            "detail": _("Typy, kurty a ceny – volné pojmenování"),
+            "url": reverse("admin:core_cenik_changelist"),
         },
         {
             "label": _("Rodiny"),
@@ -797,7 +811,7 @@ def admin_nastaveni_view(request):
     ]
 
     from core.data_import import is_sqlite_database
-    from core.roles import can_export_data, can_import_data, can_manage_users
+    from core.roles import can_export_data, can_import_data, can_manage_users, is_platform_admin
 
     show_data_export = can_export_data(request.user)
     show_data_import = can_import_data(request.user) and is_sqlite_database()
@@ -810,12 +824,24 @@ def admin_nastaveni_view(request):
             }
         )
 
+    password_url = reverse("admin:password_change")
+    users_url = reverse("admin:auth_user_changelist")
+    groups_url = reverse("admin:auth_group_changelist")
+
     if not can_manage_users(request.user):
         for panel in sidebar_panels:
             if panel["id"] == "uzivatele":
                 panel["items"] = [
                     item for item in panel["items"]
-                    if item["url"] == reverse("admin:password_change")
+                    if item["url"] == password_url
+                ]
+    elif not is_platform_admin(request.user):
+        # Club admin: uživatelé ano, skupiny oprávnění ne (platform).
+        for panel in sidebar_panels:
+            if panel["id"] == "uzivatele":
+                panel["items"] = [
+                    item for item in panel["items"]
+                    if item["url"] != groups_url
                 ]
 
     ctx = {
@@ -827,9 +853,9 @@ def admin_nastaveni_view(request):
         "nastaveni_config": {
             "vzhledUrl": reverse("admin:nastaveni_vzhled"),
             "saveUrl": reverse("admin:nastaveni_autosave"),
-            "barevnaVarianta": nastaveni.barevna_varianta or DEFAULT_THEME,
+            "barevnaVarianta": user_variant or DEFAULT_THEME,
         },
-        "aktualni_varianta": nastaveni.barevna_varianta,
+        "aktualni_varianta": user_variant,
         "sidebar_panels": sidebar_panels,
         "provoz_links": provoz_links,
         "vyuct_summary": vyuct_summary,
@@ -887,8 +913,34 @@ def admin_nastaveni_import_view(request):
     return redirect("admin:nastaveni")
 
 
-def _apply_system_nastaveni_form(form, vyuct_nast) -> None:
-    form.save()
+def _apply_system_nastaveni_form(
+    form,
+    vyuct_nast,
+    *,
+    user=None,
+    update_user_theme: bool = False,
+) -> None:
+    """Uloží systémová nastavení; vzhled se ukládá per-user, ne do singletonu."""
+    current = SystemNastaveni.load()
+    sys_variant = current.barevna_varianta
+    sys_tmavy = current.tmavy_rezim
+    user_variant = form.cleaned_data.get("barevna_varianta")
+    user_tmavy = form.cleaned_data.get("tmavy_rezim")
+
+    obj = form.save(commit=False)
+    obj.barevna_varianta = sys_variant
+    obj.tmavy_rezim = sys_tmavy
+    obj.save()
+    form.save_m2m()
+
+    if update_user_theme and user is not None and getattr(user, "is_authenticated", False):
+        pref = UserPreference.for_user(user)
+        if user_variant and user_variant in THEME_VARIANTS:
+            pref.barevna_varianta = user_variant
+        if "tmavy_rezim" in form.cleaned_data:
+            pref.tmavy_rezim = bool(user_tmavy)
+        pref.save()
+
     rezim = form.cleaned_data.get("vyuctovani_rezim")
     if rezim and rezim != vyuct_nast.auto_rezim:
         vyuct_nast.auto_rezim = rezim
@@ -901,8 +953,6 @@ def _merge_nastaveni_autosave_post(post, nastaveni: SystemNastaveni, vyuct_nast:
     """Doplní chybějící pole pro AJAX autosave z aktuální instance."""
     merged = post.copy()
     boolean_fields = {
-        "tmavy_rezim",
-        "sezona_automaticky_kurt",
         "zvyraznit_zaporny_kredit",
     }
     scalar_fields = [
@@ -912,12 +962,11 @@ def _merge_nastaveni_autosave_post(post, nastaveni: SystemNastaveni, vyuct_nast:
         "kontakt_telefon",
         "kontakt_adresa",
         "vychozi_jazyk",
+        "mena",
         "email_podpis",
         "barevna_varianta",
         "vychozi_delka_minut",
-        "vychozi_kurt",
-        "sezona_venek_od",
-        "sezona_venek_do",
+        "vychozi_sezona",
         "rozvrh_od_hodina",
         "rozvrh_do_hodina",
         "vychozi_zobrazeni_rozvrhu",
@@ -931,6 +980,11 @@ def _merge_nastaveni_autosave_post(post, nastaveni: SystemNastaveni, vyuct_nast:
         if field not in merged:
             if getattr(nastaveni, field):
                 merged[field] = "on"
+    # Tmavý režim: ModelForm očekává checkbox přítomnost (systémová hodnota jen pro validaci formuláře)
+    if "tmavy_rezim" not in post and nastaveni.tmavy_rezim:
+        merged["tmavy_rezim"] = "on"
+    elif "tmavy_rezim" not in post:
+        merged.pop("tmavy_rezim", None)
     if "vyuctovani_rezim" not in merged:
         merged["vyuctovani_rezim"] = vyuct_nast.auto_rezim
     if "email_jmeno" not in merged:
@@ -950,11 +1004,9 @@ def _nastaveni_autosave_payload(nastaveni: SystemNastaveni, *, language_changed:
         "nazev_klubu": nastaveni.nazev_klubu or "",
         "vychozi_jazyk": nastaveni.vychozi_jazyk or settings.LANGUAGE_CODE,
         "language_changed": language_changed,
+        "logo_url": nastaveni.logo.url if nastaveni.logo else "",
+        "favicon_url": nastaveni.favicon.url if nastaveni.favicon else "",
     }
-    if nastaveni.logo:
-        payload["logo_url"] = nastaveni.logo.url
-    if nastaveni.favicon:
-        payload["favicon_url"] = nastaveni.favicon.url
     return payload
 
 
@@ -991,32 +1043,28 @@ def admin_nastaveni_autosave_view(request):
 
 
 def admin_nastaveni_vzhled_view(request):
-    """Okamžité uložení palety a tmavého režimu (AJAX)."""
+    """Okamžité uložení osobní palety a tmavého režimu (AJAX)."""
     if not request.user.is_staff:
         return JsonResponse({"ok": False, "error": "Forbidden"}, status=403)
     if request.method != "POST":
         return JsonResponse({"ok": False, "error": "Method not allowed"}, status=405)
 
     nast = SystemNastaveni.load()
+    pref = UserPreference.for_user(request.user)
 
     variant = (request.POST.get("barevna_varianta") or "").strip()
     if variant and variant in THEME_VARIANTS:
-        nast.barevna_varianta = variant
+        pref.barevna_varianta = variant
     elif variant:
         return JsonResponse({"ok": False, "error": "Neplatná paleta."}, status=400)
 
     if "tmavy_rezim" in request.POST:
         val = request.POST.get("tmavy_rezim", "")
-        nast.tmavy_rezim = val in ("1", "true", "on", "True")
+        pref.tmavy_rezim = val in ("1", "true", "on", "True")
 
-    nast.save(sync_colors=True)
+    pref.save()
 
-    from .admin_urls import refresh_admin_branding
-    refresh_admin_branding()
-
-    colors = resolve_theme_colors(nast)
-    tmavy = bool(nast.tmavy_rezim)
-    variant = nast.barevna_varianta or DEFAULT_THEME
+    variant, tmavy, colors = resolve_effective_theme(user=request.user, nastaveni=nast)
     return JsonResponse(
         {
             "ok": True,

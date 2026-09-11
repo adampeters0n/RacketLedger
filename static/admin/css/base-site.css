@@ -51,40 +51,57 @@
   #branding .brand{
     display:flex; align-items:center; gap:10px; text-decoration:none;
   }
-  #branding .brand .brand-logo{ width:var(--brand-logo) !important; height:var(--brand-logo) !important; }
-  #branding .brand .brand-title{ font-size:var(--brand-font-size) !important; font-weight:var(--brand-font-weight) !important; }
+  #branding .brand .brand-logo{ width:var(--brand-logo) !important; height:var(--brand-logo) !important; object-fit:cover !important; border-radius:50% !important; }
+  #branding .brand .brand-logo[hidden]{ display:none !important; }
+  #branding .brand .brand-title{ font-size:var(--brand-font-size) !important; font-weight:var(--brand-font-weight) !important; line-height:1.35 !important; padding-block:0.12em; }
 
   /* user tools vpravo */
   #user-tools{ display:flex; align-items:center; gap:8px; padding-right:12px; }
   #user-tools a{ font-size:13px; white-space:nowrap; }
 
-  /* ikona rozvrhu (vpravo) */
-  #user-tools .schedule-icon{
-    order:-1; display:inline-flex; align-items:center; justify-content:center;
-    box-sizing:border-box;
-    width:34px; height:34px; padding:6px;
-    background:#fff; border:2px solid #f59e0b; border-radius:8px; text-decoration:none;
-    flex-shrink:0;
+  /* ikona rozvrhu v topnav (vedle Nastavení) */
+  .ts-topnav a.schedule-icon,
+  .ts-topnav #nav-rozvrh{
+    display:inline-flex !important;
+    align-items:center !important;
+    justify-content:center !important;
+    aspect-ratio:1 / 1;
+    min-width:2.4em;
+    line-height:0 !important;
   }
-  #user-tools .schedule-icon:hover{ background:#ffedd5; border-color:#E67817; }
-  #user-tools .schedule-icon svg{ color:#f59e0b; width:18px; height:18px; display:block; }
+  .ts-topnav a.schedule-icon svg,
+  .ts-topnav #nav-rozvrh svg{
+    width:1.15em; height:1.15em; display:block; color:currentColor;
+  }
+  .ts-topnav a.schedule-icon.is-active,
+  .ts-topnav #nav-rozvrh.is-active{ color:#fff; }
+  .ts-topnav a.schedule-icon.is-active svg,
+  .ts-topnav #nav-rozvrh.is-active svg{ color:#fff; stroke:#fff; }
 
   /* ====== TOP NAV ====== */
   .ts-topnav{
-    display:flex !important; align-items:center; flex-wrap:nowrap; gap:8px;
+    display:flex !important; align-items:center; flex-wrap:nowrap;
+    gap:clamp(2px, 0.45vw, 8px);
     padding:6px 12px 6px 0 !important;
     overflow:visible !important;
     border-bottom:0;
     background:transparent !important;
+    justify-content:center !important;
+    min-width:0;
+    max-width:100%;
   }
   .ts-topnav a{
-    flex:0 0 auto; white-space:nowrap; font-weight:900;
-    font-size:13px; padding:.6rem .9rem;
+    flex:0 1 auto; white-space:nowrap; font-weight:900;
+    font-size:calc(clamp(11px, 0.92vw, 13px) * var(--ts-nav-scale, 1));
+    padding:
+      calc(clamp(0.4rem, 0.55vw, 0.7rem) * var(--ts-nav-scale, 1))
+      calc(clamp(0.4rem, 0.65vw, 0.9rem) * var(--ts-nav-scale, 1));
     border-radius:100px; border:1px solid transparent; text-decoration:none;
+    min-width:0;
   }
   .ts-topnav a:hover{ background:#ffedd5; border-color:#ffedd5; }
   .ts-topnav a.is-active{ background:var(--brand, #E67817); border:1px solid var(--brand, #E67817); box-shadow:none; color:#fff; }
-  .ts-topnav .divider{ width:1px; height:20px; background:#e5e7eb; }
+  .ts-topnav .divider{ width:1px; height:20px; background:#e5e7eb; flex:0 0 auto; }
 
   /* ====== BURGER – pevně k levému okraji HLAVIČKY ====== */
   #ts-burger{
@@ -138,7 +155,12 @@
     display:flex !important; align-items:center !important; gap:10px !important;
     font-weight:800 !important; font-size:18px !important; color:#fff !important;
   }
-  .ts-drawer-title img{ width:26px !important; height:26px !important; }
+  .ts-drawer-title img{
+    width:26px !important;
+    height:26px !important;
+    object-fit:cover !important;
+    border-radius:50% !important;
+  }
   .ts-drawer-close{
     appearance:none !important; border:1px solid #333 !important;
     background:#1a1a1a !important; color:#fff !important;

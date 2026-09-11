@@ -88,11 +88,11 @@
   /* Základ eventu – pozice podle skutečného času (minuty), ne jen celých hodin */
   .ev{
     position:absolute; box-sizing:border-box;
-    background:var(--sched-brand-weak);
-    border:1px solid var(--sched-brand);
+    background:var(--ev-bg, var(--sched-brand-weak));
+    border:1px solid var(--ev-border, var(--sched-brand));
     border-radius:4px;
     padding:4px 6px;
-    color:#7c2d12;
+    color:var(--ev-text, #7c2d12);
     box-shadow:0 4px 12px rgba(0,0,0,.06);
     overflow:hidden;
     container-type: inline-size;
@@ -201,29 +201,12 @@
     .ev-sub{ font-size: min(var(--ev-sub-size), 6px); }
   }
 
-  /* === Barevné varianty podle formátu (stejné barvy jako legenda) ===
-     Třída je ev--{{ ev.fmt }} (slug z get_format_display). */
-  .ev[class*="ev--solo"]        { background:#ffedd5; border-color:#f59e0b; color:#7c2d12; }
-  .ev[class*="ev--dvojice"]     { background:#dbeafe; border-color:#3b82f6; color:#1e3a8a; }
-  .ev[class*="ev--trojice"],
-  .ev[class*="ev--trio"]        { background:#ede9fe; border-color:#8b5cf6; color:#4c1d95; }
-  .ev[class*="ev--ctverice"],
-  .ev[class*="ev--ctver"],
-  .ev[class*="ev--ctyr"]        { background:#dcfce7; border-color:#22c55e; color:#14532d; }
-  .ev[class*="ev--skupina"],
-  .ev[class*="ev--skup"],
-  .ev[class*="ev--petice"],
-  .ev[class*="ev--sobota"]      { background:#ccfbf1; border-color:#14b8a6; color:#115e59; }
-  .ev.ev--kurt-tre,
-  .ev[class*="ev--kurt-rezervace"] { background:#ffe4e6; border-color:#e11d48; color:#9f1239; }
+  /* Barvy typů tréninku přicházejí z ceníku přes CSS proměnné (--ev-bg / --ev-border / --ev-text). */
 
   /* legenda – barvy shodné s událostmi v kalendáři */
   .legend{ margin-top:12px; color:var(--sched-muted); font-size:13px; display:flex; gap:18px; flex-wrap:wrap; align-items:center; }
   .legend .item{ display:flex; align-items:center; gap:8px; }
-  .chip{ width:12px; height:12px; border-radius:4px; border:1px solid transparent; display:inline-block; }
-  .chip--solo     { background:#ffedd5; border-color:#f59e0b; }
-  .chip--dvojice  { background:#dbeafe; border-color:#3b82f6; }
-  .chip--trojice  { background:#ede9fe; border-color:#8b5cf6; }
-  .chip--ctverice { background:#dcfce7; border-color:#22c55e; }
-  .chip--skupina  { background:#ccfbf1; border-color:#14b8a6; }
-  .chip--rezervace { background:#ffe4e6; border-color:#e11d48; }
+  .chip{
+    width:12px; height:12px; border-radius:4px; border:1px solid var(--ev-border, #9ca3af);
+    background:var(--ev-bg, #f3f4f6); display:inline-block;
+  }

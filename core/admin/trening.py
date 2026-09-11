@@ -2,6 +2,7 @@
 from ..admin_mixins import ConfigurableListPerPageMixin
 from collections import defaultdict
 from decimal import Decimal, ROUND_HALF_UP
+from core.money import format_castka
 from datetime import datetime, time, timedelta
 import json
 import re
@@ -11,11 +12,12 @@ from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Prefetch, Sum
+from django.db.models import Prefetch, Q, Sum
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
+from django.utils.translation import gettext as _g
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone as dj_tz
 from django.utils.html import format_html, escape
@@ -32,7 +34,7 @@ from ..forms import (
     TrainingSlotForm,
     TrainingSlotFormSet,
 )
-from ..models import Cenik, CenikFormat, Dochazka, Hrac, SystemNastaveni, TrenerPlatba, TrenerSazba, Trening
+from ..models import Cenik, Dochazka, Hrac, SystemNastaveni, TrenerPlatba, TrenerSazba, Trening
 from .inlines import DochazkaInline
 
 User = get_user_model()
@@ -73,9 +75,8 @@ def _hraci_from_training(training):
 
 
 def _format_name_map() -> dict[str, str]:
-    names = dict(CenikFormat.VYCHOZI_KODY)
-    names.update(CenikFormat.objects.values_list("kod", "nazev"))
-    return names
+    """Identity map – format je volný text (název)."""
+    return {}
 
 
 def _training_row_dict(user, training, rate_lookup: TrenerRateLookup, format_names: dict[str, str]):
@@ -90,8 +91,8 @@ def _training_row_dict(user, training, rate_lookup: TrenerRateLookup, format_nam
         "kurt": training.get_kurt_display(),
         "hraci": _hraci_from_training(training),
         "hodiny": f"{hours:.2f}",
-        "sazba": f"{rate:.0f} Kč/h",
-        "castka": f"{castka:.0f} Kč",
+        "sazba": format_castka(rate, per_hour=True),
+        "castka": format_castka(castka),
         "trening_change_url": reverse("admin:core_trening_change", args=[training.id]),
         "month_key": (dt.year, dt.month),
     }
@@ -132,14 +133,14 @@ def _build_trener_training_stats(user, trainings, rate_lookup: TrenerRateLookup)
             "month": month,
             "pocet": data["pocet"],
             "hodiny": f"{m_hours:.2f}",
-            "castka": f"{m_castka:.0f} Kč",
+            "castka": format_castka(m_castka),
             "castka_raw": m_castka,
         })
 
     stats = {
         "pocet": pocet,
         "hodiny": f"{hodiny:.2f}",
-        "castka": f"{total_castka.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP):.0f} Kč",
+        "castka": format_castka(total_castka),
         "castka_raw": total_castka,
         "hodiny_raw": hodiny,
         "mesice": mesice,
@@ -207,14 +208,14 @@ def _aggregate_trener_trainings(user, trainings, rate_lookup: TrenerRateLookup |
             "month": month,
             "pocet": data["pocet"],
             "hodiny": f"{m_hours:.2f}",
-            "castka": f"{m_castka:.0f} Kč",
+            "castka": format_castka(m_castka),
             "castka_raw": m_castka,
         })
 
     return {
         "pocet": pocet,
         "hodiny": f"{hodiny:.2f}",
-        "castka": f"{total_castka.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP):.0f} Kč",
+        "castka": format_castka(total_castka),
         "castka_raw": total_castka,
         "hodiny_raw": hodiny,
         "mesice": mesice,
@@ -223,7 +224,7 @@ def _aggregate_trener_trainings(user, trainings, rate_lookup: TrenerRateLookup |
 
 
 def _format_kc(value: Decimal) -> str:
-    return f"{value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP):.0f} Kč"
+    return format_castka(value)
 
 
 def _trener_financial_overview(user, rate_lookup: TrenerRateLookup, stats: dict | None = None):
@@ -269,7 +270,7 @@ def _enrich_mesice_with_payments(user, mesice):
         key = (dt.year, dt.month)
         platby_by_month[key]["items"].append({
             "datum": dt.strftime("%d.%m.%Y"),
-            "castka": f"{p.castka:.0f} Kč",
+            "castka": format_castka(p.castka),
             "url": reverse("admin:core_trenerplatba_change", args=[p.id]),
         })
         platby_by_month[key]["total"] += p.castka
@@ -332,6 +333,7 @@ def _trainings_for_copy(source_date, target_date, scope, trener=None):
             "cas": local.time().replace(second=0, microsecond=0),
             "delka_minut": t.delka_minut,
             "format": t.format,
+            "sezona": t.sezona or "",
             "kurt": t.kurt,
             "poznamka": t.poznamka or "",
             "hraci": hraci,
@@ -409,7 +411,26 @@ class TreningFormatFilter(admin.SimpleListFilter):
     parameter_name = "format"
 
     def lookups(self, request, model_admin):
-        return CenikFormat.choices()
+        from ..forms import cenik_format_choices
+
+        seen = set()
+        out = []
+        for value, label in cenik_format_choices():
+            if not value or value in seen:
+                continue
+            seen.add(value)
+            out.append((value, label))
+        used = (
+            Trening.objects.exclude(format="")
+            .order_by("format")
+            .values_list("format", flat=True)
+            .distinct()
+        )
+        for value in used:
+            if value and value not in seen:
+                seen.add(value)
+                out.append((value, value))
+        return out
 
     def queryset(self, request, queryset):
         val = self.value()
@@ -423,16 +444,43 @@ class SezonaListFilter(admin.SimpleListFilter):
     parameter_name = "sezona"
 
     def lookups(self, request, model_admin):
-        return [
-            (Cenik.Kurt.VENEK, _("Léto")),
-            (Cenik.Kurt.HALA, _("Zima")),
-        ]
+        from ..forms import cenik_sezona_choices
+
+        seen = set()
+        out = []
+        for value, label in cenik_sezona_choices():
+            if not value or value in seen:
+                continue
+            seen.add(value)
+            out.append((value, label))
+        used = (
+            Trening.objects.exclude(sezona="")
+            .order_by("sezona")
+            .values_list("sezona", flat=True)
+            .distinct()
+        )
+        for value in used:
+            if value and value not in seen:
+                seen.add(value)
+                out.append((value, value))
+        return out
 
     def queryset(self, request, queryset):
         val = self.value()
-        if val:
-            return queryset.filter(kurt=val)
-        return queryset
+        if not val:
+            return queryset
+        # Legacy: starší tréninky bez sezóny, jen podle kurtu
+        if val.casefold() in {"léto", "leto"}:
+            return queryset.filter(
+                Q(sezona__iexact=val)
+                | Q(kurt__in=[Cenik.Kurt.VENEK, Cenik.Kurt.VENEK_CODE, "Venek"])
+            )
+        if val.casefold() == "zima":
+            return queryset.filter(
+                Q(sezona__iexact=val)
+                | Q(kurt__in=[Cenik.Kurt.HALA, Cenik.Kurt.HALA_CODE])
+            )
+        return queryset.filter(sezona=val)
 
 
 class TreningDatumFilter(admin.DateFieldListFilter):
@@ -464,16 +512,34 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
     list_per_page_default = 50
     inlines = [DochazkaInline]
     actions = ["znovu_zpracovat_uctovani"]
-    fields = ("trener", "datum", "delka_minut", "format", "kurt", "poznamka")
+    fields = ("trener", "datum", "delka_minut", "format", "sezona", "kurt", "poznamka")
 
     def get_form(self, request, obj=None, **kwargs):
+        from ..forms import cenik_format_choices, cenik_kurt_choices, cenik_sezona_choices
+
         Form = super().get_form(request, obj, **kwargs)
         if "format" in Form.base_fields:
             Form.base_fields["format"] = forms.ChoiceField(
-                label=_("Formát"),
-                choices=CenikFormat.choices(),
+                label=_("Typ tréninku"),
+                required=True,
+                choices=cenik_format_choices(getattr(obj, "format", "")),
                 widget=forms.Select(attrs={"class": "vTextField"}),
             )
+        if "sezona" in Form.base_fields:
+            Form.base_fields["sezona"] = forms.ChoiceField(
+                label=_("Sezóna"),
+                required=False,
+                choices=cenik_sezona_choices(getattr(obj, "sezona", "")),
+                widget=forms.Select(attrs={"class": "vTextField"}),
+            )
+            if obj is None:
+                try:
+                    default_sezona = (SystemNastaveni.training_defaults().get("sezona") or "").strip()
+                    sezona_values = {c[0] for c in Form.base_fields["sezona"].choices if c[0]}
+                    if default_sezona in sezona_values:
+                        Form.base_fields["sezona"].initial = default_sezona
+                except Exception:
+                    pass
         if "delka_minut" in Form.base_fields:
             field = Form.base_fields["delka_minut"]
             field.label = _("Délka (hodiny)")
@@ -486,18 +552,19 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
                 except Exception:
                     field.initial = 60
         if "trener" in Form.base_fields:
-            Form.base_fields["trener"].label = "Trenér"
+            Form.base_fields["trener"].label = _("Trenér")
         if "datum" in Form.base_fields:
             Form.base_fields["datum"].label = ""
         if "kurt" in Form.base_fields:
-            Form.base_fields["kurt"].label = "Kurt"
-            if obj is None:
-                try:
-                    Form.base_fields["kurt"].initial = SystemNastaveni.training_defaults()["kurt"]
-                except Exception:
-                    pass
+            choices = cenik_kurt_choices(getattr(obj, "kurt", ""))
+            Form.base_fields["kurt"] = forms.ChoiceField(
+                label=_("Kurt"),
+                required=True,
+                choices=choices,
+                widget=forms.Select(attrs={"class": "vTextField"}),
+            )
         if "poznamka" in Form.base_fields:
-            Form.base_fields["poznamka"].label = "Poznámka"
+            Form.base_fields["poznamka"].label = _("Poznámka")
         return Form
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -515,7 +582,7 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         if not form.is_valid():
-            messages.error(request, f"Chyba v hlavním formuláři: {form.errors}")
+            messages.error(request, _g("Chyba v hlavním formuláři: %(errors)s") % {"errors": form.errors})
         super().save_model(request, obj, form, change)
 
     def save_formset(self, request, form, formset, change):
@@ -542,7 +609,7 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             return
 
         if not formset.is_valid():
-            messages.error(request, f"Chyba v seznamu hráčů: {formset.errors}")
+            messages.error(request, _g("Chyba v seznamu hráčů: %(errors)s") % {"errors": formset.errors})
             return
 
         if formset.model == Dochazka:
@@ -574,7 +641,7 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             if request.path.rstrip("/").endswith("/add"):
                 w = forms.SplitDateTimeWidget(
                     date_attrs={"type": "date", "class": "add-day-datum-input vDateField"},
-                    time_attrs={"type": "time", "class": "vTimeField", "placeholder": "např. 13:00"},
+                    time_attrs={"type": "time", "class": "vTimeField", "placeholder": _g("např. 13:00")},
                 )
             else:
                 w = AdminSplitDateTimeWithDatalist()
@@ -660,12 +727,18 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
                             if settings.USE_TZ:
                                 dt = dj_tz.make_aware(dt, dj_tz.get_current_timezone())
                             defaults = SystemNastaveni.training_defaults(for_date=slot_datum)
+                            fmt = (cd.get("format") or "").strip()
+                            sezona = (cd.get("sezona") or "").strip()
+                            kurt = (cd.get("kurt") or defaults["kurt"] or "").strip()
+                            if not fmt or not kurt:
+                                continue
                             trening = Trening.objects.create(
                                 trener=slot_trener,
                                 datum=dt,
                                 delka_minut=cd.get("delka_minut") or defaults["delka_minut"],
-                                format=cd["format"] or CenikFormat.default_kod(),
-                                kurt=cd["kurt"] or defaults["kurt"],
+                                format=fmt,
+                                sezona=sezona,
+                                kurt=kurt,
                                 poznamka=(cd.get("poznamka") or "")[:240],
                             )
                             hraci = cd.get("hraci") or []
@@ -679,8 +752,8 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
                     if created:
                         trener_str = (getattr(default_trener, "get_full_name", lambda: "")() or getattr(default_trener, "username", ""))
                         parts = [
-                            format_html("<strong>Trenér:</strong> {}", escape(trener_str)),
-                            format_html("Bylo uloženo {} tréninků:", created),
+                            format_html("<strong>{}:</strong> {}", _g("Trenér"), escape(trener_str)),
+                            format_html("{}:", _g("Bylo uloženo %(count)s tréninků") % {"count": created}),
                         ]
                         for datum_str, cas_str, hraci_str, trening_pk in created_items:
                             change_url = reverse("admin:core_trening_change", args=[trening_pk])
@@ -697,7 +770,7 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
                     else:
                         messages.error(
                             request,
-                            "Vyplňte alespoň jeden trénink (čas).",
+                            _g("Vyplňte alespoň jeden trénink (čas)."),
                         )
             context = self._add_form_context(
                 request, day_form, formset,
@@ -738,6 +811,7 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
                                 "cas": slot["cas"],
                                 "delka_minut": slot["delka_minut"],
                                 "format": slot["format"],
+                                "sezona": slot.get("sezona") or "",
                                 "kurt": slot["kurt"],
                                 "poznamka": slot["poznamka"],
                                 "hraci": slot["hraci"],
@@ -759,7 +833,7 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
                     else:
                         messages.warning(
                             request,
-                            "Ve zvoleném období nejsou žádné tréninky ke zkopírování.",
+                            _g("Ve zvoleném období nejsou žádné tréninky ke zkopírování."),
                         )
                         copy_form = CopyTrainingsForm(initial={
                             "source_date": source_date,
@@ -836,7 +910,7 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
 
     @admin.display(description=_("Částka / hráč"))
     def castka_na_hrace_kc(self, obj):
-        return f"{obj.cena_na_hrace()} Kč"
+        return format_castka(obj.cena_na_hrace())
 
     def response_add(self, request, obj, post_url_continue=None):
         local_dt = dj_tz.localtime(obj.datum) if dj_tz.is_aware(obj.datum) else obj.datum
@@ -859,31 +933,37 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
         edit_url = reverse("admin:core_trening_change", args=[obj.pk])
 
         summary_message = format_html(
-            (
-                'Položka typu <strong>Trénink</strong> byla úspěšně přidána.<br>'
-                'Zkontrolujte prosím zadané údaje:<br>'
-                '<strong>Trenér:</strong> {}<br>'
-                '<strong>Datum:</strong> {}<br>'
-                '<strong>Čas:</strong> {}<br>'
-                '<strong>Délka (hodiny):</strong> {}<br>'
-                '<strong>Formát:</strong> {}<br>'
-                '<strong>Kurt:</strong> {}<br>'
-                '<strong>Hráči:</strong> {}<br>'
-                'Níže můžete přidat další položku typu <strong>Trénink</strong>.<br>'
-                '<a href="{}" class="button" '
-                'style="display:inline-block;margin-top:14px;padding:6px 12px;'
-                'font-size:12px;line-height:1.4;">'
-                'Otevřít a upravit tento trénink'
-                '</a>'
-            ),
-            trener_str,
-            date_str,
-            time_str,
-            hours_str,
-            format_str,
-            kurt_str,
-            hraci_str,
-            edit_url,
+            "{added}<br>{check}<br>"
+            "<strong>{coach}:</strong> {trener}<br>"
+            "<strong>{date}:</strong> {date_val}<br>"
+            "<strong>{time}:</strong> {time_val}<br>"
+            "<strong>{duration}:</strong> {hours}<br>"
+            "<strong>{fmt}:</strong> {format_val}<br>"
+            "<strong>{court}:</strong> {kurt}<br>"
+            "<strong>{players}:</strong> {hraci}<br>"
+            "{more}<br>"
+            '<a href="{edit_url}" class="button" '
+            'style="display:inline-block;margin-top:14px;padding:6px 12px;'
+            'font-size:12px;line-height:1.4;">{edit_link}</a>',
+            added=mark_safe(_g("Položka typu <strong>Trénink</strong> byla úspěšně přidána.")),
+            check=_g("Zkontrolujte prosím zadané údaje:"),
+            coach=_g("Trenér"),
+            trener=trener_str,
+            date=_g("Datum"),
+            date_val=date_str,
+            time=_g("Čas"),
+            time_val=time_str,
+            duration=_g("Délka (hodiny)"),
+            hours=hours_str,
+            fmt=_g("Formát"),
+            format_val=format_str,
+            court=_g("Kurt"),
+            kurt=kurt_str,
+            players=_g("Hráči"),
+            hraci=hraci_str,
+            more=mark_safe(_g("Níže můžete přidat další položku typu <strong>Trénink</strong>.")),
+            edit_url=edit_url,
+            edit_link=_g("Otevřít a upravit tento trénink"),
         )
 
         response = super().response_add(request, obj, post_url_continue)
@@ -891,8 +971,7 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
         storage = messages.get_messages(request)
         kept = []
         for m in storage:
-            text = str(m.message)
-            if "Položka typu Trénink" in text and "byla úspěšně přidána" in text and "Zkontrolujte prosím zadané údaje" not in text:
+            if m.level == messages.SUCCESS:
                 continue
             kept.append(m)
 
@@ -924,29 +1003,33 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
         kurt_str = obj.get_kurt_display()
 
         summary_message = format_html(
-            (
-                'Položka typu <strong>Trénink</strong> byla úspěšně změněna.<br>'
-                'Aktuálně uložené údaje:<br>'
-                '<strong>Trenér:</strong> {}<br>'
-                '<strong>Datum:</strong> {}<br>'
-                '<strong>Čas:</strong> {}<br>'
-                '<strong>Délka (hodiny):</strong> {}<br>'
-                '<strong>Formát:</strong> {}<br>'
-                '<strong>Kurt:</strong> {}'
-            ),
-            trener_str,
-            date_str,
-            time_str,
-            hours_str,
-            format_str,
-            kurt_str,
+            "{changed}<br>{current}<br>"
+            "<strong>{coach}:</strong> {trener}<br>"
+            "<strong>{date}:</strong> {date_val}<br>"
+            "<strong>{time}:</strong> {time_val}<br>"
+            "<strong>{duration}:</strong> {hours}<br>"
+            "<strong>{fmt}:</strong> {format_val}<br>"
+            "<strong>{court}:</strong> {kurt}",
+            changed=mark_safe(_g("Položka typu <strong>Trénink</strong> byla úspěšně změněna.")),
+            current=_g("Aktuálně uložené údaje:"),
+            coach=_g("Trenér"),
+            trener=trener_str,
+            date=_g("Datum"),
+            date_val=date_str,
+            time=_g("Čas"),
+            time_val=time_str,
+            duration=_g("Délka (hodiny)"),
+            hours=hours_str,
+            fmt=_g("Formát"),
+            format_val=format_str,
+            court=_g("Kurt"),
+            kurt=kurt_str,
         )
 
         storage = messages.get_messages(request)
         kept = []
         for m in storage:
-            text = str(m.message)
-            if "Položka" in text and "typu Trénink" in text and "byla úspěšně změněna" in text:
+            if m.level == messages.SUCCESS:
                 continue
             kept.append(m)
 
@@ -957,22 +1040,10 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
         return response
 
     def schedule_view(self, request):
-        """Týdenní/denní rozvrh tréninků s filtry + rozložení překryvů do pruhů."""
+        from ..schedule_colors import color_for_format, format_slug, schedule_legend_items
+
         q = request.GET
         CZECH_DOW = ["po", "út", "st", "čt", "pá", "so", "ne"]
-
-        def _slug(s: str) -> str:
-            s = (s or "").strip().lower()
-            repl = (("á", "a"), ("č", "c"), ("ď", "d"), ("é", "e"), ("ě", "e"), ("í", "i"),
-                    ("ň", "n"), ("ó", "o"), ("ř", "r"), ("š", "s"), ("ť", "t"), ("ú", "u"),
-                    ("ů", "u"), ("ý", "y"), ("ž", "z"))
-            for a, b in repl:
-                s = s.replace(a, b)
-            import re
-            s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
-            if not s or not s[0].isalpha():
-                s = f"f-{s or 'neznamy'}"
-            return s
 
         try:
             base_date = datetime.strptime(q.get("date", ""), "%Y-%m-%d").date()
@@ -1031,8 +1102,8 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             end_local = local + timedelta(minutes=dur)
 
             fmt_label = t.get_format_display()
-            fmt_slug = _slug(fmt_label)
-            fmt_code = (t.format or "").lower().replace("_", "-")
+            fmt_slug = format_slug(fmt_label)
+            color = color_for_format(fmt_label)
 
             players = []
             for dch in t.dochazky.select_related("hrac").filter(prisel=True):
@@ -1049,8 +1120,8 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
                 "title": ", ".join(players) or "—",
                 "sub": f"{local.strftime('%H:%M')}–{end_local.strftime('%H:%M')}",
                 "fmt": fmt_slug,
-                "fmt_code": fmt_code,
                 "fmt_label": fmt_label,
+                "color": color,
             }
             days[i]["events"].append(ev)
 
@@ -1114,7 +1185,7 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             copy_week_url += f"&copy-trener={trainer_id}"
         ctx = dict(self.admin_site.each_context(request))
         ctx.update({
-            "title": "Rozvrh tréninků",
+            "title": _("Rozvrh tréninků"),
             "active_menu": "rozvrh",
             "view_mode": mode,
             "trainers": User.objects.order_by("username"),
@@ -1129,6 +1200,7 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             "hour_count": hour_count,
             "sched_start_hour": hours[0] if hours else 6,
             "days": days,
+            "format_legend": schedule_legend_items(),
         })
         return TemplateResponse(request, "admin/core/trening/kalendar.html", ctx)
 
@@ -1154,7 +1226,7 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
         total_hodiny = Decimal("0.00")
         total_castka = Decimal("0.00")
 
-        for uid in sorted(users.keys(), key=lambda i: (users[i].get_full_name() or users[i].username).lower()):
+        for uid in sorted(users.keys(), key=lambda i: trener_label(users[i]).lower()):
             u = users[uid]
             tqs = list(
                 base_qs.filter(trener_id=uid).order_by("datum").prefetch_related(_dochazka_prefetch())
@@ -1172,7 +1244,7 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             detail_qs = ("?" + "&".join(q)) if q else ""
 
             rows.append({
-                "trener": (u.get_full_name() or u.username),
+                "trener": trener_label(u),
                 "detail_url": reverse("admin:core_treneri_detail", args=[u.id]) + detail_qs,
                 "pocet": stats["pocet"],
                 "hodiny": stats["hodiny"],
@@ -1185,7 +1257,7 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             rows=rows,
             total_pocet=total_pocet,
             total_hodiny=f"{total_hodiny:.2f}",
-            total_castka=f"{total_castka.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP):.0f} Kč",
+            total_castka=format_castka(total_castka),
             dfrom=dfrom, dto=dto,
             active_menu="treneri",
         )
@@ -1215,11 +1287,15 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             try:
                 TrenerSazba.set_rate_from(user=u, effective_from=eff_from, rate=amount)
             except ValidationError as e:
-                messages.error(request, f"Sazbu se nepodařilo nastavit: {e}")
+                messages.error(request, _g("Sazbu se nepodařilo nastavit: %(error)s") % {"error": e})
             else:
                 messages.success(
                     request,
-                    f"Sazba {amount:.0f} Kč/h nastavena od {eff_from.strftime('%d.%m.%Y')}."
+                    _g("Sazba %(amount)s nastavena od %(date)s.")
+                    % {
+                        "amount": format_castka(amount, per_hour=True),
+                        "date": eff_from.strftime("%d.%m.%Y"),
+                    },
                 )
             return redirect(request.get_full_path())
 
@@ -1263,8 +1339,9 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
 
         ctx = dict(
             self.admin_site.each_context(request),
-            title=_("Trenér – %(name)s") % {"name": u.get_full_name() or u.username},
+            title=_("Trenér – %(name)s") % {"name": trener_label(u)},
             trener=u,
+            trener_label=trener_label(u),
             pocet=stats["pocet"],
             total_hours=f"{stats['hodiny']} h",
             total_castka=stats["castka"],

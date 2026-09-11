@@ -2,6 +2,16 @@ document.addEventListener('DOMContentLoaded', function () {
   var cfg = document.getElementById('transakce-changelist-config');
   if (!cfg) return;
 
+  function readI18n() {
+    try {
+      var el = document.getElementById('ts-global-i18n');
+      return el ? JSON.parse(el.textContent) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  var I18N = readI18n();
+
   var trainingsUrl = cfg.dataset.trainingsUrl || '';
   var trainingsBox = document.getElementById('transakce-day-trainings');
   var trainingsBody = document.getElementById('transakce-day-trainings-body');
@@ -15,14 +25,21 @@ document.addEventListener('DOMContentLoaded', function () {
       trainingsBody.innerHTML = '';
       return;
     }
-    trainingsTitle.textContent = 'Tréninky – ' + (data.date_label || '');
+    trainingsTitle.textContent = (I18N.trainingsPrefix || 'Tréninky –') + ' ' + (data.date_label || '');
     if (!data.trainings || !data.trainings.length) {
-      trainingsBody.innerHTML = '<p class="transakce-day-trainings-empty">Pro tento den nejsou žádné tréninky.</p>';
+      trainingsBody.innerHTML = '<p class="transakce-day-trainings-empty">'
+        + (I18N.noTrainingsThatDay || 'Pro tento den nejsou žádné tréninky.')
+        + '</p>';
       trainingsBox.style.display = 'block';
       return;
     }
     var html = '<table class="transakce-day-trainings-table"><thead><tr>'
-      + '<th>Datum</th><th>Čas</th><th>Trenér</th><th>Formát</th><th>Hráči</th><th></th>'
+      + '<th>' + (I18N.date || 'Datum') + '</th>'
+      + '<th>' + (I18N.time || 'Čas') + '</th>'
+      + '<th>' + (I18N.coach || 'Trenér') + '</th>'
+      + '<th>' + (I18N.format || 'Formát') + '</th>'
+      + '<th>' + (I18N.players || 'Hráči') + '</th>'
+      + '<th></th>'
       + '</tr></thead><tbody>';
     data.trainings.forEach(function (t) {
       html += '<tr>'
@@ -31,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
         + '<td>' + t.trener + '</td>'
         + '<td>' + t.format + '</td>'
         + '<td>' + t.hraci + '</td>'
-        + '<td><a href="' + t.url + '">Otevřít</a></td>'
+        + '<td><a href="' + t.url + '">' + (I18N.open || 'Otevřít') + '</a></td>'
         + '</tr>';
     });
     html += '</tbody></table>';

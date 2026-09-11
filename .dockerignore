@@ -1,0 +1,16 @@
+.git
+.venv
+venv
+__pycache__
+*.pyc
+.env
+*.env
+!.env.example
+db.sqlite3
+*.sqlite3
+staticfiles
+media
+data
+.cursor
+.DS_Store
+core/club_seeds_local.py

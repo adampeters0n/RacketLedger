@@ -98,7 +98,7 @@
   }
 
   function chartSurfaceColor() {
-    return anaCssVar('--ana-bg', isDarkMode() ? cssVar('--bg', '#111827') : '#f4f5f0');
+    return anaCssVar('--ana-bg', isDarkMode() ? cssVar('--bg', '#1C1C1E') : '#f4f5f0');
   }
 
   function hexToRgb(hex) {
@@ -1149,7 +1149,7 @@
         ${drillGrid(rows, 'drill-grid--stats')}
       </div>
       ${notes ? `<div class="drill-subsection drill-subsection--notes">${notes}</div>` : ''}
-      ${d.datum_value ? `<a class="drill-link" href="${nakladySectionUrl}?datum=${d.datum_value}">Upravit náklady za den →</a>` : ''}
+      ${d.datum_value ? `<a class="drill-link" href="${nakladySectionUrl}?datum=${d.datum_value}">${t('editDayCosts', 'Upravit náklady za den')} →</a>` : ''}
     `);
   }
 

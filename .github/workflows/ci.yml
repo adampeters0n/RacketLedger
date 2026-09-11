@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        env:
+          DJANGO_SECRET_KEY: ci-test-secret-key-not-for-production
+          DEBUG: "True"
+        run: python manage.py test core -v1
+
+      - name: Django system check
+        env:
+          DJANGO_SECRET_KEY: ci-test-secret-key-not-for-production
+          DEBUG: "True"
+        run: python manage.py check
+
+      - name: Instance smoke (bootstrap branding)
+        env:
+          DJANGO_SECRET_KEY: ci-test-secret-key-not-for-production
+          DEBUG: "True"
+          BOOTSTRAP_ADMIN_PASSWORD: ci-admin-pass
+        run: |
+          python manage.py migrate --noinput
+          python manage.py bootstrap_instance --nazev "Tenis XY" --email "info@xy.cz" --create-admin admin admin@xy.cz
+          python manage.py check_instance

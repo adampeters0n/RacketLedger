@@ -252,7 +252,7 @@
     var serverQuery = urlSearchQuery();
 
     var cfg = document.getElementById('changelist-search-config');
-    var emptyMsg = (cfg && cfg.dataset.emptyMsg) || 'Nebyly nalezeny žádné výsledky.';
+    var emptyMsg = (cfg && cfg.dataset.emptyMsg) || GI18N.noResults || 'Nebyly nalezeny žádné výsledky.';
 
     function hasResultTable() {
       return !!document.getElementById('result_list');

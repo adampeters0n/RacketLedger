@@ -17,8 +17,9 @@ body:has(.analytika-app) #content-main {
   --ana-border: #e4e6df;
   --ana-text: #1a1d16;
   --ana-muted: #6b7264;
-  --ana-brand: #E67817;
-  --ana-brand-soft: #fff4e8;
+  --ana-brand: var(--brand, #E67817);
+  --ana-brand-soft: var(--brand-100, #fff4e8);
+  --ana-brand-strong: var(--brand-600, var(--ana-brand));
   --ana-danger: #c92a2a;
   --ana-link: #2563eb;
   --ana-radius: 14px;
@@ -30,17 +31,18 @@ body:has(.analytika-app) #content-main {
   --ana-nav-icon-bg: #f0f2eb;
   --ana-nav-icon-border: #e8ebe3;
   --ana-nav-icon-hover-bg: #f4f6f1;
-  --ana-nav-icon-active-bg: #fde8cc;
-  --ana-nav-icon-active-border: #f5c99a;
+  --ana-nav-icon-active-bg: color-mix(in srgb, var(--ana-brand) 18%, #ffffff);
+  --ana-nav-icon-active-border: color-mix(in srgb, var(--ana-brand) 42%, #ffffff);
   --ana-nav-hover-bg: #f4f6f1;
   --ana-nav-hover-border: #e8ebe3;
-  --ana-nav-active-bg: linear-gradient(90deg, var(--ana-brand-soft) 0%, rgba(255, 250, 245, 0.85) 100%);
-  --ana-nav-active-border: #f5dcc0;
-  --ana-nav-active-text: #9a4e00;
+  --ana-nav-active-bg: color-mix(in srgb, var(--ana-brand) 12%, #ffffff);
+  --ana-nav-active-border: color-mix(in srgb, var(--ana-brand) 38%, #ffffff);
+  --ana-nav-active-text: var(--ana-brand-strong);
 
   background: var(--ana-bg);
   min-height: calc(100vh - 80px);
   margin: -8px -18px 0;
+  padding: 16px 18px 24px;
   position: relative;
 }
 
@@ -80,7 +82,7 @@ body.analytika-sidebar-open { overflow: hidden; }
   width: var(--ana-sidebar-w);
   flex-shrink: 0;
   background: var(--ana-surface);
-  border: none;
+  border: 1px solid color-mix(in srgb, var(--ana-brand) 14%, var(--ana-border));
   border-radius: 16px;
   box-shadow: 0 2px 12px rgba(26, 29, 22, 0.06), 0 8px 28px rgba(26, 29, 22, 0.05);
   display: flex;
@@ -100,18 +102,10 @@ body.analytika-sidebar-open { overflow: hidden; }
   .analytika-sidebar {
     position: sticky;
     top: var(--ana-top-offset);
-    height: calc(100vh - var(--ana-top-offset) - 16px);
-    max-height: calc(100vh - var(--ana-top-offset) - 16px);
+    height: auto;
+    max-height: none;
     margin-bottom: 16px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: #d8ddd0 transparent;
-  }
-  .analytika-sidebar::-webkit-scrollbar { width: 6px; }
-  .analytika-sidebar::-webkit-scrollbar-thumb {
-    background: #d8ddd0;
-    border-radius: 999px;
+    overflow: visible;
   }
 }
 
@@ -145,12 +139,7 @@ body.analytika-sidebar-open { overflow: hidden; }
   border-color: #f5c99a;
 }
 .sidebar-brand-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--ana-brand);
-  box-shadow: 0 0 0 4px var(--ana-brand-soft);
-  flex-shrink: 0;
+  display: none !important;
 }
 .sidebar-brand strong {
   display: block;
@@ -167,12 +156,12 @@ body.analytika-sidebar-open { overflow: hidden; }
 }
 
 .sidebar-nav {
-  flex: 1;
+  flex: 0 0 auto;
   padding: 8px 12px 12px;
   display: flex;
   flex-direction: column;
   gap: 3px;
-  overflow-y: auto;
+  overflow: visible;
 }
 .sidebar-nav-label {
   margin: 0 0 6px;
@@ -195,11 +184,12 @@ body.analytika-sidebar-open { overflow: hidden; }
   background: transparent;
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s, border-color 0.15s, transform 0.12s;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s;
   font-family: inherit;
   text-decoration: none !important;
   color: inherit;
   box-sizing: border-box;
+  box-shadow: none;
 }
 a.sidebar-nav-item:visited { color: inherit; text-decoration: none !important; }
 .sidebar-nav-item:hover {
@@ -207,12 +197,18 @@ a.sidebar-nav-item:visited { color: inherit; text-decoration: none !important; }
   border-color: var(--ana-nav-hover-border);
   text-decoration: none !important;
 }
+.sidebar-nav-item:hover .nav-text strong {
+  color: var(--ana-brand);
+}
 .sidebar-nav-item.active {
   background: var(--ana-nav-active-bg);
   border-color: var(--ana-nav-active-border);
-  box-shadow: inset 3px 0 0 var(--ana-brand);
+  box-shadow: none;
 }
-.sidebar-nav-item.active .nav-text strong { color: var(--ana-nav-active-text); }
+.sidebar-nav-item.active .nav-text strong {
+  color: var(--ana-nav-active-text);
+  font-weight: 800;
+}
 
 .nav-icon {
   width: 34px;

@@ -58,7 +58,7 @@
                   {% if radio.data.value == "MANUAL" %}
                   <span class="vyuct-rezim-hint">{% trans "Systém neposílá automatická vyúčtování. Vyúčtování vytvoříte ručně v profilu hráče nebo u rodiny." %}</span>
                   {% elif radio.data.value == "CASTKA" %}
-                  <span class="vyuct-rezim-hint">{% trans "Po tréninku zkontroluje celkový kredit. Když klesne na zadanou částku (např. −5000 Kč), odešle e-mail s vyúčtováním." %}</span>
+                  <span class="vyuct-rezim-hint">{% blocktrans with mena=system_mena %}Po tréninku zkontroluje celkový kredit. Když klesne na zadanou částku (např. −5000 {{ mena }}), odešle e-mail s vyúčtováním.{% endblocktrans %}</span>
                   {% elif radio.data.value == "MESICNE" %}
                   <span class="vyuct-rezim-hint">{% trans "Od zadaného dne v měsíci uzavře při dalším tréninku období a pošle vyúčtování za uplynulý měsíc." %}</span>
                   {% elif radio.data.value == "N_TRENINGU" %}

@@ -30,10 +30,13 @@
 {% block responsive %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'admin/css/dark-mode.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/ts-buttons.css' %}">
 <style id="system-theme-vars">{{ system_theme_style }}</style>
 {{ system_theme_state|json_script:"system-theme-state" }}
 <script src="{% static 'admin/js/theme.js' %}"></script>
 {% endblock %}
+
+{% block bodyclass %}{{ block.super }} ts-app{% endblock %}
 
 {% block branding %}
   <div id="site-name" class="brand-wrap">
@@ -47,7 +50,12 @@
     </button>
 
     <a class="brand" href="{% url 'home' %}">
-      <img src="{% if system_logo_url %}{{ system_logo_url }}{% else %}{% static 'admin/tenis_logo.png' %}{% endif %}" alt="{{ system_nazev_klubu|default:'TenisSystém' }}" class="brand-logo"/>
+      <img
+        src="{% if system_logo_url %}{{ system_logo_url }}{% endif %}"
+        alt="{{ system_nazev_klubu|default:'TenisSystém' }}"
+        class="brand-logo"
+        {% if not system_logo_url %}hidden{% endif %}
+      />
       <span class="brand-title">{{ system_nazev_klubu|default:"TenisSystém" }}</span>
     </a>
   </div>
@@ -56,14 +64,6 @@
 {% block userlinks %}
   <a href="{% url 'admin:password_change' %}">{% trans "Změnit heslo" %}</a> /
   <a href="{% url 'logout_to_home' %}" class="ts-logout-link">{% trans "Odhlásit se" %}</a>
-  <a class="schedule-icon" href="{% url 'admin:core_trening_schedule' %}" title="{% trans 'Rozvrh' %}" aria-label="{% trans 'Rozvrh' %}">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <rect x="3" y="4" width="18" height="18" rx="2"></rect>
-      <path d="M16 2v4M8 2v4M3 10h18"></path>
-      <rect x="7" y="14" width="4" height="4" rx="1"></rect>
-    </svg>
-  </a>
 {% endblock %}
 
 {% block nav-global %}
@@ -76,13 +76,26 @@
     <a id="nav-vyuctovani" href="{% url 'admin:core_vyuctovani_changelist' %}">{% trans "Vyúčtování" %}</a>
     <span class="divider" aria-hidden="true"></span>
     <a id="nav-nastaveni"  href="{% url 'admin:nastaveni' %}">{% trans "Nastavení" %}</a>
+    <a id="nav-rozvrh" class="schedule-icon" href="{% url 'admin:core_trening_schedule' %}" title="{% trans 'Rozvrh' %}" aria-label="{% trans 'Rozvrh' %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+        <path d="M16 2v4M8 2v4M3 10h18"></path>
+        <rect x="7" y="14" width="4" height="4" rx="1"></rect>
+      </svg>
+    </a>
   </nav>
 
   <div class="ts-drawer" id="ts-drawer" aria-hidden="true">
     <div class="ts-drawer-panel" role="dialog" aria-modal="true" aria-label="{% trans 'Hlavní menu' %}">
       <div class="ts-drawer-header">
         <div class="ts-drawer-title">
-          <img src="{% if system_logo_url %}{{ system_logo_url }}{% else %}{% static 'admin/tenis_logo.png' %}{% endif %}" alt="">
+          <img
+            src="{% if system_logo_url %}{{ system_logo_url }}{% endif %}"
+            alt=""
+            class="brand-logo"
+            {% if not system_logo_url %}hidden{% endif %}
+          >
           <span>{{ system_nazev_klubu|default:"TenisSystém" }}</span>
         </div>
         <button id="ts-drawer-close" class="ts-drawer-close" aria-label="{% trans 'Zavřít' %}">✕</button>

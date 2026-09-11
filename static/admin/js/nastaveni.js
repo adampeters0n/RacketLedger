@@ -68,8 +68,25 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     }
     if (data.logo_url) {
-      document.querySelectorAll('.brand-logo, .ts-drawer-title img').forEach(function (img) {
+      var logos = document.querySelectorAll('.brand-logo');
+      if (!logos.length) {
+        document.querySelectorAll('.brand, .ts-drawer-title').forEach(function (wrap) {
+          var img = document.createElement('img');
+          img.className = 'brand-logo';
+          img.alt = '';
+          wrap.insertBefore(img, wrap.firstChild);
+        });
+        logos = document.querySelectorAll('.brand-logo');
+      }
+      logos.forEach(function (img) {
         img.src = data.logo_url;
+        img.hidden = false;
+        img.removeAttribute('hidden');
+      });
+    } else if (Object.prototype.hasOwnProperty.call(data, 'logo_url')) {
+      document.querySelectorAll('.brand-logo').forEach(function (img) {
+        img.removeAttribute('src');
+        img.hidden = true;
       });
     }
   }
@@ -123,6 +140,18 @@ document.addEventListener('DOMContentLoaded', function () {
       .then(function (data) {
         autosaveInFlight = null;
         updateBranding(data);
+        document.querySelectorAll('.nast-upload-box').forEach(function (box) {
+          var previewName = (box.querySelector('.js-upload-field') || {}).dataset
+            ? box.querySelector('.js-upload-field').dataset.preview
+            : '';
+          var removeBtn = box.querySelector('.js-upload-remove');
+          if (!removeBtn) return;
+          var hasFile = previewName === 'favicon'
+            ? !!data.favicon_url
+            : !!data.logo_url;
+          removeBtn.hidden = !hasFile;
+          if (hasFile) removeBtn.removeAttribute('hidden');
+        });
         var pageLangEl = document.getElementById('page-lang');
         var pageLang = pageLangEl ? JSON.parse(pageLangEl.textContent) : (document.documentElement.lang || 'cs');
         if (data.vychozi_jazyk && data.vychozi_jazyk !== pageLang) {
@@ -352,10 +381,41 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!box || !input.files || !input.files[0]) return;
       var preview = box.querySelector('.nast-upload-preview');
       var img = box.querySelector('.js-upload-preview-img');
-      if (!preview || !img) return;
-      img.src = URL.createObjectURL(input.files[0]);
-      img.hidden = false;
-      preview.hidden = false;
+      var removeBtn = box.querySelector('.js-upload-remove');
+      var clearCb = box.querySelector('.nast-file-clear-input');
+      if (clearCb) clearCb.checked = false;
+      if (preview && img) {
+        img.src = URL.createObjectURL(input.files[0]);
+        img.hidden = false;
+        preview.hidden = false;
+      }
+      if (removeBtn) {
+        removeBtn.hidden = false;
+        removeBtn.removeAttribute('hidden');
+      }
+    });
+  });
+
+  document.querySelectorAll('.js-upload-remove').forEach(function (btn) {
+    btn.textContent = t('removeFile', 'Odstranit');
+    btn.addEventListener('click', function () {
+      var box = btn.closest('.nast-upload-box');
+      if (!box) return;
+      var clearCb = box.querySelector('.nast-file-clear-input');
+      var fileInput = box.querySelector('input[type="file"]');
+      var preview = box.querySelector('.nast-upload-preview');
+      var img = box.querySelector('.js-upload-preview-img');
+      var status = box.querySelector('.nast-file-status');
+      if (clearCb) clearCb.checked = true;
+      if (fileInput) fileInput.value = '';
+      if (img) {
+        img.removeAttribute('src');
+        img.hidden = true;
+      }
+      if (preview) preview.hidden = true;
+      btn.hidden = true;
+      if (status) status.textContent = t('noFileChosen', 'Soubor nevybrán');
+      scheduleAutosave(100);
     });
   });
 });

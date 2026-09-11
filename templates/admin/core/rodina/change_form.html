@@ -1,5 +1,6 @@
 {% extends "admin/change_form.html" %}
 {% load static i18n %}
+{% load money_tags %}
 {% block extrastyle %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'admin/css/rodina-change-form.css' %}">
@@ -67,9 +68,9 @@
               <td>{{ r.hodiny }}</td>
               <td>{{ r.skupina }}</td>
               <td>{{ r.sezona }}</td>
-              <td>{% if r.cena %}{{ r.cena }} {% trans "Kč" %}{% endif %}</td>
-              <td>{% if r.zaplaceno %}{{ r.zaplaceno }} {% trans "Kč" %}{% endif %}</td>
-              <td>{{ r.kredit }} {% trans "Kč" %}</td>
+              <td>{% if r.cena %}{{ r.cena }} {{ system_mena }}{% endif %}</td>
+              <td>{% if r.zaplaceno %}{{ r.zaplaceno }} {{ system_mena }}{% endif %}</td>
+              <td>{{ r.kredit }} {{ system_mena }}</td>
               <td>{{ r.akce|safe }}</td>
             </tr>
           {% empty %}
@@ -86,9 +87,9 @@
             <td class="totals-value tot-hodiny">{{ ledger_totals.hodiny }}</td>
             <td></td>
             <td></td>
-            <td class="totals-value">{{ ledger_totals.cena }} {% trans "Kč" %}</td>
-            <td class="totals-value">{{ ledger_totals.zaplaceno }} {% trans "Kč" %}</td>
-            <td class="totals-value">{{ ledger_totals.credit }} {% trans "Kč" %}</td>
+            <td class="totals-value">{{ ledger_totals.cena }} {{ system_mena }}</td>
+            <td class="totals-value">{{ ledger_totals.zaplaceno }} {{ system_mena }}</td>
+            <td class="totals-value">{{ ledger_totals.credit }} {{ system_mena }}</td>
             <td></td>
           </tr>
         </tfoot>

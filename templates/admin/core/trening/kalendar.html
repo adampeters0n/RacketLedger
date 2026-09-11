@@ -49,10 +49,10 @@
       <div class="sched-day">
         <div class="sched-day-body">
           {% for ev in d.events %}
-            <a class="ev ev--{{ ev.fmt }} ev--{{ ev.fmt_code }} ev--nlanes-{{ ev.lanes|default:1 }} ev--players-{{ ev.names|length|default:1 }}"
+            <a class="ev ev--{{ ev.fmt }} ev--nlanes-{{ ev.lanes|default:1 }} ev--players-{{ ev.names|length|default:1 }}"
                href="{% url 'admin:core_trening_change' ev.id %}"
                title="{{ ev.title }} · {{ ev.fmt_label }} · {{ ev.sub }}"
-               style="--off: {{ ev.offset_min }}; --dur: {{ ev.dur_min }}; --lane: {{ ev.lane|default:0 }}; --lanes: {{ ev.lanes|default:1 }};">
+               style="--off: {{ ev.offset_min }}; --dur: {{ ev.dur_min }}; --lane: {{ ev.lane|default:0 }}; --lanes: {{ ev.lanes|default:1 }}; --ev-bg: {{ ev.color.bg }}; --ev-border: {{ ev.color.border }}; --ev-text: {{ ev.color.text }}; --ev-bg-dark: {{ ev.color.bg_dark }}; --ev-border-dark: {{ ev.color.border_dark }}; --ev-text-dark: {{ ev.color.text_dark }};">
               <div class="ev-names">
                 {% for name in ev.names %}
                 <span class="ev-name">{{ name }}</span>
@@ -71,13 +71,16 @@
   </div>
 </div>
 
-<!-- jednoduchá legenda barev formátů -->
+<!-- legenda barev typů z ceníku -->
+{% if format_legend %}
 <div class="legend">
-  <span class="item"><span class="chip chip--solo"></span>{% trans "Solo" %}</span>
-  <span class="item"><span class="chip chip--dvojice"></span>{% trans "Dvojice" %}</span>
-  <span class="item"><span class="chip chip--trojice"></span>{% trans "Trojice" %}</span>
-  <span class="item"><span class="chip chip--ctverice"></span>{% trans "Čtveřice" %}</span>
-  <span class="item"><span class="chip chip--skupina"></span>{% trans "Skupina" %}</span>
-  <span class="item"><span class="chip chip--rezervace"></span> Rezervace kurtu</span>
+  {% for item in format_legend %}
+  <span class="item">
+    <span class="chip"
+          style="--ev-bg: {{ item.bg }}; --ev-border: {{ item.border }}; --ev-bg-dark: {{ item.bg_dark }}; --ev-border-dark: {{ item.border_dark }};"></span>
+    {{ item.label }}
+  </span>
+  {% endfor %}
 </div>
+{% endif %}
 {% endblock %}

@@ -39,24 +39,17 @@ DEBUG = _get_bool("DEBUG", True)
 _default_hosts = ["127.0.0.1", "localhost"]
 ALLOWED_HOSTS = [h for h in os.getenv("ALLOWED_HOSTS", ",".join(_default_hosts)).split(",") if h]
 
-# Produkční domény (doplňuje ALLOWED_HOSTS z env).
-# Default Čimice – lze přepsat/rozšířit přes EXTRA_ALLOWED_HOSTS.
+# Další domény (doplňuje ALLOWED_HOSTS) – default prázdný; instance si doplní v .env.
 ALLOWED_HOSTS.extend([
-    h for h in os.getenv(
-        "EXTRA_ALLOWED_HOSTS",
-        "tscimice.cz,www.tscimice.cz",
-    ).split(",") if h
+    h for h in os.getenv("EXTRA_ALLOWED_HOSTS", "").split(",") if h
 ])
 
 # CSRF důvěryhodné originy (z env, čárkami oddělené; musí mít https:// prefixy)
 CSRF_TRUSTED_ORIGINS = [o for o in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",") if o]
 
-# Produkční CSRF originy (doplňuje CSRF_TRUSTED_ORIGINS z env)
+# Další CSRF originy (doplňuje CSRF_TRUSTED_ORIGINS) – default prázdný.
 CSRF_TRUSTED_ORIGINS.extend([
-    o for o in os.getenv(
-        "EXTRA_CSRF_TRUSTED_ORIGINS",
-        "https://tscimice.cz,https://www.tscimice.cz",
-    ).split(",") if o
+    o for o in os.getenv("EXTRA_CSRF_TRUSTED_ORIGINS", "").split(",") if o
 ])
 
 # =====================================
@@ -71,7 +64,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
 
     # Lokální appky
-    "core",
+    "core.apps.CoreConfig",
 ]
 
 # =====================================
@@ -135,7 +128,8 @@ if os.environ.get("DATABASE_URL"):
         "default": dj_database_url.config(
             conn_max_age=600,
             conn_health_checks=True,
-            ssl_require=True,   # jen pro Postgres
+            # Lokální Docker Postgres typicky bez SSL; produkce: DATABASE_SSL_REQUIRE=1
+            ssl_require=_get_bool("DATABASE_SSL_REQUIRE", False),
         )
     }
 else:
@@ -154,6 +148,11 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
+AUTHENTICATION_BACKENDS = [
+    "core.auth_backends.EmailOrUsernameModelBackend",
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
 # =====================================
@@ -191,7 +190,7 @@ if not DEBUG:
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # =====================================
-# E-MAIL (SMTP volny.cz) – výchozí 465/SSL
+# E-MAIL (SMTP) – výchozí 465/SSL
 # =====================================
 USE_SMTP = (not DEBUG) or (_get_bool("EMAIL_FORCE_SMTP", False))
 
@@ -255,23 +254,16 @@ if not DEBUG:
 # =====================================
 PRODUCT_NAME = os.getenv("PRODUCT_NAME", "TenisSystém")
 
-_DEFAULT_TENNIS_SCHOOLS = [
-    {
-        "slug": "cimice",
-        "name": "Tenisová škola Čimice",
-        "city": "Praha 8",
-        "region": "Praha",
-        "admin_url": "/admin/",
-        "active": True,
-    },
-]
+# Prázdný default = landing sestaví jednu školu z SystemNastaveni (single-tenant).
+# Multi-school adresář jen přes env TENNIS_SCHOOLS (JSON).
+_DEFAULT_TENNIS_SCHOOLS: list = []
 
 
 def _get_tennis_schools():
     raw = os.getenv("TENNIS_SCHOOLS", "").strip()
     if raw:
         return json.loads(raw)
-    return _DEFAULT_TENNIS_SCHOOLS
+    return list(_DEFAULT_TENNIS_SCHOOLS)
 
 
 TENNIS_SCHOOLS = _get_tennis_schools()

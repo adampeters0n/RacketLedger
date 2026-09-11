@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
+from core.money import format_castka
 
 from django.contrib.auth import get_user_model
 from django.db.models import Sum, Case, When, F, Value, DecimalField, Q, Count
@@ -422,7 +423,7 @@ def build_trener_rows(m_from: date, m_to: date, rate_lookup: TrenerRateLookup):
         hours_total = (Decimal(mins_total[uid]) / Decimal(60)).quantize(Decimal("0.01"))
         rows.append({
             "name": u.get_full_name() or u.username,
-            "balance": f"{balance:.0f} Kč",
+            "balance": format_castka(balance),
             "balance_value": float(balance),
             "hours_month": f"{hours_month:.1f} h",
             "hours_month_value": float(hours_month),
@@ -430,7 +431,7 @@ def build_trener_rows(m_from: date, m_to: date, rate_lookup: TrenerRateLookup):
             "hours_total_value": float(hours_total),
             "trainings_month": count_month[uid],
             "trainings_total": count_total[uid],
-            "earned_month": f"{earned_month[uid]:.0f} Kč",
+            "earned_month": format_castka(earned_month[uid]),
             "url": reverse("admin:core_treneri_detail", args=[u.id]),
         })
     rows.sort(key=lambda r: r["balance_value"], reverse=True)
@@ -585,7 +586,7 @@ def naklady_day_items(den: date):
             "kategorie": item["kategorie"],
             "label": kat_labels.get(item["kategorie"], item["kategorie"]),
             "castka": item["castka"],
-            "castka_fmt": f"{Decimal(item['castka']):.0f} Kč",
+            "castka_fmt": format_castka(Decimal(item['castka'])),
             "poznamka": item["poznamka"],
         }
         for item in OstatniNaklad.objects.filter(mesic=den).order_by("kategorie").values(
@@ -604,7 +605,7 @@ def naklady_day_block(den: date):
         "label": den.strftime("%d.%m.%Y"),
         "weekday": weekdays[den.weekday()],
         "total": total,
-        "total_fmt": f"{total:.0f} Kč",
+        "total_fmt": format_castka(total),
         "items": items,
     }
 
@@ -691,15 +692,15 @@ def build_analytika_context(section: str, request) -> dict:
         ctx["kpis"] = {
             "hours": f"{hours_current:.2f} h",
             "hours_value": float(hours_current),
-            "nauctovano": f"{nac_current:.0f} Kč",
-            "platby": f"{pays_current:.0f} Kč",
-            "k_vyplaceni": f"{total_trener_to_pay_now:.0f} Kč",
-            "total_debt": f"{total_debt:.0f} Kč",
-            "total_surplus": f"{total_surplus:.0f} Kč",
+            "nauctovano": format_castka(nac_current),
+            "platby": format_castka(pays_current),
+            "k_vyplaceni": format_castka(total_trener_to_pay_now),
+            "total_debt": format_castka(total_debt),
+            "total_surplus": format_castka(total_surplus),
             "total_debt_value": float(abs(total_debt)),
             "total_surplus_value": float(total_surplus),
-            "total_balance": f"{total_balance:.0f} Kč",
-            "unpaid": f"{unpaid_amount:.0f} Kč",
+            "total_balance": format_castka(total_balance),
+            "unpaid": format_castka(unpaid_amount),
             "nauctovano_value": float(nac_current),
             "platby_value": float(pays_current),
             "unpaid_value": float(unpaid_amount),
@@ -708,9 +709,9 @@ def build_analytika_context(section: str, request) -> dict:
             "payments_count_current": payments_count_current,
             "total_all_hours": f"{total_all_hours:.2f} h",
             "total_all_hours_value": float(total_all_hours),
-            "total_all_charged": f"{total_all_charged:.0f} Kč",
+            "total_all_charged": format_castka(total_all_charged),
             "total_all_charged_value": float(total_all_charged),
-            "total_all_paid": f"{total_all_paid:.0f} Kč",
+            "total_all_paid": format_castka(total_all_paid),
             "total_all_paid_value": float(total_all_paid),
             "total_trainings_count": Trening.objects.count(),
             "total_charges_count": Transakce.objects.filter(typ=Transakce.Typ.NAUCTOVANO).count(),
@@ -723,7 +724,7 @@ def build_analytika_context(section: str, request) -> dict:
         hraci_qs = hraci_kredit_qs()
         debtors = [{
             "name": h.cele_jmeno,
-            "kredit": f"{(h._kredit_calculated or 0):.0f} Kč",
+            "kredit": format_castka((h._kredit_calculated or 0)),
             "url": reverse("admin:core_hrac_change", args=[h.id]),
             "kredit_value": float(h._kredit_calculated or 0),
         } for h in SystemNastaveni.load().filter_debtors(hraci_qs).order_by("_kredit_calculated")]
@@ -731,7 +732,7 @@ def build_analytika_context(section: str, request) -> dict:
         ctx["top_debtors"] = debtors[:5]
         ctx["top_surplus"] = [{
             "name": h.cele_jmeno,
-            "kredit": f"+{(h._kredit_calculated or 0):.0f} Kč",
+            "kredit": "+" + format_castka((h._kredit_calculated or 0)),
             "url": reverse("admin:core_hrac_change", args=[h.id]),
         } for h in hraci_qs.filter(_kredit_calculated__gt=0).order_by("-_kredit_calculated")[:5]]
         ctx["debtors_chart_data"] = {
@@ -849,21 +850,21 @@ def build_analytika_context(section: str, request) -> dict:
         accounting_alltime_data = accounting_alltime_series(today, rate_lookup, accounting_maps)
 
         ctx["accounting"] = {
-            "cashflow_month": f"{cashflow_month:.0f} Kč",
-            "gross_profit_month": f"{gross_profit_month:.0f} Kč",
+            "cashflow_month": format_castka(cashflow_month),
+            "gross_profit_month": format_castka(gross_profit_month),
             "margin_month": f"{margin_month_pct:.1f} %",
-            "revenue_per_hour_month": f"{revenue_per_hour_month:.0f} Kč",
-            "total_trener_paid": f"{total_trener_paid_all:.0f} Kč",
-            "total_trener_remaining": f"{(total_trener_earned_all - total_trener_paid_all).quantize(Decimal('0.01')):.0f} Kč",
-            "net_profit_total": f"{(total_all_paid - total_trener_paid_all - total_other_costs).quantize(Decimal('0.01')):.0f} Kč",
-            "net_profit_month": f"{cashflow_month:.0f} Kč",
-            "other_costs_month": f"{other_costs_month:.0f} Kč",
-            "other_costs_total": f"{total_other_costs:.0f} Kč",
-            "avg_revenue_per_player_month": f"{avg_revenue_per_player_month:.0f} Kč",
-            "gross_profit_total": f"{gross_profit_total:.0f} Kč",
+            "revenue_per_hour_month": format_castka(revenue_per_hour_month),
+            "total_trener_paid": format_castka(total_trener_paid_all),
+            "total_trener_remaining": format_castka((total_trener_earned_all - total_trener_paid_all)),
+            "net_profit_total": format_castka((total_all_paid - total_trener_paid_all - total_other_costs)),
+            "net_profit_month": format_castka(cashflow_month),
+            "other_costs_month": format_castka(other_costs_month),
+            "other_costs_total": format_castka(total_other_costs),
+            "avg_revenue_per_player_month": format_castka(avg_revenue_per_player_month),
+            "gross_profit_total": format_castka(gross_profit_total),
             "margin_total": f"{margin_total_pct:.1f} %",
-            "revenue_per_hour_total": f"{revenue_per_hour_total:.0f} Kč",
-            "avg_revenue_per_player_total": f"{avg_revenue_per_player_total:.0f} Kč",
+            "revenue_per_hour_total": format_castka(revenue_per_hour_total),
+            "avg_revenue_per_player_total": format_castka(avg_revenue_per_player_total),
             "cashflow_month_value": float(cashflow_month),
             "gross_profit_month_value": float(gross_profit_month),
             "net_profit_month_value": float(cashflow_month),

@@ -1,4 +1,14 @@
 (function () {
+      function readI18n() {
+        try {
+          var el = document.getElementById('ts-global-i18n');
+          return el ? JSON.parse(el.textContent) : {};
+        } catch (e) {
+          return {};
+        }
+      }
+      var I18N = readI18n();
+
       function wireDochazka(ctx) {
         var group = ctx.querySelector('#dochazka_set-group') || ctx.querySelector('#dochazky-group') ||
           Array.from(ctx.querySelectorAll('.inline-group')).find(function (g) {
@@ -18,10 +28,10 @@
           var thead = group.querySelector('thead');
           if (thead) {
             var headerMap = [
-              [/hrac|hráč/i, 'Hráč'],
-              [/cena/i, 'Cena'],
-              [/castka|na[uú]ct|naúčt/i, 'Naúčtováno'],
-              [/nauceno|naúčteno|kdy/i, 'Kdy naúčtováno'],
+              [/hrac|hráč/i, I18N.player || 'Hráč'],
+              [/cena/i, I18N.price || 'Cena'],
+              [/castka|na[uú]ct|naúčt/i, I18N.charged || 'Naúčtováno'],
+              [/nauceno|naúčteno|kdy/i, I18N.chargedWhen || 'Kdy naúčtováno'],
             ];
             thead.querySelectorAll('th').forEach(function (th) {
               var raw = (th.textContent || '').trim();
@@ -41,7 +51,7 @@
           var addRow = group.querySelector('.add-row');
           if (addRow) {
             var a = addRow.querySelector('a');
-            if (a) a.textContent = 'Přidat docházku';
+            if (a) a.textContent = I18N.addAttendance || 'Přidat docházku';
             addRow.style.display = '';
             addRow.style.visibility = '';
           }
@@ -98,7 +108,7 @@
             a.href = '#';
             a.className = 'x-clear-hrac';
             a.textContent = '×';
-            a.setAttribute('aria-label', 'Odstranit');
+            a.setAttribute('aria-label', I18N.remove || 'Odstranit');
             lastTd.appendChild(a);
           });
         }

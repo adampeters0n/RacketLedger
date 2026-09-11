@@ -1,0 +1,25 @@
+{% extends "admin/change_form.html" %}
+{% load static i18n %}
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/transakce-change-form.css' %}">
+{% endblock %}
+
+{% block admin_change_form_document_ready %}
+{{ block.super }}
+<script>
+(function () {
+  var input = document.getElementById("id_castka");
+  if (!input || input.closest(".castka-mena-wrap")) return;
+  var suffix = input.getAttribute("data-mena-suffix") || "{{ system_mena|escapejs }}";
+  var wrap = document.createElement("span");
+  wrap.className = "castka-mena-wrap";
+  input.parentNode.insertBefore(wrap, input);
+  wrap.appendChild(input);
+  var span = document.createElement("span");
+  span.className = "castka-mena-suffix";
+  span.textContent = suffix;
+  wrap.appendChild(span);
+})();
+</script>
+{% endblock %}

@@ -119,20 +119,35 @@
             </div>
           </div>
           {{ form.vychozi_jazyk.errors }}
+          <div class="nast-row">
+            <div class="nast-row-text">
+              <span class="nast-row-label">{{ form.mena.label }}</span>
+              <span class="nast-row-detail">{{ form.mena.help_text }}</span>
+            </div>
+            <div class="nast-row-control">
+              {{ form.mena }}
+            </div>
+          </div>
+          {{ form.mena.errors }}
           <div class="nast-row nast-row-upload">
             <div class="nast-row-text">
               <span class="nast-row-label">{{ form.logo.label }}</span>
-              <span class="nast-row-detail">{% trans 'PNG nebo JPG, nejlépe čtverec' %}</span>
+              <span class="nast-row-detail">{% trans 'PNG nebo JPG' %}</span>
             </div>
             <div class="nast-row-control nast-upload-box">
               <div class="nast-upload-preview"{% if not form.instance.logo %} hidden{% endif %}>
                 {% if form.instance.logo %}
-                <img src="{{ form.instance.logo.url }}" alt="Logo klubu" class="nast-upload-img js-upload-preview-img">
+                <img src="{{ form.instance.logo.url }}" alt="{% trans 'Logo klubu' %}" class="nast-upload-img js-upload-preview-img">
                 {% else %}
                 <img src="" alt="" class="nast-upload-img js-upload-preview-img" hidden>
                 {% endif %}
               </div>
-              <div class="nast-upload-field js-upload-field" data-preview="logo">{{ form.logo }}</div>
+              <div class="nast-upload-actions">
+                <div class="nast-upload-field js-upload-field" data-preview="logo">{{ form.logo }}</div>
+                <button type="button" class="nast-file-remove-btn js-upload-remove"{% if not form.instance.logo %} hidden{% endif %}>
+                  {% trans "Odstranit" %}
+                </button>
+              </div>
             </div>
           </div>
           {{ form.logo.errors }}
@@ -149,7 +164,12 @@
                 <img src="" alt="" class="nast-upload-img js-upload-preview-img" hidden>
                 {% endif %}
               </div>
-              <div class="nast-upload-field js-upload-field" data-preview="favicon">{{ form.favicon }}</div>
+              <div class="nast-upload-actions">
+                <div class="nast-upload-field js-upload-field" data-preview="favicon">{{ form.favicon }}</div>
+                <button type="button" class="nast-file-remove-btn js-upload-remove"{% if not form.instance.favicon %} hidden{% endif %}>
+                  {% trans "Odstranit" %}
+                </button>
+              </div>
             </div>
           </div>
           {{ form.favicon.errors }}
@@ -159,15 +179,15 @@
       {# ── Vzhled ── #}
       <section class="nast-panel" id="panel-vzhled" role="tabpanel" aria-labelledby="tab-vzhled" hidden>
         <header class="nast-panel-head">
-          <h2>Vzhled</h2>
-          <p>{% trans "Režim zobrazení a barevná paleta – změna se uloží hned." %}</p>
+          <h2>{% trans "Vzhled" %}</h2>
+          <p>{% trans "Váš osobní režim a barevná paleta – změna se uloží hned a platí jen pro vás." %}</p>
         </header>
 
         <div class="nast-group">
           <div class="nast-row nast-row-toggle">
             <div class="nast-row-text">
               <span class="nast-row-label">{% trans "Tmavý režim" %}</span>
-              <span class="nast-row-detail">{% trans "Tmavé pozadí, světlý text a upravené tabulky" %}</span>
+              <span class="nast-row-detail">{% trans "Tmavě šedé pozadí ve stylu Apple, světlý text a vrstvené plochy" %}</span>
             </div>
             <label class="nast-switch" aria-label="{% trans 'Tmavý režim' %}">
               {{ form.tmavy_rezim }}
@@ -178,8 +198,8 @@
         </div>
 
         <div class="nast-group">
-          <p class="nast-group-label">Barvy</p>
-          <p class="nast-group-hint">{% trans "Palety ve stylu Excel – každá mění akcenty, tabulky i tlačítka v celém systému." %}</p>
+          <p class="nast-group-label">{% trans "Barvy" %}</p>
+          <p class="nast-group-hint">{% trans "Palety ve stylu různých barev – každá mění akcenty, tabulky i tlačítka ve vašem zobrazení." %}</p>
           {{ form.barevna_varianta.errors }}
           <div class="nast-excel-list" role="radiogroup" aria-label="{% trans 'Barevná paleta' %}">
             {% for theme in theme_options %}
@@ -196,7 +216,7 @@
                      {% endif %}>
               <span class="nast-excel-strip" aria-hidden="true">
                 {% for color in theme.stripe %}
-                <span class="nast-excel-swatch" style="background-color: {{ color }};"></span>
+                <span class="nast-excel-swatch"><svg viewBox="0 0 1 1" preserveAspectRatio="none" focusable="false"><rect width="1" height="1" fill="{{ color }}"/></svg></span>
                 {% endfor %}
               </span>
               <span class="nast-excel-meta">
@@ -215,7 +235,7 @@
       {# ── Provoz ── #}
       <section class="nast-panel" id="panel-provoz" role="tabpanel" aria-labelledby="tab-provoz" hidden>
         <header class="nast-panel-head">
-          <h2>Provoz</h2>
+          <h2>{% trans "Provoz" %}</h2>
           <p>{% trans "Výchozí hodnoty pro tréninky, rozvrh a přehled vyúčtování." %}</p>
         </header>
 
@@ -231,7 +251,7 @@
               <dd>{{ vyuct_summary.popis }}</dd>
             </div>
             <div>
-              <dt>E-maily</dt>
+              <dt>{% trans "E-maily" %}</dt>
               <dd>{{ vyuct_summary.email }}</dd>
             </div>
             <div>
@@ -254,14 +274,14 @@
           {{ form.vychozi_delka_minut.errors }}
           <div class="nast-row">
             <div class="nast-row-text">
-              <span class="nast-row-label">{{ form.vychozi_kurt.label }}</span>
-              <span class="nast-row-detail">{% trans 'Hala nebo venek u nového tréninku' %}</span>
+              <span class="nast-row-label">{{ form.vychozi_sezona.label }}</span>
+              <span class="nast-row-detail">{% trans 'Z ceníku – předvyplní se u nového tréninku' %}</span>
             </div>
             <div class="nast-row-control">
-              {{ form.vychozi_kurt }}
+              {{ form.vychozi_sezona }}
             </div>
           </div>
-          {{ form.vychozi_kurt.errors }}
+          {{ form.vychozi_sezona.errors }}
           <div class="nast-row">
             <div class="nast-row-text">
               <span class="nast-row-label">{{ form.vychozi_zobrazeni_rozvrhu.label }}</span>
@@ -274,7 +294,7 @@
           {{ form.vychozi_zobrazeni_rozvrhu.errors }}
           <div class="nast-row">
             <div class="nast-row-text">
-              <span class="nast-row-label">Rozsah hodin v rozvrhu</span>
+              <span class="nast-row-label">{% trans "Rozsah hodin v rozvrhu" %}</span>
               <span class="nast-row-detail">{% trans "Začátek a konec zobrazení v kalendáři tréninků" %}</span>
             </div>
             <div class="nast-row-control nast-row-control--inline">
@@ -285,30 +305,6 @@
           </div>
           {{ form.rozvrh_od_hodina.errors }}
           {{ form.rozvrh_do_hodina.errors }}
-          <div class="nast-row nast-row-toggle">
-            <div class="nast-row-text">
-              <span class="nast-row-label">{{ form.sezona_automaticky_kurt.label }}</span>
-              <span class="nast-row-detail">{% trans 'Venku v letních měsících, hala v zimě' %}</span>
-            </div>
-            <label class="nast-switch" aria-label="{% trans 'Automatický kurt' %}">
-              {{ form.sezona_automaticky_kurt }}
-              <span class="nast-switch-track"></span>
-            </label>
-          </div>
-          {{ form.sezona_automaticky_kurt.errors }}
-          <div class="nast-row">
-            <div class="nast-row-text">
-              <span class="nast-row-label">{% trans "Venkovní sezóna" %}</span>
-              <span class="nast-row-detail">{% trans "Měsíce, kdy se preferuje venkovní kurt" %}</span>
-            </div>
-            <div class="nast-row-control nast-row-control--inline">
-              {{ form.sezona_venek_od }}
-              <span class="nast-inline-sep">–</span>
-              {{ form.sezona_venek_do }}
-            </div>
-          </div>
-          {{ form.sezona_venek_od.errors }}
-          {{ form.sezona_venek_do.errors }}
           <div class="nast-row">
             <div class="nast-row-text">
               <span class="nast-row-label">{{ form.vyuctovani_rezim.label }}</span>
@@ -338,14 +334,14 @@
       {# ── E-maily ── #}
       <section class="nast-panel" id="panel-emaily" role="tabpanel" aria-labelledby="tab-emaily" hidden>
         <header class="nast-panel-head">
-          <h2>E-maily</h2>
+          <h2>{% trans "E-maily" %}</h2>
           <p>{% trans "Kdo píše vyúčtování a jak vypadá zpráva." %}</p>
         </header>
         <div class="nast-group">
           <div class="nast-row">
             <div class="nast-row-text">
               <span class="nast-row-label">{{ form.email_jmeno.label }}</span>
-              <span class="nast-row-detail">Jak se klub jmenuje v e-mailu</span>
+              <span class="nast-row-detail">{% trans "Jak se klub jmenuje v e-mailu" %}</span>
             </div>
             <div class="nast-row-control">{{ form.email_jmeno }}</div>
           </div>
@@ -391,9 +387,9 @@
                 <span class="nast-row-label">{% trans "Testovací e-mail" %}</span>
                 <span class="nast-row-detail">{% trans "Pošle zkušební zprávu" %}</span>
               </div>
-              <div class="nast-row-control nast-row-control--inline">
+              <div class="nast-row-control nast-row-control--inline nast-row-control--action">
                 <input type="email" name="test_email_to" form="nastaveni-test-email-form" class="vTextField nast-row-input" value="{{ test_email_default }}" placeholder="email@example.com">
-                <button type="submit" form="nastaveni-test-email-form" class="button">{% trans "Odeslat" %}</button>
+                <button type="submit" form="nastaveni-test-email-form" class="button ts-btn ts-btn--primary">{% trans "Odeslat" %}</button>
               </div>
             </div>
           </div>
@@ -410,7 +406,7 @@
           <div class="nast-row">
             <div class="nast-row-text">
               <span class="nast-row-label">{{ form.prah_dluhu_dashboard.label }}</span>
-              <span class="nast-row-detail">{% trans '0 = každý dluh, −1000 = od 1000 Kč' %}</span>
+              <span class="nast-row-detail">{% blocktrans with mena=system_mena %}0 = každý dluh, −1000 = od 1000 {{ mena }}{% endblocktrans %}</span>
             </div>
             <div class="nast-row-control">{{ form.prah_dluhu_dashboard }}</div>
           </div>
@@ -441,7 +437,7 @@
       <section class="nast-panel" id="panel-nastroje" role="tabpanel" aria-labelledby="tab-nastroje" hidden>
         <header class="nast-panel-head">
           <h2>{% trans "Nástroje" %}</h2>
-          <p>Diagnostika, export a import dat.</p>
+          <p>{% trans "Diagnostika, export a import dat." %}</p>
         </header>
 
         <div class="nast-summary-card">
@@ -449,9 +445,9 @@
           <dl class="nast-summary-grid">
             <div><dt>{% trans "Hráči" %}</dt><dd>{{ diagnostika.hraci_pocet }}</dd></div>
             <div><dt>{% trans 'Tréninky' %}</dt><dd>{{ diagnostika.treningy_pocet }}</dd></div>
-            <div><dt>Platby</dt><dd>{{ diagnostika.platby_pocet }}</dd></div>
+            <div><dt>{% trans "Platby" %}</dt><dd>{{ diagnostika.platby_pocet }}</dd></div>
             <div><dt>{% trans 'Databáze' %}</dt><dd>{{ diagnostika.db_engine }}</dd></div>
-            <div><dt>E-mail SMTP</dt><dd>{% if diagnostika.email_configured %}Nastaveno ({{ diagnostika.email_host }}){% else %}{% trans "Chybí" %}{% endif %}</dd></div>
+            <div><dt>{% trans "E-mail SMTP" %}</dt><dd>{% if diagnostika.email_configured %}{% trans "Nastaveno" %} ({{ diagnostika.email_host }}){% else %}{% trans "Chybí" %}{% endif %}</dd></div>
             <div><dt>{% trans 'Odesílatel' %}</dt><dd>{{ diagnostika.email_from|default:"—" }}</dd></div>
             <div><dt>{% trans 'Poslední vyúčtování' %}</dt><dd>{{ diagnostika.posledni_vyuctovani }}</dd></div>
           </dl>

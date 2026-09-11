@@ -8,16 +8,16 @@
   body.app-core.model-hrac.change-form .object-tools a.custom-pay-link,
   body.app-core.model-hrac.change-form .object-tools a.historylink {
       background: var(--brand, #E67817) !important;
-      border: 5px solid var(--brand-600, #D1640C) !important;
+      border: 1px solid var(--brand) !important;
       color: #fff !important;
-      border-radius: 100px !important;
-      padding: 7px 12px !important;
-      font-family: var(--btn-font-family, inherit) !important;
-      font-size: 12px !important;
+      border-radius: var(--btn-radius, 100px) !important;
+      padding: 10px 18px !important;
+      font-family: inherit !important;
+      font-size: 13px !important;
       font-weight: 800 !important;
       line-height: 1 !important;
-      letter-spacing: 0.2px !important;
-      text-transform: uppercase !important;
+      letter-spacing: 0.02em !important;
+      text-transform: none !important;
       text-decoration: none !important;
       display: inline-flex !important;
       align-items: center !important;
@@ -220,7 +220,8 @@
     color: #1f2937;
   }
   table.ledger tbody tr{ background:var(--surface, #fff); }
-  table.ledger tbody tr:hover{ background:var(--brand-100, #fff1de); }
+  table.ledger tbody tr:hover{ background:var(--table-row-hover) !important; }
+  table.ledger tbody tr:hover a:not(.deletelink){ color:var(--brand) !important; }
 
   tr.typ-nauctovano { background:rgba(239,68,68,0.12); }
   tr.typ-platba, tr.typ-vratka { background:rgba(34,197,94,0.12); }

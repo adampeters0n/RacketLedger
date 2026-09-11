@@ -1,5 +1,15 @@
 document.addEventListener('DOMContentLoaded', function () {
 
+  function readI18n() {
+    try {
+      var el = document.getElementById('ts-global-i18n');
+      return el ? JSON.parse(el.textContent) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  var I18N = readI18n();
+
   // === OVLÁDÁNÍ MODÁLNÍCH OKEN PRO AKCE ===
   (function () {
     var changelistForm = document.getElementById('changelist-form');
@@ -24,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (action === 'akce_vygenerovat_vyuctovani') {
         if (changelistForm.querySelectorAll('input[name="_selected_action"]:checked').length === 0) {
-          alert('Musíte vybrat alespoň jednoho hráče.');
+          alert(I18N.selectAtLeastOnePlayer || 'Musíte vybrat alespoň jednoho hráče.');
           e.preventDefault();
           return;
         }
@@ -32,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
         modalVyuct.style.display = 'block';
       } else if (action === 'akce_pridat_platbu') {
         if (changelistForm.querySelectorAll('input[name="_selected_action"]:checked').length === 0) {
-          alert('Musíte vybrat alespoň jednoho hráče.');
+          alert(I18N.selectAtLeastOnePlayer || 'Musíte vybrat alespoň jednoho hráče.');
           e.preventDefault();
           return;
         }
@@ -62,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function () {
       btnPlatbaConfirm.addEventListener('click', function () {
         var amt = document.getElementById('id_modal_payment_amount').value;
         if (!amt) {
-          alert('Zadejte částku.');
+          alert(I18N.enterAmount || 'Zadejte částku.');
           return;
         }
         addHidden(changelistForm, '_bulk_payment_amount', amt);

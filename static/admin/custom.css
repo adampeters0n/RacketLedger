@@ -1,12 +1,12 @@
 /* === Paleta + layout proměnné === */
 :root{
-  --bg:#F7F7F4; --surface:#FFFFFF; --text:#1F2937; --text-strong:#111111;
-  --muted:#475569; --line:#e2e5ea;
+  --bg:#FFFFFF; --surface:#FFFFFF; --text:#1F2937; --text-strong:#111111;
+  --muted:#475569; --line:#E5E7EB;
   --brand:#E67817; --brand-600:#D1640C; --brand-100:#FFF1DE;
   --accent:#14833B; --accent-600:#0F6B2E; --accent-100:#E9F7EE;
-  --amber:#080704; --amber-100:#FFF7D6; --amber-200:#FFE9A6;
+  --amber:#080704; --amber-100:#FFF7D6; --amber-200:#F3F4F6;
   --danger:#D92D20; --danger-100:#FFE5E1; --line-200:#929aa4;
-  --table-head:#FFE9A6; --table-row-alt:#FFFAF0; --table-row-hover:#FFFEF2;
+  --table-head:#F3F4F6; --table-row-alt:#F9FAFB; --table-row-hover:#F8FAFC;
   --muted:#64748B;
 
   --page-pad:18px;   /* vnitřní odsazení stránky – drobečky, zprávy, tabulky */
@@ -117,9 +117,16 @@ body.change-list #content{
 }
 #content a:hover, #content-main a:hover, .module a:hover, .results a:hover{ text-decoration:none; }
 
-/* kill dark-mode přepínače */
-.theme-toggle, .dark-mode-toggle, [class*="theme-toggle"],
-[aria-label*="Dark"], [aria-label*="Světl"], a[href*="theme="]{ display:none !important; }
+/* Schovej vestavěný Django theme toggle v hlavičce – ne naše .nast-switch */
+#header .theme-toggle,
+#header .dark-mode-toggle,
+#header [class*="theme-toggle"],
+#header a[href*="theme="],
+#user-tools [aria-label*="Dark"]:not(.nast-switch),
+#user-tools [aria-label*="Světl"]:not(.nast-switch),
+#header > .theme {
+  display: none !important;
+}
 @media (prefers-color-scheme: dark){
   :root, html, body, #header, #content{ background:var(--bg) !important; color:var(--text) !important; }
 }
@@ -140,24 +147,44 @@ body.change-list #content{
 @media (min-width: 1201px){
   #header{
     display:grid !important;
-    grid-template-columns:auto minmax(0, 1fr) auto;
+    /* Stejné boční sloupce → nav je opticky uprostřed stránky */
+    grid-template-columns:minmax(0, 1fr) auto minmax(0, 1fr);
     grid-template-rows:auto;
     align-items:center !important;
-    gap:8px 20px;
-    padding:6px var(--page-pad) !important;
+    gap:8px 12px;
+    padding:10px var(--page-pad) !important;
   }
   #branding{
     grid-column:1;
     grid-row:1;
     width:auto !important;
-    max-width:none !important;
+    max-width:100% !important;
+    min-width:0 !important;
     margin:0 !important;
     padding:0 !important;
+    justify-self:start;
   }
   .brand-wrap{
     width:auto !important;
+    max-width:100% !important;
+    min-width:0 !important;
     padding:4px 0 !important;
     margin:0 !important;
+  }
+  #branding .brand{
+    min-width:0;
+    max-width:100%;
+  }
+  #branding .brand .brand-title{
+    /* Ellipsis jen vodorovně; vertikálně necháme místo pro háčky/čárky */
+    overflow-x:clip;
+    overflow-y:visible;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    max-width:min(220px, 28vw);
+    line-height:1.35 !important;
+    padding-block:0.15em;
+    box-decoration-break:clone;
   }
   #user-tools{
     grid-column:3;
@@ -165,18 +192,48 @@ body.change-list #content{
     position:static !important;
     right:auto !important;
     top:auto !important;
+    transform:none !important;
     justify-self:end;
+    align-self:center !important;
     flex-shrink:0;
+    max-width:100%;
+    height:100%;
+    padding:0 !important;
+    margin:0 !important;
   }
   .ts-topnav, .topnav{
     grid-column:2;
     grid-row:1;
+    justify-self:center;
     justify-content:center !important;
-    width:100%;
+    width:max-content;
+    max-width:100%;
     min-width:0;
     padding:0 !important;
     margin:0 !important;
-    transform:translateX(32px);
+    transform:none;
+    gap:clamp(2px, 0.45vw, 8px);
+  }
+  .ts-topnav a, .topnav a{
+    /* Při delších jazycích (FR…) zmenši padding i font, ať se vejde */
+    flex:0 1 auto;
+    font-size:calc(clamp(11px, 0.92vw, 13px) * var(--ts-nav-scale, 1));
+    padding:
+      calc(clamp(0.4rem, 0.55vw, 0.75rem) * var(--ts-nav-scale, 1))
+      calc(clamp(0.4rem, 0.65vw, 1rem) * var(--ts-nav-scale, 1));
+    letter-spacing:clamp(-0.02em, 0.1vw, 0);
+  }
+}
+/* Středně široký desktop: ještě kompaktnější nav před přechodem na burger */
+@media (min-width: 1201px) and (max-width: 1400px){
+  .ts-topnav a, .topnav a{
+    font-size:calc(clamp(10.5px, 0.85vw, 12px) * var(--ts-nav-scale, 1));
+    padding:
+      calc(0.4rem * var(--ts-nav-scale, 1))
+      calc(0.55rem * var(--ts-nav-scale, 1));
+  }
+  #branding .brand .brand-title{
+    max-width:min(160px, 18vw);
   }
 }
 
@@ -184,23 +241,34 @@ body.change-list #content{
 /* === Brand: velikost loga + text v jedné rovině (NOVÉ) === */
 #branding .brand{
   display:flex;
-  align-items:center;      /* zarovnání loga a textu */
+  align-items:center;
   gap:10px;
   text-decoration:none;
+  overflow:visible;
 }
 #branding .brand .brand-logo{
   width:var(--brand-logo);
   height:var(--brand-logo);
   display:block;
-  object-fit:contain;
+  object-fit:cover;
+  border-radius:50%;
+  flex-shrink:0;
+}
+#branding .brand .brand-logo[hidden]{
+  display:none !important;
 }
 #branding .brand .brand-title{
   font-size:var(--brand-font-size);
   font-weight:var(--brand-font-weight);
-  line-height:1;
+  line-height:1.35;
   letter-spacing:.2px;
   margin:0;
+  padding-block:0.15em;
   color:var(--text);
+  overflow-x:clip;
+  overflow-y:visible;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
 @media (max-width:640px){
   :root{
@@ -214,15 +282,16 @@ body.change-list #content{
   position:relative;
   background:transparent !important;
   display:flex; align-items:center; gap:8px;
-  justify-content:flex-start !important;
+  justify-content:center !important;
   padding:0 var(--page-pad) !important;
   overflow:visible !important;
   flex-wrap:nowrap !important;
   box-sizing:border-box;
   width:100%;
+  min-width:0;
 }
 .ts-topnav a, .topnav a{
-  flex:0 0 auto;                       /* nepřetékají, drží šířku */
+  flex:0 1 auto;
   white-space:nowrap;
   color:var(--text) !important;
   font-weight:900;
@@ -231,8 +300,9 @@ body.change-list #content{
   border:1px solid transparent;
   position:relative;
   text-decoration:none !important;
-  transition:background .15s ease, border-color .15s ease, box-shadow .15s ease;
-  font-size:13px;                      /* jednotná velikost záložek */
+  transition:background .15s ease, border-color .15s ease, box-shadow .15s ease, font-size .12s ease, padding .12s ease;
+  font-size:13px;
+  min-width:0;
 }
 
 .ts-topnav a:hover, .topnav a:hover{ background:var(--brand-100); border-color:var(--brand-100); }
@@ -244,19 +314,70 @@ body.change-list #content{
 }
 .ts-topnav a:focus-visible, .topnav a:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
 
-/* === Utility odkazy (ZMĚNIT HESLO / ODHlÁSIT SE) vpravo v pruhu === */
+/* Kalendář / rozvrh – vedle Nastavení, stejná výška jako ostatní nav buttony */
+.ts-topnav a.schedule-icon,
+.ts-topnav #nav-rozvrh{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  box-sizing:border-box !important;
+  line-height:0 !important;
+  /* Stejný padding jako textové položky → stejná výška; šířka ≈ výška */
+  padding-left:0.75em !important;
+  padding-right:0.75em !important;
+  min-width:calc(1.15em + 1.5em);
+}
+.ts-topnav a.schedule-icon svg,
+.ts-topnav #nav-rozvrh svg{
+  width:1.15em;
+  height:1.15em;
+  display:block;
+  color:currentColor;
+  stroke:currentColor;
+}
+.ts-topnav a.schedule-icon.is-active svg,
+.ts-topnav #nav-rozvrh.is-active svg{
+  color:#fff;
+  stroke:#fff;
+}
+
+/* === Utility odkazy (kalendář / ODHLÁSIT SE) vpravo === */
 #user-tools{
-  position:absolute !important;
-  right:calc(var(--page-pad) - 8px) !important; /* víc vpravo k okraji */
-  top:0 !important;                       /* zarovnání na horní lištu */
-  height:auto !important;
   display:flex !important;
   align-items:center !important;
-  gap:2px;             /* menší mezera mezi odkazy */
-  padding:8px 0 7px !important; margin:0 !important;
-  background:transparent !important; border:0 !important;
-  font-size:0 !important;                  /* skryje případný text „VÍTEJTE…“ */
+  gap:8px;
+  margin:0 !important;
+  padding:0 !important;
+  background:transparent !important;
+  border:0 !important;
+  font-size:0 !important; /* skryje „VÍTEJTE…“ */
   z-index:5;
+  height:auto !important;
+  box-sizing:border-box;
+}
+
+/* Pod 1200px (bez středové nav) – připni nástroje vpravo na střed výšky headeru */
+@media (max-width: 1200px){
+  #user-tools{
+    position:absolute !important;
+    right:calc(var(--page-pad) - 8px) !important;
+    top:50% !important;
+    transform:translateY(-50%);
+    padding:0 !important;
+  }
+}
+
+/* Desktop grid – stejná vodorovná osa jako Ceník / Hráči / … */
+@media (min-width: 1201px){
+  #user-tools{
+    position:static !important;
+    right:auto !important;
+    top:auto !important;
+    transform:none !important;
+    align-self:center !important;
+    justify-self:end !important;
+    padding:0 !important;
+  }
 }
 
 /* schovej „Zobrazení webu“ – je první odkaz v #user-tools */
@@ -266,15 +387,19 @@ body.change-list #content{
 #user-tools a.button,
 #user-tools button,
 #user-tools input[type=submit]{
-  font-size:13px !important;          /* menší než záložky */
-  color:var(--text) !important;          /* černé, dobře čitelné */
+  font-size:13px !important;
+  color:var(--text) !important;
   font-weight:900;
   text-decoration:none !important;
-  padding:.55rem .75rem;                 /* menší vnitřní okraje */
+  padding:.55rem .75rem;
   border-radius:100px;
-  border:1px solid transparent;          /* kvůli hover efektu jako u menu */
-  background:transparent !important;     /* ať nevypadá jako tlačítko */
+  border:1px solid transparent;
+  background:transparent !important;
   white-space:nowrap;
+  display:inline-flex !important;
+  align-items:center !important;
+  line-height:1.2 !important;
+  box-sizing:border-box;
 }
 /* HOVER: odhlášení + submit tlačítka zčervenají */
 #user-tools a.ts-logout-link:hover,
@@ -300,30 +425,13 @@ body.change-list #content{
   outline-offset: 2px !important;
 }
 
-#user-tools .schedule-icon{
-  box-sizing:border-box !important;
+#user-tools a.ts-logout-link{
   display:inline-flex !important;
   align-items:center !important;
-  justify-content:center !important;
-  width:34px !important;
   height:34px !important;
-  padding:6px !important;
+  box-sizing:border-box !important;
+  padding:0 .85rem !important;
   margin:0 !important;
-  background:#fff !important;
-  border:2px solid #f59e0b !important;
-  border-radius:8px !important;
-  flex-shrink:0 !important;
-  text-decoration:none !important;
-}
-#user-tools .schedule-icon:hover{
-  background:#ffedd5 !important;
-  border-color:#E67817 !important;
-}
-#user-tools .schedule-icon svg{
-  color:#f59e0b !important;
-  width:18px !important;
-  height:18px !important;
-  display:block !important;
 }
 
 /* drobečky */
@@ -387,6 +495,45 @@ div.breadcrumbs a:hover{ background:var(--amber-100); }
 table{ background:var(--surface) !important; border-color:var(--line) !important; width:100% !important; table-layout:auto !important; }
 th, td{ color:var(--text) !important; }
 thead th{ background:var(--table-head) !important; color:var(--text-strong) !important; border-bottom:1px solid var(--line) !important; }
+
+/* Changelist: přirozené šířky sloupců + vyšší jen hlavička */
+body.change-list #result_list{
+  table-layout: auto !important;
+  width: 100% !important;
+}
+body.change-list #result_list thead th{
+  padding: 12px 12px !important;
+  vertical-align: middle !important;
+  height: auto !important;
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+body.change-list #result_list thead th .text a,
+body.change-list #result_list thead th .text span{
+  padding: 0 !important;
+}
+body.change-list #result_list tbody td,
+body.change-list #result_list tbody th{
+  padding: 8px 12px !important;
+  width: auto !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  white-space: normal !important;
+}
+body.change-list #result_list th.action-checkbox-column,
+body.change-list #result_list td.action-checkbox{
+  width: 1.5em !important;
+  white-space: nowrap !important;
+}
+body.change-list #result_list th.column-akce_smazat,
+body.change-list #result_list td.field-akce_smazat{
+  width: 1% !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
 #result_list tbody tr:nth-child(odd){ background:var(--surface) !important; }
 #result_list tbody tr:nth-child(even){ background:var(--surface) !important; }
 #result_list tbody tr.selected,
@@ -398,17 +545,18 @@ thead th{ background:var(--table-head) !important; color:var(--text-strong) !imp
 #result_list tbody tr.selected > td,
 #result_list tbody tr.row-selected > th,
 #result_list tbody tr.row-selected > td{
-  background:var(--table-row-hover) !important;
-  color:var(--text) !important;
-  border-top-color:var(--line) !important;
-  border-bottom-color:var(--line) !important;
-  border-left-color:var(--line) !important;
-  border-right-color:var(--line) !important;
-  box-shadow:none !important;
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-top-color: var(--line) !important;
+  border-bottom-color: var(--line) !important;
+  border-left-color: var(--line) !important;
+  border-right-color: var(--line) !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 /* platby tabulka */
-table.payments thead th{ background:var(--amber-200) !important; border-bottom:0px solid var(--brand) !important; }
+table.payments thead th{ background:var(--table-head) !important; border-bottom:1px solid var(--line) !important; }
 table.payments tbody tr:nth-child(even){ background:var(--surface) !important; }
 
 /* formuláře */
@@ -419,8 +567,8 @@ input, select, textarea{
   border-radius:var(--field-radius) !important;
 }
 /* === Jednotný oranžový focus border (jako u Změny hesla) – platí všude === */
-input:focus,
-input:focus-visible,
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus-visible,
 select:focus,
 select:focus-visible,
 textarea:focus,
@@ -435,6 +583,84 @@ input[type=submit]:focus-visible,
   outline-offset: 1px !important;
   border-color: var(--brand) !important;
   box-shadow: 0 0 0 2px rgba(230,120,23,.12) !important;
+}
+
+/* Checkboxy v tabulkách – bez barevného čtverce kolem */
+#result_list input[type="checkbox"],
+.results input[type="checkbox"],
+.change-list input.action-select,
+.change-list input#action-toggle,
+table input.action-select,
+table input[type="checkbox"].action-select {
+  outline: none !important;
+  box-shadow: none !important;
+}
+#result_list input[type="checkbox"]:focus,
+#result_list input[type="checkbox"]:focus-visible,
+.results input[type="checkbox"]:focus,
+.results input[type="checkbox"]:focus-visible,
+.change-list input.action-select:focus,
+.change-list input.action-select:focus-visible,
+.change-list input#action-toggle:focus,
+.change-list input#action-toggle:focus-visible,
+table input.action-select:focus,
+table input.action-select:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+#result_list input[type="checkbox"],
+.results input[type="checkbox"],
+.change-list input.action-select,
+.change-list input#action-toggle {
+  accent-color: var(--brand) !important;
+}
+
+/* Ceník – checkbox „Přidat do kalendáře“ v barvě z nastavení */
+body.app-core.model-cenik.change-form #id_v_kalendari,
+body.model-cenik.change-form #id_v_kalendari {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  min-height: 18px !important;
+  border: 2px solid color-mix(in srgb, var(--brand) 45%, #94a3b8) !important;
+  border-radius: 5px !important;
+  background-color: var(--surface, #fff) !important;
+  accent-color: var(--brand) !important;
+  cursor: pointer !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+body.app-core.model-cenik.change-form #id_v_kalendari:hover,
+body.app-core.model-cenik.change-form #id_v_kalendari:focus,
+body.app-core.model-cenik.change-form #id_v_kalendari:focus-visible,
+body.app-core.model-cenik.change-form #id_v_kalendari:checked,
+body.model-cenik.change-form #id_v_kalendari:hover,
+body.model-cenik.change-form #id_v_kalendari:focus,
+body.model-cenik.change-form #id_v_kalendari:focus-visible,
+body.model-cenik.change-form #id_v_kalendari:checked {
+  box-shadow: none !important;
+  outline: none !important;
+}
+body.app-core.model-cenik.change-form #id_v_kalendari:checked,
+body.model-cenik.change-form #id_v_kalendari:checked {
+  background-color: var(--brand) !important;
+  border-color: var(--brand) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23ffffff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round' d='M3.5 8.5l3 3 6-6'/%3E%3C/svg%3E") !important;
+  background-size: 12px 12px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+#result_list tbody tr.selected > td.action-checkbox,
+#result_list tbody tr.row-selected > td.action-checkbox,
+.results tbody tr.selected > td.action-checkbox,
+table tbody tr.selected > td.action-checkbox {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
 }
 
 /* Pole s dlouhým obsahem (readonly hash, salt, dlouhé texty) – posouvání do strany v celém adminu */
@@ -1164,21 +1390,7 @@ body.app-core.add-form .module .button{
 }
 
 
-/* tlačítka (globálně) */
-.button, input[type=submit], .submit-row input, a.button{
-  background:var(--brand) !important; border:3px solid var(--brand-600) !important; color:#fff !important;
-  border-radius:var(--btn-radius) !important; padding:7px 12px !important; text-decoration:none !important;
-
-  /* typografie přidaná */
-  font-family: var(--btn-font-family) !important;
-  font-size: var(--btn-font-size) !important;
-  font-weight: var(--btn-font-weight) !important;
-  line-height: 1 !important;
-  letter-spacing: .2px;
-}
-.button:hover, input[type=submit]:hover, a.button:hover{ filter:brightness(1.05); }
-a.button.secondary, .btn-secondary{ background:#FFFFFF !important; color:var(--text) !important; border:1px solid var(--line) !important; }
-a.button.secondary:hover{ background:#F7F7F7 !important; }
+/* tlačítka – viz static/admin/css/ts-buttons.css (design system) */
 
 /* ============================= */
 /* CHANGELIST – jednoduché řazení (jeden sloupec) */
@@ -1203,7 +1415,9 @@ body.change-list #result_list thead th.sortable a {
 :root{ --ctl-h: 28px; }
 
 /* toolbar se search formulářem do jedné řádky/středu – nepřetéká z bubliny */
-.change-list #toolbar, #changelist #toolbar{
+.change-list #toolbar,
+#changelist #toolbar,
+#toolbar{
   display:flex !important;
   align-items:center !important;
   gap:.5rem !important;
@@ -1212,6 +1426,8 @@ body.change-list #result_list thead th.sortable a {
   min-width:0 !important;
   overflow-x:hidden !important;
   box-sizing:border-box !important;
+  padding:14px 12px 12px !important; /* níže od horní hrany tabulky */
+  margin-bottom:12px !important;
 }
 
 /* celý formulář changelistu nesmí přesáhnout šířku bubliny */
@@ -1255,21 +1471,55 @@ body.change-list #result_list thead th.sortable a {
   align-items:center !important;
   gap:.5rem !important;
   margin:0 !important;
+  width:100% !important;
 }
-#changelist-search label{ margin:0 !important; }
 
-/* input „Hledat“ – stejná výška jako tlačítko */
+#changelist-search > div{
+  display:flex !important;
+  align-items:center !important;
+  gap:.5rem !important;
+  flex-wrap:wrap !important;
+  min-width:0 !important;
+}
+
+#changelist-search label{
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  margin:0 !important;
+  padding:0 !important;
+  line-height:0 !important;
+  height:var(--ctl-h) !important;
+  flex:0 0 auto !important;
+}
+
+#changelist-search label img,
+#changelist-search img{
+  display:block !important;
+  width:16px !important;
+  height:16px !important;
+  margin:0 !important;
+}
+
+/* input „Hledat“ – stejná výška jako lupa */
 #changelist-search #searchbar,
-#changelist-search input[type="text"]{
+#changelist-search input[type="text"],
+#toolbar #searchbar{
   padding:7px 12px !important;
   border-radius:100px !important;
   min-height:var(--ctl-h) !important;
+  height:var(--ctl-h) !important;
   line-height:1 !important;
+  vertical-align:middle !important;
+  box-sizing:border-box !important;
+  margin:0 !important;
 }
 
-/* submit „Hledat“ – jistota stejné výšky */
-#changelist-search input[type="submit"]{
-  min-height:var(--ctl-h) !important;
+/* Globálně schovat tlačítko „Hledat“ u search bubliny (hledá se Enterem / live search) */
+#changelist-search input[type="submit"],
+#toolbar form#changelist-search input[type="submit"],
+#toolbar form input[type="submit"]{
+  display: none !important;
 }
 
 /* blok Operace/Provést – jedna řádka vedle sebe */
@@ -1311,28 +1561,10 @@ body.change-list #result_list thead th.sortable a {
   font-size: 14px !important;
 }
 
-/* Object tools (CENÍK: PŘIDAT, HRÁČ: PŘIDAT, …) – oranžová jako Hledat */
+/* Object tools (CENÍK: PŘIDAT, …) – styly v ts-buttons.css */
 .object-tools, .object-tools li{ background:transparent !important; border:0 !important; box-shadow:none !important; }
-.object-tools a, .object-tools li a, .addlink{
-  background:var(--brand) !important;
-  border:5px solid var(--brand-600) !important;
-  color:#fff !important;
-  border-radius:var(--btn-radius) !important;
-  padding:7px 12px !important;
-  text-decoration:none !important;
-  display:inline-flex; align-items:center; gap:.4rem;
 
-  /* typografie přidaná */
-  font-family: var(--btn-font-family) !important;
-  font-size: var(--btn-font-size) !important;
-  font-weight: var(--btn-font-weight) !important;
-  line-height: 1 !important;
-  letter-spacing: .2px;
-}
-.object-tools a:hover, .object-tools li a:hover{ filter:brightness(1.05); }
-.object-tools a::before, .object-tools li a::before{ filter:invert(1) brightness(2); }
-
-/* Spodní akční tlačítka – stejná velikost (Uložit i Odstranit) */
+/* Spodní akční tlačítka – layout; barvy/okraje v ts-buttons.css */
 .submit-row input[type="submit"][name="_save"],
 .submit-row input[type="submit"][name="_addanother"],
 .submit-row input[type="submit"].default:not([name="_continue"]):not([value*="Odstranit"]),
@@ -1346,11 +1578,10 @@ body.change-list #result_list thead th.sortable a {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  min-width: var(--admin-action-btn-min-width) !important;
-  min-height: 2rem !important;
-  padding: var(--admin-action-btn-padding) !important;
+  min-width: var(--admin-action-btn-min-width, var(--btn-min-width)) !important;
+  min-height: var(--btn-min-height, 2rem) !important;
+  padding: var(--admin-action-btn-padding, var(--btn-padding)) !important;
   border-radius: var(--btn-radius) !important;
-  font-family: var(--btn-font-family, inherit) !important;
   font-size: var(--btn-font-size) !important;
   font-weight: var(--btn-font-weight) !important;
   line-height: 1 !important;
@@ -1364,52 +1595,18 @@ body.change-list #result_list thead th.sortable a {
 }
 
 .submit-row input[type="submit"][name="_save"],
-.submit-row a.deletelink {
-  width: var(--admin-action-btn-min-width) !important;
-}
-
-.submit-row input[type="submit"][name="_save"],
 .submit-row input[type="submit"][name="_addanother"],
-.submit-row input[type="submit"].default:not([name="_continue"]):not([value*="Odstranit"]),
 .submit-row button[type="submit"][name="_addanother"],
-.add-day-btn-save,
-.add-day-btn-save-addanother {
-  background: var(--brand) !important;
-  border: 3px solid var(--brand-600) !important;
-  color: #fff !important;
-}
-
-.submit-row input[type="submit"][name="_save"]:hover,
-.submit-row input[type="submit"][name="_addanother"]:hover,
-.submit-row input[type="submit"].default:not([name="_continue"]):not([value*="Odstranit"]):hover,
-.submit-row button[type="submit"][name="_addanother"]:hover,
-.add-day-btn-save:hover,
-.add-day-btn-save-addanother:hover {
-  filter: brightness(1.05) !important;
+.add-day-submit-row .add-day-btn-save,
+.add-day-submit-row .add-day-btn-save-addanother,
+.submit-row a.deletelink {
+  min-width: var(--admin-action-btn-min-width, var(--btn-min-width)) !important;
+  width: auto !important;
 }
 
 .submit-row a.deletelink {
   float: none !important;
   margin-left: auto;
-  background: var(--danger) !important;
-  background-image: none !important;
-  border: 3px solid #b91c1c !important;
-  color: #fff !important;
-}
-
-.delete-confirmation .delete-confirm-submit,
-.delete-confirmation input[type="submit"].delete-confirm-submit {
-  background: var(--danger) !important;
-  background-image: none !important;
-  border: 3px solid #b91c1c !important;
-  color: #fff !important;
-}
-
-.submit-row a.deletelink:hover,
-.delete-confirmation .delete-confirm-submit:hover,
-.delete-confirmation input[type="submit"].delete-confirm-submit:hover {
-  filter: brightness(1.05) !important;
-  text-decoration: none !important;
 }
 
 .submit-row .deletelink-box{ margin-left:auto; order:2; }
@@ -1499,28 +1696,12 @@ ul.messagelist li a:hover{
 /* === Jednotný searchbar na všech changelist stránkách (jako v Platbách) === */
 :root{ --searchbar-w: 280px; }  /* šířka pole; když chceš, změň číslo */
 
-#changelist-search{
-  display:flex !important;
-  align-items:center !important;
-  gap:.5rem !important;
-  flex-wrap:wrap !important;
-  margin:0 !important;
-}
-#changelist-search label{ margin:0 !important; }
-
 #changelist-search #searchbar,
-#changelist-search input[type="text"]{
+#changelist-search input[type="text"],
+#toolbar #searchbar{
   flex:0 0 var(--searchbar-w) !important;
   width:var(--searchbar-w) !important;
   max-width:var(--searchbar-w) !important;
-  min-height:var(--ctl-h) !important;   /* stejné jako ostatní prvky */
-  height:auto !important;
-  padding:7px 12px !important;
-  border-radius:100px !important;
-}
-
-#changelist-search input[type="submit"]{
-  min-height:var(--ctl-h) !important;
 }
 
 @media (max-width:1024px){
@@ -1540,7 +1721,7 @@ ul.messagelist li a:hover{
     min-width:0 !important;
     box-sizing:border-box !important;
     overflow:hidden !important;
-    padding:10px 12px !important;
+    padding:14px 12px 12px !important;
   }
 
   #changelist-search{
@@ -1562,20 +1743,9 @@ ul.messagelist li a:hover{
     box-sizing:border-box !important;
   }
 
-  #changelist-search label{
-    flex:0 0 auto !important;
-    margin:0 !important;
-    line-height:0 !important;
-  }
-
-  #changelist-search label img{
-    display:block !important;
-    width:16px !important;
-    height:16px !important;
-  }
-
   #changelist-search #searchbar,
-  #changelist-search input[type="text"]{
+  #changelist-search input[type="text"],
+  #toolbar #searchbar{
     flex:1 1 0 !important;
     width:100% !important;
     min-width:0 !important;
@@ -1584,9 +1754,7 @@ ul.messagelist li a:hover{
   }
 
   #changelist-search input[type="submit"]{
-    flex:0 0 auto !important;
-    white-space:nowrap !important;
-    margin:0 !important;
+    display: none !important;
   }
 
   #changelist-search .quiet,
@@ -1617,7 +1785,7 @@ ul.messagelist li a:hover{
     grid-column:1 !important;
     grid-row:1 !important;
     display:flex !important;
-    align-items:center !important;
+    align-items:center !important; 
     gap:0.5rem !important;
     min-width:0 !important;
     margin:0 !important;
@@ -1932,12 +2100,14 @@ ul.messagelist li a:hover{
   display: none !important;
 }
 
-/* ===== FIX 1: Hlavička tabulek – žádný hover, drž krémovou ===== */
+/* ===== FIX 1: Hlavička tabulek – jednotná neutrální barva (žádné brandové buňky) ===== */
 #result_list thead th,
 .module table thead th,
 .results thead th {
   background: var(--table-head) !important;
   color: var(--text-strong) !important;
+  background-image: none !important;
+  box-shadow: none !important;
 }
 
 #result_list thead tr:hover th,
@@ -1946,6 +2116,15 @@ ul.messagelist li a:hover{
 table thead tr:hover th {
   background: var(--table-head) !important;
   color: var(--text-strong) !important;
+  background-image: none !important;
+}
+
+body.change-list #result_list thead th.sorted,
+body.change-list #result_list thead th.sortable,
+#result_list thead th.sorted,
+#result_list thead th.sortable {
+  background: var(--table-head) !important;
+  background-image: none !important;
 }
 
 #result_list tbody tr:hover td,
@@ -1953,70 +2132,314 @@ table thead tr:hover th {
 .results tbody tr:hover td {
   background: var(--table-row-hover) !important;
 }
+#result_list tbody tr:hover a:not(.deletelink),
+.module table tbody tr:hover a:not(.deletelink),
+.results tbody tr:hover a:not(.deletelink) {
+  color: var(--brand) !important;
+}
 
-/* ===== FIX 2: Kalendář v „Přidat trénink“ ===== */
+/* ===== Kalendář + výběr času (stejný vzhled, barva z nastavení) ===== */
 .calendarbox,
 .clockbox {
-  z-index: 10000 !important; /* ať je nad sticky věcmi */
+  z-index: 10000 !important;
+  background: var(--surface, #fff) !important;
+  color: var(--text, #111) !important;
+  border: 1px solid var(--line, #e5e7eb) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.14) !important;
+  overflow: hidden !important;
 }
 
-/* pevné pozadí hlavičky kalendáře/caption */
+/* Hlavička – brand soft jako kalendář */
 .calendarbox table thead th,
-.calendarbox table caption {
-  background: var(--amber-100) !important;
-  color: var(--text) !important;
+.calendarbox table caption,
+.calendarbox h2,
+.clockbox h2 {
+  background: var(--brand-100, #fff3df) !important;
+  color: var(--text-strong, #111) !important;
+  border: none !important;
+  font-weight: 700 !important;
+  padding: 10px 14px !important;
+  margin: 0 !important;
 }
 
-/* zruš jakékoliv globální tr:hover uvnitř kalendáře */
+/* zruš globální tr:hover uvnitř kalendáře – jen jednotlivý den */
 .calendarbox table tr:hover th,
-.calendarbox table tr:hover td {
-  background: initial !important;
+.calendarbox table tr:hover td,
+.calendarbox table tbody tr:hover > td,
+.calendarbox table tbody tr:hover > th {
+  background: var(--surface, #fff) !important;
   color: inherit !important;
 }
 
-/* příjemný hover jen na konkrétní dny */
+/* Dny v kalendáři – hover jen na odkaz dne */
+.calendarbox .calendar tbody td,
+.calendarbox .calendar tbody td.nonday,
+.calendarbox .calendar tbody td.noday {
+  background: var(--surface, #fff) !important;
+}
+.calendarbox .calendar tbody td a {
+  color: var(--text, #111) !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+}
+.calendarbox .calendar tbody td > a:hover,
+.calendarbox .calendar tbody td > a:focus {
+  background: color-mix(in srgb, var(--brand) 16%, #ffffff) !important;
+  color: var(--brand-600, var(--brand)) !important;
+}
+.calendarbox .calendar tbody td.selected > a,
+.calendarbox .calendar tbody td.selected > a:hover,
+.calendarbox .calendar tbody td.selected > a:focus,
+.calendarbox .calendar tbody td.selected > a:active {
+  background: var(--brand) !important;
+  color: #fff !important;
+}
+.calendarbox .calendar tbody td.today:not(.selected) > a {
+  font-weight: 700 !important;
+  color: var(--brand) !important;
+}
 .calendarbox .calendar tbody td:hover {
-  background: #fff8e6 !important;
+  background: var(--surface, #fff) !important;
 }
 
-/* Ikona kalendáře u pole Datum – světle oranžová pilulka + oranžová ikona */
-.datetimeshortcuts a {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: #fff3df;              /* světle oranžové pozadí */
-  color: #E67817 !important;        /* text „Dnes“ oranžový */
+/* Zkratky pod kalendářem (Dnes / Včera…) */
+.calendarbox .calendar-shortcuts {
+  background: var(--surface, #fff) !important;
+  border-top: 1px solid var(--line, #e5e7eb) !important;
+  padding: 10px 8px !important;
+}
+.calendarbox .calendar-shortcuts a {
+  color: var(--brand) !important;
+  font-weight: 600 !important;
   text-decoration: none !important;
 }
-.datetimeshortcuts a:hover {
-  background: #ffe4bf;              /* o něco sytější při hoveru */
-}
-.datetimeshortcuts a img {
-  filter: hue-rotate(-10deg) saturate(140%) brightness(1.1); /* zabarví ikonku lehce do oranžova */
+.calendarbox .calendar-shortcuts a:hover {
+  color: var(--brand-600, var(--brand)) !important;
+  text-decoration: underline !important;
 }
 
-/* Desktop: kalendář držet v rámci viewportu (plovoucí box uprostřed) */
+/* Storno – stejné u kalendáře i hodin */
+.calendarbox .calendar-cancel,
+.clockbox .calendar-cancel {
+  background: var(--brand-100, #fff3df) !important;
+  border-top: 1px solid var(--line, #e5e7eb) !important;
+  color: var(--text) !important;
+  margin: 0 !important;
+  padding: 8px 10px !important;
+}
+.calendarbox .calendar-cancel a,
+.clockbox .calendar-cancel a {
+  color: var(--text-strong, #111) !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+}
+.calendarbox .calendar-cancel:hover,
+.clockbox .calendar-cancel:hover,
+.calendarbox .calendar-cancel:focus,
+.clockbox .calendar-cancel:focus {
+  background: color-mix(in srgb, var(--brand) 22%, #ffffff) !important;
+}
+.calendarbox .calendar-cancel a:hover,
+.clockbox .calendar-cancel a:hover {
+  color: var(--brand) !important;
+}
+
+/* Výběr času – seznam jako kalendář */
+.clockbox ul.timelist,
+.clockbox .timelist {
+  margin: 0 !important;
+  padding: 6px 0 !important;
+  background: var(--surface, #fff) !important;
+  list-style: none !important;
+  min-width: 12rem !important;
+}
+.clockbox .timelist li {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.clockbox .timelist a {
+  display: block !important;
+  padding: 10px 16px !important;
+  color: var(--text, #111) !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+.clockbox .timelist a:hover,
+.clockbox .timelist a:focus {
+  background: color-mix(in srgb, var(--brand) 14%, #ffffff) !important;
+  color: var(--brand-600, var(--brand)) !important;
+}
+.clockbox .timelist a:active {
+  background: var(--brand) !important;
+  color: #fff !important;
+}
+
+/* Desktop: kalendář i hodiny uprostřed viewportu */
 @media (min-width: 1024px) {
-  .calendarbox {
+  .calendarbox,
+  .clockbox {
     position: fixed !important;
     top: 96px !important;
     left: 50% !important;
-    transform: translateX(-50%);
-    width: 640px !important;                          /* ještě širší kalendář */
+    transform: translateX(-50%) !important;
+    margin: 0 !important;
     max-width: calc(100vw - 32px) !important;
     max-height: calc(100vh - 140px) !important;
     overflow: auto !important;
-    margin: 0 !important;
+  }
+  .calendarbox {
+    width: 640px !important;
+  }
+  .clockbox {
+    width: auto !important;
+    min-width: 220px !important;
   }
 }
 
-/* === FINAL PATCH: světlo pro tabulky, Select2 a kalendář === */
+/* Mobil / tablet: modal uprostřed + dim overlay (jako Django, s brand UI) */
+@media (max-width: 1023px) {
+  .calendarbox,
+  .clockbox {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    width: min(92vw, 420px) !important;
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100vh - 48px) !important;
+    overflow: auto !important;
+    z-index: 10001 !important;
+  }
+  .calendarbox:before,
+  .clockbox:before {
+    content: "" !important;
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(15, 23, 42, 0.55) !important;
+    transform: none !important;
+    top: 0 !important;
+    left: 0 !important;
+    z-index: -1 !important;
+  }
+  .calendarbox > *,
+  .clockbox > * {
+    position: relative !important;
+    z-index: 1 !important;
+  }
+  .clockbox h2 {
+    padding: 12px 16px !important;
+    font-size: 0.95rem !important;
+  }
+  .clockbox .timelist a {
+    padding: 12px 16px !important;
+    font-size: 15px !important;
+  }
+  .calendarbox .calendar-cancel,
+  .clockbox .calendar-cancel {
+    padding: 12px 16px !important;
+  }
+}
 
-/* vynutit světlé schéma i proti auto-dark */
-html, body, .change-list, .results, table, .select2-container, .calendarbox { 
-  color-scheme: light !important; 
+/* Dnes / Nyní + ikony: bez glow; hover a ikony v barvě z nastavení; společná osa */
+.datetimeshortcuts {
+  display: inline-flex !important;
+  align-items: center !important;
+  flex-wrap: wrap;
+  gap: 2px 6px;
+  vertical-align: middle;
+  line-height: 1;
+}
+.datetimeshortcuts a {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px;
+  min-height: 20px;
+  padding: 0 2px;
+  border-radius: 4px;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--text, #111) !important;
+  text-decoration: none !important;
+  font-weight: 600;
+  line-height: 1 !important;
+  vertical-align: middle;
+}
+.datetimeshortcuts a:hover,
+.datetimeshortcuts a:focus {
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: var(--brand) !important;
+}
+.datetimeshortcuts a img {
+  filter: none;
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+/* Ikony kalendáře / hodin – 16×16, střed s textem, barva z nastavení */
+.datetimeshortcuts .date-icon,
+.datetimeshortcuts .clock-icon {
+  position: relative !important;
+  top: 0 !important;
+  display: block !important;
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  background-color: var(--brand) !important;
+  background-image: none !important;
+  background-position: 0 0 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: 16px 16px;
+  mask-size: 16px 16px;
+}
+.datetimeshortcuts .date-icon {
+  -webkit-mask-image: url("img/icon-calendar-single.svg");
+  mask-image: url("img/icon-calendar-single.svg");
+}
+.datetimeshortcuts .clock-icon {
+  -webkit-mask-image: url("img/icon-clock-single.svg");
+  mask-image: url("img/icon-clock-single.svg");
+}
+.datetimeshortcuts a:hover .date-icon,
+.datetimeshortcuts a:focus .date-icon,
+.datetimeshortcuts a:hover .clock-icon,
+.datetimeshortcuts a:focus .clock-icon {
+  background-color: var(--brand-600, var(--brand)) !important;
+  background-image: none !important;
+  background-position: 0 0 !important;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+/* === FINAL PATCH: světlo pro tabulky, Select2 a kalendář/hodiny === */
+
+/* vynutit světlé schéma jen mimo tmavý režim */
+html:not([data-mode="dark"]),
+html:not([data-mode="dark"]) body,
+html:not([data-mode="dark"]) .change-list,
+html:not([data-mode="dark"]) .results,
+html:not([data-mode="dark"]) table,
+html:not([data-mode="dark"]) .select2-container,
+html:not([data-mode="dark"]) .calendarbox,
+html:not([data-mode="dark"]) .clockbox {
+  color-scheme: light !important;
 }
 
 /* TABULKY (hlavička + řádky + hover) */
@@ -2029,8 +2452,12 @@ table thead th{
 table thead th::before, table thead th::after{ background:transparent !important; box-shadow:none !important; }
 
 table tbody tr, table tbody td{ background:var(--surface) !important; color:var(--text) !important; }
-table tbody tr:nth-child(even){ background:var(--surface) !important; }
-table tbody tr:hover > td{ background:var(--table-row-hover) !important; color:var(--text) !important; }
+table tbody tr:nth-child(even){ background:var(--table-row-alt) !important; }
+table tbody tr:hover > td{ background:var(--table-row-hover) !important; }
+.calendarbox table tbody tr,
+.calendarbox table tbody tr:nth-child(even){ background: transparent !important; }
+.calendarbox table tbody tr:hover > td{ background: var(--surface, #fff) !important; }
+.calendarbox table tbody td{ background: var(--surface, #fff) !important; }
 
 /* SELECT2 (dropdown, vyhledávací input, položky) */
 .select2-container--admin-autocomplete .select2-selection--single{
@@ -2116,14 +2543,21 @@ body.app-core.model-trening.change-form #content-main .module.aligned textarea:f
   box-shadow: 0 0 0 3px rgba(230, 120, 23, 0.15) !important;
 }
 
-/* KALENDÁŘ (widget) */
+/* KALENDÁŘ + HODINY (widget) */
 .calendarbox table, .calendarbox .calendar td, .calendarbox .calendar th{
-  background:#fff !important; color:var(--text) !important; box-shadow:none !important; filter:none !important;
+  background:var(--surface, #fff) !important; color:var(--text) !important; box-shadow:none !important; filter:none !important;
 }
 .calendarbox table thead th, .calendarbox table caption{
-  background:var(--amber-100) !important; color:var(--text) !important;
+  background:var(--brand-100, #fff3df) !important; color:var(--text) !important;
 }
-.calendarbox .calendar tbody td:hover{ background:#fff8e6 !important; }
+.calendarbox .calendar tbody td:hover{
+  background:transparent !important;
+}
+.clockbox,
+.clockbox ul.timelist {
+  background: var(--surface, #fff) !important;
+  color: var(--text) !important;
+}
 
 /* Pojistka proti force-dark z prohlížeče */
 html, body, #result_list, .results, table {
@@ -2136,19 +2570,19 @@ html, body, #result_list, .results, table {
 #result_list td::before, #result_list td::after,
 #result_list th::before, #result_list th::after { content: none !important; }
 #result_list tbody tr:hover > td { background: var(--table-row-hover) !important; }
+#result_list tbody tr:hover a:not(.deletelink) { color: var(--brand) !important; }
 #result_list tbody tr.selected:hover > th,
 #result_list tbody tr.selected:hover > td,
 #result_list tbody tr.row-selected:hover > th,
 #result_list tbody tr.row-selected:hover > td{
   background:var(--table-row-hover) !important;
-  color:var(--text) !important;
 }
 
 /* =================================================================== */
 /* === GLOBÁLNÍ FIX v2: Hover efekt pro všechny tabulky (agresivní) === */
 /* =================================================================== */
 
-/* 1. STATICKÝ STAV HLAVIČKY: Vynutí krémové pozadí a správnou barvu textu. */
+/* 1. STATICKÝ STAV HLAVIČKY: jednotná neutrální barva (ne brand po sloupcích). */
 table thead th,
 table thead th a {
     background: var(--table-head) !important;
@@ -2157,6 +2591,15 @@ table thead th a {
     box-shadow: none !important;
     filter: none !important;
     text-decoration: none !important;
+}
+
+table thead th.sorted,
+table thead th.sortable,
+table thead th.sorted a,
+table thead th.sortable a {
+    background: var(--table-head) !important;
+    background-image: none !important;
+    color: var(--text-strong) !important;
 }
 
 table thead tr:hover th,
@@ -2168,8 +2611,68 @@ table thead tr:hover th a {
 table tbody tr:hover td,
 table tbody tr:hover th {
   background: var(--table-row-hover) !important;
-  color: var(--text) !important;
 }
+table tbody tr:hover a:not(.deletelink) {
+  color: var(--brand) !important;
+}
+.calendarbox table tbody tr:hover > td.selected > a,
+.calendarbox .calendar tbody tr:hover > td.selected > a {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+/* Kalendář: žádný hover řádku; hover jen na den; bez šedých prázdných buněk */
+.calendarbox table tbody tr,
+.calendarbox table tbody tr:nth-child(even),
+.calendarbox table tbody tr:hover {
+  background: transparent !important;
+}
+.calendarbox table tbody tr:hover > td,
+.calendarbox table tbody tr:hover > th,
+.calendarbox .calendar tbody tr:hover > td,
+.calendarbox .calendar tbody tr:hover > th {
+  background: var(--surface, #fff) !important;
+}
+.calendarbox .calendar tbody td,
+.calendarbox .calendar tbody td.nonday,
+.calendarbox .calendar tbody td.noday {
+  background: var(--surface, #fff) !important;
+}
+/* Globální „tr:hover a → brand“ vypnout; hover barvu řeší jen a:hover níže */
+.calendarbox table tbody tr:hover > td:not(.selected) > a:not(:hover):not(:focus),
+.calendarbox .calendar tbody tr:hover > td:not(.selected) > a:not(:hover):not(:focus) {
+  color: var(--text, #111) !important;
+  background: transparent !important;
+}
+.calendarbox .calendar tbody td > a:hover,
+.calendarbox .calendar tbody td > a:focus {
+  background: color-mix(in srgb, var(--brand) 16%, #ffffff) !important;
+  color: var(--brand-600, var(--brand)) !important;
+}
+/* Vybraný den: vždy bílé číslo (i při hoveru jiného dne ve stejném řádku) */
+.calendarbox .calendar tbody td.selected > a,
+.calendarbox .calendar tbody td.selected > a:hover,
+.calendarbox .calendar tbody td.selected > a:focus,
+.calendarbox .calendar tbody td.selected > a:active,
+.calendarbox .calendar tbody tr:hover > td.selected > a,
+.calendarbox .calendar tbody tr:hover > td.selected > a:not(:hover),
+.calendarbox table tbody tr:hover > td.selected > a,
+.calendarbox table tbody tr:hover > td.selected > a:not(.deletelink) {
+  background: var(--brand) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+.calendarbox .calendar tbody td.today:not(.selected) > a {
+  font-weight: 700 !important;
+  color: var(--brand) !important;
+  background: transparent !important;
+}
+.calendarbox .calendar tbody td.today:not(.selected) > a:hover,
+.calendarbox .calendar tbody td.today:not(.selected) > a:focus {
+  background: color-mix(in srgb, var(--brand) 16%, #ffffff) !important;
+  color: var(--brand-600, var(--brand)) !important;
+}
+
 /* =================================================================== */
 /* === MOBILNÍ OPRAVY (přebijí vše ostatní) === */
 /* =================================================================== */

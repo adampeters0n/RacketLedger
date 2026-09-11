@@ -120,6 +120,42 @@ table tbody tr:hover > th {
   background: var(--table-row-hover) !important;
 }
 
+/* Kalendář – nepřepisovat hover řádku (jen den); bez šedých prázdných buněk */
+.calendarbox table tbody tr:hover > td,
+.calendarbox table tbody tr:hover > th {
+  background: var(--surface, #fff) !important;
+}
+.calendarbox .calendar tbody td.nonday,
+.calendarbox .calendar tbody td.noday {
+  background: var(--surface, #fff) !important;
+}
+.calendarbox table tbody tr:hover > td:not(.selected) > a:not(:hover):not(:focus) {
+  color: var(--text, #111) !important;
+}
+
+#result_list tbody tr:hover a:not(.deletelink),
+.results tbody tr:hover a:not(.deletelink),
+.module table tbody tr:hover a:not(.deletelink),
+table tbody tr:hover a:not(.deletelink) {
+  color: var(--brand) !important;
+  text-decoration: none !important;
+}
+
+/* Vybraný den v kalendáři – vždy bílý text i při hoveru řádku */
+.calendarbox .calendar tbody tr:hover > td.selected > a,
+.calendarbox .calendar tbody td.selected > a,
+.calendarbox table tbody tr:hover > td.selected > a {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  background: var(--brand) !important;
+}
+
+#result_list tbody tr:hover a.deletelink,
+#result_list tbody tr:hover .deletelink,
+table tbody tr:hover a.deletelink {
+  color: var(--danger) !important;
+}
+
 table tbody tr,
 table tbody td,
 table tbody th {
@@ -127,7 +163,7 @@ table tbody th {
   color: var(--text) !important;
 }
 
-/* Vybrané řádky – celý řádek bez ohraničení */
+/* Vybrané řádky – řádek bez zvýraznění, jen checkbox (mark) */
 #result_list tbody tr.selected,
 #result_list tbody tr.row-selected,
 .results tbody tr.selected,
@@ -150,13 +186,14 @@ table tbody tr.selected > th,
 table tbody tr.selected > td,
 table tbody tr.row-selected > th,
 table tbody tr.row-selected > td {
-  background: var(--table-row-hover) !important;
+  background: var(--surface) !important;
   color: var(--text) !important;
   border-top-color: var(--line) !important;
   border-bottom-color: var(--line) !important;
   border-left-color: var(--line) !important;
   border-right-color: var(--line) !important;
   box-shadow: none !important;
+  outline: none !important;
 }
 
 #result_list tbody tr.selected:hover > th,
@@ -170,7 +207,6 @@ table tbody tr.selected:hover > td,
 table tbody tr.row-selected:hover > th,
 table tbody tr.row-selected:hover > td {
   background: var(--table-row-hover) !important;
-  color: var(--text) !important;
 }
 
 #result_list tbody tr.selected a,
@@ -205,7 +241,7 @@ table tbody tr.row-selected a {
 html[data-mode="dark"] input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]),
 html[data-mode="dark"] select,
 html[data-mode="dark"] textarea {
-  background: var(--bg) !important;
+  background: var(--table-head) !important;
   color: var(--text) !important;
   border-color: var(--line) !important;
 }

@@ -1,5 +1,6 @@
 """Rodina admin."""
 from decimal import Decimal, ROUND_HALF_UP
+from core.money import format_castka
 from datetime import datetime, time
 
 from django.contrib import admin, messages
@@ -45,7 +46,7 @@ class RodinaAdmin(admin.ModelAdmin):
 
     def kredit_total_display(self, obj):
         val = obj._kredit or 0
-        return f"{int(val):,} Kč".replace(",", " ")
+        return format_castka(val, thousands=True)
     kredit_total_display.short_description = "KREDIT"
     kredit_total_display.admin_order_field = "_kredit"
 
@@ -59,12 +60,12 @@ class RodinaAdmin(admin.ModelAdmin):
 
         items = format_html_join(
             "",
-            "<li><a href='{}'>{}</a> <span style='opacity:.7'>({} Kč)</span></li>",
+            "<li><a href='{}'>{}</a> <span style='opacity:.7'>({})</span></li>",
             (
                 (
                     reverse("admin:core_hrac_change", args=[h.id]),
                     h.cele_jmeno,
-                    f"{int(h.kredit):,}".replace(",", " "),
+                    format_castka(h.kredit, thousands=True),
                 )
                 for h in members
             ),
@@ -164,7 +165,7 @@ class RodinaAdmin(admin.ModelAdmin):
 
             self.message_user(
                 request,
-                f"Vyúčtování rodiny: odesláno {count} členům, celkem k úhradě {total_due:.0f} Kč.",
+                f"Vyúčtování rodiny: odesláno {count} členům, celkem k úhradě {format_castka(total_due)}.",
                 level=messages.SUCCESS,
             )
             return redirect(request.path)
@@ -247,7 +248,7 @@ class RodinaAdmin(admin.ModelAdmin):
                 hodiny_decimal = (Decimal(tx.trening.delka_minut) / Decimal(60)).normalize()
                 hodiny = str(hodiny_decimal).replace('.', ',')
                 skupina = tx.trening.get_format_display()
-                sezona = "léto" if tx.trening.kurt == "VENEK" else "zima"
+                sezona = "léto" if (tx.trening.kurt or "").casefold() in {"venku", "venek"} else "zima"
                 cena = f"{Decimal(tx.castka):.0f}"
                 running_credit -= Decimal(tx.castka or 0)
             else:
@@ -298,9 +299,9 @@ class RodinaAdmin(admin.ModelAdmin):
             "family_members": family.clenove.all(),
             "family_summary": {
                 "trainings_count": trainings_count,
-                "trainings_sum": f"{sum_cena:.0f} Kč",
-                "payments_sum": f"{sum_paid:.0f} Kč",
-                "credit": f"{end_credit:.0f} Kč",
+                "trainings_sum": format_castka(sum_cena),
+                "payments_sum": format_castka(sum_paid),
+                "credit": format_castka(end_credit),
                 "credit_raw": end_credit,
             },
         })

@@ -134,6 +134,10 @@ def setup_admin_site():
     admin.site.site_title = "Tenis systém"
     admin.site.index_title = _("Přehled")
 
+    from core.auth_forms import EmailOrUsernameAuthenticationForm
+
+    admin.site.login_form = EmailOrUsernameAuthenticationForm
+
     _orig_each_context = admin.site.each_context
 
     def _each_context(request):

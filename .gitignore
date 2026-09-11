@@ -3,6 +3,7 @@
 *.env
 *.env.*
 !.env.example
+core/club_seeds_local.py
 
 # --- Python / Django ---
 __pycache__/
@@ -31,6 +32,7 @@ media/
 
 # Virtuální prostředí
 venv/
+.venv/
 .envrc
 
 # IDE/OS

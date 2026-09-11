@@ -25,8 +25,6 @@ KEEP_AS_IS = {
     "-", "CZK", "Kč", "Solo", "Doubles", "Home", "Delete", "Close",
     "Documentation", "Save as new", "Save and continue editing", "Save and view",
     "Dashboard", "PDF", "Excel", "JSON", "SQLite", "Earned", "Cash Flow", "PLAYERS",
-    "Quads", "Triples", "TS key metrics", "TS Čimice overview",
-    "Account 1 AJ Sport", "Account 2 Káťa", "12,400 CZK", "Monday 7 Jul",
     "Home › Analytics", "Nobody owes anything 🎉",
 }
 
@@ -61,8 +59,6 @@ FIXES: dict[str, dict[str, str]] = {
         "court": "Platz", "Charged": "Berechnet", "To bill": "Abzurechnen",
         "Doubles": "Doppel", "Quads": "Vierer", "Triples": "Dreier",
         "Indoor": "Halle", "Outdoor": "Outdoor", "Coach": "Trainer",
-        "Are you sure you want to log out of Tennis System Čimice?":
-            "Möchten Sie sich wirklich vom Tennis System Čimice abmelden?",
         "Tennis school management – trainings, payments, coach billing.":
             "Tennis-Schulverwaltung – Trainings, Zahlungen, Trainerabrechnung.",
     },
@@ -72,64 +68,48 @@ FIXES: dict[str, dict[str, str]] = {
         "court": "kort", "Charged": "Naliczono", "To bill": "Do rozliczenia",
         "Doubles": "Debel", "Quads": "Czwórka", "Triples": "Trójka",
         "Indoor": "Hala", "Outdoor": "Otwarty", "Coach": "Trener",
-        "Are you sure you want to log out of Tennis System Čimice?":
-            "Czy na pewno chcesz wylogować się z Tennis System Čimice?",
     },
     "es": {
         "Overview": "Resumen", "Analytics": "Analítica", "Coaches": "Entrenadores",
         "Players": "Jugadores", "Trainings": "Entrenamientos", "Billing": "Facturación",
         "court": "pista", "Charged": "Facturado", "To bill": "Por facturar",
         "Doubles": "Dobles", "Coach": "Entrenador",
-        "Are you sure you want to log out of Tennis System Čimice?":
-            "¿Seguro que desea cerrar sesión en Tennis System Čimice?",
     },
     "fr": {
         "Overview": "Aperçu", "Analytics": "Analytique", "Coaches": "Entraîneurs",
         "Players": "Joueurs", "Trainings": "Entraînements", "Billing": "Facturation",
         "court": "court", "Charged": "Facturé", "To bill": "À facturer",
         "Doubles": "Double", "Coach": "Entraîneur",
-        "Are you sure you want to log out of Tennis System Čimice?":
-            "Voulez-vous vraiment vous déconnecter de Tennis System Čimice ?",
     },
     "it": {
         "Overview": "Panoramica", "Analytics": "Analitica", "Coaches": "Allenatori",
         "Players": "Giocatori", "Trainings": "Allenamenti", "Billing": "Fatturazione",
         "court": "campo", "Charged": "Addebitato", "To bill": "Da fatturare",
         "Doubles": "Doppio", "Coach": "Allenatore",
-        "Are you sure you want to log out of Tennis System Čimice?":
-            "Sei sicuro di voler uscire da Tennis System Čimice?",
     },
     "nl": {
         "Overview": "Overzicht", "Analytics": "Analyse", "Coaches": "Trainers",
         "Players": "Spelers", "Trainings": "Trainingen", "Billing": "Facturatie",
         "court": "baan", "Charged": "Gefactureerd", "To bill": "Te factureren",
         "Doubles": "Dubbel", "Coach": "Trainer",
-        "Are you sure you want to log out of Tennis System Čimice?":
-            "Weet u zeker dat u wilt uitloggen uit Tennis System Čimice?",
     },
     "pt": {
         "Overview": "Visão geral", "Analytics": "Análise", "Coaches": "Treinadores",
         "Players": "Jogadores", "Trainings": "Treinos", "Billing": "Faturação",
         "court": "campo", "Charged": "Faturado", "To bill": "A faturar",
         "Doubles": "Pares", "Coach": "Treinador",
-        "Are you sure you want to log out of Tennis System Čimice?":
-            "Tem a certeza de que deseja sair do Tennis System Čimice?",
     },
     "ru": {
         "Overview": "Обзор", "Analytics": "Аналитика", "Coaches": "Тренеры",
         "Players": "Игроки", "Trainings": "Тренировки", "Billing": "Биллинг",
         "court": "корт", "Charged": "Начислено", "To bill": "К выставлению",
         "Doubles": "Пары", "Coach": "Тренер",
-        "Are you sure you want to log out of Tennis System Čimice?":
-            "Вы уверены, что хотите выйти из Tennis System Čimice?",
     },
     "uk": {
         "Overview": "Огляд", "Analytics": "Аналітика", "Coaches": "Тренери",
         "Players": "Гравці", "Trainings": "Тренування", "Billing": "Білінг",
         "court": "корт", "Charged": "Нараховано", "To bill": "До виставлення",
         "Doubles": "Пари", "Coach": "Тренер",
-        "Are you sure you want to log out of Tennis System Čimice?":
-            "Ви впевнені, що хочете вийти з Tennis System Čimice?",
     },
 }
 
@@ -143,7 +123,7 @@ def protect(text: str) -> tuple[str, dict[str, str]]:
             mapping[tok] = ph
             result = result.replace(ph, tok)
     for token, orig in [
-        ("__TS__", "TS Čimice"), ("__AJ__", "AJ Sport"), ("__KATA__", "Káťa"),
+        ("__CF2__", "Cash Flow"),
         ("__CF__", "Cash Flow"), ("__ER__", "Earned"),
     ]:
         if orig in result:
@@ -220,11 +200,9 @@ def translate_lang(lang: str, cached: dict[str, dict[str, str]]) -> dict[str, st
                 text = en
                 break
         # restore proper nouns
-        for noun in ("TS Čimice", "AJ Sport", "Káťa", "CZK", "Kč", "Earned", "Cash Flow"):
+        for noun in ("CZK", "Kč", "Earned", "Cash Flow"):
             if noun in en and noun not in text:
-                if noun == "TS Čimice" and "TS" in text:
-                    text = re.sub(r"TS\s+\S+", "TS Čimice", text)
-                elif noun in ("CZK", "Kč"):
+                if noun in ("CZK", "Kč"):
                     pass  # keep machine translation number format
                 else:
                     text = text  # accept MT

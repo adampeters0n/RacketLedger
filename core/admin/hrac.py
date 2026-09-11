@@ -1,5 +1,6 @@
 """Hrac admin."""
 from decimal import Decimal, InvalidOperation
+from core.money import format_castka
 from datetime import datetime, time
 import logging
 
@@ -12,6 +13,7 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone as dj_tz
 from django.utils.html import format_html
+from django.utils.translation import gettext as _g
 from django.utils.translation import gettext_lazy as _
 
 from ..forms import HracInfoForm
@@ -82,13 +84,13 @@ class HracAdmin(admin.ModelAdmin):
             form = HracInfoForm(request.POST, instance=hrac)
             if form.is_valid():
                 form.save()
-                self.message_user(request, "Informace uloženy.", level=messages.SUCCESS)
+                self.message_user(request, _g("Informace uloženy."), level=messages.SUCCESS)
                 return redirect("admin:core_hrac_change", object_id)
         else:
             form = HracInfoForm(instance=hrac)
         ctx = dict(
             self.admin_site.each_context(request),
-            title=f"Změna informací – {hrac.cele_jmeno}",
+            title=_g("Změna informací – %(name)s") % {"name": hrac.cele_jmeno},
             opts=self.model._meta,
             original=hrac,
             form=form,
@@ -99,7 +101,7 @@ class HracAdmin(admin.ModelAdmin):
         """POST endpoint pro tlačítko 'Vygenerovat vyúčtování teď'."""
         hrac = self.get_object(request, object_id)
         if not hrac:
-            self.message_user(request, "Hráč neexistuje.", level=messages.ERROR)
+            self.message_user(request, _g("Hráč neexistuje."), level=messages.ERROR)
             return redirect("admin:core_hrac_changelist")
 
         if request.method != "POST":
@@ -149,10 +151,11 @@ class HracAdmin(admin.ModelAdmin):
             hrac.pk, getattr(vyuct, "amount_due", None), getattr(vyuct, "pk", None)
         )
 
+        email_status = _g("odeslán") if hrac.email else _g("není vyplněn")
         self.message_user(
             request,
-            f"Vyúčtování vytvořeno. K úhradě: {vyuct.amount_due:.0f} Kč. "
-            f"E-mail: {'odeslán' if hrac.email else 'není vyplněn'}",
+            _g("Vyúčtování vytvořeno. K úhradě: %(amount)s. E-mail: %(email)s")
+            % {"amount": format_castka(vyuct.amount_due), "email": email_status},
             level=messages.SUCCESS,
         )
         return redirect("admin:core_hrac_change", object_id)
@@ -160,7 +163,7 @@ class HracAdmin(admin.ModelAdmin):
     @admin.display(description=_("Kredit"), ordering="_kredit_sort")
     def kredit_display(self, obj):
         val = obj.kredit
-        text = f"{val:.0f} Kč"
+        text = format_castka(val)
         try:
             from ..models import SystemNastaveni
 
@@ -220,7 +223,11 @@ class HracAdmin(admin.ModelAdmin):
                 hrac.pk, hrac.email, getattr(vyuct, "amount_due", None), getattr(vyuct, "pk", None)
             )
             count += 1
-        self.message_user(request, f"Vyúčtování vytvořeno pro {count} hráčů.", level=messages.SUCCESS)
+        self.message_user(
+            request,
+            _g("Vyúčtování vytvořeno pro %(count)s hráčů.") % {"count": count},
+            level=messages.SUCCESS,
+        )
     akce_vygenerovat_vyuctovani.short_description = _("Vygenerovat vyúčtování (poslat e-mail)")
     
     def akce_pridat_platbu(self, request, queryset):
@@ -257,10 +264,19 @@ class HracAdmin(admin.ModelAdmin):
                     )
                     count += 1
             
-            self.message_user(request, f"Hromadná platba: Úspěšně přidáno {castka} Kč pro {count} hráčů.", messages.SUCCESS)
+            self.message_user(
+                request,
+                _g("Hromadná platba: Úspěšně přidáno %(amount)s pro %(count)s hráčů.")
+                % {"amount": format_castka(castka), "count": count},
+                messages.SUCCESS,
+            )
 
         except (ValueError, InvalidOperation) as e:
-            self.message_user(request, f"Chyba při zadávání platby: {e}", messages.ERROR)
+            self.message_user(
+                request,
+                _g("Chyba při zadávání platby: %(error)s") % {"error": e},
+                messages.ERROR,
+            )
 
     akce_pridat_platbu.short_description = _("Zadat platbu vybraným hráčům")
 
@@ -362,7 +378,7 @@ class HracAdmin(admin.ModelAdmin):
                 hodiny = str(hodiny_decimal).replace('.', ',')
 
                 skupina = tx.trening.get_format_display()
-                sezona = "léto" if tx.trening.kurt == "VENEK" else "zima"
+                sezona = "léto" if (tx.trening.kurt or "").casefold() in {"venku", "venek"} else "zima"
                 cena = f"{Decimal(tx.castka):.0f}"
                 running_credit -= Decimal(tx.castka or 0)
             else:
@@ -375,10 +391,14 @@ class HracAdmin(admin.ModelAdmin):
             delete_link = ""
             if is_charge and tx.trening:
                 delete_url = reverse("admin:core_trening_delete", args=[tx.trening.id])
-                delete_link = format_html('<a href="{}" class="deletelink">Smazat</a>', delete_url)
+                delete_link = format_html(
+                    '<a href="{}" class="deletelink">{}</a>', delete_url, _g("Smazat")
+                )
             elif not is_charge:
                 delete_url = reverse("admin:core_transakce_delete", args=[tx.id])
-                delete_link = format_html('<a href="{}" class="deletelink">Smazat</a>', delete_url)
+                delete_link = format_html(
+                    '<a href="{}" class="deletelink">{}</a>', delete_url, _g("Smazat")
+                )
 
             rows.append({
                 "datum": datum_str,
@@ -414,9 +434,9 @@ class HracAdmin(admin.ModelAdmin):
 
         extra_context["player_summary"] = {
             "trainings_count": trainings_count,
-            "trainings_sum": f"{sum_cena:.0f} Kč",
-            "payments_sum": f"{sum_paid:.0f} Kč",
-            "credit": f"{end_credit:.0f} Kč",
+            "trainings_sum": format_castka(sum_cena),
+            "payments_sum": format_castka(sum_paid),
+            "credit": format_castka(end_credit),
             "credit_raw": end_credit,
         }
 

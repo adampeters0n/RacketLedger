@@ -899,10 +899,7 @@ class SystemNastaveniTests(TestCase):
             "tmavy_rezim": nast.tmavy_rezim,
             "barevna_varianta": nast.barevna_varianta,
             "vychozi_delka_minut": nast.vychozi_delka_minut,
-            "vychozi_kurt": nast.vychozi_kurt,
-            "sezona_automaticky_kurt": nast.sezona_automaticky_kurt,
-            "sezona_venek_od": nast.sezona_venek_od,
-            "sezona_venek_do": nast.sezona_venek_do,
+            "vychozi_sezona": nast.vychozi_sezona,
             "rozvrh_od_hodina": nast.rozvrh_od_hodina,
             "rozvrh_do_hodina": nast.rozvrh_do_hodina,
             "vychozi_zobrazeni_rozvrhu": nast.vychozi_zobrazeni_rozvrhu,
@@ -934,16 +931,16 @@ class SystemNastaveniTests(TestCase):
         self.assertIn("rozvrh_do_hodina", form.errors)
 
     def test_training_defaults_from_settings(self):
-        from core.models import Cenik, SystemNastaveni
+        from core.models import SystemNastaveni
 
         nast = SystemNastaveni.load()
         nast.vychozi_delka_minut = 90
-        nast.vychozi_kurt = Cenik.Kurt.VENEK
+        nast.vychozi_sezona = "Léto"
         nast.save(sync_colors=False)
 
         defaults = SystemNastaveni.training_defaults()
         self.assertEqual(defaults["delka_minut"], 90)
-        self.assertEqual(defaults["kurt"], Cenik.Kurt.VENEK)
+        self.assertEqual(defaults["sezona"], "Léto")
 
     def test_home_uses_club_name_and_contact(self):
         from core.models import SystemNastaveni
@@ -964,25 +961,23 @@ class SystemNastaveniTests(TestCase):
         self.assertIn("klub@example.com", content)
         self.assertIn("+420 123 456", content)
 
-    def test_seasonal_kurt_in_summer(self):
+    def test_kurt_pro_datum_uses_vychozi_sezona(self):
         from datetime import date
-        from core.models import Cenik, SystemNastaveni
+        from core.models import SystemNastaveni
 
         nast = SystemNastaveni.load()
-        nast.sezona_automaticky_kurt = True
-        nast.sezona_venek_od = 4
-        nast.sezona_venek_do = 10
+        nast.vychozi_sezona = "Léto"
         nast.save(sync_colors=False)
 
-        self.assertEqual(nast.kurt_pro_datum(date(2026, 7, 15)), Cenik.Kurt.VENEK)
-        self.assertEqual(nast.kurt_pro_datum(date(2026, 1, 15)), Cenik.Kurt.HALA)
+        self.assertEqual(nast.kurt_pro_datum(date(2026, 7, 15)), "Léto")
+        self.assertEqual(nast.kurt_pro_datum(date(2026, 1, 15)), "Léto")
 
     def test_email_subject_prefix(self):
         from core.models import SystemNastaveni
 
         self.assertEqual(
-            SystemNastaveni.compose_subject_prefix("Tenis Čimice"),
-            "[Tenis Čimice] ",
+            SystemNastaveni.compose_subject_prefix("Tenis Test Club"),
+            "[Tenis Test Club] ",
         )
         nast = SystemNastaveni.load()
         nast.email_predmet_prefix = "[Klub] "
@@ -1002,22 +997,26 @@ class SystemNastaveniTests(TestCase):
     def test_from_email_parts(self):
         from core.models import SystemNastaveni
 
-        nast = SystemNastaveni(email_odesilatel="Tenis Čimice <kptenis@volny.cz>")
+        nast = SystemNastaveni(email_odesilatel="Tenis Test <info@test.cz>")
         jmeno, adresa = nast.from_email_parts()
-        self.assertEqual(jmeno, "Tenis Čimice")
-        self.assertEqual(adresa, "kptenis@volny.cz")
+        self.assertEqual(jmeno, "Tenis Test")
+        self.assertEqual(adresa, "info@test.cz")
         self.assertEqual(
-            SystemNastaveni.compose_from_email("Tenis Čimice", "kptenis@volny.cz"),
-            "Tenis Čimice <kptenis@volny.cz>",
+            SystemNastaveni.compose_from_email("Tenis Test", "info@test.cz"),
+            "Tenis Test <info@test.cz>",
         )
 
     def test_vzhled_ajax_save(self):
         from django.contrib.auth import get_user_model
         from django.test import RequestFactory
         from core.admin_views import admin_nastaveni_vzhled_view
-        from core.models import SystemNastaveni
+        from core.models import SystemNastaveni, UserPreference
 
         user = get_user_model().objects.create_superuser("admin", "admin@test.com", "pass")
+        nast_before = SystemNastaveni.load()
+        sys_variant = nast_before.barevna_varianta
+        sys_tmavy = nast_before.tmavy_rezim
+
         request = RequestFactory().post(
             "/admin/nastaveni/vzhled/",
             {"barevna_varianta": "modra", "tmavy_rezim": "true"},
@@ -1033,9 +1032,48 @@ class SystemNastaveniTests(TestCase):
         self.assertTrue(data["tmavy_rezim"])
         self.assertIn("--brand: #2563EB", data["theme_style"])
 
+        # Systémové výchozí zůstane; preference je na uživateli
         nast = SystemNastaveni.load()
-        self.assertEqual(nast.barevna_varianta, "modra")
-        self.assertTrue(nast.tmavy_rezim)
+        self.assertEqual(nast.barevna_varianta, sys_variant)
+        self.assertEqual(nast.tmavy_rezim, sys_tmavy)
+        pref = UserPreference.objects.get(user=user)
+        self.assertEqual(pref.barevna_varianta, "modra")
+        self.assertTrue(pref.tmavy_rezim)
+
+    def test_user_theme_overrides_system(self):
+        from django.contrib.auth import get_user_model
+        from django.test import RequestFactory
+        from core.models import SystemNastaveni, UserPreference, Trening
+        from core.system_theme import resolve_effective_theme
+        from django.contrib import admin
+
+        user_a = get_user_model().objects.create_superuser("usera", "a@test.com", "pass")
+        user_b = get_user_model().objects.create_superuser("userb", "b@test.com", "pass")
+        nast = SystemNastaveni.load()
+        nast.barevna_varianta = "oranzova"
+        nast.tmavy_rezim = False
+        nast.save(sync_colors=True)
+
+        UserPreference.objects.update_or_create(
+            user=user_a,
+            defaults={"barevna_varianta": "modra", "tmavy_rezim": True},
+        )
+
+        va, da, ca = resolve_effective_theme(user=user_a, nastaveni=nast)
+        vb, db, cb = resolve_effective_theme(user=user_b, nastaveni=nast)
+        self.assertEqual(va, "modra")
+        self.assertTrue(da)
+        self.assertEqual(ca["brand"], "#2563EB")
+        self.assertEqual(vb, "oranzova")
+        self.assertFalse(db)
+
+        request = RequestFactory().get("/admin/core/trening/")
+        request.user = user_a
+        ma = admin.site._registry[Trening]
+        response = ma.changelist_view(request)
+        response.render()
+        html = response.content.decode()
+        self.assertIn("--brand: #2563EB", html)
 
     def test_resolve_theme_ignores_stale_barva_fields(self):
         from core.models import SystemNastaveni
@@ -1097,9 +1135,7 @@ class SystemNastaveniTests(TestCase):
                 "email_oznaceni": "",
                 "barevna_varianta": nast.barevna_varianta or "oranzova",
                 "vychozi_delka_minut": str(nast.vychozi_delka_minut or 60),
-                "vychozi_kurt": nast.vychozi_kurt or "HALA",
-                "sezona_venek_od": str(nast.sezona_venek_od or 4),
-                "sezona_venek_do": str(nast.sezona_venek_do or 10),
+                "vychozi_sezona": nast.vychozi_sezona or "",
                 "rozvrh_od_hodina": str(nast.rozvrh_od_hodina or 6),
                 "rozvrh_do_hodina": str(nast.rozvrh_do_hodina or 22),
                 "vychozi_zobrazeni_rozvrhu": nast.vychozi_zobrazeni_rozvrhu or "tyden",
@@ -1173,7 +1209,16 @@ class RolesAndImportGuardTests(TestCase):
         self.assertTrue(is_club_admin(self.club))
         self.assertFalse(can_import_data(self.club))
         self.assertFalse(can_export_data(self.club))
-        self.assertFalse(can_manage_users(self.club))
+        self.assertTrue(can_manage_users(self.club))
+
+    def test_club_admin_group_has_core_model_perms(self):
+        from core.roles import CLUB_ADMIN_GROUP, ensure_role_groups
+
+        ensure_role_groups()
+        self.assertTrue(self.club.has_perm("core.view_hrac"))
+        self.assertTrue(self.club.has_perm("core.change_trening"))
+        self.assertTrue(self.club.has_perm("auth.view_user"))
+        self.assertFalse(self.club.has_perm("auth.change_group"))
 
     def test_import_blocked_on_non_sqlite(self):
         from unittest.mock import patch
@@ -1195,3 +1240,361 @@ class RolesAndImportGuardTests(TestCase):
         nast.save()
         self.assertEqual(nast.email_variant_label("1"), "Hlavní účet")
         self.assertEqual(nast.get_email_variant_display(), "Hlavní účet")
+
+
+class BootstrapInstanceTests(TestCase):
+    def test_bootstrap_sets_branding_and_club_admin(self):
+        import os
+        from django.contrib.auth.models import Group, User
+        from django.core.management import call_command
+        from core.models import SystemNastaveni, VyuctovaniNastaveni
+        from core.roles import CLUB_ADMIN_GROUP
+
+        os.environ["BOOTSTRAP_ADMIN_PASSWORD"] = "test-pass-123"
+        try:
+            call_command(
+                "bootstrap_instance",
+                "--nazev",
+                "Tenis Test",
+                "--email",
+                "info@test.cz",
+                "--ucet1",
+                "111/0100",
+                "--create-admin",
+                "clubadmin",
+                "admin@test.cz",
+            )
+        finally:
+            os.environ.pop("BOOTSTRAP_ADMIN_PASSWORD", None)
+
+        system = SystemNastaveni.load()
+        self.assertEqual(system.nazev_klubu, "Tenis Test")
+        self.assertEqual(system.kontakt_email, "info@test.cz")
+
+        vyuct = VyuctovaniNastaveni.load()
+        self.assertEqual(vyuct.ucet_varianta_1, "111/0100")
+
+        user = User.objects.get(username="clubadmin")
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.groups.filter(name=CLUB_ADMIN_GROUP).exists())
+        self.assertTrue(Group.objects.filter(name=CLUB_ADMIN_GROUP).exists())
+
+    def test_bootstrap_seed_demo(self):
+        from django.core.management import call_command
+        from core.models import SystemNastaveni
+
+        call_command("bootstrap_instance", "--seed", "demo")
+        system = SystemNastaveni.load()
+        self.assertIn("Demo", system.nazev_klubu)
+
+    def test_bootstrap_skip_branding_preserves_nazev(self):
+        import os
+        from django.core.management import call_command
+        from core.models import SystemNastaveni
+
+        nast = SystemNastaveni.load()
+        nast.nazev_klubu = "Původní klub"
+        nast.save(sync_colors=False)
+
+        os.environ["BOOTSTRAP_ADMIN_PASSWORD"] = "test-pass-123"
+        try:
+            call_command(
+                "bootstrap_instance",
+                "--skip-branding",
+                "--create-admin",
+                "onlyadmin",
+                "only@test.cz",
+            )
+        finally:
+            os.environ.pop("BOOTSTRAP_ADMIN_PASSWORD", None)
+
+        self.assertEqual(SystemNastaveni.load().nazev_klubu, "Původní klub")
+
+    def test_bootstrap_without_seed_or_cli_skips_branding(self):
+        from django.core.management import call_command
+        from core.models import SystemNastaveni
+
+        nast = SystemNastaveni.load()
+        nast.nazev_klubu = "Neměnit"
+        nast.save(sync_colors=False)
+
+        call_command("bootstrap_instance")
+        self.assertEqual(SystemNastaveni.load().nazev_klubu, "Neměnit")
+
+
+class UserAdminPrivilegeTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth.models import Group, User
+        from core.roles import CLUB_ADMIN_GROUP, ensure_role_groups
+
+        ensure_role_groups()
+        self.club = User.objects.create_user("clubmgr", "c@example.com", "x", is_staff=True)
+        self.club.groups.add(Group.objects.get(name=CLUB_ADMIN_GROUP))
+        self.client.force_login(self.club)
+
+    def test_club_admin_user_form_hides_privileged_fields(self):
+        response = self.client.get("/admin/auth/user/add/")
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'name="is_superuser"')
+        self.assertNotContains(response, 'name="groups"')
+        self.assertNotContains(response, 'name="user_permissions"')
+
+    def test_club_admin_cannot_escalate_via_post(self):
+        from django.contrib.auth.models import User
+
+        response = self.client.post(
+            "/admin/auth/user/add/",
+            {
+                "username": "newbie",
+                "password1": "ComplexPass123!",
+                "password2": "ComplexPass123!",
+                "email": "n@example.com",
+                "is_superuser": "on",
+            },
+            follow=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        newbie = User.objects.get(username="newbie")
+        self.assertFalse(newbie.is_superuser)
+        self.assertTrue(newbie.is_staff)
+        self.assertTrue(newbie.groups.filter(name="club_admin").exists())
+
+
+class EmailOrUsernameAuthTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth.models import User
+
+        self.user = User.objects.create_user(
+            "coach1",
+            "coach@example.com",
+            "SecretPass123!",
+            is_staff=True,
+        )
+
+    def test_authenticate_by_username(self):
+        from django.contrib.auth import authenticate
+
+        user = authenticate(username="coach1", password="SecretPass123!")
+        self.assertEqual(user, self.user)
+
+    def test_authenticate_by_email(self):
+        from django.contrib.auth import authenticate
+
+        user = authenticate(username="coach@example.com", password="SecretPass123!")
+        self.assertEqual(user, self.user)
+
+    def test_authenticate_by_email_case_insensitive(self):
+        from django.contrib.auth import authenticate
+
+        user = authenticate(username="Coach@Example.com", password="SecretPass123!")
+        self.assertEqual(user, self.user)
+
+    def test_seed_club_defaults_requires_slug(self):
+        from django.core.management import call_command
+        from django.core.management.base import CommandError
+
+        with self.assertRaises(CommandError):
+            call_command("seed_club_defaults")
+
+
+class LandingSingleTenantTests(TestCase):
+    def test_empty_tennis_schools_falls_back_to_system_nastaveni(self):
+        from django.test import override_settings
+        from core.models import SystemNastaveni
+
+        nast = SystemNastaveni.load()
+        nast.nazev_klubu = "Tenis Fallback"
+        nast.kontakt_adresa = "Praha"
+        nast.save(sync_colors=False)
+
+        with override_settings(TENNIS_SCHOOLS=[]):
+            response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["single_school"])
+        self.assertEqual(len(response.context["active_schools"]), 1)
+        self.assertEqual(response.context["active_schools"][0]["name"], "Tenis Fallback")
+        self.assertContains(response, "Vstup do systému")
+
+    def test_multi_school_keeps_select_cta(self):
+        from django.test import override_settings
+
+        schools = [
+            {
+                "slug": "a",
+                "name": "Škola A",
+                "city": "Praha",
+                "region": "",
+                "admin_url": "/admin/",
+                "active": True,
+            },
+            {
+                "slug": "b",
+                "name": "Škola B",
+                "city": "Brno",
+                "region": "",
+                "admin_url": "/admin/",
+                "active": True,
+            },
+        ]
+        with override_settings(TENNIS_SCHOOLS=schools):
+            response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context["single_school"])
+        self.assertContains(response, "Vybrat školu")
+
+
+class FreshInstanceSmokeTests(TestCase):
+    """Fresh bootstrap Tenis XY – žádné Čimice v brandingu / klíčových stránkách."""
+
+    def setUp(self):
+        import os
+        from django.core.management import call_command
+
+        os.environ["BOOTSTRAP_ADMIN_PASSWORD"] = "xy-pass-123"
+        try:
+            call_command(
+                "bootstrap_instance",
+                "--nazev",
+                "Tenis XY",
+                "--email",
+                "info@xy.cz",
+                "--email-odesilatel",
+                "Tenis XY <info@xy.cz>",
+                "--email-prefix",
+                "[Tenis XY] ",
+                "--email-podpis",
+                "S pozdravem,\n\nTenis XY",
+                "--ucet1-nazev",
+                "Účet 1",
+                "--ucet1",
+                "123456789/0100",
+                "--ucet2-nazev",
+                "Účet 2",
+                "--create-admin",
+                "admin",
+                "admin@xy.cz",
+            )
+        finally:
+            os.environ.pop("BOOTSTRAP_ADMIN_PASSWORD", None)
+
+    def test_branding_and_email_defaults(self):
+        from core.models import SystemNastaveni, VyuctovaniNastaveni
+
+        nast = SystemNastaveni.load()
+        self.assertEqual(nast.nazev_klubu, "Tenis XY")
+        self.assertEqual(nast.kontakt_email, "info@xy.cz")
+        self.assertIn("Tenis XY", nast.email_odesilatel)
+        self.assertEqual(nast.email_predmet_prefix.strip(), "[Tenis XY]")
+        self.assertIn("Tenis XY", nast.email_podpis)
+        for blob in (
+            nast.nazev_klubu,
+            nast.email_odesilatel,
+            nast.email_predmet_prefix,
+            nast.email_podpis,
+        ):
+            self.assertNotIn("Čimice", blob)
+            self.assertNotIn("cimice", blob.casefold())
+            self.assertNotIn("Káťa", blob)
+            self.assertNotIn("kptenis", blob.casefold())
+
+        vyuct = VyuctovaniNastaveni.load()
+        self.assertEqual(vyuct.ucet_nazev_1, "Účet 1")
+        self.assertEqual(vyuct.ucet_nazev_2, "Účet 2")
+        self.assertNotIn("AJ Sport", vyuct.ucet_nazev_1)
+        self.assertNotIn("Káťa", vyuct.ucet_nazev_2)
+
+    def test_landing_and_admin_pages_show_club_not_cimice(self):
+        from django.contrib.auth.models import User
+        from django.test import override_settings
+
+        with override_settings(TENNIS_SCHOOLS=[]):
+            landing = self.client.get("/")
+        self.assertEqual(landing.status_code, 200)
+        self.assertContains(landing, "Tenis XY")
+        self.assertContains(landing, "Vstup do systému")
+        self.assertNotContains(landing, "Čimice")
+
+        user = User.objects.get(username="admin")
+        self.client.force_login(user)
+
+        admin_index = self.client.get("/admin/")
+        self.assertEqual(admin_index.status_code, 200)
+        self.assertContains(admin_index, "Tenis XY")
+        self.assertNotContains(admin_index, "Čimice")
+
+        analytika = self.client.get("/admin/analytika/prehled/")
+        self.assertEqual(analytika.status_code, 200)
+        self.assertContains(analytika, "Tenis XY")
+        self.assertNotContains(analytika, "Čimice")
+        self.assertNotContains(analytika, "Přehled TS")
+
+    def test_check_instance_passes(self):
+        from django.core.management import call_command
+        from io import StringIO
+
+        out = StringIO()
+        call_command("check_instance", stdout=out)
+        self.assertIn("OK", out.getvalue())
+
+
+class ProductionHostsCheckTests(TestCase):
+    def test_debug_skips_host_errors(self):
+        from django.test import override_settings
+        from core.checks import check_production_hosts
+
+        with override_settings(DEBUG=True, ALLOWED_HOSTS=[], CSRF_TRUSTED_ORIGINS=[]):
+            self.assertEqual(check_production_hosts(None), [])
+
+    def test_production_empty_hosts_is_error(self):
+        from django.test import override_settings
+        from core.checks import check_production_hosts
+
+        with override_settings(DEBUG=False, ALLOWED_HOSTS=[], CSRF_TRUSTED_ORIGINS=[]):
+            msgs = check_production_hosts(None)
+        ids = {m.id for m in msgs}
+        self.assertIn("core.E001", ids)
+        self.assertIn("core.W001", ids)
+
+    def test_check_instance_strict_hosts_fails_when_empty(self):
+        from django.core.management import call_command
+        from django.core.management.base import CommandError
+        from django.test import override_settings
+
+        with override_settings(DEBUG=True, ALLOWED_HOSTS=[], CSRF_TRUSTED_ORIGINS=[]):
+            with self.assertRaises(CommandError):
+                call_command("check_instance", "--strict-hosts")
+
+
+class ScrubLegacyDefaultsTests(TestCase):
+    def test_migration_logic_scrubs_cimice_values(self):
+        import importlib.util
+        from pathlib import Path
+        from django.apps import apps
+        from core.models import SystemNastaveni, VyuctovaniNastaveni
+
+        nast = SystemNastaveni.load()
+        nast.nazev_klubu = "Tenis systém Čimice"
+        nast.email_odesilatel = "Tenis Čimice <kptenis@volny.cz>"
+        nast.email_predmet_prefix = "[Tenis Čimice] "
+        nast.email_podpis = "S pozdravem,\n\nKateřina Peterková\nTenis Čimice"
+        nast.save(sync_colors=False)
+
+        vyuct = VyuctovaniNastaveni.load()
+        vyuct.ucet_nazev_1 = "Účet 1 AJ Sport"
+        vyuct.ucet_nazev_2 = "Účet 2 Káťa"
+        vyuct.save()
+
+        mig_path = Path(__file__).resolve().parent / "migrations" / "0044_scrub_legacy_club_defaults.py"
+        spec = importlib.util.spec_from_file_location("scrub_legacy_mig", mig_path)
+        mod = importlib.util.module_from_spec(spec)
+        assert spec.loader is not None
+        spec.loader.exec_module(mod)
+        mod._scrub(apps, None)
+
+        nast.refresh_from_db()
+        vyuct.refresh_from_db()
+        self.assertEqual(nast.nazev_klubu, "TenisSystém")
+        self.assertNotIn("Čimice", nast.email_odesilatel)
+        self.assertNotIn("kptenis", nast.email_odesilatel.casefold())
+        self.assertEqual(vyuct.ucet_nazev_1, "Účet 1")
+        self.assertEqual(vyuct.ucet_nazev_2, "Účet 2")

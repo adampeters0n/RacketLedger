@@ -38,7 +38,7 @@
             <small style="color:#666; display:block; margin-top:4px;">{% trans "(nechte prázdné pro auto-výpočet)" %}</small>
         </div>
 
-        <label for="id_modal_email_variant">Varianta e-mailu:</label>
+        <label for="id_modal_email_variant">{% trans "Varianta e-mailu:" %}</label>
         <select id="id_modal_email_variant">
             <option value="1" selected>{{ email_variant_label_1 }}</option>
             <option value="2">{{ email_variant_label_2 }}</option>
@@ -47,7 +47,7 @@
 
       <div class="modal-actions">
         <button type="button" id="modal-cancel-button" class="button secondary">{% trans "Zrušit" %}</button>
-        <button type="button" id="modal-confirm-button" class="button default">Vygenerovat a odeslat</button>
+        <button type="button" id="modal-confirm-button" class="button default">{% trans "Vygenerovat a odeslat" %}</button>
       </div>
     </div>
   </div>
@@ -58,17 +58,17 @@
       <p style="margin-top:-10px; margin-bottom:20px; color:#666; font-size:13px;">{% trans "Tato platba bude připsána všem zaškrtnutým hráčům." %}</p>
       
       <div class="modal-fields">
-        <label>{% trans "Částka (Kč):" %}</label> 
+        <label>{% trans "Částka" %} ({{ system_mena }}):</label> 
         <input type="number" id="id_modal_payment_amount" step="1" placeholder="{% trans 'např. 2000' %}" style="font-weight:bold;">
         
-        <label>Typ:</label>
+        <label>{% trans "Typ:" %}</label>
         <select id="id_modal_payment_type">
-            <option value="PLATBA" selected>Platba (Vklad)</option>
-            <option value="VRATKA">Vratka / Bonifikace</option>
+            <option value="PLATBA" selected>{% trans "Platba (Vklad)" %}</option>
+            <option value="VRATKA">{% trans "Vratka / Bonifikace" %}</option>
             <option value="NAUCTOVANO">{% trans "Ruční stržení (Mínus)" %}</option>
         </select>
 
-        <label>Datum:</label> 
+        <label>{% trans "Datum:" %}</label> 
         <input type="date" id="id_modal_payment_date">
 
         <label>{% trans "Poznámka:" %}</label> 

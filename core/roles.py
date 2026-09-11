@@ -11,16 +11,43 @@ zatím neexistuje – role připravují hranice oprávnění.
 
 from __future__ import annotations
 
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
 
 PLATFORM_ADMIN_GROUP = "platform_admin"
 CLUB_ADMIN_GROUP = "club_admin"
 
 
+def _club_admin_permissions() -> list[Permission]:
+    """Provoz klubu: všechna core + správa User účtů (ne Group permissions)."""
+    cts = ContentType.objects.filter(app_label="core")
+    perms = list(Permission.objects.filter(content_type__in=cts))
+    user_ct = ContentType.objects.filter(app_label="auth", model="user").first()
+    if user_ct:
+        perms.extend(Permission.objects.filter(content_type=user_ct))
+    return perms
+
+
+def _platform_admin_permissions() -> list[Permission]:
+    """Core + auth (uživatelé/skupiny) pro provozovatele platformy."""
+    cts = ContentType.objects.filter(app_label__in=["core", "auth"])
+    return list(Permission.objects.filter(content_type__in=cts))
+
+
+def sync_role_permissions(platform: Group, club: Group) -> None:
+    """Nastaví Django model permissions na role groups (idempotentní)."""
+    club_perms = _club_admin_permissions()
+    club.permissions.set(club_perms)
+
+    platform_perms = _platform_admin_permissions()
+    platform.permissions.set(platform_perms)
+
+
 def ensure_role_groups() -> tuple[Group, Group]:
-    """Vytvoří skupiny rolí, pokud ještě neexistují."""
+    """Vytvoří skupiny rolí a synchronizuje jejich permissions."""
     platform, _ = Group.objects.get_or_create(name=PLATFORM_ADMIN_GROUP)
     club, _ = Group.objects.get_or_create(name=CLUB_ADMIN_GROUP)
+    sync_role_permissions(platform, club)
     return platform, club
 
 
@@ -54,5 +81,9 @@ def can_export_data(user) -> bool:
 
 
 def can_manage_users(user) -> bool:
-    """Správa účtů a oprávnění – platform admin."""
-    return is_platform_admin(user)
+    """Správa staff účtů na instanci – club_admin i platform_admin.
+
+    U white-label (1 instance = 1 klub) správce klubu zakládá kolegy.
+    Import/export DB zůstává jen platform_admin.
+    """
+    return is_club_admin(user)

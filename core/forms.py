@@ -7,10 +7,58 @@ from django.forms import formset_factory
 from django.forms.models import BaseInlineFormSet
 from django.utils.translation import gettext_lazy as _
 
-from .admin_utils import get_month_choices, trener_label
-from .models import Cenik, CenikFormat, Dochazka, Hrac, SystemNastaveni, TrenerPlatba, VyuctovaniNastaveni
+from .admin_utils import trener_label
+from .models import Cenik, Dochazka, Hrac, SystemNastaveni, TrenerPlatba, VyuctovaniNastaveni
 
 User = get_user_model()
+
+
+def cenik_select_choices(*extra_values, blank_label="------"):
+    """Distinct hodnoty z Ceníku + případné extra (pro edit/copy)."""
+    values = []
+    seen = set()
+    for v in extra_values:
+        v = (v or "").strip()
+        if v and v not in seen:
+            seen.add(v)
+            values.append(v)
+    return [("", blank_label)] + [(v, v) for v in values]
+
+
+def cenik_format_choices(*extra):
+    qs = (
+        Cenik.objects.exclude(format="")
+        .order_by("format")
+        .values_list("format", flat=True)
+        .distinct()
+    )
+    return cenik_select_choices(*extra, *qs)
+
+
+def cenik_sezona_choices(*extra):
+    qs = (
+        Cenik.objects.exclude(sezona="")
+        .order_by("sezona")
+        .values_list("sezona", flat=True)
+        .distinct()
+    )
+    return cenik_select_choices(*extra, *qs, blank_label="---------")
+
+
+def cenik_kurt_choices(*extra):
+    qs = (
+        Cenik.objects.exclude(kurt="")
+        .order_by("kurt")
+        .values_list("kurt", flat=True)
+        .distinct()
+    )
+    return cenik_select_choices(*extra, *qs)
+
+
+class NastaveniClearableFileInput(forms.ClearableFileInput):
+    """File input bez Django „Currently / Clear“ – mazání řeší UI nastavení."""
+
+    template_name = "admin/widgets/nastaveni_clearable_file.html"
 
 
 class HracInfoForm(forms.ModelForm):
@@ -177,14 +225,21 @@ class TrainingSlotForm(forms.Form):
     )
     format = forms.ChoiceField(
         label=_("Typ tréninku"),
-        choices=[("", "------")],
         required=False,
+        choices=[("", "------")],
+        widget=forms.Select(attrs={"class": "vTextField"}),
+    )
+    sezona = forms.ChoiceField(
+        label=_("Sezóna"),
+        required=False,
+        choices=[("", "---------")],
         widget=forms.Select(attrs={"class": "vTextField"}),
     )
     kurt = forms.ChoiceField(
         label=_("Kurt"),
-        choices=[("", "------")] + list(Cenik.Kurt.choices),
         required=False,
+        choices=[("", "------")],
+        widget=forms.Select(attrs={"class": "vTextField"}),
     )
     poznamka = forms.CharField(
         label=_("Poznámka"),
@@ -222,7 +277,14 @@ class TrainingSlotForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["format"].choices = [("", "------")] + CenikFormat.choices()
+        init = self.initial or {}
+        data = self.data if self.is_bound else None
+        fmt_extra = init.get("format") or (data.get(self.add_prefix("format")) if data else "")
+        sez_extra = init.get("sezona") or (data.get(self.add_prefix("sezona")) if data else "")
+        kurt_extra = init.get("kurt") or (data.get(self.add_prefix("kurt")) if data else "")
+        self.fields["format"].choices = cenik_format_choices(fmt_extra)
+        self.fields["sezona"].choices = cenik_sezona_choices(sez_extra)
+        self.fields["kurt"].choices = cenik_kurt_choices(kurt_extra)
         if not self.is_bound:
             try:
                 for_date = None
@@ -237,9 +299,25 @@ class TrainingSlotForm(forms.Form):
                         pass
                 defaults = SystemNastaveni.training_defaults(for_date=for_date)
                 self.fields["delka_minut"].initial = defaults["delka_minut"]
-                self.fields["kurt"].initial = defaults["kurt"]
+                sezona_values = {c[0] for c in self.fields["sezona"].choices if c[0]}
+                default_sezona = (defaults.get("sezona") or "").strip()
+                if default_sezona in sezona_values:
+                    self.fields["sezona"].initial = default_sezona
+                kurt_values = {c[0] for c in self.fields["kurt"].choices if c[0]}
+                default_kurt = (defaults.get("kurt") or "").strip()
+                if default_kurt in kurt_values:
+                    self.fields["kurt"].initial = default_kurt
             except Exception:
                 pass
+
+    def clean_format(self):
+        return (self.cleaned_data.get("format") or "").strip()
+
+    def clean_sezona(self):
+        return (self.cleaned_data.get("sezona") or "").strip()
+
+    def clean_kurt(self):
+        return (self.cleaned_data.get("kurt") or "").strip()
 
 
 class TrainingSlotFormSetBase(forms.BaseFormSet):
@@ -409,14 +487,12 @@ class SystemNastaveniForm(forms.ModelForm):
             "kontakt_telefon",
             "kontakt_adresa",
             "vychozi_jazyk",
+            "mena",
             "email_podpis",
             "tmavy_rezim",
             "barevna_varianta",
             "vychozi_delka_minut",
-            "vychozi_kurt",
-            "sezona_automaticky_kurt",
-            "sezona_venek_od",
-            "sezona_venek_do",
+            "vychozi_sezona",
             "rozvrh_od_hodina",
             "rozvrh_do_hodina",
             "vychozi_zobrazeni_rozvrhu",
@@ -427,20 +503,18 @@ class SystemNastaveniForm(forms.ModelForm):
         widgets = {
             "nazev_klubu": forms.TextInput(attrs={"class": "vTextField nast-row-input"}),
             "slogan": forms.TextInput(attrs={"class": "vTextField nast-row-input"}),
-            "logo": forms.ClearableFileInput(attrs={"class": "nast-file-native", "accept": "image/png,image/jpeg,image/webp"}),
-            "favicon": forms.ClearableFileInput(attrs={"class": "nast-file-native", "accept": "image/png,image/jpeg,image/webp,.ico"}),
+            "logo": NastaveniClearableFileInput(attrs={"class": "nast-file-native", "accept": "image/png,image/jpeg,.png,.jpg,.jpeg"}),
+            "favicon": NastaveniClearableFileInput(attrs={"class": "nast-file-native", "accept": "image/png,image/jpeg,image/webp,.ico"}),
             "kontakt_email": forms.EmailInput(attrs={"class": "vTextField nast-row-input"}),
             "kontakt_telefon": forms.TextInput(attrs={"class": "vTextField nast-row-input"}),
             "kontakt_adresa": forms.TextInput(attrs={"class": "vTextField nast-row-input"}),
             "vychozi_jazyk": forms.Select(attrs={"class": "vTextField nast-row-input"}),
+            "mena": forms.Select(attrs={"class": "vTextField nast-row-input"}),
             "email_podpis": forms.Textarea(attrs={"class": "vTextField nast-row-input", "rows": 4}),
             "tmavy_rezim": forms.CheckboxInput(attrs={"class": "nast-switch-input"}),
             "barevna_varianta": forms.RadioSelect,
             "vychozi_delka_minut": forms.Select(attrs={"class": "vTextField nast-row-input"}),
-            "vychozi_kurt": forms.Select(attrs={"class": "vTextField nast-row-input"}),
-            "sezona_automaticky_kurt": forms.CheckboxInput(attrs={"class": "nast-switch-input"}),
-            "sezona_venek_od": forms.Select(attrs={"class": "vTextField nast-row-input"}),
-            "sezona_venek_do": forms.Select(attrs={"class": "vTextField nast-row-input"}),
+            "vychozi_sezona": forms.Select(attrs={"class": "vTextField nast-row-input"}),
             "rozvrh_od_hodina": forms.NumberInput(attrs={"class": "vTextField nast-row-input", "min": 0, "max": 23}),
             "rozvrh_do_hodina": forms.NumberInput(attrs={"class": "vTextField nast-row-input", "min": 1, "max": 23}),
             "vychozi_zobrazeni_rozvrhu": forms.Select(attrs={"class": "vTextField nast-row-input"}),
@@ -452,13 +526,17 @@ class SystemNastaveniForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         vyuct_rezim = kwargs.pop("vyuct_rezim_initial", None)
         super().__init__(*args, **kwargs)
-        month_choices = get_month_choices()
-        self.fields["sezona_venek_od"].choices = month_choices
-        self.fields["sezona_venek_do"].choices = month_choices
-        self.fields["vychozi_kurt"].choices = [
-            (Cenik.Kurt.VENEK, _("Venku")),
-            (Cenik.Kurt.HALA, _("Hala")),
-        ]
+        current_sezona = ""
+        if self.instance and getattr(self.instance, "vychozi_sezona", None):
+            current_sezona = self.instance.vychozi_sezona
+        self.fields["vychozi_sezona"] = forms.ChoiceField(
+            label=_("Výchozí sezóna"),
+            required=False,
+            choices=cenik_sezona_choices(current_sezona),
+            widget=forms.Select(attrs={"class": "vTextField nast-row-input"}),
+        )
+        if current_sezona:
+            self.fields["vychozi_sezona"].initial = current_sezona
         if vyuct_rezim is not None:
             self.fields["vyuctovani_rezim"].initial = vyuct_rezim
         if self.instance and self.instance.pk and not self.is_bound:

@@ -1,43 +1,88 @@
-    /* Zarovnání částky v tabulce doprava + font */
-    .field-castka_display { 
-        font-family: 'Courier New', monospace; 
-        font-weight: bold; 
-        text-align: left; 
-    }
+/* Částka – stejný font jako ostatní tabulky (bez Courier) */
+body.app-core.model-transakce.change-list #result_list .field-castka_display {
+  font-family: inherit;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
 
-    .transakce-day-trainings-card {
-        margin-top: 20px;
-        padding: 16px 18px;
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        box-shadow: 0 1px 2px rgba(0,0,0,.03);
-    }
-    .transakce-day-trainings-card h2 {
-        margin: 0 0 12px 0;
-        font-size: 18px;
-        color: #111827;
-    }
-    .transakce-day-trainings-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    .transakce-day-trainings-table th,
-    .transakce-day-trainings-table td {
-        padding: 8px 10px;
-        border-bottom: 1px solid #f1f5f9;
-        text-align: left;
-        font-size: 14px;
-    }
-    .transakce-day-trainings-table th {
-        color: #6b7280;
-        font-weight: 600;
-    }
-    .transakce-day-trainings-empty {
-        margin: 0;
-        color: #6b7280;
-        font-size: 14px;
-    }
-    .tx-datum {
-        white-space: nowrap;
-    }
+/* Výška řádku = globální changelist (padding 8px 12px z custom.css) */
+body.app-core.model-transakce.change-list #result_list tbody td,
+body.app-core.model-transakce.change-list #result_list tbody th {
+  padding: 8px 12px !important;
+  vertical-align: middle !important;
+}
+
+/* Akce – křížek bez roztahování řádku */
+body.app-core.model-transakce.change-list #result_list th.column-akce_smazat,
+body.app-core.model-transakce.change-list #result_list td.field-akce_smazat {
+  text-align: center !important;
+  vertical-align: middle !important;
+  width: 1% !important;
+  white-space: nowrap !important;
+}
+
+body.app-core.model-transakce.change-list #result_list td.field-akce_smazat .tx-akce-cross {
+  display: inline !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--brand) !important;
+  font-size: inherit !important;
+  font-weight: 700 !important;
+  line-height: inherit !important;
+  text-decoration: none !important;
+  filter: none !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  vertical-align: baseline !important;
+}
+
+body.app-core.model-transakce.change-list #result_list td.field-akce_smazat .tx-akce-cross:hover {
+  background: transparent !important;
+  color: var(--brand-600, var(--brand)) !important;
+  filter: none !important;
+  text-decoration: none !important;
+}
+
+.transakce-day-trainings-card {
+  margin-top: 20px;
+  padding: 16px 18px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+.transakce-day-trainings-card h2 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  color: #111827;
+}
+.transakce-day-trainings-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.transakce-day-trainings-table th,
+.transakce-day-trainings-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #f1f5f9;
+  text-align: left;
+  font-size: 14px;
+}
+.transakce-day-trainings-table th {
+  color: #6b7280;
+  font-weight: 600;
+}
+.transakce-day-trainings-empty {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+.tx-datum {
+  white-space: nowrap;
+}

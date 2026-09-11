@@ -29,9 +29,10 @@
 }
 
 .vyuct-btn-danger {
-  background: #b91c1c !important;
-  border-color: #991b1b !important;
+  background: var(--danger) !important;
+  border-color: var(--danger) !important;
   color: #fff !important;
+  background-image: none !important;
 }
 
 .vyuct-kpi-bar {

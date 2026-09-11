@@ -1,20 +1,20 @@
-"""Aplikuje seed branding / účty pro známý klub (zatím singleton nastavení)."""
+"""Aplikuje seed branding / účty pro známý klub (alias na bootstrap seed část)."""
 
 from django.core.management.base import BaseCommand, CommandError
 
-from core.club_seed import CLUB_SEEDS
-from core.models import SystemNastaveni, VyuctovaniNastaveni
+from core.club_seed import CLUB_SEEDS, apply_club_seed, resolve_seed
 
 
 class Command(BaseCommand):
-    help = "Nastaví branding a platební údaje podle seed dat klubu (např. cimice)."
+    help = (
+        "Nastaví branding a platební údaje podle seed dat klubu. "
+        "Slug je povinný (viz katalog v core/club_seed.py)."
+    )
 
     def add_arguments(self, parser):
         parser.add_argument(
             "slug",
-            nargs="?",
-            default="cimice",
-            help="Slug klubu ze seed katalogu (výchozí: cimice)",
+            help=f"Slug klubu ze seed katalogu. Dostupné: {', '.join(sorted(CLUB_SEEDS)) or '(žádné)'}",
         )
         parser.add_argument(
             "--dry-run",
@@ -23,27 +23,22 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        slug = options["slug"]
-        seed = CLUB_SEEDS.get(slug)
-        if not seed:
-            known = ", ".join(sorted(CLUB_SEEDS))
-            raise CommandError(f"Neznámý klub {slug!r}. Dostupné: {known}")
+        slug = (options["slug"] or "").strip()
+        if not slug:
+            known = ", ".join(sorted(CLUB_SEEDS)) or "(žádné)"
+            raise CommandError(f"Zadej slug klubu. Dostupné: {known}")
+
+        try:
+            seed = resolve_seed(slug)
+        except KeyError as exc:
+            raise CommandError(str(exc)) from exc
 
         if options["dry_run"]:
             self.stdout.write(f"Dry-run seed pro {slug}:")
-            self.stdout.write(repr(seed))
+            self.stdout.write(repr(apply_club_seed(seed, dry_run=True)))
             return
 
-        system = SystemNastaveni.load()
-        for key, value in seed.get("system", {}).items():
-            setattr(system, key, value)
-        system.save(sync_colors=False)
-
-        vyuct = VyuctovaniNastaveni.load()
-        for key, value in seed.get("vyuctovani", {}).items():
-            setattr(vyuct, key, value)
-        vyuct.save()
-
+        apply_club_seed(seed)
         self.stdout.write(self.style.SUCCESS(
             f"Seed „{slug}“ aplikován na SystemNastaveni / VyuctovaniNastaveni."
         ))

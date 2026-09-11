@@ -1,0 +1,20 @@
+/* Platby – měna zarovnaná na střed vedle bubliny (bez změny výšky inputu) */
+body.app-core.model-transakce.change-form .castka-mena-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  vertical-align: middle;
+}
+
+body.app-core.model-transakce.change-form .castka-mena-wrap .castka-mena-suffix {
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--muted, #64748b);
+  white-space: nowrap;
+  background: none;
+  border: none;
+  box-shadow: none;
+}

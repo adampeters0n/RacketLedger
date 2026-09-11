@@ -1,3 +1,4 @@
+from core.money import format_castka
 """Vyuctovani admin."""
 from decimal import Decimal
 
@@ -175,7 +176,7 @@ class VyuctovaniAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             self.change_form_template,
             {
                 **self.admin_site.each_context(request),
-                "title": f"Vyúčtování – {obj.hrac.cele_jmeno}",
+                "title": gettext("Vyúčtování – %(name)s") % {"name": obj.hrac.cele_jmeno},
                 "subtitle": None,
                 "opts": self.model._meta,
                 "original": obj,
@@ -220,21 +221,28 @@ class VyuctovaniAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
         return dt.strftime("%d.%m.%Y %H:%M")
 
     def _fmt_obdobi(self, obj):
-        start = self._fmt_dt(obj.period_from) if obj.period_from else "od začátku"
+        start = self._fmt_dt(obj.period_from) if obj.period_from else gettext("od začátku")
         end = self._fmt_dt(obj.period_to)
         return f"{start} → {end}"
 
     def _kc(self, value: Decimal) -> str:
-        value = Decimal(value or 0).quantize(Decimal("0.01"))
-        return f"{value:,.0f} Kč".replace(",", " ")
+        return format_castka(value, thousands=True)
 
     def _kc_kredit(self, value: Decimal) -> str:
         value = Decimal(value or 0).quantize(Decimal("0.01"))
         if value < 0:
-            return format_html('<span class="vyuct-kredit-dluh">{} Kč (dluh)</span>', f"{abs(value):,.0f}".replace(",", " "))
+            return format_html(
+                '<span class="vyuct-kredit-dluh">{} ({})</span>',
+                format_castka(abs(value), thousands=True),
+                gettext("dluh"),
+            )
         if value > 0:
-            return format_html('<span class="vyuct-kredit-plus">+{} Kč (přeplatek)</span>', f"{value:,.0f}".replace(",", " "))
-        return "0 Kč"
+            return format_html(
+                '<span class="vyuct-kredit-plus">+{} ({})</span>',
+                format_castka(value, thousands=True).lstrip("+"),
+                gettext("přeplatek"),
+            )
+        return format_castka(0)
 
     @admin.display(description=_("Období"))
     def col_obdobi(self, obj):

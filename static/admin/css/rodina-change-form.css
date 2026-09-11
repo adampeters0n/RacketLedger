@@ -66,7 +66,8 @@
     color: #1f2937;
   }
   table.ledger tbody tr{ background:var(--surface, #fff); }
-  table.ledger tbody tr:hover{ background:var(--brand-100, #fff1de); }
+  table.ledger tbody tr:hover{ background:var(--table-row-hover) !important; }
+  table.ledger tbody tr:hover a:not(.deletelink){ color:var(--brand) !important; }
 
   tr.typ-nauctovano { background:rgba(239,68,68,0.12); }
   tr.typ-platba, tr.typ-vratka { background:rgba(34,197,94,0.12); }

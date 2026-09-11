@@ -1,6 +1,16 @@
 (function() {
   document.documentElement.classList.add('add-day-ready');
 
+  function readI18n() {
+    try {
+      var el = document.getElementById('ts-global-i18n');
+      return el ? JSON.parse(el.textContent) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+  var I18N = readI18n();
+
   var today = new Date();
   var todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
   var dnesLink = document.getElementById('add-day-dnes');
@@ -320,8 +330,9 @@
         if (seen[ids[i]]) {
           ev.preventDefault();
           var titleEl = card.querySelector('.add-day-slot-title-text');
-          var slotName = titleEl ? titleEl.textContent : 'Trénink';
-          alert('V ' + slotName + ' je stejný hráč vybrán více než jednou. Každého hráče vyberte pouze jednou.');
+          var slotName = titleEl ? titleEl.textContent : (I18N.training || 'Trénink');
+          var tpl = I18N.duplicatePlayerInSlot || 'V %(slot)s je stejný hráč vybrán více než jednou. Každého hráče vyberte pouze jednou.';
+          alert(tpl.replace('%(slot)s', slotName));
           return;
         }
         seen[ids[i]] = true;
@@ -338,7 +349,7 @@
         if (slotCards[i].style.display === 'none') {
           slotCards[i].style.display = 'block';
           var titleText = slotCards[i].querySelector('.add-day-slot-title-text');
-          if (titleText) titleText.textContent = 'Trénink ' + (i + 1);
+          if (titleText) titleText.textContent = (I18N.training || 'Trénink') + ' ' + (i + 1);
           slotCards[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
           // po odhalení nového slotu zadrátujeme i časové pole uvnitř
           wireTimeInputs();

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-14 23:23+0200\n"
+"POT-Creation-Date: 2026-09-11 10:30+0200\n"
 "PO-Revision-Date: 2026-07-14 22:12\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -17,26 +17,50 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
+msgid "Staff status musí být zapnutý, jinak uživatel neuvidí admin."
+msgstr ""
+"Le statut Staff doit être activé, sinon l’utilisateur ne verra pas l’admin."
+
+msgid ""
+"Nový účet pro správu klubu: zapněte Staff status (výchozí zapnuto), jinak se "
+"nepřihlásí do adminu."
+msgstr ""
+"Nouveau compte admin du club : activez le statut Staff (activé par défaut), "
+"sinon pas d’accès admin."
+
+msgid "Nový účet dostane přístup do adminu (Staff) a roli club_admin."
+msgstr "Le nouveau compte aura accès à l’admin (Staff) et le rôle club_admin."
+
+msgid "Bez Staff statusu se uživatel nedostane do admin rozhraní."
+msgstr "Sans statut Staff, l’utilisateur n’accède pas à l’admin."
+
 msgid "Typ tréninku"
 msgstr "Type d'entraînement"
 
-msgid "— Nový typ tréninku —"
-msgstr "— Nouveau type d'entraînement —"
+msgid "Sezóna"
+msgstr "Saison"
 
-msgid "Nejdříve zadejte název nového typu tréninku, nebo vyberte existující."
-msgstr "Saisissez le nom du nouveau type d'entraînement."
+msgid "Kurt"
+msgstr "Court"
 
-msgid "Zadejte název nového typu tréninku."
-msgstr "Saisissez le nom du nouveau type d'entraînement."
+msgid "Přidat do kalendáře"
+msgstr "Afficher dans le calendrier"
 
-msgid "Typ tréninku nebyl nalezen."
-msgstr "Type d'entraînement introuvable."
+msgid "např. Solo, Dvojice, Výplet…"
+msgstr "p. ex. Solo, Double, Cordage…"
 
-msgid "Zadejte název typu tréninku."
-msgstr "Saisissez le nom du type d'entraînement."
+msgid "např. Léto, Zima…"
+msgstr "p. ex. Été, Hiver…"
 
-msgid "Název typu tréninku byl upraven."
-msgstr "Nom du type d'entraînement modifié."
+msgid "např. Venku, Hala, Kurt 1…"
+msgstr "p. ex. Extérieur, Salle, Court 1…"
+
+#, python-format
+msgid "Cena za hodinu (%(mena)s/h)"
+msgstr "Prix par heure (%(mena)s/h)"
+
+msgid "Cena za hodinu"
+msgstr "Prix par heure"
 
 msgid "Jméno"
 msgstr "Prénom"
@@ -52,6 +76,12 @@ msgstr "Générer la facturation (envoyer e-mail)"
 
 msgid "Zadat platbu vybraným hráčům"
 msgstr "Saisir le paiement pour les joueurs sélectionnés"
+
+msgid "Docházka"
+msgstr "Présence"
+
+msgid "Hráči"
+msgstr "Joueurs"
 
 msgid "Hráč"
 msgstr "Joueur"
@@ -71,6 +101,10 @@ msgstr "Type"
 msgid "Datum"
 msgstr "Date"
 
+#, python-format
+msgid "Částka (%(mena)s)"
+msgstr "Montant (%(mena)s)"
+
 msgid "Částka"
 msgstr "Montant"
 
@@ -80,23 +114,14 @@ msgstr "Note"
 msgid "Akce"
 msgstr "Actions"
 
+msgid "Smazat"
+msgstr "Supprimer"
+
 msgid "Trenér"
 msgstr "Entraîneur"
 
-msgid "Sezóna"
-msgstr "Saison"
-
-msgid "Léto"
-msgstr "Été"
-
-msgid "Zima"
-msgstr "Hiver"
-
 msgid "Vše"
 msgstr "Tout"
-
-msgid "Formát"
-msgstr "Format"
 
 msgid "Délka (hodiny)"
 msgstr "Durée (heures)"
@@ -112,6 +137,9 @@ msgstr "Joueur(s)"
 
 msgid "Částka / hráč"
 msgstr "Montant / joueur"
+
+msgid "Rozvrh tréninků"
+msgstr "Calendrier des formations"
 
 msgid "Trenéři – souhrn"
 msgstr "Entraîneurs – résumé"
@@ -156,10 +184,23 @@ msgstr "Paramètres de facturation enregistrés."
 
 msgid "Nastavení se nepodařilo uložit. Zkontrolujte zvýrazněná pole."
 msgstr ""
-"Impossible d'enregistrer les paramètres. Vérifiez les champs en surbrillance."
+"Impossible d’enregistrer les paramètres. Vérifiez les champs surlignés."
 
 msgid "Nastavení vyúčtování"
 msgstr "Paramètres de facturation"
+
+#, python-format
+msgid "Vyúčtování – %(name)s"
+msgstr "Facturation – %(name)s"
+
+msgid "od začátku"
+msgstr "depuis le début"
+
+msgid "dluh"
+msgstr "dette"
+
+msgid "přeplatek"
+msgstr "trop-perçu"
 
 msgid "Období"
 msgstr "Période"
@@ -242,11 +283,11 @@ msgstr "Changer le mot de passe"
 msgid "Nástroje"
 msgstr "Outils"
 
-msgid "Ceník menu"
-msgstr "Menu liste de prix"
+msgid "Ceník"
+msgstr "Grille tarifaire"
 
-msgid "Typy a formáty tréninků"
-msgstr "Types et formats de formation"
+msgid "Typy, kurty a ceny – volné pojmenování"
+msgstr "Types, courts et prix – libellés libres"
 
 msgid "Rodiny"
 msgstr "Familles"
@@ -262,9 +303,6 @@ msgstr "Désactivé"
 
 msgid "Přehledy a exporty"
 msgstr "Rapports et exportations"
-
-msgid "Rozvrh tréninků"
-msgstr "Calendrier des formations"
 
 msgid "Týdenní kalendář"
 msgstr "Calendrier hebdomadaire"
@@ -305,6 +343,12 @@ msgstr "Dernier semestre"
 msgid "Celá doba"
 msgstr "Toute la période"
 
+msgid "Uživatelské jméno nebo e-mail"
+msgstr "Nom d’utilisateur ou e-mail"
+
+msgid "uživatel@email.cz nebo username"
+msgstr "utilisateur@email.fr ou username"
+
 msgid "Datum dne"
 msgstr "Date du jour"
 
@@ -329,14 +373,8 @@ msgstr "Tous les entraîneurs"
 msgid "Čas"
 msgstr "Heure"
 
-msgid "Kurt"
-msgstr "Court"
-
 msgid "—— stejný jako nahoře ——"
 msgstr "—— identique ci-dessus ——"
-
-msgid "Hráči"
-msgstr "Joueurs"
 
 msgid "Synchronizovat režim u všech stávajících hráčů"
 msgstr "Synchroniser le mode pour tous les joueurs existants"
@@ -363,14 +401,14 @@ msgstr "Nom du club dans l'objet"
 msgid "Režim vyúčtování"
 msgstr "Facturer"
 
-msgid "Venku"
-msgstr "Extérieur"
-
-msgid "Hala"
-msgstr "Intérieur"
+msgid "Výchozí sezóna"
+msgstr "Saison extérieure"
 
 msgid "Hledat"
 msgstr "Rechercher"
+
+msgid "Formát"
+msgstr "Format"
 
 msgid "Zaplaceno"
 msgstr "Payé"
@@ -429,6 +467,44 @@ msgstr "Pour toute la période"
 msgid "Rozbalit detail"
 msgstr "Développer le détail"
 
+msgid "Otevřít"
+msgstr "Ouvrir"
+
+msgid "Odstranit"
+msgstr "Supprimer"
+
+msgid "Trénink"
+msgstr "Entraînement"
+
+msgid "Tréninky"
+msgstr "Entraînements"
+
+msgid "Tréninky –"
+msgstr "Entraînements –"
+
+msgid "Pro tento den nejsou žádné tréninky."
+msgstr "Aucun entraînement pour ce jour."
+
+msgid "Musíte vybrat alespoň jednoho hráče."
+msgstr "Vous devez sélectionner au moins un joueur."
+
+msgid "Zadejte částku."
+msgstr "Saisissez un montant."
+
+msgid "Přidat docházku"
+msgstr "Ajouter une présence"
+
+#, python-format
+msgid ""
+"V %(slot)s je stejný hráč vybrán více než jednou. Každého hráče vyberte "
+"pouze jednou."
+msgstr ""
+"Dans %(slot)s le même joueur est sélectionné plusieurs fois. Sélectionnez "
+"chaque joueur une seule fois."
+
+msgid "Nebyly nalezeny žádné výsledky."
+msgstr "Aucun résultat trouvé."
+
 msgid "Uložení se nezdařilo."
 msgstr "L'enregistrement a échoué."
 
@@ -452,9 +528,6 @@ msgstr "Choisir un fichier"
 
 msgid "Soubor nevybrán"
 msgstr "Aucun fichier sélectionné"
-
-msgid "Kč"
-msgstr "CZK"
 
 msgid "% z naúčtováno"
 msgstr "% de facturé"
@@ -484,7 +557,7 @@ msgid "Výplaty trenérům"
 msgstr "Paiements des entraîneurs"
 
 msgid "Ostatní náklady"
-msgstr "Autres dépenses"
+msgstr "Autres coûts"
 
 msgid "Účetní detail"
 msgstr "Détail comptable"
@@ -588,6 +661,9 @@ msgstr "Aucun article"
 msgid "Měsíční rozpad po dnech"
 msgstr "Répartition mensuelle par jours"
 
+msgid "Upravit náklady za den"
+msgstr "Modifier les coûts du jour"
+
 msgid "Náklady:"
 msgstr "Frais:"
 
@@ -669,6 +745,9 @@ msgstr "Novembre"
 msgid "Prosinec"
 msgstr "Décembre"
 
+msgid "Název rodiny (např. Novákovi)"
+msgstr "Nom de famille (p. ex. famille Novák)"
+
 msgid "Příjmení"
 msgstr "Nom"
 
@@ -678,26 +757,22 @@ msgstr "Format de la liste de prix"
 msgid "Formáty ceníku"
 msgstr "Formats de listes de prix"
 
-msgid "Služba (neplatí pro kurt)"
-msgstr "Service (hors court)"
-
-msgid "Cena za hodinu"
-msgstr "Prix par heure"
-
 msgid "Platnost od"
 msgstr "Valide à partir de"
 
 msgid "Platnost do"
 msgstr "Valide jusqu'à"
 
-msgid "Ceník"
-msgstr "Grille tarifaire"
+msgid "Zobrazit typ tréninku v legendě a barvách rozvrhu."
+msgstr ""
+"Afficher ce type d’entraînement dans la légende et les couleurs du pla"
+"nning."
 
-msgid "Trénink"
-msgstr "Entraînement"
+msgid "Zadejte typ tréninku."
+msgstr "Saisissez le nom du type d'entraînement."
 
-msgid "Tréninky"
-msgstr "Entraînements"
+msgid "Zadejte kurt."
+msgstr "Saisissez un court."
 
 msgid "Platba"
 msgstr "Paiement"
@@ -750,44 +825,39 @@ msgstr "Selon les entraînements joués"
 msgid "Pouze manuálně"
 msgstr "Manuel uniquement"
 
-msgid "Účet 1 AJ Sport"
-msgstr "Compte 1 AJ Sport"
+msgid "Účet 1"
+msgstr "Compte 1"
 
-msgid "Účet 2 Káťa"
-msgstr "Compte 2 Káťa"
-
-msgid "Limit kreditu (Kč)"
-msgstr "Limite de crédit (Kč)"
+msgid "Účet 2"
+msgstr "Compte 2"
 
 msgid ""
 "Vyúčtování se vytvoří, když kredit hráče klesne na tuto zápornou částku nebo "
-"níže (např. −5000 Kč)."
+"níže (např. −5000)."
 msgstr ""
-"La facturation est déclenchée lorsque le crédit du joueur atteint ce m"
-"ontant négatif ou moins (p. ex. −5000 Kč)."
+"La facturation est déclenchée lorsque le crédit du joueur atteint ce montant "
+"négatif ou moins (p. ex. −5000 Kč)."
 
-msgid "Částka k zaplacení v e-mailu (Kč)"
+msgid "Částka k zaplacení v e-mailu"
 msgstr "Montant à payer"
 
 msgid ""
 "Částka zobrazená v e-mailu jako požadavek k úhradě. Ponechte 0 pro "
 "automatický výpočet z období."
 msgstr ""
-"Montant affiché dans l'e-mail comme demande de paiement. Laissez 0 pou"
-"r un calcul automatique sur la période."
+"Montant affiché dans l'e-mail comme demande de paiement. Laissez 0 pour un "
+"calcul automatique sur la période."
 
 msgid "Po tolika odehraných trénincích od poslední uzávěrky se vyúčtuje."
-msgstr ""
-"Après le nombre d'entraînements indiqué depuis la dernière clôture, crée "
-"automatiquement la facturation."
+msgstr "Facturation après autant d’entraînements depuis la dernière clôture."
 
 msgid "Den v měsíci"
 msgstr "Ce mois-ci"
 
 msgid "Od tohoto dne v měsíci (po dalším tréninku) proběhne měsíční uzávěrka."
 msgstr ""
-"Après le jour indiqué du mois, l'entraînement suivant clôture la période "
-"depuis la dernière clôture."
+"À partir de ce jour du mois (après le prochain entraînement) a lieu la "
+"clôture mensuelle."
 
 msgid "Posílat e-mail při automatickém vyúčtování"
 msgstr "Envoyer un e-mail lors de la facturation automatique"
@@ -795,17 +865,34 @@ msgstr "Envoyer un e-mail lors de la facturation automatique"
 msgid "Výchozí varianta e-mailu"
 msgstr "Variante d'e-mail par défaut"
 
+msgid "Název účtu – varianta 1"
+msgstr "Numéro de compte – variante 1"
+
+msgid "Zobrazí se ve výběru varianty e-mailu (např. hlavní účet klubu)."
+msgstr ""
+"Affiché dans le sélecteur de variante d’e-mail (p. ex. compte principal du "
+"club)."
+
+msgid "Název účtu – varianta 2"
+msgstr "Numéro de compte – variante 2"
+
 msgid "Číslo účtu – varianta 1"
 msgstr "Numéro de compte – variante 1"
 
 msgid "Číslo účtu – varianta 2"
 msgstr "Numéro de compte – variante 2"
 
+msgid "Variabilní symbol (text v e-mailu)"
+msgstr "Symbole variable (texte dans l’e-mail)"
+
+msgid "Text zobrazený u VS v e-mailu vyúčtování."
+msgstr "Texte affiché près du VS dans l’e-mail de facturation."
+
 msgid "Vyúčtování pouze ručně z profilu hráče"
 msgstr "Facturation uniquement manuelle depuis le profil du joueur"
 
 #, python-format
-msgid "Při kreditu −%(limit)s Kč nebo níže"
+msgid "Při kreditu −%(limit)s nebo níže"
 msgstr "Lorsque le crédit est −%(limit)s Kč ou moins"
 
 #, python-format
@@ -849,6 +936,9 @@ msgstr "Texte court sur la page publique."
 msgid "Logo klubu"
 msgstr "Logo du club"
 
+msgid "PNG nebo JPG."
+msgstr "PNG ou JPG."
+
 msgid "Favicon"
 msgstr "Favicon"
 
@@ -873,11 +963,17 @@ msgstr "Saison extérieure jusqu'à (mois)"
 msgid "Automaticky volit kurt dle sezóny"
 msgstr "Choisir automatiquement le court selon la saison"
 
-msgid "Práh dluhu na dashboardu (Kč)"
+msgid "Práh dluhu na dashboardu"
 msgstr "Seuil de dette sur le tableau de bord (Kč)"
 
-msgid "0 = všichni se záporným kreditem, −1000 = dluh od 1000 Kč."
+msgid "0 = všichni se záporným kreditem, −1000 = dluh od 1000 jednotek měny."
 msgstr "0 = chaque dette, −1000 = à partir de 1000 CZK"
+
+msgid "Měna"
+msgstr "Devise"
+
+msgid "Zobrazí se u všech cen a částek v systému (Kč, €, $ …)."
+msgstr "Affiché avec tous les prix et montants (Kč, €, $ …)."
 
 msgid "Zvýraznit záporný kredit v seznamu hráčů"
 msgstr "Mettre en évidence le crédit négatif dans la liste"
@@ -907,9 +1003,7 @@ msgid "Barevná varianta"
 msgstr "Palette de couleurs"
 
 msgid "Paleta barev ve stylu Excel – mění celý vzhled systému."
-msgstr ""
-"Palettes style Excel – chacune modifie les accents, tableaux et boutons dans "
-"tout le système."
+msgstr "Palette de couleurs style Excel – change tout l’apparence du système."
 
 msgid "Tmavý režim"
 msgstr "Mode sombre"
@@ -932,6 +1026,21 @@ msgstr "Autocar – tarif"
 msgid "Trenéři – sazby"
 msgstr "Autocars – tarifs"
 
+msgid "Uživatel"
+msgstr "Utilisateurs"
+
+msgid "Prázdné = výchozí vzhled klubu."
+msgstr "Vide = apparence par défaut du club."
+
+msgid "Prázdné = výchozí režim klubu."
+msgstr "Vide = mode par défaut du club."
+
+msgid "Preference uživatele"
+msgstr "Préférence utilisateur"
+
+msgid "Preference uživatelů"
+msgstr "Préférences utilisateurs"
+
 msgid "Trenér – sazba (období)"
 msgstr "Coach – tarif (période)"
 
@@ -941,11 +1050,173 @@ msgstr "Coachs – tarifs (période)"
 msgid "Výplata trenérovi"
 msgstr "Paiement du coach"
 
+msgid "Energie"
+msgstr "Énergie"
+
+msgid "Nájem"
+msgstr "Loyer"
+
+msgid "Bonusy"
+msgstr "Primes"
+
+msgid "Míče a protže"
+msgstr "Balles et cordage"
+
+msgid "Vybavení"
+msgstr "Équipement"
+
+msgid "Údržba kurtů"
+msgstr "Entretien des courts"
+
+msgid "Pojištění"
+msgstr "Assurance"
+
+msgid "Marketing"
+msgstr "Marketing"
+
+msgid "Doprava"
+msgstr "Transport"
+
+msgid "Administrativa"
+msgstr "Administration"
+
+msgid "Ostatní"
+msgstr "Autres"
+
 msgid "Den, ke kterému se náklad vztahuje"
 msgstr "Jour auquel la dépense se rapporte"
 
 msgid "Ostatní náklad"
 msgstr "Autres dépenses"
+
+msgid "Evropa"
+msgstr "Europe"
+
+msgid "Kč – Česká koruna"
+msgstr "Kč – couronne tchèque"
+
+msgid "€ – Euro"
+msgstr "€ – Euro"
+
+msgid "£ – Britská libra"
+msgstr "£ – livre sterling"
+
+msgid "CHF – Švýcarský frank"
+msgstr "CHF – franc suisse"
+
+msgid "zł – Polský zlotý"
+msgstr "zł – zloty polonais"
+
+msgid "Ft – Maďarský forint"
+msgstr "Ft – forint hongrois"
+
+msgid "lei – Rumunský leu"
+msgstr "lei – leu roumain"
+
+msgid "лв – Bulharský lev"
+msgstr "лв – lev bulgare"
+
+msgid "дин – Srbský dinár"
+msgstr "дин – dinar serbe"
+
+msgid "₴ – Ukrajinská hřivna"
+msgstr "₴ – hryvnia ukrainienne"
+
+msgid "₺ – Turecká lira"
+msgstr "₺ – livre turque"
+
+msgid "kr – Švédská koruna"
+msgstr "kr – couronne suédoise"
+
+msgid "kr – Norská koruna"
+msgstr "kr – couronne norvégienne"
+
+msgid "kr – Dánská koruna"
+msgstr "kr – couronne danoise"
+
+msgid "kr – Islandská koruna"
+msgstr "kr – couronne islandaise"
+
+msgid "Severní Amerika"
+msgstr "Amérique du Nord"
+
+msgid "$ – Americký dolar"
+msgstr "$ – dollar américain"
+
+msgid "C$ – Kanadský dolar"
+msgstr "C$ – dollar canadien"
+
+msgid "$ – Mexické peso"
+msgstr "$ – peso mexicain"
+
+msgid "Jižní Amerika"
+msgstr "Amérique du Sud"
+
+msgid "R$ – Brazilský real"
+msgstr "R$ – réal brésilien"
+
+msgid "$ – Argentinské peso"
+msgstr "$ – peso argentin"
+
+msgid "$ – Chilské peso"
+msgstr "$ – peso chilien"
+
+msgid "$ – Kolumbijské peso"
+msgstr "$ – peso colombien"
+
+msgid "S/ – Peruánský sol"
+msgstr "S/ – sol péruvien"
+
+msgid "$U – Uruguayské peso"
+msgstr "$U – peso uruguayen"
+
+msgid "Asie"
+msgstr "Asie"
+
+msgid "¥ – Japonský jen"
+msgstr "¥ – yen japonais"
+
+msgid "¥ – Čínský jüan"
+msgstr "¥ – yuan chinois"
+
+msgid "₩ – Jihokorejský won"
+msgstr "₩ – won sud-coréen"
+
+msgid "₹ – Indická rupie"
+msgstr "₹ – roupie indienne"
+
+msgid "Rp – Indonéská rupie"
+msgstr "Rp – roupie indonésienne"
+
+msgid "฿ – Thajský baht"
+msgstr "฿ – baht thaïlandais"
+
+msgid "₫ – Vietnamský dong"
+msgstr "₫ – dong vietnamien"
+
+msgid "RM – Malajsijský ringgit"
+msgstr "RM – ringgit malaisien"
+
+msgid "S$ – Singapurský dolar"
+msgstr "S$ – dollar de Singapour"
+
+msgid "HK$ – Hongkongský dolar"
+msgstr "HK$ – dollar de Hong Kong"
+
+msgid "NT$ – Tchajwanský dolar"
+msgstr "NT$ – dollar taïwanais"
+
+msgid "₱ – Filipínské peso"
+msgstr "₱ – peso philippin"
+
+msgid "د.إ – SAE dirham"
+msgstr "د.إ – dirham des ÉAU"
+
+msgid "﷼ – Saúdský rijál"
+msgstr "﷼ – riyal saoudien"
+
+msgid "₪ – Izraelský šekel"
+msgstr "₪ – shekel israélien"
 
 msgid "Tenis"
 msgstr "Tennis"
@@ -988,9 +1259,6 @@ msgstr "Menu Analyses"
 
 msgid "Sekce"
 msgstr "Section"
-
-msgid "Přehled TS Čimice"
-msgstr "TS Čimice overview"
 
 msgid "Zavřít menu"
 msgstr "Menu Close"
@@ -1057,8 +1325,8 @@ msgstr "Exporter le rapport"
 
 msgid "Stáhněte souhrn finančních a účetních ukazatelů za vybrané období."
 msgstr ""
-"Téléchargez une synthèse des indicateurs financiers et comptables pour la "
-"période sélectionnée."
+"Téléchargez un résumé des indicateurs financiers et comptables pour la "
+"période."
 
 msgid "Stáhnout PDF"
 msgstr "Télécharger PDF"
@@ -1306,6 +1574,9 @@ msgstr "Paiements du coach – 6 mois"
 msgid "Roční přehled – 12 měsíců"
 msgstr "Aperçu annuel – 12 mois"
 
+msgid "Cash Flow – 1 rok"
+msgstr "Cash-flow – 1 an"
+
 msgid "Hrubý zisk – 1 rok"
 msgstr "Bénéfice brut – 1 an"
 
@@ -1439,8 +1710,8 @@ msgid "Uložit náklady"
 msgstr "Économisez des dépenses"
 
 msgid ""
-"Vyplňte částky v Kč pro vybraný den. Prázdné pole = kategorie se pro daný "
-"den smaže. Součet všech dnů v měsíci se odečítá od čistého zisku."
+"Vyplňte částky v %(mena)s pro vybraný den. Prázdné pole = kategorie se pro "
+"daný den smaže. Součet všech dnů v měsíci se odečítá od čistého zisku."
 msgstr ""
 "Saisissez les montants en CZK pour le jour sélectionné. Champ vide = la "
 "catégorie est supprimée pour ce jour. La somme de tous les jours du mois est "
@@ -1491,11 +1762,11 @@ msgstr "Changer le mot de passe"
 msgid "Odhlásit se"
 msgstr "Se déconnecter"
 
-msgid "Rozvrh"
-msgstr "Planning"
-
 msgid "Hlavní navigace"
 msgstr "Navigation principale"
+
+msgid "Rozvrh"
+msgstr "Planning"
 
 msgid "Hlavní menu"
 msgstr "Menu principal"
@@ -1521,8 +1792,9 @@ msgstr "Enregistrer"
 msgid "Zrušit"
 msgstr "Annuler"
 
-msgid "Smazat"
-msgstr "Supprimer"
+#, python-format
+msgid "Opravdu odstranit typ „%(name)s“?"
+msgstr "Vraiment supprimer le type « %(name)s » ?"
 
 msgid "Zatím žádné typy. Přidejte první níže."
 msgstr "Aucun type pour l'instant. Ajoutez le premier ci-dessous."
@@ -1536,6 +1808,9 @@ msgstr "Nom du nouveau type de formation"
 msgid "+ Přidat typ"
 msgstr "+ Ajouter un type"
 
+msgid "Zadat platbu"
+msgstr "Enregistrer un paiement"
+
 msgid "Vygenerovat vyúčtování"
 msgstr "Générer la facturation"
 
@@ -1544,6 +1819,9 @@ msgstr "Montant dû"
 
 msgid "např. 5000"
 msgstr "par ex. 5000"
+
+msgid "Varianta e-mailu"
+msgstr "Variante d'e-mail"
 
 msgid "Otevřít vyúčtování hráče"
 msgstr "Facturation des joueurs ouverts"
@@ -1596,17 +1874,32 @@ msgstr "Montant dû :"
 msgid "(nechte prázdné pro auto-výpočet)"
 msgstr "(laisser vide pour le calcul automatique)"
 
+msgid "Varianta e-mailu:"
+msgstr "Variante d'e-mail :"
+
+msgid "Vygenerovat a odeslat"
+msgstr "Générer et envoyer"
+
 msgid "Tato platba bude připsána všem zaškrtnutým hráčům."
 msgstr "Ce paiement sera crédité à tous les joueurs vérifiés."
-
-msgid "Částka (Kč):"
-msgstr "Montant (CZK) :"
 
 msgid "např. 2000"
 msgstr "par ex. 2000"
 
+msgid "Typ:"
+msgstr "Type :"
+
+msgid "Platba (Vklad)"
+msgstr "Paiement (Dépôt)"
+
+msgid "Vratka / Bonifikace"
+msgstr "Remboursement / Bonus"
+
 msgid "Ruční stržení (Mínus)"
 msgstr "Déduction manuelle (Moins)"
+
+msgid "Datum:"
+msgstr "Date :"
 
 msgid "Poznámka:"
 msgstr "Note:"
@@ -1643,7 +1936,7 @@ msgstr "Charger les formations"
 
 #, python-format
 msgid "Načteno %(count)s tréninků – zkontrolujte a uložte níže."
-msgstr "Formations %(count)s chargées – consultez et enregistrez ci-dessous."
+msgstr "%(count)s entraînements chargés – vérifiez et enregistrez ci-dessous."
 
 msgid "Vyplňte položky"
 msgstr "Remplissez les éléments"
@@ -1700,18 +1993,6 @@ msgstr "Jour de copie"
 msgid "Kopírovat týden"
 msgstr "Semaine de copie"
 
-msgid "Solo"
-msgstr "Solo"
-
-msgid "Dvojice"
-msgstr "Doubles"
-
-msgid "Trojice"
-msgstr "Triples"
-
-msgid "Čtveřice"
-msgstr "Quads"
-
 msgid "← Zpět na souhrn"
 msgstr "← Retour au résumé"
 
@@ -1755,9 +2036,6 @@ msgstr "Nouveau tarif à partir de…"
 msgid "Od data:"
 msgstr "À partir du :"
 
-msgid "Částka (Kč/h):"
-msgstr "Montant (CZK/h) :"
-
 msgid "Nastavit sazbu"
 msgstr "Définir le tarif"
 
@@ -1767,14 +2045,12 @@ msgstr "Tarif actuel aujourd'hui :"
 msgid "Účinné sazby:"
 msgstr "Tarifs effectifs :"
 
-msgid "Kč/h"
-msgstr "CZK/h"
-
 msgid "(upravit)"
 msgstr "(modifier)"
 
 msgid ""
-"Žádné záznamy sazeb. Používá se výchozí sazba z profilu (nebo 500 Kč/h)."
+"Žádné záznamy sazeb. Používá se výchozí sazba z profilu (nebo 500 %(mena)s/"
+"h)."
 msgstr ""
 "Aucun enregistrement de tarif. Le tarif par défaut du profil est utilisé (ou "
 "500 CZK/h)."
@@ -1860,7 +2136,7 @@ msgstr ""
 
 msgid ""
 "Po tréninku zkontroluje celkový kredit. Když klesne na zadanou částku (např. "
-"−5000 Kč), odešle e-mail s vyúčtováním."
+"−5000 %(mena)s), odešle e-mail s vyúčtováním."
 msgstr ""
 "Après l'entraînement, il vérifie le crédit total. S'il atteint le montant "
 "défini (p. ex. −5000 CZK), il envoie un e-mail de facturation."
@@ -2019,11 +2295,16 @@ msgstr ""
 "Voulez-vous vraiment supprimer les %(objects_name)s sélectionnés ? Tous les "
 "objets suivants et leurs éléments associés seront supprimés :"
 
+#, python-format
+msgid "Dle: %(filter_title)s"
+msgstr "Par : %(filter_title)s"
+
 msgid "Odhlášení"
 msgstr "Se déconnecter"
 
-msgid "Opravdu se chcete odhlásit ze systému Tenis systém Čimice?"
-msgstr "Etes-vous sûr de vouloir vous déconnecter de Tennis System Čimice ?"
+#, python-format
+msgid "Opravdu se chcete odhlásit ze systému %(name)s?"
+msgstr "Voulez-vous vraiment vous déconnecter de %(name)s ?"
 
 msgid "Ano, odhlásit se"
 msgstr "Oui, déconnectez-vous"
@@ -2049,34 +2330,37 @@ msgstr "Facultatif"
 msgid "Krátký text pod názvem na webu"
 msgstr "Texte court sous le nom sur le site Web"
 
-msgid "PNG nebo JPG, nejlépe čtverec"
-msgstr "PNG ou JPG, carré de préférence"
+msgid "PNG nebo JPG"
+msgstr "PNG ou JPG"
 
 msgid "Malá ikona v záložce prohlížeče"
 msgstr "Petite icône dans l'onglet du navigateur"
 
-msgid "Režim zobrazení a barevná paleta – změna se uloží hned."
+msgid ""
+"Váš osobní režim a barevná paleta – změna se uloží hned a platí jen pro vás."
 msgstr ""
-"Mode d’affichage et palette de couleurs – les modifications sont "
-"enregistrées immédiatement."
+"Votre mode d'affichage et palette de couleurs personnels – les changements "
+"sont enregistrés immédiatement et ne s'appliquent qu'à vous."
 
-msgid "Tmavé pozadí, světlý text a upravené tabulky"
+msgid "Tmavě šedé pozadí ve stylu Apple, světlý text a vrstvené plochy"
 msgstr "Fond sombre, texte clair et tableaux ajustés"
 
+msgid "Barvy"
+msgstr "Couleurs"
+
 msgid ""
-"Palety ve stylu Excel – každá mění akcenty, tabulky i tlačítka v celém "
-"systému."
+"Palety ve stylu různých barev – každá mění akcenty, tabulky i tlačítka ve "
+"vašem zobrazení."
 msgstr ""
-"Palettes style Excel – chacune modifie les accents, tableaux et boutons dans "
-"tout le système."
+"Palettes style Excel – chacune change les accents, tableaux et boutons dans "
+"votre affichage."
 
 msgid "Barevná paleta"
 msgstr "Palette de couleurs"
 
 msgid "Výchozí hodnoty pro tréninky, rozvrh a přehled vyúčtování."
 msgstr ""
-"Valeurs par défaut pour les formations, le calendrier et l'aperçu de la "
-"facturation."
+"Valeurs par défaut pour entraînements, planning et aperçu de facturation."
 
 msgid "Aktuální vyúčtování"
 msgstr "Facturation actuelle"
@@ -2093,30 +2377,20 @@ msgstr "Variante de compte"
 msgid "Při přidávání nového tréninku"
 msgstr "Lors de l'ajout d'une nouvelle formation"
 
-msgid "Hala nebo venek u nového tréninku"
-msgstr "Intérieur ou extérieur pour une nouvelle formation"
+msgid "Z ceníku – předvyplní se u nového tréninku"
+msgstr "Lors de l'ajout d'une nouvelle formation"
 
 msgid "Výchozí pohled v kalendáři tréninků"
 msgstr "Vue par défaut dans le calendrier des formations"
 
+msgid "Rozsah hodin v rozvrhu"
+msgstr "Plage horaire du planning"
+
 msgid "Začátek a konec zobrazení v kalendáři tréninků"
 msgstr "Début et fin d'affichage dans le calendrier des entraînements"
 
-msgid "Venku v letních měsících, hala v zimě"
-msgstr "Extérieur en été, intérieur en hiver"
-
-msgid "Automatický kurt"
-msgstr "Tribunal automatique"
-
-msgid "Venkovní sezóna"
-msgstr "Saison extérieure"
-
-msgid "Měsíce, kdy se preferuje venkovní kurt"
-msgstr "Mois où le terrain extérieur est préféré"
-
 msgid "Detailní nastavení vyúčtování je v samostatné stránce"
-msgstr ""
-"Les paramètres de facturation détaillés se trouvent sur une page séparée"
+msgstr "Les paramètres détaillés de facturation sont sur une page séparée"
 
 msgid "Související nastavení"
 msgstr "Paramètres associés"
@@ -2124,11 +2398,14 @@ msgstr "Paramètres associés"
 msgid "Kdo píše vyúčtování a jak vypadá zpráva."
 msgstr "Qui rédige la facturation et à quoi ressemble le message."
 
+msgid "Jak se klub jmenuje v e-mailu"
+msgstr "Nom du club dans l'e-mail"
+
 msgid "Adresa, ze které se e-maily odesílají"
 msgstr "Adresse à partir de laquelle les e-mails sont envoyés"
 
 msgid "Stačí název klubu – závorky doplníme sami"
-msgstr "Le nom du club suffit – nous ajouterons nous-mêmes des parenthèses"
+msgstr "Le nom du club suffit – nous ajoutons les parenthèses"
 
 msgid "Ukázka předmětu"
 msgstr "Aperçu du sujet"
@@ -2151,7 +2428,7 @@ msgstr "Envoyer"
 msgid "Dashboard, seznam hráčů a tabulky v adminu."
 msgstr "Dashboard, liste des joueurs et tableaux dans l'admin."
 
-msgid "0 = každý dluh, −1000 = od 1000 Kč"
+msgid "0 = každý dluh, −1000 = od 1000 %(mena)s"
 msgstr "0 = chaque dette, −1000 = à partir de 1000 CZK"
 
 msgid "Červeně v seznamu hráčů"
@@ -2163,11 +2440,20 @@ msgstr "Mettre en évidence le crédit négatif"
 msgid "Tréninky, platby, vyúčtování"
 msgstr "Formations, paiements, facturation"
 
+msgid "Diagnostika, export a import dat."
+msgstr "Diagnostic, export et import de données."
+
 msgid "Diagnostika systému"
 msgstr "Diagnostic du système"
 
 msgid "Databáze"
 msgstr "Base de données"
+
+msgid "E-mail SMTP"
+msgstr "E-mail SMTP"
+
+msgid "Nastaveno"
+msgstr "Configuré"
 
 msgid "Chybí"
 msgstr "Manquant"
@@ -2178,7 +2464,12 @@ msgstr "Expéditeur"
 msgid "Poslední vyúčtování"
 msgstr "Dernière facturation"
 
-msgid "Pouze lokální SQLite – před importem se vytvoří záloha databáze."
+msgid "Import dat (JSON)"
+msgstr "Exportation de données (JSON)"
+
+msgid ""
+"Jen platform admin + lokální SQLite. Před importem se vytvoří záloha "
+"databáze."
 msgstr ""
 "Local SQLite uniquement : une sauvegarde de la base de données est créée "
 "avant l'importation."
@@ -2206,14 +2497,17 @@ msgstr "Close"
 
 msgid "Správa tenisové školy – tréninky, platby, vyúčtování trenérů."
 msgstr ""
-"Gestion de l'école de tennis – entraînements, paiements, facturation des "
-"entraîneurs."
+"Gestion de l’école de tennis – entraînements, paiements, facturation des "
+"coaches."
 
 msgid "Správa tenisové školy"
 msgstr "Gestion d'une école de tennis"
 
 msgid "Jazyk"
 msgstr "Langue"
+
+msgid "Vstup"
+msgstr "Connexion"
 
 msgid "Školy"
 msgstr "Écoles"
@@ -2243,6 +2537,9 @@ msgstr ""
 "Qui s'entraîne demain, qui a du crédit et combien est dû à l'entraîneur pour "
 "le mois — sans autre fichier sur l'ordinateur."
 
+msgid "Vstup do systému"
+msgstr "Paramètres système"
+
 msgid "Vybrat školu"
 msgstr "Choisissez une école"
 
@@ -2264,9 +2561,6 @@ msgstr "Joueurs actifs"
 msgid "K vyúčtování"
 msgstr "Facturer"
 
-msgid "12 400 Kč"
-msgstr "12,400 CZK"
-
 msgid "Solo · venku"
 msgstr "Solo · extérieur"
 
@@ -2275,6 +2569,12 @@ msgstr "Doubles · extérieur"
 
 msgid "Skupina · hala"
 msgstr "Groupe · intérieur"
+
+msgid "Přihlášení"
+msgstr "Se déconnecter"
+
+msgid "Vstup do správy klubu."
+msgstr "Connexion à l’administration du club."
 
 msgid "Přihlášení do školy"
 msgstr "Connexion à l'école"
@@ -2304,7 +2604,7 @@ msgid "Kalendář tréninků"
 msgstr "Calendrier des formations"
 
 msgid "Solo, dvojice i skupiny — venek i hala na jedné obrazovce."
-msgstr "Solo, doubles et groupes — extérieur et intérieur sur un seul écran."
+msgstr "Solo, paires et groupes — extérieur et salle sur un écran."
 
 msgid "Platby rodin"
 msgstr "Paiements familiaux"
@@ -2351,26 +2651,257 @@ msgstr ""
 msgid "Change my password"
 msgstr "Changer mon mot de passe"
 
+
+
+
+
+# Doplněno z katalogu překladů
+# Doplněno z katalogu překladů
+# Doplněno z katalogu překladů
+# Doplněno z katalogu překladů
+# Doplněno z katalogu překladů
+# Doplněno z katalogu překladů
+# Doplněno z katalogu překladů
+# Doplněno z katalogu překladů
+# Doplněno z katalogu překladů
+# Doplněno z katalogu překladů
 # Doplněno z katalogu překladů
 # Doplněno z katalogu překladů
 # Doplněno z katalogu překladů
 # Doplněno z katalogu překladů
 
 # Doplněno z katalogu překladů
+
+msgid "0 = každý dluh, −1000 = od 1000 Kč"
+msgstr "0 = chaque dette, −1000 = à partir de 1000 CZK"
+
+msgid "12 400 Kč"
+msgstr "12,400 CZK"
+
+msgid "Aktuálně uložené údaje:"
+msgstr "Données actuellement enregistrées :"
+
+msgid "Automatický kurt"
+msgstr "Tribunal automatique"
+
+msgid "Bylo uloženo %(count)s tréninků"
+msgstr "%(count)s entraînements ont été enregistrés"
 
 msgid "Celoroční"
 msgstr "Toute l'année"
 
+msgid "Ceník menu"
+msgstr "Menu liste de prix"
+
+msgid "Chyba při zadávání platby: %(error)s"
+msgstr "Erreur lors de l’enregistrement du paiement : %(error)s"
+
+msgid "Chyba v hlavním formuláři: %(errors)s"
+msgstr "Erreur dans le formulaire principal : %(errors)s"
+
+msgid "Chyba v seznamu hráčů: %(errors)s"
+msgstr "Erreur dans la liste des joueurs : %(errors)s"
+
+msgid "Dvojice"
+msgstr "Doubles"
+
+msgid "Hala"
+msgstr "Intérieur"
+
+msgid "Hala nebo venek u nového tréninku"
+msgstr "Intérieur ou extérieur pour une nouvelle formation"
+
+msgid "Hromadná platba: Úspěšně přidáno %(amount)s pro %(count)s hráčů."
+msgstr "Paiement groupé : %(amount)s ajoutés pour %(count)s joueurs."
+
+msgid "Hráč neexistuje."
+msgstr "Le joueur n’existe pas."
+
+msgid "Informace uloženy."
+msgstr "Informations enregistrées."
+
 msgid "Jazyk rozhraní pro všechny uživatele (lze přepsat v hlavičce)."
+msgstr "Langue de l’interface pour tous (modifiable dans l’en-tête)."
+
+msgid "Kč"
+msgstr "CZK"
+
+msgid "Kč/h"
+msgstr "CZK/h"
+
+msgid "Limit kreditu (Kč)"
+msgstr "Limite de crédit (Kč)"
+
+msgid "Léto"
+msgstr "Été"
+
+msgid "Léto (Venku)"
+msgstr "Été (extérieur)"
+
+msgid "Měsíce, kdy se preferuje venkovní kurt"
+msgstr "Mois où le terrain extérieur est préféré"
+
+msgid "Název typu tréninku byl upraven."
+msgstr "Nom du type d'entraînement modifié."
+
+msgid "Níže můžete přidat další položku typu <strong>Trénink</strong>."
 msgstr ""
-"Langue de l'interface pour tous les utilisateurs (peut être remplacée "
-"dans l'en-tête)."
+"Ci-dessous vous pouvez ajouter un autre élément <strong>Entraînement</"
+"strong>."
+
+msgid "Otevřít a upravit tento trénink"
+msgstr "Ouvrir et modifier cet entraînement"
+
+msgid ""
+"Palety ve stylu Excel – každá mění akcenty, tabulky i tlačítka v celém"
+" systému."
+msgstr ""
+"Palettes style Excel – chacune modifie les accents, tableaux et bouton"
+"s dans tout le système."
+
+msgid ""
+"Palety ve stylu Excel – každá mění akcenty, tabulky i tlačítka ve vaše"
+"m zobrazení."
+msgstr ""
+"Palettes style Excel – chacune change les accents, tableaux et boutons"
+" dans votre affichage."
+
+msgid ""
+"Po tréninku zkontroluje celkový kredit. Když klesne na zadanou částku "
+"(např. −5000 Kč), odešle e-mail s vyúčtováním."
+msgstr ""
+"Après l'entraînement, il vérifie le crédit total. S'il atteint le mont"
+"ant défini (p. ex. −5000 CZK), il envoie un e-mail de facturation."
+
+msgid "Položka typu <strong>Trénink</strong> byla úspěšně přidána."
+msgstr "L’élément <strong>Entraînement</strong> a été ajouté avec succès."
+
+msgid "Položka typu <strong>Trénink</strong> byla úspěšně změněna."
+msgstr "L’élément <strong>Entraînement</strong> a été modifié avec succès."
+
+msgid "Pouze lokální SQLite – před importem se vytvoří záloha databáze."
+msgstr "SQLite local uniquement – une sauvegarde est créée avant l’import."
+
+msgid "Práh dluhu na dashboardu (Kč)"
+msgstr "Seuil de dette sur le tableau de bord (Kč)"
+
+msgid "Při kreditu −%(limit)s Kč nebo níže"
+msgstr "Lorsque le crédit est −%(limit)s Kč ou moins"
+
+msgid "Režim zobrazení a barevná paleta – změna se uloží hned."
+msgstr "Mode d’affichage et palette de couleurs – enregistrement immédiat."
+
+msgid "Sazba %(amount)s nastavena od %(date)s."
+msgstr "Tarif %(amount)s défini à partir du %(date)s."
+
+msgid "Sazbu se nepodařilo nastavit: %(error)s"
+msgstr "Impossible de définir le tarif : %(error)s"
 
 msgid "Sezóny"
 msgstr "Saisons"
 
+msgid "Služba (neplatí pro kurt)"
+msgstr "Service (hors court)"
+
+msgid "Solo"
+msgstr "Solo"
+
+msgid "Tmavé pozadí, světlý text a upravené tabulky"
+msgstr "Fond sombre, texte clair et tableaux ajustés"
+
 msgid "Trenéra"
 msgstr "Entraîneur"
 
+msgid "Trojice"
+msgstr "Triples"
+
+msgid "Typ tréninku nebyl nalezen."
+msgstr "Type d'entraînement introuvable."
+
 msgid "Typu tréninku"
 msgstr "Type d'entraînement"
+
+msgid "Typy a formáty tréninků"
+msgstr "Types et formats de formation"
+
+msgid "Ve zvoleném období nejsou žádné tréninky ke zkopírování."
+msgstr "Aucun entraînement à copier sur la période sélectionnée."
+
+msgid "Venkovní sezóna"
+msgstr "Saison extérieure"
+
+msgid "Venku"
+msgstr "Extérieur"
+
+msgid "Venku v letních měsících, hala v zimě"
+msgstr "Extérieur en été, intérieur en hiver"
+
+msgid "Vyplňte alespoň jeden trénink (čas)."
+msgstr "Remplissez au moins un entraînement (heure)."
+
+msgid ""
+"Vyplňte částky v Kč pro vybraný den. Prázdné pole = kategorie se pro d"
+"aný den smaže. Součet všech dnů v měsíci se odečítá od čistého zisku."
+msgstr ""
+"Saisissez les montants en CZK pour le jour sélectionné. Champ vide = l"
+"a catégorie est supprimée pour ce jour. La somme de tous les jours du "
+"mois est déduite du bénéfice net."
+
+msgid ""
+"Vyúčtování se vytvoří, když kredit hráče klesne na tuto zápornou částk"
+"u nebo níže (např. −5000 Kč)."
+msgstr ""
+"La facturation est déclenchée lorsque le crédit du joueur atteint ce m"
+"ontant négatif ou moins (p. ex. −5000 Kč)."
+
+msgid "Vyúčtování vytvořeno pro %(count)s hráčů."
+msgstr "Facturation créée pour %(count)s joueurs."
+
+msgid "Vyúčtování vytvořeno. K úhradě: %(amount)s. E-mail: %(email)s"
+msgstr "Facturation créée. À payer : %(amount)s. E-mail : %(email)s"
+
+msgid "Zadejte název nového typu tréninku."
+msgstr "Saisissez le nom du nouveau type d'entraînement."
+
+msgid "Zadejte název typu tréninku."
+msgstr "Saisissez le nom du type d'entraînement."
+
+msgid "Zima"
+msgstr "Hiver"
+
+msgid "Zima (Hala)"
+msgstr "Hiver (salle)"
+
+msgid "Zkontrolujte prosím zadané údaje:"
+msgstr "Veuillez vérifier les données saisies :"
+
+msgid "Změna informací – %(name)s"
+msgstr "Modifier les informations – %(name)s"
+
+msgid "např. 13:00"
+msgstr "p. ex. 13:00"
+
+msgid "není vyplněn"
+msgstr "non renseigné"
+
+msgid "odeslán"
+msgstr "envoyé"
+
+msgid "Čtveřice"
+msgstr "Quads"
+
+msgid "Částka (Kč):"
+msgstr "Montant (CZK) :"
+
+msgid "Částka (Kč/h):"
+msgstr "Montant (CZK/h) :"
+
+msgid ""
+"Žádné záznamy sazeb. Používá se výchozí sazba z profilu (nebo 500 Kč/h"
+")."
+msgstr ""
+"Aucun enregistrement de tarif. Le tarif par défaut du profil est utili"
+"sé (ou 500 CZK/h)."
+
+msgid "— Nový typ tréninku —"
+msgstr "— Nouveau type d'entraînement —"

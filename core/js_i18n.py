@@ -6,18 +6,26 @@ from django.utils.translation import gettext as _
 
 def get_global_js_i18n() -> dict[str, str]:
     """Globální překlady pro admin JS (vyhledávání, společné popisky)."""
+    from .money import get_mena_symbol
+
     return {
         "search": _("Hledat"),
         "action": _("Akce"),
         "player": _("Hráč"),
+        "players": _("Hráči"),
         "amount": _("Částka"),
         "note": _("Poznámka"),
         "type": _("Typ"),
         "date": _("Datum"),
+        "time": _("Čas"),
+        "coach": _("Trenér"),
+        "format": _("Formát"),
+        "price": _("Cena"),
+        "charged": _("Naúčtováno"),
+        "chargedWhen": _("Kdy naúčtováno"),
         "credit": _("Kredit"),
         "paid": _("Zaplaceno"),
         "unpaid": _("Nezaplaceno"),
-        "charged": _("Naúčtováno"),
         "hours": _("Hodiny"),
         "debt": _("Dluh"),
         "debts": _("Dluhy"),
@@ -35,6 +43,20 @@ def get_global_js_i18n() -> dict[str, str]:
         "paymentsRefunds": _("Platby a vratky"),
         "allTime": _("Za celou dobu evidence"),
         "expandDetail": _("Rozbalit detail"),
+        "open": _("Otevřít"),
+        "remove": _("Odstranit"),
+        "training": _("Trénink"),
+        "trainings": _("Tréninky"),
+        "trainingsPrefix": _("Tréninky –"),
+        "noTrainingsThatDay": _("Pro tento den nejsou žádné tréninky."),
+        "selectAtLeastOnePlayer": _("Musíte vybrat alespoň jednoho hráče."),
+        "enterAmount": _("Zadejte částku."),
+        "addAttendance": _("Přidat docházku"),
+        "duplicatePlayerInSlot": _(
+            "V %(slot)s je stejný hráč vybrán více než jednou. Každého hráče vyberte pouze jednou."
+        ),
+        "noResults": _("Nebyly nalezeny žádné výsledky."),
+        "currency": get_mena_symbol(),
     }
 
 
@@ -48,12 +70,15 @@ def get_nastaveni_js_i18n() -> dict[str, str]:
         "emailSubjectPreview": _("Přehled tréninků – Jméno hráče"),
         "chooseFile": _("Vybrat soubor"),
         "noFileChosen": _("Soubor nevybrán"),
+        "removeFile": _("Odstranit"),
     }
 
 
 def get_analytika_js_i18n() -> dict[str, str]:
+    from .money import get_mena_symbol
+
     return {
-        "currency": _("Kč"),
+        "currency": get_mena_symbol(),
         "percentOfCharged": _("% z naúčtováno"),
         "chartRenderError": _("Graf se nepodařilo vykreslit:"),
         "openDetail": _("Otevřít detail"),
@@ -103,6 +128,7 @@ def get_analytika_js_i18n() -> dict[str, str]:
         "cumulative": _("Kumulativně:"),
         "noItems": _("Žádné položky"),
         "monthlyBreakdownByDays": _("Měsíční rozpad po dnech"),
+        "editDayCosts": _("Upravit náklady za den"),
         "costsPrefix": _("Náklady:"),
         "debts": _("Dluhy"),
         "playerDebts": _("Dluhy hráčů"),

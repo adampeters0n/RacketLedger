@@ -4,6 +4,7 @@ from django.contrib.auth import logout
 from django.shortcuts import redirect, render
 from django.urls import reverse, NoReverseMatch
 from django.utils import timezone
+from django.utils.text import slugify
 
 
 def _admin_url(name: str) -> str:
@@ -12,6 +13,27 @@ def _admin_url(name: str) -> str:
         return reverse(f"admin:{name}")
     except NoReverseMatch:
         return "/admin/"
+
+
+def _schools_from_settings() -> list[dict]:
+    schools = []
+    for school in settings.TENNIS_SCHOOLS:
+        admin_url = school.get("admin_url") or _admin_url("index")
+        schools.append({**school, "admin_url": admin_url})
+    return schools
+
+
+def _school_from_system_nastaveni(nast) -> dict:
+    """Jedna škola pro single-tenant landing (instance = jeden klub)."""
+    name = (nast.nazev_klubu or getattr(settings, "PRODUCT_NAME", "TenisSystém")).strip()
+    return {
+        "slug": slugify(name) or "club",
+        "name": name,
+        "city": (nast.kontakt_adresa or "").strip(),
+        "region": "",
+        "admin_url": _admin_url("index"),
+        "active": True,
+    }
 
 
 def home(request):
@@ -24,6 +46,7 @@ def home(request):
     logo_url = ""
     favicon_url = ""
     product_name = settings.PRODUCT_NAME
+    nast = None
     try:
         nast = SystemNastaveni.load()
         if nast.nazev_klubu:
@@ -40,19 +63,31 @@ def home(request):
     except Exception:
         pass
 
-    schools = []
-    for school in settings.TENNIS_SCHOOLS:
-        admin_url = school.get("admin_url") or _admin_url("index")
-        schools.append({**school, "admin_url": admin_url})
+    schools = _schools_from_settings()
+    if not schools and nast is not None:
+        schools = [_school_from_system_nastaveni(nast)]
+    elif not schools:
+        schools = [{
+            "slug": "club",
+            "name": product_name,
+            "city": "",
+            "region": "",
+            "admin_url": _admin_url("index"),
+            "active": True,
+        }]
 
     active_schools = [s for s in schools if s.get("active", True)]
     upcoming_schools = [s for s in schools if not s.get("active", True)]
+    single_school = len(schools) == 1 and len(active_schools) == 1
+    primary_admin_url = active_schools[0]["admin_url"] if active_schools else _admin_url("index")
 
     ctx = {
         "product_name": product_name,
         "schools": schools,
         "active_schools": active_schools,
         "upcoming_schools": upcoming_schools,
+        "single_school": single_school,
+        "primary_admin_url": primary_admin_url,
         "contact_email": contact_email,
         "contact_phone": contact_phone,
         "contact_address": contact_address,
@@ -78,4 +113,8 @@ def logout_to_home(request):
     if not cancel_url.startswith(site_root):
         cancel_url = _admin_url("index")
 
-    return render(request, "admin/logout_confirm.html", {"cancel_url": cancel_url})
+    return render(
+        request,
+        "admin/logout_confirm.html",
+        {"cancel_url": cancel_url},
+    )

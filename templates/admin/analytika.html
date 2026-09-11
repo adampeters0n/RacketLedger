@@ -23,10 +23,9 @@
     <!-- LEVÉ MENU -->
     <aside class="analytika-sidebar" id="analytikaSidebar">
       <div class="sidebar-brand">
-        <span class="sidebar-brand-dot"></span>
         <div class="sidebar-brand-text">
           <strong>{% trans "Analytika" %}</strong>
-          <small>{% trans "Přehled TS Čimice" %}</small>
+          <small>{% if system_nazev_klubu %}{{ system_nazev_klubu }}{% else %}{% trans "Přehled" %}{% endif %}</small>
         </div>
         <button type="button" class="sidebar-close" id="analytikaSidebarClose" aria-label="{% trans 'Zavřít menu' %}">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -597,9 +596,9 @@
           <div class="acc-chart-card">
             <div class="acc-chart-card-header">
               <div class="acc-chart-dot" style="background:#14b8a6"></div>
-              <h4>Cash Flow – 1 rok</h4>
+              <h4>{% trans "Cash Flow – 1 rok" %}</h4>
               <span class="acc-sum-badge teal" id="sum-year-cashflow">—</span>
-              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accYearCashflowChart" data-expand-title="Cash Flow – 1 rok"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+              <button type="button" class="panel-expand-btn panel-expand-btn--sm" data-chart-expand="accYearCashflowChart" data-expand-title="{% trans 'Cash Flow – 1 rok' %}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
             </div>
             <div class="acc-chart-wrap chart-wrap-interactive">
               <canvas id="accYearCashflowChart"></canvas>
@@ -889,7 +888,7 @@
                 </div>
                 <button type="submit" class="naklady-save-btn">{% trans "Uložit náklady" %}</button>
               </div>
-              <p class="naklady-form-hint">{% trans "Vyplňte částky v Kč pro vybraný den. Prázdné pole = kategorie se pro daný den smaže. Součet všech dnů v měsíci se odečítá od čistého zisku." %}</p>
+              <p class="naklady-form-hint">{% blocktrans with mena=system_mena %}Vyplňte částky v {{ mena }} pro vybraný den. Prázdné pole = kategorie se pro daný den smaže. Součet všech dnů v měsíci se odečítá od čistého zisku.{% endblocktrans %}</p>
               <div class="naklady-grid">
                 {% for row in naklady_form_rows %}
                 <div class="naklady-row">

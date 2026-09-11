@@ -1,3 +1,4 @@
+from core.money import format_castka
 """Admin inlines."""
 from decimal import Decimal
 
@@ -15,8 +16,8 @@ class DochazkaInline(admin.TabularInline):
     form = DochazkaInlineForm
     formset = DochazkaFormSet
     extra = 0
-    verbose_name = "Docházka"
-    verbose_name_plural = "Hráči"
+    verbose_name = _("Docházka")
+    verbose_name_plural = _("Hráči")
     autocomplete_fields = ("hrac",)
     
     fields = ("hrac", "cena_preview", "castka_nauc_display", "nauceno_kdy_display")
@@ -52,12 +53,12 @@ class DochazkaInline(admin.TabularInline):
     @admin.display(description=_("Cena"))
     def cena_preview(self, obj):
         tr = obj.trening if getattr(obj, "trening_id", None) else getattr(self, "parent_obj", None)
-        return f"{tr.cena_na_hrace():.0f} Kč" if tr else "—"
+        return format_castka(tr.cena_na_hrace()) if tr else "—"
 
     @admin.display(description=_("Naúčtováno"))
     def castka_nauc_display(self, obj):
         val = getattr(obj, "castka_nauc", None)
-        return f"{Decimal(val):.0f} Kč" if val is not None else "—"
+        return format_castka(val) if val is not None else "—"
 
     @admin.display(description=_("Kdy naúčtováno"))
     def nauceno_kdy_display(self, obj):

@@ -45,8 +45,8 @@
           {% else %}
           <span class="cenik-menu-name">{{ fmt.nazev }}</span>
           <span class="cenik-menu-actions">
-            <a href="{% url 'admin:core_cenik_formaty' %}?edit_format={{ fmt.pk }}&next={{ next_url|urlencode }}" class="button secondary cenik-menu-btn">Upravit</a>
-            <form method="post" class="cenik-menu-delete-form" onsubmit="return confirm('Opravdu odstranit typ „{{ fmt.nazev|escapejs }}“?');">
+            <a href="{% url 'admin:core_cenik_formaty' %}?edit_format={{ fmt.pk }}&next={{ next_url|urlencode }}" class="button secondary cenik-menu-btn">{% trans "Upravit" %}</a>
+            <form method="post" class="cenik-menu-delete-form" onsubmit="return confirm('{% blocktrans with name=fmt.nazev|escapejs %}Opravdu odstranit typ „{{ name }}“?{% endblocktrans %}');">
               {% csrf_token %}
               <input type="hidden" name="fmt_manage" value="1">
               <input type="hidden" name="fmt_action" value="delete">

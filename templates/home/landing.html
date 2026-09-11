@@ -38,7 +38,7 @@
             {% endfor %}
           </select>
         </form>
-        <a class="nav__pill" href="#skoly">{% trans "Školy" %}</a>
+        <a class="nav__pill" href="{% if single_school %}{{ primary_admin_url }}{% else %}#skoly{% endif %}">{% if single_school %}{% trans "Vstup" %}{% else %}{% trans "Školy" %}{% endif %}</a>
         <a href="#funkce">{% trans "Co umí" %}</a>
         <a href="{% if contact_email %}mailto:{{ contact_email }}{% else %}#kontakt{% endif %}">{% trans "Kontakt" %}</a>
       </nav>
@@ -57,7 +57,11 @@
         <p class="stage__lead">
           {% trans "Kdo trénuje zítra, kdo má kredit a kolik patří trenérovi za měsíc — bez dalšího souboru v počítači." %}
         </p>
+        {% if single_school %}
+        <a class="stage__cta" href="{{ primary_admin_url }}">{% trans "Vstup do systému" %}</a>
+        {% else %}
         <a class="stage__cta" href="#skoly">{% trans "Vybrat školu" %}</a>
+        {% endif %}
       </div>
 
       <div class="showcase" aria-hidden="true">
@@ -91,7 +95,7 @@
                 </div>
                 <div class="stat-card">
                   <span>{% trans "K vyúčtování" %}</span>
-                  <b>{% trans "12 400 Kč" %}</b>
+                  <b>12 400 {{ system_mena }}</b>
                 </div>
               </div>
               <div class="showcase__schedule">
@@ -108,8 +112,13 @@
     <section class="panel" id="skoly">
       <div class="panel__inner">
         <header class="panel__head">
+          {% if single_school %}
+          <h2>{% trans "Přihlášení" %}</h2>
+          <p>{% trans "Vstup do správy klubu." %}</p>
+          {% else %}
           <h2>{% trans "Přihlášení do školy" %}</h2>
           <p>{% trans "Vyberte školu, ke které patříte." %}</p>
+          {% endif %}
         </header>
 
         {% if schools|length > 1 %}

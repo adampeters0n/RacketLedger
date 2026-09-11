@@ -5,6 +5,16 @@
 
 html[data-mode="dark"] {
   color-scheme: dark;
+  /* Apple Dark Mode – charcoal layers (Settings), ne čistá černá */
+  --bg: #1C1C1E;
+  --surface: #2C2C2E;
+  --table-head: #3A3A3C;
+  --table-row-alt: #2C2C2E;
+  --table-row-hover: #48484A;
+  --text: #EBEBF5;
+  --text-strong: #FFFFFF;
+  --line: #38383A;
+  --muted: #8E8E93;
 }
 
 /* ── Základ: pozadí, text, vynucení dark color-scheme ── */
@@ -105,6 +115,20 @@ html[data-mode="dark"] .cenik-menu-card > h3 {
   border-bottom-color: var(--line) !important;
 }
 
+/* Hlavička tabulek v dark: jednotná barva pozadí, žádné brandové buňky */
+html[data-mode="dark"] table thead th,
+html[data-mode="dark"] table thead th a,
+html[data-mode="dark"] #result_list thead th,
+html[data-mode="dark"] #result_list thead th.sorted,
+html[data-mode="dark"] #result_list thead th.sortable,
+html[data-mode="dark"] .results thead th,
+html[data-mode="dark"] .module table thead th {
+  background: var(--table-head) !important;
+  background-image: none !important;
+  color: var(--text-strong) !important;
+  box-shadow: none !important;
+}
+
 /* ── Formulářové řádky a labely ── */
 html[data-mode="dark"] body.change-form .aligned th,
 html[data-mode="dark"] body.change-form label,
@@ -141,7 +165,7 @@ html[data-mode="dark"] .vyuct-field input,
 html[data-mode="dark"] .vyuct-field select,
 html[data-mode="dark"] #changelist-search input[type="text"],
 html[data-mode="dark"] .change-list .actions select {
-  background: var(--bg) !important;
+  background: var(--table-head) !important;
   color: var(--text) !important;
   border-color: var(--line) !important;
   -webkit-text-fill-color: var(--text) !important;
@@ -161,7 +185,7 @@ html[data-mode="dark"] input[type="radio"] {
 /* ── Select2 ── */
 html[data-mode="dark"] .select2-container--admin-autocomplete .select2-selection--single,
 html[data-mode="dark"] .select2-container--default .select2-selection--single {
-  background: var(--bg) !important;
+  background: var(--table-head) !important;
   color: var(--text) !important;
   border-color: var(--line) !important;
 }
@@ -179,7 +203,7 @@ html[data-mode="dark"] .select2-dropdown {
 }
 
 html[data-mode="dark"] .select2-search--dropdown .select2-search__field {
-  background: var(--bg) !important;
+  background: var(--table-head) !important;
   color: var(--text) !important;
   border-color: var(--line) !important;
   -webkit-text-fill-color: var(--text) !important;
@@ -201,36 +225,98 @@ html[data-mode="dark"] .select2-results__option--highlighted[aria-selected] {
   color: #fff !important;
 }
 
-/* ── Datum / čas – ikony a zkratky ── */
-html[data-mode="dark"] .datetimeshortcuts a,
+/* ── Datum / čas – bez glow; barva z nastavení ── */
+html[data-mode="dark"] .datetimeshortcuts a {
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .datetimeshortcuts a:hover,
+html[data-mode="dark"] .datetimeshortcuts a:focus {
+  background: transparent !important;
+  color: var(--brand) !important;
+}
+
+html[data-mode="dark"] .datetimeshortcuts .date-icon,
+html[data-mode="dark"] .datetimeshortcuts .clock-icon {
+  background-color: var(--brand) !important;
+  top: 0 !important;
+  width: 16px !important;
+  height: 16px !important;
+}
+
 html[data-mode="dark"] .clockbox h2,
 html[data-mode="dark"] .calendarbox h2 {
   background: var(--brand-100) !important;
-  color: var(--brand) !important;
+  color: var(--text) !important;
   border-color: var(--line) !important;
-}
-
-html[data-mode="dark"] .datetimeshortcuts a:hover {
-  background: var(--table-row-hover) !important;
 }
 
 html[data-mode="dark"] .calendarbox,
 html[data-mode="dark"] .clockbox,
 html[data-mode="dark"] .calendarbox table,
 html[data-mode="dark"] .calendarbox .calendar td,
-html[data-mode="dark"] .calendarbox .calendar th {
+html[data-mode="dark"] .calendarbox .calendar th,
+html[data-mode="dark"] .clockbox ul.timelist {
   background: var(--surface) !important;
   color: var(--text) !important;
+  border-color: var(--line) !important;
 }
 
 html[data-mode="dark"] .calendarbox table caption,
 html[data-mode="dark"] .calendarbox table thead th {
-  background: var(--table-head) !important;
+  background: var(--brand-100) !important;
   color: var(--text-strong) !important;
 }
 
-html[data-mode="dark"] .calendarbox .calendar tbody td:hover {
-  background: var(--table-row-hover) !important;
+html[data-mode="dark"] .calendarbox table tbody tr:hover > td,
+html[data-mode="dark"] .calendarbox table tbody tr:hover > th,
+html[data-mode="dark"] .calendarbox .calendar tbody tr:hover > td {
+  background: var(--surface) !important;
+}
+html[data-mode="dark"] .calendarbox .calendar tbody td,
+html[data-mode="dark"] .calendarbox .calendar tbody td.nonday,
+html[data-mode="dark"] .calendarbox .calendar tbody td.noday {
+  background: var(--surface) !important;
+}
+html[data-mode="dark"] .calendarbox table tbody tr:hover > td:not(.selected) > a:not(:hover):not(:focus) {
+  color: var(--text) !important;
+  background: transparent !important;
+}
+html[data-mode="dark"] .calendarbox .calendar tbody td > a:hover,
+html[data-mode="dark"] .calendarbox .calendar tbody td > a:focus {
+  background: color-mix(in srgb, var(--brand) 22%, var(--surface)) !important;
+  color: var(--brand) !important;
+}
+html[data-mode="dark"] .calendarbox .calendar tbody td.selected > a,
+html[data-mode="dark"] .calendarbox .calendar tbody td.selected > a:hover,
+html[data-mode="dark"] .calendarbox .calendar tbody td.selected > a:focus,
+html[data-mode="dark"] .calendarbox .calendar tbody tr:hover > td.selected > a {
+  background: var(--brand) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+html[data-mode="dark"] .clockbox .timelist a:hover,
+html[data-mode="dark"] .clockbox .timelist a:focus {
+  background: color-mix(in srgb, var(--brand) 22%, var(--surface)) !important;
+  color: var(--brand) !important;
+}
+html[data-mode="dark"] .clockbox .timelist a:active {
+  background: var(--brand) !important;
+  color: #fff !important;
+}
+
+html[data-mode="dark"] .calendarbox .calendar-cancel,
+html[data-mode="dark"] .clockbox .calendar-cancel {
+  background: var(--brand-100) !important;
+  border-top-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .calendarbox .calendar-shortcuts {
+  background: var(--surface) !important;
+  border-top-color: var(--line) !important;
 }
 
 /* ── Vyúčtování / hráč panely ── */
@@ -382,7 +468,7 @@ html[data-mode="dark"] body #content-main.add-day-page .add-day-row label {
 
 html[data-mode="dark"] body #content-main.add-day-page .add-day-hraci-title {
   color: var(--text-strong) !important;
-  background: var(--table-head) !important;
+  background: var(--brand-100) !important;
   border-bottom-color: var(--line) !important;
 }
 
@@ -407,6 +493,11 @@ html[data-mode="dark"] body #content-main.add-day-page input[type="time"] {
   color-scheme: dark;
 }
 
+html[data-mode="dark"] body #content-main.add-day-page .add-day-copy-card {
+  background: var(--brand-100) !important;
+  border-color: var(--brand) !important;
+}
+
 html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-card .add-day-datum-row label.add-day-label-inline,
 html[data-mode="dark"] body #content-main.add-day-page .add-day-copy-help {
   color: var(--text-strong) !important;
@@ -425,8 +516,20 @@ html[data-mode="dark"] body #content-main.add-day-page .add-day-hraci-dropdown l
 }
 
 html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-shortcuts a {
-  background: var(--brand-100) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--text) !important;
+}
+html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-shortcuts a:hover,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-shortcuts a:focus {
   color: var(--brand) !important;
+}
+html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-shortcuts a#add-day-calendar {
+  background-color: var(--brand) !important;
+}
+html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-shortcuts a#add-day-calendar:hover,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-shortcuts a#add-day-calendar:focus {
+  background-color: var(--brand-600, var(--brand)) !important;
 }
 
 html[data-mode="dark"] .add-day-page h1,
@@ -528,9 +631,9 @@ html[data-mode="dark"] .ts-topnav a:not(.is-active) {
   color: var(--text) !important;
 }
 
-html[data-mode="dark"] #user-tools .schedule-icon {
-  background: var(--surface) !important;
-  border-color: var(--line) !important;
+html[data-mode="dark"] .ts-topnav a.schedule-icon:not(.is-active),
+html[data-mode="dark"] .ts-topnav #nav-rozvrh:not(.is-active) {
+  color: var(--text) !important;
 }
 
 /* ── Trénink change form (bílé moduly – vyšší specificita než trening-change-form.css) ── */
@@ -597,7 +700,10 @@ html[data-mode="dark"] body.app-core.model-trening.change-form .select2-containe
 }
 
 html[data-mode="dark"] body.app-core.model-trening.change-form .form-row.field-datum .datetimeshortcuts a {
-  background: var(--brand-100) !important;
+  background: transparent !important;
+  color: var(--text) !important;
+}
+html[data-mode="dark"] body.app-core.model-trening.change-form .form-row.field-datum .datetimeshortcuts a:hover {
   color: var(--brand) !important;
 }
 
@@ -645,6 +751,7 @@ html[data-mode="dark"] .analytika-app {
   --ana-muted: var(--muted);
   --ana-brand: var(--brand);
   --ana-brand-soft: var(--brand-100);
+  --ana-brand-strong: var(--brand-600, var(--brand));
   --ana-link: var(--brand);
   --ana-danger: #f87171;
   --ana-shadow: none;
@@ -659,9 +766,9 @@ html[data-mode="dark"] .analytika-app {
   --ana-nav-icon-active-border: color-mix(in srgb, var(--brand) 42%, var(--line));
   --ana-nav-hover-bg: var(--table-row-hover);
   --ana-nav-hover-border: var(--line);
-  --ana-nav-active-bg: color-mix(in srgb, var(--brand) 16%, var(--surface));
-  --ana-nav-active-border: color-mix(in srgb, var(--brand) 38%, var(--line));
-  --ana-nav-active-text: var(--text-strong);
+  --ana-nav-active-bg: color-mix(in srgb, var(--brand) 18%, var(--surface));
+  --ana-nav-active-border: color-mix(in srgb, var(--brand) 45%, var(--line));
+  --ana-nav-active-text: color-mix(in srgb, var(--brand) 70%, #ffffff);
   background: var(--bg) !important;
   color: var(--text) !important;
 }
@@ -703,12 +810,8 @@ html[data-mode="dark"] .analytika-modal-extra {
 
 html[data-mode="dark"] .analytika-sidebar {
   background: var(--surface) !important;
-  border: 1px solid var(--line) !important;
-  box-shadow: none !important;
-}
-
-html[data-mode="dark"] .analytika-sidebar::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--muted) 40%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--brand) 28%, var(--line)) !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35), 0 8px 28px rgba(0, 0, 0, 0.25) !important;
 }
 
 html[data-mode="dark"] .sidebar-brand {
@@ -716,13 +819,12 @@ html[data-mode="dark"] .sidebar-brand {
   border-bottom-color: var(--line) !important;
 }
 
-html[data-mode="dark"] .sidebar-brand-dot {
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 22%, transparent) !important;
+html[data-mode="dark"] .sidebar-brand strong {
+  color: var(--text-strong) !important;
 }
 
-html[data-mode="dark"] .sidebar-brand strong,
 html[data-mode="dark"] .sidebar-nav-item.active .nav-text strong {
-  color: var(--text-strong) !important;
+  color: var(--ana-nav-active-text) !important;
 }
 
 html[data-mode="dark"] .sidebar-nav-item {
@@ -739,7 +841,7 @@ html[data-mode="dark"] .sidebar-nav-item:hover {
 html[data-mode="dark"] .sidebar-nav-item.active {
   background: var(--ana-nav-active-bg) !important;
   border-color: var(--ana-nav-active-border) !important;
-  box-shadow: inset 3px 0 0 var(--brand) !important;
+  box-shadow: none !important;
 }
 
 html[data-mode="dark"] .analytika-app .nav-icon {
@@ -1081,25 +1183,44 @@ html[data-mode="dark"] table tbody tr.selected > th,
 html[data-mode="dark"] table tbody tr.selected > td,
 html[data-mode="dark"] table tbody tr.row-selected > th,
 html[data-mode="dark"] table tbody tr.row-selected > td {
-  background: var(--table-row-hover) !important;
+  background: var(--surface) !important;
   color: var(--text) !important;
   border-top-color: var(--line) !important;
   border-bottom-color: var(--line) !important;
   border-left-color: var(--line) !important;
   border-right-color: var(--line) !important;
   box-shadow: none !important;
+  outline: none !important;
 }
 
-html[data-mode="dark"] #result_list tbody tr.selected:hover > th,
-html[data-mode="dark"] #result_list tbody tr.selected:hover > td,
-html[data-mode="dark"] #result_list tbody tr.row-selected:hover > th,
-html[data-mode="dark"] #result_list tbody tr.row-selected:hover > td,
+html[data-mode="dark"] #result_list tbody tr:hover > td,
+html[data-mode="dark"] #result_list tbody tr:hover > th,
+html[data-mode="dark"] table tbody tr:hover > td,
+html[data-mode="dark"] table tbody tr:hover > th,
+html[data-mode="dark"] .results tbody tr:hover > td,
+html[data-mode="dark"] .module table tbody tr:hover > td,
+html[data-mode="dark"] table.list tbody tr:hover > td,
+html[data-mode="dark"] table.payments tbody tr:hover > td,
+html[data-mode="dark"] table.ledger tbody tr:hover > td,
+html[data-mode="dark"] table.ledger tbody tr:hover {
+  background: var(--table-row-hover) !important;
+}
+html[data-mode="dark"] #result_list tbody tr:hover a:not(.deletelink),
+html[data-mode="dark"] table tbody tr:hover a:not(.deletelink) {
+  color: var(--brand) !important;
+}
 html[data-mode="dark"] table tbody tr.selected:hover > th,
 html[data-mode="dark"] table tbody tr.selected:hover > td,
 html[data-mode="dark"] table tbody tr.row-selected:hover > th,
 html[data-mode="dark"] table tbody tr.row-selected:hover > td {
   background: var(--table-row-hover) !important;
-  color: var(--text) !important;
+}
+html[data-mode="dark"] #result_list tbody tr.selected a,
+html[data-mode="dark"] #result_list tbody tr.row-selected a,
+html[data-mode="dark"] .results tbody tr.selected a,
+html[data-mode="dark"] table tbody tr.selected a,
+html[data-mode="dark"] table tbody tr.row-selected a {
+  color: var(--text-strong) !important;
 }
 
 html[data-mode="dark"] #result_list tbody tr.selected a,
@@ -1277,81 +1398,19 @@ html[data-mode="dark"] .ev-names::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2) !important;
 }
 
-html[data-mode="dark"] .ev[class*="ev--solo"] {
-  background: rgba(180, 83, 9, 0.32) !important;
-  border-color: #d97706 !important;
-  color: #fcd34d !important;
-}
-
-html[data-mode="dark"] .ev[class*="ev--dvojice"] {
-  background: rgba(30, 64, 175, 0.35) !important;
-  border-color: #3b82f6 !important;
-  color: #93c5fd !important;
-}
-
-html[data-mode="dark"] .ev[class*="ev--trojice"],
-html[data-mode="dark"] .ev[class*="ev--trio"] {
-  background: rgba(76, 29, 149, 0.35) !important;
-  border-color: #8b5cf6 !important;
-  color: #c4b5fd !important;
-}
-
-html[data-mode="dark"] .ev[class*="ev--ctverice"],
-html[data-mode="dark"] .ev[class*="ev--ctver"],
-html[data-mode="dark"] .ev[class*="ev--ctyr"] {
-  background: rgba(20, 83, 45, 0.35) !important;
-  border-color: #22c55e !important;
-  color: #86efac !important;
-}
-
-html[data-mode="dark"] .ev[class*="ev--skupina"],
-html[data-mode="dark"] .ev[class*="ev--skup"],
-html[data-mode="dark"] .ev[class*="ev--petice"],
-html[data-mode="dark"] .ev[class*="ev--sobota"] {
-  background: rgba(17, 94, 89, 0.35) !important;
-  border-color: #14b8a6 !important;
-  color: #5eead4 !important;
-}
-
-html[data-mode="dark"] .ev.ev--kurt-tre,
-html[data-mode="dark"] .ev[class*="ev--kurt-rezervace"] {
-  background: rgba(159, 18, 57, 0.35) !important;
-  border-color: #e11d48 !important;
-  color: #fda4af !important;
+html[data-mode="dark"] .ev {
+  background: var(--ev-bg-dark, rgba(75, 85, 99, 0.4)) !important;
+  border-color: var(--ev-border-dark, #9ca3af) !important;
+  color: var(--ev-text-dark, #e5e7eb) !important;
 }
 
 html[data-mode="dark"] .legend {
   color: var(--muted) !important;
 }
 
-html[data-mode="dark"] .chip--solo {
-  background: rgba(180, 83, 9, 0.55) !important;
-  border-color: #d97706 !important;
-}
-
-html[data-mode="dark"] .chip--dvojice {
-  background: rgba(30, 64, 175, 0.55) !important;
-  border-color: #3b82f6 !important;
-}
-
-html[data-mode="dark"] .chip--trojice {
-  background: rgba(76, 29, 149, 0.55) !important;
-  border-color: #8b5cf6 !important;
-}
-
-html[data-mode="dark"] .chip--ctverice {
-  background: rgba(20, 83, 45, 0.55) !important;
-  border-color: #22c55e !important;
-}
-
-html[data-mode="dark"] .chip--skupina {
-  background: rgba(17, 94, 89, 0.55) !important;
-  border-color: #14b8a6 !important;
-}
-
-html[data-mode="dark"] .chip--rezervace {
-  background: rgba(159, 18, 57, 0.55) !important;
-  border-color: #e11d48 !important;
+html[data-mode="dark"] .chip {
+  background: var(--ev-bg-dark, rgba(75, 85, 99, 0.55)) !important;
+  border-color: var(--ev-border-dark, #9ca3af) !important;
 }
 
 html[data-mode="dark"] .kredit-zaporny {

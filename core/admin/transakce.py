@@ -2,12 +2,15 @@
 from datetime import date
 from decimal import Decimal
 
+from django import forms
 from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import path, reverse
 from django.utils import timezone as dj_tz
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
+
+from core.money import format_castka, get_mena_symbol
 
 from ..admin_utils import (
     CZECH_MONTHS_GENITIVE,
@@ -45,8 +48,22 @@ class TransakceDatumFilter(admin.DateFieldListFilter):
         self.title = _("Datum")
 
 
+class TransakceAdminForm(forms.ModelForm):
+    class Meta:
+        model = Transakce
+        fields = ("hrac", "typ", "castka", "popis", "vytvoreno")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        symbol = get_mena_symbol()
+        self.fields["castka"].label = _("Částka (%(mena)s)") % {"mena": symbol}
+        self.fields["castka"].widget.attrs["data-mena-suffix"] = symbol
+
+
 @admin.register(Transakce)
 class TransakceAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
+    form = TransakceAdminForm
+    change_form_template = "admin/core/transakce/change_form.html"
     list_display = ("datum_display", "hrac_link", "castka_display", "typ_display", "poznamka", "akce_smazat")
     list_filter = (OnlyPaymentsFilter, ("vytvoreno", TransakceDatumFilter))
     search_fields = ("hrac__jmeno", "hrac__prijmeni", "popis")
@@ -91,11 +108,11 @@ class TransakceAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
     def castka_display(self, obj):
         color = "green" if obj.castka >= 0 else "red"
         sign = "+" if obj.castka > 0 else ""
-        formatted_val = f"{obj.castka:,.0f}".replace(",", " ")
-        
         return format_html(
-            '<span style="color:{}; font-weight:bold;">{} {} Kč</span>',
-            color, sign, formatted_val
+            '<span style="color:{}; font-weight:bold;">{}{}</span>',
+            color,
+            sign,
+            format_castka(obj.castka, thousands=True).lstrip("+"),
         )
 
     @admin.display(description=_("Typ"), ordering="typ")
@@ -109,7 +126,12 @@ class TransakceAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
     @admin.display(description=_("Akce"))
     def akce_smazat(self, obj):
         url = reverse("admin:core_transakce_delete", args=[obj.id])
-        return format_html('<a class="deletelink" href="{}"></a>', url)
+        return format_html(
+            '<a class="tx-akce-cross" href="{}" title="{}" aria-label="{}">×</a>',
+            url,
+            _("Smazat"),
+            _("Smazat"),
+        )
 
     def trainings_for_day_view(self, request):
         from datetime import datetime as dt_parse

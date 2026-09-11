@@ -127,7 +127,7 @@
       align-items: flex-start !important;
       text-align: left !important;
     }
-    /* Dnes a ikona kalendáře – stejné pilulky jako add_day (#fff3df, #E67817) */
+    /* Dnes + ikony – layout; vzhled z globálního custom.css (bez glow, --brand) */
     body.app-core.model-trening.change-form .form-row.field-datum p:has(input.vDateField) > div,
     body.app-core.model-trening.change-form .form-row.field-datum .datetimeshortcuts {
       justify-content: flex-start !important;
@@ -141,24 +141,6 @@
       max-width: 100% !important;
       align-self: flex-start !important;
       gap: 4px !important;
-    }
-    body.app-core.model-trening.change-form .form-row.field-datum .datetimeshortcuts a {
-      display: inline-flex !important;
-      align-items: center !important;
-      gap: 4px !important;
-      padding: 3px 8px !important;
-      border-radius: 999px !important;
-      background: #fff3df !important;
-      color: #E67817 !important;
-      text-decoration: none !important;
-    }
-    body.app-core.model-trening.change-form .form-row.field-datum .datetimeshortcuts a:hover {
-      background: #ffe4bf !important;
-    }
-    body.app-core.model-trening.change-form .form-row.field-datum .datetimeshortcuts a:focus {
-      outline: 2px solid #E67817 !important;
-      outline-offset: 2px !important;
-      border-radius: 6px !important;
     }
     body.app-core.model-trening.change-form .form-row.field-datum p:has(input.vDateField) {
       margin-bottom: 0 !important;
