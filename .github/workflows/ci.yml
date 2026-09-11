@@ -24,18 +24,24 @@ jobs:
         env:
           DJANGO_SECRET_KEY: ci-test-secret-key-not-for-production
           DEBUG: "True"
+          ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+          CSRF_TRUSTED_ORIGINS: http://localhost,http://127.0.0.1,http://testserver
         run: python manage.py test core -v1
 
       - name: Django system check
         env:
           DJANGO_SECRET_KEY: ci-test-secret-key-not-for-production
           DEBUG: "True"
+          ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+          CSRF_TRUSTED_ORIGINS: http://localhost,http://127.0.0.1,http://testserver
         run: python manage.py check
 
       - name: Instance smoke (bootstrap branding)
         env:
           DJANGO_SECRET_KEY: ci-test-secret-key-not-for-production
           DEBUG: "True"
+          ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+          CSRF_TRUSTED_ORIGINS: http://localhost,http://127.0.0.1,http://testserver
           BOOTSTRAP_ADMIN_PASSWORD: ci-admin-pass
         run: |
           python manage.py migrate --noinput

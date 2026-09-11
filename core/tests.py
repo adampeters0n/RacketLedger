@@ -1530,10 +1530,17 @@ class FreshInstanceSmokeTests(TestCase):
 
     def test_check_instance_passes(self):
         from django.core.management import call_command
+        from django.test import override_settings
         from io import StringIO
 
+        # Django test runner forces DEBUG=False, so check_instance validates hosts.
+        # Provide CI-safe hosts; branding was set in setUp via bootstrap.
         out = StringIO()
-        call_command("check_instance", stdout=out)
+        with override_settings(
+            ALLOWED_HOSTS=["testserver", "localhost"],
+            CSRF_TRUSTED_ORIGINS=["http://testserver", "http://localhost"],
+        ):
+            call_command("check_instance", stdout=out)
         self.assertIn("OK", out.getvalue())
 
 
