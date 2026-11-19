@@ -87,6 +87,8 @@ INSTALLED_APPS = [
 # MIDDLEWARE
 # =====================================
 MIDDLEWARE = [
+    # Před SecurityMiddleware – /healthz bez DB, sessions i SSL redirectu
+    "core.middleware.HealthCheckMiddleware",
     "django.middleware.security.SecurityMiddleware",
     # WhiteNoise musí být hned po SecurityMiddleware
     "whitenoise.middleware.WhiteNoiseMiddleware",

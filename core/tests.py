@@ -86,9 +86,11 @@ class BillingLogicTests(TestCase):
         self.assertIsNotNone(vyuct)
         self.assertEqual(vyuct.charges_total, Decimal("1000.00"))
         self.assertEqual(vyuct.payments_total, Decimal("500.00"))
-        self.assertEqual(vyuct.amount_due, Decimal("500.00"))  # bez override = spočtená částka
+        # Manuál bez override_amount_due = 0 Kč (částku zadává operátor)
+        self.assertEqual(vyuct.amount_due, Decimal("0.00"))
         self.hrac.refresh_from_db()
-        self.assertIsNotNone(self.hrac.posledni_vyuctovani_at)  # manuál také uzavírá období
+        # Manuál neuzavírá období (posledni_vyuctovani_at zůstává)
+        self.assertIsNone(self.hrac.posledni_vyuctovani_at)
 
     def test_billing_statement_with_override_amount(self):
         """Test billing with override amount."""
@@ -876,17 +878,20 @@ class AutomaticBillingTests(TestCase):
 
         self.hrac.spustit_auto_vyuctovani()
 
+        from core.models import _zacatek_obdobi_pro_auto_vyuctovani
+
+        expected_from = timezone.localtime(_zacatek_obdobi_pro_auto_vyuctovani()).date()
         vyuct = Vyuctovani.objects.filter(hrac=self.hrac).order_by("-created_at").first()
         self.assertIsNotNone(vyuct)
         self.assertEqual(
             timezone.localtime(vyuct.period_from).date(),
-            timezone.localtime(old_charge).date(),
+            expected_from,
         )
         self.assertEqual(vyuct.charges_total, Decimal("6500.00"))
 
     def test_automatic_billing_period_from_last_payment(self):
-        """S platbou: rozpis od poslední platby (včetně platby + tréninků po ní)."""
-        from core.models import VyuctovaniNastaveni
+        """Auto období = N měsíců zpět; platba i charge v okně se započítají."""
+        from core.models import VyuctovaniNastaveni, _zacatek_obdobi_pro_auto_vyuctovani
 
         nast = VyuctovaniNastaveni.load()
         nast.auto_rezim = Hrac.RezimVyuctovani.CASTKA
@@ -915,11 +920,12 @@ class AutomaticBillingTests(TestCase):
 
         self.hrac.spustit_auto_vyuctovani()
 
+        expected_from = timezone.localtime(_zacatek_obdobi_pro_auto_vyuctovani()).date()
         vyuct = Vyuctovani.objects.filter(hrac=self.hrac).order_by("-created_at").first()
         self.assertIsNotNone(vyuct)
         self.assertEqual(
             timezone.localtime(vyuct.period_from).date(),
-            timezone.localtime(pay_at).date(),
+            expected_from,
         )
         self.assertEqual(vyuct.charges_total, Decimal("7500.00"))
         self.assertEqual(vyuct.payments_total, Decimal("2000.00"))
@@ -2400,6 +2406,7 @@ class BootstrapInstanceTests(TestCase):
 class EmailOrUsernameAuthTests(TestCase):
     def setUp(self):
         from django.contrib.auth.models import User
+        from django.test import RequestFactory
 
         self.user = User.objects.create_user(
             "coach1",
@@ -2407,23 +2414,34 @@ class EmailOrUsernameAuthTests(TestCase):
             "SecretPass123!",
             is_staff=True,
         )
+        self.request = RequestFactory().post("/admin/login/")
 
     def test_authenticate_by_username(self):
         from django.contrib.auth import authenticate
 
-        user = authenticate(username="coach1", password="SecretPass123!")
+        user = authenticate(
+            request=self.request, username="coach1", password="SecretPass123!"
+        )
         self.assertEqual(user, self.user)
 
     def test_authenticate_by_email(self):
         from django.contrib.auth import authenticate
 
-        user = authenticate(username="coach@example.com", password="SecretPass123!")
+        user = authenticate(
+            request=self.request,
+            username="coach@example.com",
+            password="SecretPass123!",
+        )
         self.assertEqual(user, self.user)
 
     def test_authenticate_by_email_case_insensitive(self):
         from django.contrib.auth import authenticate
 
-        user = authenticate(username="Coach@Example.com", password="SecretPass123!")
+        user = authenticate(
+            request=self.request,
+            username="Coach@Example.com",
+            password="SecretPass123!",
+        )
         self.assertEqual(user, self.user)
 
     def test_seed_club_defaults_requires_slug(self):
@@ -2512,11 +2530,14 @@ class FreshInstanceSmokeTests(TestCase):
         self.assertContains(admin_index, "Tenis XY")
         self.assertNotContains(admin_index, "Čimice")
 
+        # club_admin nemá analytiku (platform only) — branding ověř na nastavení
+        nastaveni = self.client.get("/admin/nastaveni/")
+        self.assertEqual(nastaveni.status_code, 200)
+        self.assertContains(nastaveni, "Tenis XY")
+        self.assertNotContains(nastaveni, "Čimice")
+
         analytika = self.client.get("/admin/analytika/prehled/")
-        self.assertEqual(analytika.status_code, 200)
-        self.assertContains(analytika, "Tenis XY")
-        self.assertNotContains(analytika, "Čimice")
-        self.assertNotContains(analytika, "Přehled TS")
+        self.assertEqual(analytika.status_code, 404)
 
     def test_check_instance_passes(self):
         from django.core.management import call_command
@@ -2524,11 +2545,13 @@ class FreshInstanceSmokeTests(TestCase):
         from io import StringIO
 
         # Django test runner forces DEBUG=False, so check_instance validates hosts.
-        # Provide CI-safe hosts; branding was set in setUp via bootstrap.
+        # Provide CI-safe hosts + SECRET_KEY; branding was set in setUp via bootstrap.
         out = StringIO()
         with override_settings(
             ALLOWED_HOSTS=["testserver", "localhost"],
             CSRF_TRUSTED_ORIGINS=["http://testserver", "http://localhost"],
+            SECRET_KEY="ci-test-secret-key-not-for-production-32chars-xx",
+            USE_S3=False,
         ):
             call_command("check_instance", stdout=out)
         self.assertIn("OK", out.getvalue())
@@ -3009,16 +3032,17 @@ class ScheduleLongPressAddTests(TestCase):
         self.assertIn(f'value="{self.user.pk}"', content)
 
     def test_training_defaults_from_settings(self):
-        from core.models import SystemNastaveni
+        from core.models import Cenik, SystemNastaveni
 
         nast = SystemNastaveni.load()
         nast.vychozi_delka_minut = 90
-        nast.vychozi_sezona = "Léto"
+        nast.sezona_automaticky_kurt = False
+        nast.vychozi_sezona = Cenik.Kurt.VENEK
         nast.save(sync_colors=False)
 
         defaults = SystemNastaveni.training_defaults()
         self.assertEqual(defaults["delka_minut"], 90)
-        self.assertEqual(defaults["sezona"], "Léto")
+        self.assertEqual(defaults["kurt"], Cenik.Kurt.VENEK)
 
     def test_home_uses_club_name_and_contact(self):
         from core.models import SystemNastaveni
@@ -3127,8 +3151,8 @@ class ScheduleLongPressAddTests(TestCase):
     def test_user_theme_overrides_system(self):
         from django.contrib.auth import get_user_model
         from django.test import RequestFactory
-        from core.models import SystemNastaveni, UserPreference, Trening
-        from core.system_theme import resolve_effective_theme
+        from core.models import SystemNastaveni, UzivatelskyVzhled, Trening
+        from core.system_theme import resolve_appearance_for_user
         from django.contrib import admin
 
         user_a = get_user_model().objects.create_superuser("usera", "a@test.com", "pass")
@@ -3138,13 +3162,13 @@ class ScheduleLongPressAddTests(TestCase):
         nast.tmavy_rezim = False
         nast.save(sync_colors=True)
 
-        UserPreference.objects.update_or_create(
+        UzivatelskyVzhled.objects.update_or_create(
             user=user_a,
             defaults={"barevna_varianta": "modra", "tmavy_rezim": True},
         )
 
-        va, da, ca = resolve_effective_theme(user=user_a, nastaveni=nast)
-        vb, db, cb = resolve_effective_theme(user=user_b, nastaveni=nast)
+        va, da, ca = resolve_appearance_for_user(user_a, nastaveni=nast)
+        vb, db, cb = resolve_appearance_for_user(user_b, nastaveni=nast)
         self.assertEqual(va, "modra")
         self.assertTrue(da)
         self.assertEqual(ca["brand"], "#2563EB")
@@ -3308,23 +3332,26 @@ class SentrySettingsTests(TestCase):
 class UserAdminPrivilegeTests(TestCase):
     def setUp(self):
         from django.contrib.auth.models import Group, User
-        from core.roles import CLUB_ADMIN_GROUP, ensure_role_groups
+        from core.roles import CLUB_ADMIN_GROUP, PLATFORM_ADMIN_GROUP, ensure_role_groups
 
         ensure_role_groups()
         self.club = User.objects.create_user("clubmgr", "c@example.com", "x", is_staff=True)
         self.club.groups.add(Group.objects.get(name=CLUB_ADMIN_GROUP))
-        self.client.force_login(self.club)
+        self.platform = User.objects.create_user(
+            "platmgr", "p@example.com", "x", is_staff=True, is_superuser=True
+        )
+        self.platform.groups.add(Group.objects.get(name=PLATFORM_ADMIN_GROUP))
 
     def test_club_admin_user_form_hides_privileged_fields(self):
+        # Správa uživatelů je jen pro platform admina
+        self.client.force_login(self.club)
         response = self.client.get("/admin/auth/user/add/")
-        self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, 'name="is_superuser"')
-        self.assertNotContains(response, 'name="groups"')
-        self.assertNotContains(response, 'name="user_permissions"')
+        self.assertEqual(response.status_code, 403)
 
     def test_club_admin_cannot_escalate_via_post(self):
         from django.contrib.auth.models import User
 
+        self.client.force_login(self.club)
         response = self.client.post(
             "/admin/auth/user/add/",
             {
@@ -3336,11 +3363,16 @@ class UserAdminPrivilegeTests(TestCase):
             },
             follow=True,
         )
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(User.objects.filter(username="newbie").exists())
+
+    def test_platform_admin_can_add_user_without_privilege_fields(self):
+        self.client.force_login(self.platform)
+        response = self.client.get("/admin/auth/user/add/")
         self.assertEqual(response.status_code, 200)
-        newbie = User.objects.get(username="newbie")
-        self.assertFalse(newbie.is_superuser)
-        self.assertTrue(newbie.is_staff)
-        self.assertTrue(newbie.groups.filter(name="club_admin").exists())
+        self.assertNotContains(response, 'name="is_superuser"')
+        self.assertNotContains(response, 'name="groups"')
+        self.assertNotContains(response, 'name="user_permissions"')
 
 class VyuctovaniNastaveniViewTests(TestCase):
     def setUp(self):
@@ -3375,13 +3407,16 @@ class VyuctovaniNastaveniViewTests(TestCase):
                 "auto_limit": str(nast.auto_limit),
                 "auto_castka_k_uhrade": str(nast.auto_castka_k_uhrade),
                 "auto_pocet_treninku": str(nast.auto_pocet_treninku),
+                "hromadne_surplus": str(nast.hromadne_surplus),
                 "auto_posilat_email": "on",
                 "aplikovat_na_vsechny": "1",
                 "email_variant": nast.email_variant,
                 "ucet_nazev_1": nast.ucet_nazev_1,
                 "ucet_nazev_2": nast.ucet_nazev_2,
+                "ucet_nazev_3": nast.ucet_nazev_3,
                 "ucet_varianta_1": nast.ucet_varianta_1,
                 "ucet_varianta_2": nast.ucet_varianta_2,
+                "ucet_varianta_3": nast.ucet_varianta_3,
                 "variabilni_symbol_popis": nast.variabilni_symbol_popis,
             },
         )
@@ -3409,12 +3444,15 @@ class VyuctovaniNastaveniViewTests(TestCase):
                 "auto_limit": str(nast.auto_limit),
                 "auto_castka_k_uhrade": str(nast.auto_castka_k_uhrade),
                 "auto_pocet_treninku": str(nast.auto_pocet_treninku),
+                "hromadne_surplus": str(nast.hromadne_surplus),
                 "aplikovat_na_vsechny": "1",
                 "email_variant": nast.email_variant,
                 "ucet_nazev_1": nast.ucet_nazev_1,
                 "ucet_nazev_2": nast.ucet_nazev_2,
+                "ucet_nazev_3": nast.ucet_nazev_3,
                 "ucet_varianta_1": nast.ucet_varianta_1,
                 "ucet_varianta_2": nast.ucet_varianta_2,
+                "ucet_varianta_3": nast.ucet_varianta_3,
                 "variabilni_symbol_popis": nast.variabilni_symbol_popis,
             },
         )
