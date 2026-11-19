@@ -720,7 +720,22 @@ class TreningAdmin(RoleGateMixin, ConfigurableListPerPageMixin, admin.ModelAdmin
                 except Exception:
                     pass
             day_form.initial["datum"] = initial_date
-            formset = FormSetClass(prefix="slots")
+            trener_raw = (request.GET.get("trener") or "").strip()
+            if trener_raw.isdigit():
+                day_form.initial["trener"] = int(trener_raw)
+            slot_initial = {}
+            time_raw = (request.GET.get("time") or "").strip()
+            if time_raw:
+                for time_fmt in ("%H:%M", "%H:%M:%S"):
+                    try:
+                        slot_initial["cas"] = datetime.strptime(time_raw, time_fmt).time()
+                        break
+                    except ValueError:
+                        pass
+            formset = FormSetClass(
+                prefix="slots",
+                initial=[slot_initial] if slot_initial else None,
+            )
             context = self._add_form_context(request, day_form, formset)
             return TemplateResponse(request, self.add_form_template, context)
         return super().add_view(request, form_url=form_url, extra_context=extra_context)

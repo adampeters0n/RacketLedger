@@ -2050,16 +2050,19 @@ class PronajemTests(TestCase):
         delky = [int(d["value"]) for d in opts["delky"]]
         self.assertEqual(max(delky), 420)
         self.assertEqual(delky, [c[0] for c in SystemNastaveni.PRONAJEM_DELKA_MINUT_CHOICES])
-        self.assertIn("HALA", opts["kurty_by_sezona"])
+        self.assertIn(Cenik.Kurt.HALA, opts["kurty_by_sezona"])
         self.assertEqual(
-            [k["value"] for k in opts["kurty_by_sezona"]["HALA"]],
+            [k["value"] for k in opts["kurty_by_sezona"][Cenik.Kurt.HALA]],
             ["HALA_1", "HALA_2", "HALA_3", "HALA_4"],
         )
         self.assertEqual(
-            [k["value"] for k in opts["kurty_by_sezona"]["VENEK"]],
+            [k["value"] for k in opts["kurty_by_sezona"][Cenik.Kurt.VENEK]],
             ["KURT_1", "KURT_2", "ANTUKA_1", "ANTUKA_2", "KURT_V", "ANTUKA_N"],
         )
-        self.assertEqual([c["value"] for c in opts["ceny_by_sezona"]["VENEK"]], ["220", "250"])
+        self.assertEqual(
+            [c["value"] for c in opts["ceny_by_sezona"][Cenik.Kurt.VENEK]],
+            ["220", "250"],
+        )
 
         resp = self.client.post(
             "/admin/core/pronajem/schedule/staly/",
@@ -2946,7 +2949,7 @@ class ScheduleLongPressAddTests(TestCase):
         self.assertContains(response, "admin/js/kalendar.js")
         self.assertContains(response, "data-quick-add-url")
         self.assertContains(response, "data-move-url")
-        self.assertContains(response, 'data-hold-ms="450"')
+        self.assertContains(response, 'data-hold-ms="480"')
         self.assertContains(response, 'id="qa-overlay"')
         self.assertContains(response, 'id="qa-options"')
 
@@ -3038,14 +3041,20 @@ class ScheduleLongPressAddTests(TestCase):
 
     def test_kurt_pro_datum_uses_vychozi_sezona(self):
         from datetime import date
-        from core.models import SystemNastaveni
+        from core.models import Cenik, SystemNastaveni
 
         nast = SystemNastaveni.load()
-        nast.vychozi_sezona = "Léto"
+        nast.sezona_automaticky_kurt = False
+        nast.vychozi_sezona = Cenik.Kurt.VENEK
         nast.save(sync_colors=False)
 
-        self.assertEqual(nast.kurt_pro_datum(date(2026, 7, 15)), "Léto")
-        self.assertEqual(nast.kurt_pro_datum(date(2026, 1, 15)), "Léto")
+        self.assertEqual(nast.kurt_pro_datum(date(2026, 7, 15)), Cenik.Kurt.VENEK)
+        self.assertEqual(nast.kurt_pro_datum(date(2026, 1, 15)), Cenik.Kurt.VENEK)
+
+        nast.sezona_automaticky_kurt = True
+        nast.save(sync_colors=False)
+        self.assertEqual(nast.kurt_pro_datum(date(2026, 7, 15)), Cenik.Kurt.VENEK)
+        self.assertEqual(nast.kurt_pro_datum(date(2026, 1, 15)), Cenik.Kurt.HALA)
 
     def test_email_subject_prefix(self):
         from core.models import SystemNastaveni
@@ -3085,9 +3094,9 @@ class ScheduleLongPressAddTests(TestCase):
         from django.contrib.auth import get_user_model
         from django.test import RequestFactory
         from core.admin_views import admin_nastaveni_vzhled_view
-        from core.models import SystemNastaveni, UserPreference
+        from core.models import SystemNastaveni, UzivatelskyVzhled
 
-        user = get_user_model().objects.create_superuser("admin", "admin@test.com", "pass")
+        user = get_user_model().objects.create_superuser("admin2", "admin2@test.com", "pass")
         nast_before = SystemNastaveni.load()
         sys_variant = nast_before.barevna_varianta
         sys_tmavy = nast_before.tmavy_rezim
@@ -3111,9 +3120,9 @@ class ScheduleLongPressAddTests(TestCase):
         nast = SystemNastaveni.load()
         self.assertEqual(nast.barevna_varianta, sys_variant)
         self.assertEqual(nast.tmavy_rezim, sys_tmavy)
-        pref = UserPreference.objects.get(user=user)
-        self.assertEqual(pref.barevna_varianta, "modra")
-        self.assertTrue(pref.tmavy_rezim)
+        vzhled = UzivatelskyVzhled.objects.get(user=user)
+        self.assertEqual(vzhled.barevna_varianta, "modra")
+        self.assertTrue(vzhled.tmavy_rezim)
 
     def test_user_theme_overrides_system(self):
         from django.contrib.auth import get_user_model

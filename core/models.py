@@ -1143,14 +1143,14 @@ class Trening(models.Model):
         return Decimal(val) if val is not None else None
 
     def cena_na_hrace(self) -> Decimal:
+        # Už naúčtováno → drž původní částku i po změně ceníku
+        charged = self._historicka_castka_nauc()
+        if charged is not None:
+            return charged
         pravidlo = self.aktualni_cenik()
         if pravidlo:
             amount = pravidlo.cena_za_hodinu * self.hodiny
             return amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        # Ceník už nepokrývá datum tréninku → zobraz historickou naúčtovanou cenu
-        charged = self._historicka_castka_nauc()
-        if charged is not None:
-            return charged
         return Decimal("0.00")
 
     def cena_pro_nove_nauceni(self) -> Decimal:
