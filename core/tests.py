@@ -1222,12 +1222,15 @@ class ChangelistSearchTests(TestCase):
         names = ["Cattaneo", "Černý", "Dvořák", "Havel", "Chmel", "Ivan"]
         self.assertEqual(sorted(names, key=czech_sort_key), names)
 
+        expr = czech_order_expr("prijmeni")
+        self.assertIsNotNone(expr)
+
         for name in names:
             Hrac.objects.get_or_create(jmeno="Test", prijmeni=name)
 
         ordered = list(
             Hrac.objects.filter(jmeno="Test", prijmeni__in=names)
-            .order_by(czech_order_expr("prijmeni"), "id")
+            .order_by(expr, "id")
             .values_list("prijmeni", flat=True)
         )
         self.assertEqual(ordered, names)

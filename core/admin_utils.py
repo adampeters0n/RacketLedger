@@ -336,7 +336,11 @@ _pg_czech_collation_name: str | None | bool = False  # False = unknown, None = u
 
 
 def postgres_czech_collation() -> str | None:
-    """Vrátí název dostupné české ICU/libc kolace na Postgresu, jinak None."""
+    """Vrátí název dostupné české ICU/libc kolace na Postgresu, jinak None.
+
+    Čte ``pg_collation`` (bez zkušebního COLLATE), aby se v TestCase
+    neaborovala transakce při chybějící kolaci.
+    """
     global _pg_czech_collation_name
     if _pg_czech_collation_name is not False:
         return _pg_czech_collation_name  # type: ignore[return-value]
@@ -347,19 +351,22 @@ def postgres_czech_collation() -> str | None:
         _pg_czech_collation_name = None
         return None
 
-    for name in _PG_CZECH_COLLATIONS:
-        if not name.replace("-", "").replace("_", "").isalnum():
-            continue
-        try:
-            with connection.cursor() as cursor:
-                cursor.execute(f'SELECT %s COLLATE "{name}"', ["č"])
-            _pg_czech_collation_name = name
-            return name
-        except Exception:
-            try:
-                connection.rollback()
-            except Exception:
-                pass
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT collname FROM pg_collation WHERE collname = ANY(%s)",
+                [list(_PG_CZECH_COLLATIONS)],
+            )
+            found = {row[0] for row in cursor.fetchall()}
+        for name in _PG_CZECH_COLLATIONS:
+            if name in found:
+                _pg_czech_collation_name = name
+                return name
+    except Exception:
+        # Katalog nedostupný / jiný vendor quirk → fallback bez kolace
+        _pg_czech_collation_name = None
+        return None
+
     _pg_czech_collation_name = None
     return None
 
@@ -383,4 +390,14 @@ def czech_order_expr(field_name: str, *, descending: bool = False):
     if connection.vendor == "sqlite":
         expr = Collate(field_name, "CZECH")
         return expr.desc() if descending else expr
+
+    if connection.vendor == "postgresql":
+        collation = postgres_czech_collation()
+        if collation:
+            expr = Collate(field_name, collation)
+            return expr.desc() if descending else expr
+
+    # Bez české kolace: řazení přes transliterační klíč (stejná logika jako czech_sort_key).
+    expr = czech_sort_key_expr(field_name)
+    return expr.desc() if descending else expr
 
