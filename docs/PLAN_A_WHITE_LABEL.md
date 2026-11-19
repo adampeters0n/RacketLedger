@@ -5,7 +5,7 @@ Shared multi-tenant (Tenant + řádková izolace) **neděláme**, dokud flotila 
 
 **Model:** každá platící škola = vlastní deploy + DB + doména + branding.  
 **Platby za software:** Stripe (mimo appku nebo lehká integrace).  
-**Vyúčtování hráčů:** beze změny (oddělený cashflow klubu).
+**Vyúčtování hráčů:** e-mail s rozpisem + online platba (Stripe Connect) → automatický zápis `PLATBA`; bankovní převod zůstává fallback.
 
 ```text
 Prodej / smlouva → provision instance → bootstrap_instance → klub běží
@@ -37,13 +37,13 @@ Cíl: každá instance je bezpečně provozuschopná. Nezávislé na počtu klub
 
 Cíl: nový klub = opakovatelný checklist, ne ad-hoc.
 
-| # | Úkol | Hotovo když |
-|---|------|-------------|
-| 1.1 | Runbook „Nová instance“ | Jeden dokument: DNS, Postgres, `.env`, migrate, `bootstrap_instance`, SMTP test, `check_instance` |
-| 1.2 | Šablona `.env` per klub | `.env.example` pokryje všechny produkční klíče; žádné baked-in hosty |
-| 1.3 | Upgrade playbook | Postup: migrate + collectstatic + restart na **jedné** instanci; checklist pro N klubů |
-| 1.4 | Inventář instancí | Jednoduchá tabulka mimo app (Notion/sheet): klub, URL, DB, Stripe customer, kontakt |
-| 1.5 | CI proti Postgres | Volitelně job s Postgres service (dnes SQLite stačí lokálně) |
+| # | Úkol | Stav | Soubor |
+|---|------|------|--------|
+| 1.1 | Runbook „Nová instance“ | hotovo | [docs/ops-new-instance.md](ops-new-instance.md) |
+| 1.2 | Šablona `.env` per klub | hotovo | [`.env.example`](../.env.example) |
+| 1.3 | Upgrade playbook | hotovo | [docs/ops-upgrade.md](ops-upgrade.md) |
+| 1.4 | Inventář instancí | hotovo (šablona) | [docs/instances.example.csv](instances.example.csv) — reálná data mimo git |
+| 1.5 | CI proti Postgres | hotovo | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) |
 
 Reuse: `bootstrap_instance`, `check_instance`, `club_seed`, Docker entrypoint.
 
@@ -51,28 +51,28 @@ Reuse: `bootstrap_instance`, `check_instance`, `club_seed`, Docker entrypoint.
 
 ## Fáze 2 — Peníze za TenisSystém (Stripe)
 
-Cíl: předplatné za software, ne self-serve Tenant v jedné DB.
+Cíl: předplatné za software na existující white-label instance.
 
-| # | Úkol | Hotovo když |
-|---|------|-------------|
-| 2.1 | Stripe produkty / prices | Plán(y) + trial v Stripe Dashboard |
-| 2.2 | Manuální napojení | Po zaplacení / smlouvě: záznam customer ID do inventáře + provision instance |
-| 2.3 | Customer Portal odkaz | Owner klubu má v Nastavení odkaz „Správa předplatného“ (Stripe Billing Portal) — **bez** CreateTenant webhooků |
-| 2.4 | Stavy předplatného | Runbook: unpaid → upozornění / suspend instance (manuálně nebo feature flag v `.env` např. `BILLING_ACTIVE=0`) |
+| # | Úkol | Stav |
+|---|------|------|
+| 2.1 | Stripe produkty / portal / webhook v Dashboard | docs [ops-stripe.md](ops-stripe.md) |
+| 2.2 | Env: secret + price + webhook (+ volitelný customer seed) | docs |
+| 2.3 | Checkout + Customer Portal v Nastavení | hotovo |
+| 2.4 | Webhook → `SoftwareBilling` + gate | hotovo |
 
-**Záměrně ne:** signup → webhook → CreateTenant v shared DB.
+**Záměrně ne:** signup landing → webhook → CreateTenant / nový deploy.
 
 ---
 
 ## Fáze 3 — Provozní polish
 
-| # | Úkol |
-|---|------|
-| 3.1 | Rate-limit login (např. django-axes / cache) |
-| 3.2 | Strukturované logy + Sentry release per deploy |
-| 3.3 | Monitoring: uptime na `/health` + alert při pádu |
-| 3.4 | ESP později (Postmark/SendGrid), pokud SMTP nestačí |
-| 3.5 | Dokumentace: self-serve **neděláme**; onboarding = sales + provision |
+| # | Úkol | Stav |
+|---|------|------|
+| 3.1 | Rate-limit login | hotovo — `django-axes` |
+| 3.2 | Strukturované logy + Sentry release | hotovo — `INSTANCE_NAME`, release fallbacky |
+| 3.3 | Monitoring `/health` | hotovo — [ops-monitoring.md](ops-monitoring.md) |
+| 3.4 | ESP (Postmark/SendGrid) | odloženo — až SMTP nestačí |
+| 3.5 | Docs onboarding ≠ self-serve | hotovo — [ops-onboarding.md](ops-onboarding.md) |
 
 ---
 
@@ -89,16 +89,16 @@ Cíl: předplatné za software, ne self-serve Tenant v jedné DB.
 
 ## Pořadí implementace (checklist)
 
-- [ ] **0.1** Password reset
-- [ ] **0.2** `/health`
-- [ ] **0.3** Produkční checky
-- [ ] **0.4** Sentry
-- [ ] **0.5** S3 média
-- [ ] **0.6** Backup runbook
-- [ ] **0.7** Privacy + Terms
-- [ ] **1.1–1.4** Provisioning runbooky + inventář
-- [ ] **2.1–2.4** Stripe předplatné (manuální + portal)
-- [ ] **3.x** Polish podle potřeby
+- [x] **0.1** Password reset
+- [x] **0.2** `/health`
+- [x] **0.3** Produkční checky
+- [x] **0.4** Sentry
+- [x] **0.5** S3 média
+- [x] **0.6** Backup runbook
+- [x] **0.7** Privacy + Terms
+- [x] **1.1–1.5** Provisioning runbooky + inventář + CI Postgres
+- [x] **2.1–2.4** Stripe předplatné (manuální + portal)
+- [x] **3.1–3.5** Rate-limit, logy/Sentry, monitoring + onboarding docs (ESP odloženo)
 
 **Odhad:** Fáze 0 = dny; Fáze 1 = dny (dokumentace + disciplína); Fáze 2 = dny–týden; Fáze 3 průběžně.
 

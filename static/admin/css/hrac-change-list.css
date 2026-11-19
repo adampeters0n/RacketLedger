@@ -1,1 +1,27 @@
 /* Seznam hráčů – doplňkové styly (modály v hrac-modals.css) */
+
+/* Bez kreditu (trenér/správce): jméno doleva přes celou šířku, ne na střed */
+body.change-list.model-hrac.hrac-no-kredit #result_list thead th.column-jmeno_display,
+body.change-list.model-hrac.hrac-no-kredit #result_list thead th.column-jmeno_display a,
+body.change-list.model-hrac.hrac-no-kredit #result_list thead th.column-jmeno_display .text,
+body.change-list.model-hrac.hrac-no-kredit #result_list tbody th.field-jmeno_display,
+body.change-list.model-hrac.hrac-no-kredit #result_list tbody th.field-jmeno_display a,
+body.change-list.model-hrac.hrac-no-kredit #result_list tbody td.field-jmeno_display,
+body.change-list.model-hrac.hrac-no-kredit #result_list tbody td.field-jmeno_display a,
+body.change-list.model-hrac.hrac-no-kredit #result_list tbody th,
+body.change-list.model-hrac.hrac-no-kredit #result_list tbody th a {
+  text-align: left !important;
+  justify-content: flex-start !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+@media (max-width: 860px) {
+  body.change-list.model-hrac.hrac-no-kredit #result_list thead th.column-jmeno_display,
+  body.change-list.model-hrac.hrac-no-kredit #result_list tbody th.field-jmeno_display,
+  body.change-list.model-hrac.hrac-no-kredit #result_list tbody td.field-jmeno_display,
+  body.change-list.model-hrac.hrac-no-kredit #result_list tbody th {
+    width: auto !important;
+    max-width: none !important;
+  }
+}

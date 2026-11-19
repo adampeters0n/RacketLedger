@@ -1,9 +1,11 @@
-/* Přepsat výchozí Django admin – bubliny a plochy jako globální theme */
+/* Add Trénink – šířka/karty bere form-detail.css (globální design) */
   body #content-main.add-day-page {
-    max-width: 100% !important;
-    padding: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 0 24px !important;
     background: transparent !important;
     border: none !important;
+    box-sizing: border-box !important;
   }
   body #content-main.add-day-page .add-day-card input:not([type="submit"]):not([type="button"]),
   body #content-main.add-day-page .add-day-card select,
@@ -13,11 +15,11 @@
     height: 36px !important;
     min-height: 36px !important;
     padding: 6px 10px !important;
-    border: 1px solid var(--line-200, #929aa4) !important;
-    border-radius: var(--field-radius, 8px) !important;
+    border: 1px solid var(--line-200) !important;
+    border-radius: 8px !important;
     font-size: 14px !important;
-    background: var(--surface, #fff) !important;
-    color: var(--text, #1f2937) !important;
+    background: #fff !important;
+    color: #1f2937 !important;
     box-sizing: border-box !important;
   }
   body #content-main.add-day-page .add-day-card select {
@@ -26,14 +28,11 @@
   }
   body #content-main.add-day-page .add-day-card input:focus,
   body #content-main.add-day-page .add-day-card select:focus,
-  body #content-main.add-day-page .add-day-card textarea:focus,
-  body #content-main.add-day-page .add-day-card input:focus-visible,
-  body #content-main.add-day-page .add-day-card select:focus-visible,
-  body #content-main.add-day-page .add-day-card textarea:focus-visible {
-    outline: 1px solid var(--brand) !important;
-    outline-offset: 1px !important;
-    border-color: var(--brand) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 12%, transparent) !important;
+  body #content-main.add-day-page .add-day-card textarea:focus {
+    outline: none !important;
+    outline-offset: 0 !important;
+    border-color: var(--line-200, #e5e7eb) !important;
+    box-shadow: none !important;
   }
   /* Stejné styly jako add_day – skrýt obsah do připravenosti, ikona kalendáře, pilulky Datum */
   .add-day-page .add-day-hraci-hidden,
@@ -53,6 +52,18 @@
   .add-day-ready #content-main.add-day-page { opacity: 1; visibility: visible; }
   body #content-main.add-day-page .add-day-datum-card .add-day-datum-row img[src*="calendar"],
   body #content-main.add-day-page .add-day-datum-card .add-day-datum-row img[src*="icon-calendar"] { display: none !important; }
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-row .add-day-datum-shortcuts a#add-day-calendar img {
+    display: block !important;
+    width: 16px !important;
+    height: 16px !important;
+    flex-shrink: 0 !important;
+  }
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-row .add-day-datum-shortcuts a#add-day-calendar {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-width: 16px !important;
+    flex-shrink: 0 !important;
+  }
   body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts {
     justify-content: flex-start !important;
     display: inline-flex !important;
@@ -66,64 +77,38 @@
     align-self: flex-start !important;
     gap: 4px !important;
   }
-  /* Dnes / −7 dní / kalendář – bez glow; hover v barvě z nastavení */
   body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts a {
     display: inline-flex !important;
     align-items: center !important;
-    justify-content: center !important;
     gap: 4px !important;
-    padding: 2px 4px !important;
-    border-radius: 4px !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    color: var(--text, #111827) !important;
-    text-decoration: none !important;
+    padding: 3px 8px !important;
+    border-radius: 999px !important;
+    border: 1px solid color-mix(in srgb, var(--brand, #E67817) 28%, var(--line, #e5e7eb)) !important;
+    background: color-mix(in srgb, var(--brand, #E67817) 12%, #fff) !important;
+    color: var(--brand-600, var(--brand, #E67817)) !important;
     font-weight: 600 !important;
+    text-decoration: none !important;
   }
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts a:hover,
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts a:hover {
+    background: color-mix(in srgb, var(--brand, #E67817) 20%, #fff) !important;
+    border-color: color-mix(in srgb, var(--brand, #E67817) 40%, var(--line, #e5e7eb)) !important;
+    color: var(--brand-600, var(--brand, #E67817)) !important;
+  }
   body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts a:focus {
-    background: transparent !important;
-    box-shadow: none !important;
-    outline: none !important;
-    color: var(--brand) !important;
+    outline: none !important; outline-offset: 0 !important; border-radius: 999px !important;
   }
-  /* Ikona kalendáře – vždy barva z nastavení */
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts a#add-day-calendar {
-    width: 20px !important;
-    height: 20px !important;
-    min-width: 20px !important;
-    padding: 0 !important;
-    flex-shrink: 0 !important;
-    background-color: var(--brand) !important;
-    background-image: none !important;
-    -webkit-mask-image: url("../img/icon-calendar-single.svg");
-    mask-image: url("../img/icon-calendar-single.svg");
-    -webkit-mask-size: 16px 16px;
-    mask-size: 16px 16px;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    mask-position: center;
-  }
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts a#add-day-calendar:hover,
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts a#add-day-calendar:focus {
-    background-color: var(--brand-600, var(--brand)) !important;
-  }
-  body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts a#add-day-calendar img {
-    display: block !important;
-    width: 16px !important;
-    height: 16px !important;
-    opacity: 0 !important;
-    flex-shrink: 0 !important;
+  body #content-main.add-day-page .add-day-datum-card .add-day-datum-shortcuts a img {
+    filter: none;
+    opacity: 0.9;
   }
   body #content-main.add-day-page .add-day-datum-card .add-day-datum-row label.add-day-label-inline {
     display: block !important;
     font-weight: 700 !important;
-    color: var(--text-strong, #111827) !important;
-    margin-bottom: 4px !important;
-    order: -1 !important;
+    color: #111827 !important;
+    margin: 0 0 8px 0 !important;
+    order: unset !important;
   }
-  /* Pole Datum – stejná buňka jako add-day: type=date nebo .add-day-datum-input, šedý border, oranžový focus */
+  /* Pole Datum – stejná buňka jako add-day: type=date nebo .add-day-datum-input, šedý border, neutrální focus */
   body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="date"],
   body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input.add-day-datum-input,
   body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="text"].vDateField {
@@ -132,20 +117,20 @@
     box-sizing: border-box !important;
     height: 36px !important;
     padding: 6px 10px !important;
-    background: var(--surface, #fff) !important;
-    border: 1px solid var(--line-200, #929aa4) !important;
-    color: var(--text, #1f2937) !important;
-    border-radius: var(--field-radius, 8px) !important;
+    background: #fff !important;
+    border: 1px solid var(--line-200) !important;
+    color: #1f2937 !important;
+    border-radius: 8px !important;
     font-size: 14px !important;
   }
   body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="date"]:focus,
   body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="date"]:focus-visible,
   body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input.add-day-datum-input:focus,
   body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input.vDateField:focus {
-    outline: 1px solid var(--brand) !important;
-    outline-offset: 1px !important;
-    border-color: var(--brand) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 12%, transparent) !important;
+    outline: none !important;
+    outline-offset: 0 !important;
+    border-color: var(--line-200, #e5e7eb) !important;
+    box-shadow: none !important;
   }
   /* Skrýt nativní ikonu kalendáře v prohlížeči – jako add_day */
   body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="date"]::-webkit-calendar-picker-indicator {
@@ -164,7 +149,7 @@
   /* Čas v Trénink: stejná buňka jako add_day – řádek label + input */
   body #content-main.add-day-page .add-day-fields .add-day-row > p.time,
   body #content-main.add-day-page .add-day-fields .add-day-row > p.date { margin: 0 !important; }
-  /* Čas – stejná bublina jako ostatní pole */
+  /* Čas – funkčně stejné jako add-day: type="time" (nativní time picker), stejná buňka */
   body #content-main.add-day-page .add-day-fields .add-day-row input[type="time"],
   body #content-main.add-day-page .add-day-fields .add-day-row input.vTimeField {
     width: 100% !important;
@@ -173,60 +158,68 @@
     height: 36px !important;
     min-height: 36px !important;
     padding: 6px 10px !important;
-    border: 1px solid var(--line-200, #929aa4) !important;
-    border-radius: var(--field-radius, 8px) !important;
+    border: 1px solid var(--line-200) !important;
+    border-radius: 8px !important;
     font-size: 14px !important;
-    background: var(--surface, #fff) !important;
-    color: var(--text, #1f2937) !important;
+    background: #fff !important;
+    color: #1f2937 !important;
   }
   body #content-main.add-day-page .add-day-fields .add-day-row input[type="time"]:focus,
   body #content-main.add-day-page .add-day-fields .add-day-row input.vTimeField:focus {
-    outline: 1px solid var(--brand) !important;
-    outline-offset: 1px !important;
-    border-color: var(--brand) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 12%, transparent) !important;
+    outline: none !important;
+    outline-offset: 0 !important;
+    border-color: var(--line-200, #e5e7eb) !important;
+    box-shadow: none !important;
   }
 
-/* Stejný layout – plochy z theme tokenů */
-  body #content-main.add-day-page { max-width: 100% !important; box-sizing: border-box !important; padding: 0 0 24px !important; min-width: 0 !important; }
+/* Stejný layout jako add_day – přepisuje výchozí Django (body prefix pro specifitu) */
+  body #content-main.add-day-page { width: 100% !important; max-width: none !important; box-sizing: border-box !important; padding: 0 0 24px !important; min-width: 0 !important; }
   body #content-main.add-day-page * { box-sizing: border-box !important; }
-  body #content-main.add-day-page form { max-width: 100% !important; min-width: 0 !important; }
-  body #content-main.add-day-page h1 {
-    margin-bottom: 20px !important;
-    font-size: 1.5rem !important;
-    color: var(--text-strong, #111827) !important;
-    border-bottom: 3px solid var(--brand) !important;
-    padding-bottom: 8px !important;
-  }
+  body #content-main.add-day-page form { width: 100% !important; max-width: none !important; min-width: 0 !important; }
+  body #content-main.add-day-page > h1 { display: none !important; }
+  /* Karty: tokeny z form-detail (stejné jako change-form .module.aligned) */
   body #content-main.add-day-page .add-day-card {
-    background: var(--surface, #fff) !important;
-    border: 1px solid var(--line, #e5e7eb) !important;
-    border-radius: 10px !important;
+    background: #fff !important;
+    border: 1px solid var(--ts-card-border, #e5e7eb) !important;
+    border-radius: var(--ts-card-radius, 10px) !important;
     box-shadow: 0 1px 2px rgba(0,0,0,.04) !important;
     padding: 16px !important;
     margin-bottom: 12px !important;
     box-sizing: border-box !important;
+    width: 100% !important;
     max-width: 100% !important;
     min-width: 0 !important;
   }
-  body #content-main.add-day-page .add-day-card-title { margin: 0 0 14px !important; font-size: 1rem !important; font-weight: 700 !important; color: var(--text-strong, #111827) !important; }
-  body #content-main.add-day-page .add-day-slot-title-row { display: flex !important; align-items: center !important; justify-content: flex-end !important; gap: 12px !important; min-height: 0 !important; }
-  body #content-main.add-day-page .add-day-slot-title-row:not(:has(.add-day-slot-close)) { display: none !important; margin: 0 !important; }
-  body #content-main.add-day-page .add-day-slot-title-text[hidden] { display: none !important; }
-  body #content-main.add-day-page .add-day-row { margin: 0 0 16px !important; }
+  body #content-main.add-day-page .add-day-card-title {
+    margin: 0 0 14px !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #111827 !important;
+  }
+  body #content-main.add-day-page .add-day-slot-title-row { display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 12px !important; }
+  body #content-main.add-day-page .add-day-slot-title-text { flex: 1 !important; min-width: 0 !important; }
+  /* Řádky / labely / bubliny → form-detail.css (--ts-row-gap, --ts-label-*, --ts-field-*) */
+  body #content-main.add-day-page .add-day-row { margin: 0 0 var(--ts-row-gap, 16px) !important; }
   body #content-main.add-day-page .add-day-row:last-of-type { margin-bottom: 0 !important; }
-  body #content-main.add-day-page .add-day-row label { display: block !important; margin-bottom: 8px !important; font-weight: 700 !important; color: var(--text-strong, #111827) !important; font-size: 14px !important; }
+  body #content-main.add-day-page .add-day-row label {
+    display: block !important;
+    margin: 0 0 var(--ts-label-gap, 8px) !important;
+    padding: 0 !important;
+    font-weight: var(--ts-label-weight, 700) !important;
+    color: #111827 !important;
+    font-size: var(--ts-label-size, 14px) !important;
+  }
   body #content-main.add-day-page .add-day-row input:not([type="submit"]):not([type="button"]),
   body #content-main.add-day-page .add-day-row select:not(.add-day-hraci-picker),
   body #content-main.add-day-page .add-day-row textarea {
     width: 100% !important;
-    max-width: 360px !important;
+    max-width: var(--ts-field-max, 360px) !important;
     box-sizing: border-box !important;
-    height: 36px !important;
-    min-height: 36px !important;
-    padding: 6px 10px !important;
-    border: 1px solid var(--line-200, #929aa4) !important;
-    border-radius: var(--field-radius, 8px) !important;
+    height: var(--ts-field-h, 36px) !important;
+    min-height: var(--ts-field-h, 36px) !important;
+    padding: var(--ts-field-pad-y, 6px) var(--ts-field-pad-x, 10px) !important;
+    border: 1px solid var(--ts-field-border, var(--line-200, #929aa4)) !important;
+    border-radius: var(--ts-field-radius, 8px) !important;
     font-size: 14px !important;
     background: var(--surface, #fff) !important;
     color: var(--text, #1f2937) !important;
@@ -234,262 +227,410 @@
   body #content-main.add-day-page .add-day-row textarea { height: 64px !important; min-height: 64px !important; resize: vertical !important; }
   body #content-main.add-day-page .add-day-row input:focus,
   body #content-main.add-day-page .add-day-row select:focus,
-  body #content-main.add-day-page .add-day-row textarea:focus,
-  body #content-main.add-day-page .add-day-row input:focus-visible,
-  body #content-main.add-day-page .add-day-row select:focus-visible,
-  body #content-main.add-day-page .add-day-row textarea:focus-visible {
-    outline: 1px solid var(--brand) !important;
-    outline-offset: 1px !important;
-    border-color: var(--brand) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 12%, transparent) !important;
+  body #content-main.add-day-page .add-day-row textarea:focus {
+    outline: none !important;
+    outline-offset: 0 !important;
+    border-color: var(--line-200, #e5e7eb) !important;
+    box-shadow: none !important;
   }
-  body #content-main.add-day-page .add-day-datum-row { display: flex !important; flex-direction: column !important; gap: 6px !important; align-items: flex-start !important; max-width: 100% !important; min-width: 0 !important; }
-  body #content-main.add-day-page .add-day-datum-input-wrap { display: inline-flex !important; flex-direction: column !important; align-items: flex-start !important; max-width: 100% !important; gap: 6px !important; }
-  body #content-main.add-day-page .add-day-datum-input-wrap input { margin: 0 !important; }
-  body #content-main.add-day-page .add-day-label-inline { order: -1 !important; }
-  body #content-main.add-day-page .add-day-hraci-wrap { margin-top: 16px !important; padding-top: 16px !important; border-top: 1px solid var(--line, #e5e7eb) !important; overflow: visible !important; border-radius: 0 0 10px 10px !important; }
-  body #content-main.add-day-page .add-day-hraci-title {
+  body #content-main.add-day-page .add-day-datum-row {
+    display: block !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+  body #content-main.add-day-page .add-day-datum-input-wrap {
+    display: block !important;
+    max-width: 100% !important;
     margin: 0 !important;
-    padding: 12px 14px !important;
-    background: var(--brand-100, #fff3df) !important;
-    color: var(--text-strong, #111827) !important;
+    padding: 0 !important;
+  }
+  body #content-main.add-day-page .add-day-datum-input-wrap input { margin: 0 !important; }
+  /* Datum/čas – stejná bublina jako Trenér (form-detail.css); jen šířka wrapu */
+  body #content-main.add-day-page .add-day-datum-input-wrap .ts-date-picker {
+    display: block !important;
+    width: min(100%, var(--ts-field-max, 360px)) !important;
+    max-width: var(--ts-field-max, 360px) !important;
+    margin: 0 !important;
+  }
+  body #content-main.add-day-page .add-day-datum-input-wrap .ts-date-trigger {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: var(--ts-field-max, 360px) !important;
+    min-height: var(--ts-field-h, 36px) !important;
+    height: var(--ts-field-h, 36px) !important;
+    padding: var(--ts-field-pad-y, 6px) var(--ts-field-pad-x, 10px) !important;
+    border: 1px solid var(--ts-field-border, var(--line-200, #929aa4)) !important;
+    border-radius: var(--ts-field-radius, 8px) !important;
+    font-weight: 500 !important;
+    box-shadow: none !important;
+  }
+  body #content-main.add-day-page .add-day-fields .ts-time-picker--enhanced,
+  body #content-main.add-day-page .add-day-row .ts-time-picker {
+    display: block !important;
+    width: min(100%, var(--ts-field-max, 360px)) !important;
+    max-width: var(--ts-field-max, 360px) !important;
+  }
+  body #content-main.add-day-page .add-day-fields .ts-time-trigger,
+  body #content-main.add-day-page .add-day-row .ts-time-trigger {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: var(--ts-field-max, 360px) !important;
+    min-height: var(--ts-field-h, 36px) !important;
+    height: var(--ts-field-h, 36px) !important;
+    padding: var(--ts-field-pad-y, 6px) var(--ts-field-pad-x, 10px) !important;
+    border: 1px solid var(--ts-field-border, var(--line-200, #929aa4)) !important;
+    border-radius: var(--ts-field-radius, 8px) !important;
+    font-weight: 500 !important;
+    box-shadow: none !important;
+  }
+  /* Hráči – stejný blok jako v rozvrhu (qa-field--hraci) */
+  body #content-main.add-day-page .add-day-hraci-wrap {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    margin-top: 16px !important;
+    padding: 10px !important;
+    border: 1px solid var(--line, #E5E7EB) !important;
+    border-radius: 10px !important;
+    background: #fafafa !important;
+    overflow: visible !important;
+  }
+  body #content-main.add-day-page .add-day-hraci-label {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
     font-size: 13px !important;
     font-weight: 700 !important;
-    text-transform: uppercase !important;
-    letter-spacing: .02em !important;
-    border-bottom: 1px solid var(--line, #e5e7eb) !important;
+    color: var(--text-strong, #111) !important;
+    letter-spacing: .01em !important;
+    text-transform: none !important;
+    background: transparent !important;
+    border: none !important;
   }
-  body #content-main.add-day-page .add-day-hraci-table { position: relative !important; padding: 12px 14px !important; background: var(--surface, #fff) !important; overflow: visible !important; }
-  body #content-main.add-day-page .add-day-hraci-rows { margin-bottom: 12px !important; }
-  body #content-main.add-day-page .add-day-hraci-row { position: relative !important; display: flex !important; align-items: center !important; gap: 10px !important; margin-bottom: 10px !important; }
-  body #content-main.add-day-page .add-day-hraci-row:last-child { margin-bottom: 0 !important; }
-  body #content-main.add-day-page .add-day-hraci-search-wrap { position: relative !important; width: 100% !important; max-width: 360px !important; overflow: visible !important; }
+  body #content-main.add-day-page .add-day-hraci-table {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+  body #content-main.add-day-page .add-day-hraci-rows {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    margin: 0 !important;
+  }
+  body #content-main.add-day-page .add-day-hraci-row {
+    position: relative !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    margin: 0 !important;
+  }
+  body #content-main.add-day-page .add-day-hraci-search-wrap {
+    position: relative !important;
+    flex: 1 !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+  }
   body #content-main.add-day-page .add-day-hraci-search {
     width: 100% !important;
     box-sizing: border-box !important;
-    height: 36px !important;
-    min-height: 36px !important;
-    padding: 6px 10px !important;
-    border: 1px solid var(--line-200, #929aa4) !important;
-    border-radius: var(--field-radius, 8px) !important;
+    min-height: 40px !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 8px 12px !important;
+    border: 1px solid var(--line, #E5E7EB) !important;
+    border-radius: 8px !important;
     background: var(--surface, #fff) !important;
     font-size: 14px !important;
-    color: var(--text, #1f2937) !important;
+    font-weight: 600 !important;
+    color: var(--text-strong, #111) !important;
+    line-height: 1.3 !important;
   }
   body #content-main.add-day-page .add-day-hraci-search:focus {
-    outline: 1px solid var(--brand) !important;
-    outline-offset: 1px !important;
-    border-color: var(--brand) !important;
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 12%, transparent) !important;
+    outline: none !important;
+    outline-offset: 0 !important;
+    border-color: var(--line, #E5E7EB) !important;
+    box-shadow: none !important;
   }
   body #content-main.add-day-page .add-day-hraci-dropdown {
-    position: absolute !important;
-    top: 100% !important;
-    left: 0 !important;
-    right: 0 !important;
-    margin: 4px 0 0 0 !important;
-    padding: 0 !important;
-    list-style: none !important;
-    background: var(--surface, #fff) !important;
-    border: 1px solid var(--line, #e5e7eb) !important;
-    border-radius: var(--field-radius, 8px) !important;
-    box-shadow: 0 4px 16px rgba(0,0,0,.12) !important;
-    max-height: 8em !important;
-    overflow-y: auto !important;
-    z-index: 1000 !important;
     display: none !important;
-    min-height: 2px !important;
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    top: auto !important;
+    z-index: 2 !important;
+    margin: 6px 0 0 !important;
+    padding: 4px 0 !important;
+    list-style: none !important;
+    max-height: 7.5em !important;
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    background: var(--surface, #fff) !important;
+    border: 1px solid var(--line, #E5E7EB) !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
   }
-  /* max 3 viditelní hráči, zbytek se scrolluje */
   body #content-main.add-day-page .add-day-hraci-dropdown.is-open { display: block !important; }
-  body #content-main.add-day-page .add-day-hraci-dropdown li { padding: 10px 12px !important; cursor: pointer !important; font-size: 14px !important; color: var(--text-strong, #111827) !important; border-bottom: 1px solid var(--line, #f3f4f6) !important; }
+  body #content-main.add-day-page .add-day-hraci-dropdown li {
+    padding: 11px 12px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    color: var(--text-strong, #111) !important;
+    border-bottom: 1px solid var(--table-row-alt, #F9FAFB) !important;
+  }
   body #content-main.add-day-page .add-day-hraci-dropdown li:last-child { border-bottom: none !important; }
   body #content-main.add-day-page .add-day-hraci-dropdown li:hover,
-  body #content-main.add-day-page .add-day-hraci-dropdown li.is-active { background: var(--brand-100) !important; color: var(--brand-600, var(--brand)) !important; }
-  body #content-main.add-day-page .add-day-hraci-add-row { margin-top: 12px !important; }
-  body #content-main.add-day-page .add-day-btn-pridat-hrace {
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 10px 20px !important;
-    background: var(--brand) !important;
-    border: 1px solid var(--brand) !important;
-    color: #fff !important;
-    font-weight: 700 !important;
-    font-size: 14px !important;
-    border-radius: 999px !important;
-    cursor: pointer !important;
+  body #content-main.add-day-page .add-day-hraci-dropdown li.is-active {
+    background: transparent !important;
+    color: var(--brand, #E67817) !important;
   }
-  body #content-main.add-day-page .add-day-btn-pridat-hrace:hover { filter: brightness(1.05) !important; }
-  body #content-main.add-day-page .add-day-hraci-row .add-day-hraci-search-wrap { flex: 1 !important; min-width: 0 !important; padding-right: 26px !important; }
+  /* .add-day-btn-pridat-hrace → ts-buttons.css */
+  body #content-main.add-day-page .add-day-btn-pridat-hrace {
+    align-self: flex-start !important;
+  }
+  body #content-main.add-day-page .add-day-hraci-row .add-day-hraci-search-wrap {
+    flex: 1 !important;
+    min-width: 0 !important;
+    padding-right: 0 !important;
+  }
   body #content-main.add-day-page .add-day-hraci-row .btn-remove {
-    position: absolute !important;
-    top: -2px !important;
-    right: 0 !important;
-    width: 18px !important;
-    height: 18px !important;
-    min-width: 18px !important;
-    min-height: 18px !important;
+    position: static !important;
+    flex-shrink: 0 !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    margin-top: 3px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
-    border: 1px solid var(--line-200, #9ca3af) !important;
-    border-radius: 4px !important;
-    background: var(--surface, #f9fafb) !important;
-    color: var(--muted, #6b7280) !important;
-    font-size: 12px !important;
+    border: 1px solid var(--line, #E5E7EB) !important;
+    border-radius: var(--btn-radius, 100px) !important;
+    background: var(--surface, #fff) !important;
+    color: var(--muted, #64748B) !important;
+    font-size: 18px !important;
+    font-weight: 700 !important;
     line-height: 1 !important;
     cursor: pointer !important;
   }
-  body #content-main.add-day-page .add-day-hraci-row .btn-remove:hover { color: #b91c1c !important; background: #fef2f2 !important; border-color: #fecaca !important; }
+  body #content-main.add-day-page .add-day-hraci-row .btn-remove:hover {
+    color: #b91c1c !important;
+    background: #fef2f2 !important;
+    border-color: #fecaca !important;
+  }
   body #content-main.add-day-page .add-day-hrac-field-hidden { position: absolute !important; left: -9999px !important; width: 1px !important; height: 1px !important; overflow: hidden !important; }
   body #content-main.add-day-page .add-day-hrac-field-hidden select { position: absolute !important; left: -9999px !important; }
-  /* Řádek Uložit a tlačítka – styly jsou v static/admin/custom.css (stejné jako .submit-row) */
-  body #content-main.add-day-page .errorlist { margin: 4px 0 0 !important; color: #b91c1c !important; font-size: 13px !important; padding-left: 20px !important; }
-  body #content-main.add-day-page .add-day-add-slot-card { margin-top: 4px !important; }
-  body #content-main.add-day-page .add-day-add-slot-inner { display: flex !important; align-items: center !important; justify-content: center !important; }
-  body #content-main.add-day-page .add-day-btn-add-slot {
-    display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 8px !important;
-    padding: 10px 20px !important; border-radius: 999px !important; border: 1px solid var(--brand) !important;
-    background: var(--brand) !important; color: #fff !important; font-weight: 700 !important; font-size: 14px !important; cursor: pointer !important;
+  /*
+    Uložit / Uložit: Přidat Další – jen tokeny z ts-buttons.css.
+    Žádné lokální barvy/velikosti (změna designu = --ts-btn-* v ts-buttons.css).
+  */
+  body #content-main.add-day-page .add-day-submit-row .ts-btn,
+  body #content-main.add-day-page .add-day-submit-row .add-day-btn-save,
+  body #content-main.add-day-page .add-day-submit-row .add-day-btn-save-addanother,
+  body.add-form #content-main.add-day-page .add-day-submit-row button[type="submit"] {
+    box-sizing: border-box !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    min-width: 0 !important;
+    width: auto !important;
+    min-height: var(--ts-btn-h, 34px) !important;
+    height: var(--ts-btn-h, 34px) !important;
+    max-height: var(--ts-btn-h, 34px) !important;
+    margin: 0 !important;
+    padding: 0 var(--ts-btn-pad-x, 13px) !important;
+    border-radius: var(--ts-btn-radius, 999px) !important;
+    border: 1px solid var(--ts-btn-border, color-mix(in srgb, var(--line, #e5e7eb) 82%, transparent)) !important;
+    background: var(--ts-btn-bg, #fff) !important;
+    background-color: var(--ts-btn-bg, #fff) !important;
+    background-image: none !important;
+    color: var(--ts-btn-fg, var(--text-strong, #111827)) !important;
+    -webkit-text-fill-color: var(--ts-btn-fg, var(--text-strong, #111827)) !important;
+    font-family: inherit !important;
+    font-size: var(--ts-btn-font, 12px) !important;
+    font-weight: var(--ts-btn-weight, 650) !important;
+    letter-spacing: var(--ts-btn-tracking, 0.01em) !important;
+    line-height: 1 !important;
+    text-transform: none !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    box-shadow: none !important;
+    filter: none !important;
+    cursor: pointer !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
   }
-  body #content-main.add-day-page .add-day-btn-add-slot:hover { filter: brightness(1.05) !important; }
+
+  body #content-main.add-day-page .add-day-submit-row .ts-btn:hover,
+  body #content-main.add-day-page .add-day-submit-row .add-day-btn-save:hover,
+  body #content-main.add-day-page .add-day-submit-row .add-day-btn-save-addanother:hover,
+  body.add-form #content-main.add-day-page .add-day-submit-row button[type="submit"]:hover {
+    background: var(--ts-btn-bg-hover, var(--brand-100, #fff4e8)) !important;
+    background-color: var(--ts-btn-bg-hover, var(--brand-100, #fff4e8)) !important;
+    border-color: var(--ts-btn-border-hover, color-mix(in srgb, var(--brand, #e67817) 18%, transparent)) !important;
+    color: var(--ts-btn-fg, var(--text-strong, #111827)) !important;
+    -webkit-text-fill-color: var(--ts-btn-fg, var(--text-strong, #111827)) !important;
+    filter: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Change form: Uložit + Přidat další vlevo, Odstranit napravo vedle nich */
+  body.change-form #content-main.add-day-page .add-day-submit-row {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+  }
+  body.change-form #content-main.add-day-page .add-day-submit-row .add-day-btn-save,
+  body.change-form #content-main.add-day-page .add-day-submit-row .add-day-btn-save-addanother {
+    flex: 0 1 auto !important;
+  }
+  body.change-form #content-main.add-day-page .add-day-submit-row a.deletelink {
+    margin-left: auto !important;
+    flex: 0 0 auto !important;
+    background: var(--danger, #d92d20) !important;
+    background-color: var(--danger, #d92d20) !important;
+    border-color: var(--danger, #d92d20) !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+    text-decoration: none !important;
+  }
+  body.change-form #content-main.add-day-page .add-day-submit-row a.deletelink:hover {
+    filter: brightness(1.06) !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+  }
+
+  /* Trenér/related: žádné ikony vedle selectu – plná šířka jako ostatní pole */
+  body.change-form #content-main.add-day-page .related-widget-wrapper {
+    display: block !important;
+    width: 100% !important;
+    max-width: var(--ts-field-max, 360px) !important;
+  }
+  body.change-form #content-main.add-day-page .related-widget-wrapper-link {
+    display: none !important;
+  }
+  body.change-form #content-main.add-day-page .related-widget-wrapper > select {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  @media (max-width: 1024px) {
+    body.change-form #content-main.add-day-page .related-widget-wrapper {
+      max-width: 100% !important;
+    }
+  }
+
+  body #content-main.add-day-page .errorlist { margin: 4px 0 0 !important; color: #b91c1c !important; font-size: 13px !important; padding-left: 20px !important; }
+  /* Přidat Trénink – bez bílé karty, jen button na ploše */
+  body #content-main.add-day-page .add-day-add-slot-card {
+    margin: 12px 0 4px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  body #content-main.add-day-page .add-day-add-slot-inner {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+  body #content-main.add-day-page .add-day-btn-add-slot {
+    gap: 8px !important;
+  }
+  /* Plus v kolečku – geometricky přesný střed (ne text „+“) */
   body #content-main.add-day-page .add-day-btn-add-icon {
-    display: inline-flex !important; align-items: center !important; justify-content: center !important;
-    width: 24px !important; height: 24px !important; border-radius: 999px !important; border: 2px solid #fff !important; font-size: 16px !important; line-height: 1 !important;
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 16px !important;
+    height: 16px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 1.5px solid currentColor !important;
+    border-radius: 50% !important;
+    box-sizing: border-box !important;
+    flex-shrink: 0 !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    color: inherit !important;
+    overflow: hidden !important;
+  }
+  body #content-main.add-day-page .add-day-btn-add-icon::before,
+  body #content-main.add-day-page .add-day-btn-add-icon::after {
+    content: "" !important;
+    display: block !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    background: currentColor !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    transform: translate(-50%, -50%) !important;
+  }
+  body #content-main.add-day-page .add-day-btn-add-icon::before {
+    width: 52% !important;
+    height: 1.5px !important;
+  }
+  body #content-main.add-day-page .add-day-btn-add-icon::after {
+    width: 1.5px !important;
+    height: 52% !important;
   }
   body #content-main.add-day-page .add-day-slot-close {
-    flex-shrink: 0 !important; width: 32px !important; height: 32px !important; border-radius: var(--field-radius, 8px) !important; border: 1px solid var(--line-200, #d1d5db) !important;
-    background: var(--surface, #fff) !important; color: var(--muted, #6b7280) !important; font-size: 20px !important; line-height: 1 !important;
+    flex-shrink: 0 !important; width: 32px !important; height: 32px !important; border-radius: 8px !important; border: 1px solid #d1d5db !important;
+    background: #fff !important; color: #6b7280 !important; font-size: 20px !important; line-height: 1 !important;
     display: inline-flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; padding: 0 !important;
   }
   body #content-main.add-day-page .add-day-slot-close:hover { background: #fef2f2 !important; border-color: #fecaca !important; color: #b91c1c !important; }
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     body #content-main.add-day-page { padding-left: 16px !important; padding-right: 16px !important; }
     body #content-main.add-day-page .add-day-card { padding-left: 16px !important; padding-right: 16px !important; }
     body #content-main.add-day-page .add-day-row input:not([type="submit"]):not([type="button"]),
     body #content-main.add-day-page .add-day-row select:not(.add-day-hraci-picker),
     body #content-main.add-day-page .add-day-row textarea { max-width: 100% !important; }
     body #content-main.add-day-page .add-day-hraci-search-wrap { max-width: 100% !important; }
-    body #content-main.add-day-page .add-day-copy-fields {
-      grid-template-columns: 1fr !important;
-      gap: 0 !important;
-    }
-    body #content-main.add-day-page .add-day-copy-card input[type="date"],
-    body #content-main.add-day-page .add-day-copy-card .add-day-datum-input,
-    body #content-main.add-day-page .add-day-copy-card select {
-      max-width: 100% !important;
-      width: 100% !important;
-    }
   }
 
-  body #content-main.add-day-page .add-day-copy-card {
-    margin-bottom: 28px !important;
-    border: 1px dashed var(--brand) !important;
-    background: var(--brand-100, #fff3df) !important;
+  /*
+    Anti auto-zoom na /admin/core/trening/add/ (iOS / Android / Xiaomi).
+    Musí přebít form-detail + dřívější 14px !important (včetně type=time/date).
+  */
+  @media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+    body.add-form #content-main.add-day-page .add-day-card input:not([type="submit"]):not([type="button"]):not([type="hidden"]),
+    body.add-form #content-main.add-day-page .add-day-card select:not(.add-day-hraci-picker),
+    body.add-form #content-main.add-day-page .add-day-card textarea,
+    body.add-form #content-main.add-day-page .add-day-row input:not([type="submit"]):not([type="button"]):not([type="hidden"]),
+    body.add-form #content-main.add-day-page .add-day-row select:not(.add-day-hraci-picker),
+    body.add-form #content-main.add-day-page .add-day-row textarea,
+    body.add-form #content-main.add-day-page .add-day-hraci-search,
+    body.add-form #content-main.add-day-page .add-day-fields .add-day-row input[type="time"],
+    body.add-form #content-main.add-day-page .add-day-fields .add-day-row input.vTimeField,
+    body.add-form #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="date"],
+    body.add-form #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input.add-day-datum-input,
+    body.add-form #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="text"].vDateField,
+    body.add-form #content-main.add-day-page .add-day-datum-input-wrap .ts-date-trigger,
+    body.add-form #content-main.add-day-page .ts-date-trigger,
+    body.add-form #content-main.add-day-page .ts-time-trigger,
+    body.add-form #content-main.add-day-page .ts-date-label,
+    body.add-form #content-main.add-day-page .ts-time-label {
+      font-size: 16px !important;
+    }
   }
-  body #content-main.add-day-page .add-day-copy-help {
-    margin: 0 0 12px 0 !important;
-    color: var(--muted, #6b7280) !important;
-    font-size: 14px !important;
-  }
-  body #content-main.add-day-page .add-day-copy-fields {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
-    gap: 8px 16px !important;
-    min-width: 0 !important;
-    max-width: 100% !important;
-  }
-  body #content-main.add-day-page .add-day-copy-fields .add-day-row {
-    min-width: 0 !important;
-    max-width: 100% !important;
-    width: 100% !important;
-  }
-  body #content-main.add-day-page .add-day-copy-card .add-day-datum-input-wrap {
-    display: flex !important;
-    align-items: center !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    position: relative !important;
-  }
-  body #content-main.add-day-page .add-day-copy-card .add-day-datum-input-wrap input[type="date"]::-webkit-calendar-picker-indicator {
-    opacity: 1 !important;
-    position: relative !important;
-    width: 18px !important;
-    height: 18px !important;
-    margin: 0 2px 0 6px !important;
-    padding: 0 !important;
-    pointer-events: auto !important;
-    cursor: pointer !important;
-    flex-shrink: 0 !important;
-  }
-  body #content-main.add-day-page .add-day-copy-card input[type="date"],
-  body #content-main.add-day-page .add-day-copy-card .add-day-datum-input {
-    flex: 1 1 auto !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    cursor: pointer !important;
-  }
-  body #content-main.add-day-page .add-day-copy-card input[type="date"]::-webkit-date-and-time-value {
-    text-align: left !important;
-    min-width: 0 !important;
-  }
-  body #content-main.add-day-page .add-day-copy-card select {
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-  }
-  body #content-main.add-day-page .add-day-copy-actions {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    align-items: center !important;
-    gap: 12px !important;
-    margin-top: 36px !important;
-    padding-top: 8px !important;
-    padding-bottom: 6px !important;
-    border-top: 1px solid color-mix(in srgb, var(--brand) 22%, transparent) !important;
-  }
-  body #content-main.add-day-page #add-day-form.add-day-form-copy-loaded {
-    margin-top: 12px !important;
-  }
-  body #content-main.add-day-page #add-day-form.add-day-form-copy-loaded #slot-cards .slot-card:first-child {
-    margin-top: 4px !important;
-  }
-  body.add-form-copy-loaded #id_day-trener:not([type="hidden"]),
-  body.add-form-copy-loaded #id_day-datum:not([type="hidden"]) {
-    display: none !important;
-  }
-  body #content-main.add-day-page .add-day-copy-status {
-    color: #166534 !important;
-    font-size: 14px !important;
-    font-weight: 600 !important;
-  }
-
-/* Select2 bubliny na add-day – stejná výška jako ostatní pole */
-body #content-main.add-day-page .select2-container--admin-autocomplete .select2-selection--single {
-  height: 36px !important;
-  min-height: 36px !important;
-  border: 1px solid var(--line-200, #929aa4) !important;
-  border-radius: var(--field-radius, 8px) !important;
-  background: var(--surface, #fff) !important;
-}
-body #content-main.add-day-page .select2-container--admin-autocomplete .select2-selection--single .select2-selection__rendered {
-  line-height: 34px !important;
-  color: var(--text) !important;
-  padding-left: 10px !important;
-}
-body #content-main.add-day-page .select2-container--admin-autocomplete .select2-selection--single .select2-selection__arrow {
-  height: 34px !important;
-}
-body #content-main.add-day-page .select2-container--admin-autocomplete.select2-container--focus .select2-selection--single {
-  border-color: var(--brand) !important;
-  outline: 1px solid var(--brand) !important;
-  outline-offset: 1px !important;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 12%, transparent) !important;
-}
-body #content-main.add-day-page .add-day-copy-card .select2-container {
-  width: 100% !important;
-  max-width: 100% !important;
-}

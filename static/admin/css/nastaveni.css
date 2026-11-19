@@ -8,10 +8,49 @@ html:has(#content-main.nast-app) {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
   gap: 20px;
-  padding: 8px 4px 24px;
-  max-width: 920px;
+  /* Šířka stránky = globální --page-pad na main; obsah na 100 % */
+  padding: 0 0 24px;
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
   align-items: start;
   overflow-anchor: none;
+}
+
+/* Napojení na globální page width (stejně jako changelist / detail) */
+body.ts-page-nastaveni,
+body.ts-page-schedule {
+  --page-pad: clamp(24px, 3vw, 48px);
+}
+
+body.ts-page-nastaveni .nast-main,
+body.ts-page-nastaveni .nast-panel {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+body.ts-page-nastaveni #content,
+body.ts-page-schedule #content {
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+
+body.ts-page-nastaveni #content-main.nast-app,
+body.ts-page-schedule #content-main {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 720px) {
+  body.ts-page-nastaveni,
+  body.ts-page-schedule {
+    --page-pad: 16px;
+  }
 }
 
 /* ── Sidebar ── */
@@ -21,6 +60,7 @@ html:has(#content-main.nast-app) {
 }
 
 .nast-sidebar-title {
+  display: none; /* nadpis je v .ts-page-head nad layoutem */
   margin: 0 0 12px;
   padding: 0 12px;
   font-size: 1.35rem;
@@ -29,10 +69,23 @@ html:has(#content-main.nast-app) {
   letter-spacing: -0.02em;
 }
 
+/* Page head nad sidebar+main – plná šířka contentu */
+#content > .ts-page-head + .nast-app,
+#content > .ts-page-head + #content-main.nast-app {
+  margin-top: 0;
+}
+
 .nast-sidebar-nav {
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.nast-sidebar-nav,
+.nast-sidebar-nav:focus-within,
+.nast-sidebar:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .nast-sidebar-item {
@@ -42,38 +95,48 @@ html:has(#content-main.nast-app) {
   border: none !important;
   border-radius: 8px;
   background: transparent !important;
-  color: var(--text);
+  color: var(--text) !important;
+  -webkit-text-fill-color: var(--text) !important;
   font: inherit;
   font-size: 0.92rem;
   font-weight: 600;
   text-align: left;
   cursor: pointer;
-  transition: color 0.12s ease;
-  appearance: none;
+  transition: color 0.12s ease, -webkit-text-fill-color 0.12s ease;
   box-shadow: none !important;
-  outline: none !important;
-  min-height: auto !important;
-  filter: none !important;
+  -webkit-tap-highlight-color: transparent;
+  appearance: none;
 }
 
-.nast-sidebar-item:hover,
-.nast-sidebar-item:focus,
-.nast-sidebar-item:focus-visible,
-.nast-sidebar-item:active {
+.nast-sidebar-item:hover {
   background: transparent !important;
   color: var(--brand) !important;
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
+  -webkit-text-fill-color: var(--brand) !important;
 }
 
 .nast-sidebar-item.is-active {
   background: transparent !important;
   color: var(--brand) !important;
+  -webkit-text-fill-color: var(--brand) !important;
   font-weight: 800;
-  border: none !important;
+}
+
+.nast-sidebar-item.is-active:hover,
+.nast-sidebar-item.is-active:focus,
+.nast-sidebar-item.is-active:focus-visible {
+  background: transparent !important;
+  color: var(--brand) !important;
+  -webkit-text-fill-color: var(--brand) !important;
+}
+
+.nast-sidebar-item:focus,
+.nast-sidebar-item:focus-visible,
+.nast-sidebar-item.is-active:focus,
+.nast-sidebar-item.is-active:focus-visible {
   outline: none !important;
+  outline-offset: 0 !important;
   box-shadow: none !important;
+  border: none !important;
 }
 
 /* ── Main panel ── */
@@ -141,6 +204,9 @@ html:has(#content-main.nast-app) {
 
 /* ── Skupiny řádků (Apple-style) ── */
 .nast-group {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -172,6 +238,8 @@ html:has(#content-main.nast-app) {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  width: 100%;
+  max-width: none;
   padding: 12px 16px;
   border-top: 1px solid var(--line);
   min-height: 52px;
@@ -179,6 +247,9 @@ html:has(#content-main.nast-app) {
 }
 
 .nast-group > .nast-row:first-child,
+.nast-group > .nast-row:first-of-type,
+.nast-group > .nast-group-label:first-child + .nast-group-hint + .nast-excel-list .nast-excel-row:first-child,
+.nast-group > .nast-group-label:first-child + .nast-excel-list .nast-excel-row:first-child,
 .nast-group > .nast-excel-list .nast-excel-row:first-child {
   border-top: none;
 }
@@ -239,7 +310,7 @@ html:has(#content-main.nast-app) {
   max-width: 260px;
 }
 
-/* ── Toggle (tmavý režim) – dle design exportu ── */
+/* ── Toggle (tmavý režim) ── */
 .nast-row-toggle {
   padding-top: 14px;
   padding-bottom: 14px;
@@ -248,16 +319,13 @@ html:has(#content-main.nast-app) {
 
 .nast-switch {
   position: relative;
-  display: inline-flex !important;
+  display: inline-flex;
   flex-shrink: 0;
   cursor: pointer;
   width: 46px;
   height: 28px;
-  visibility: visible !important;
-  opacity: 1 !important;
 }
 
-.nast-switch input,
 .nast-switch-input {
   position: absolute;
   inset: 0;
@@ -266,17 +334,15 @@ html:has(#content-main.nast-app) {
   height: 100%;
   margin: 0;
   cursor: pointer;
-  z-index: 1;
 }
 
 .nast-switch-track {
   position: relative;
-  display: block !important;
+  display: block;
   width: 46px;
   height: 28px;
   border-radius: 999px;
   background: var(--line);
-  border: none;
   transition: background 0.2s;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
   pointer-events: none;
@@ -292,25 +358,20 @@ html:has(#content-main.nast-app) {
   border-radius: 50%;
   background: #fff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-  transform: none;
   transition: transform 0.2s;
 }
 
-.nast-switch input:checked + .nast-switch-track,
 .nast-switch-input:checked + .nast-switch-track {
   background: var(--brand);
-  border-color: transparent;
 }
 
-.nast-switch input:checked + .nast-switch-track::after,
 .nast-switch-input:checked + .nast-switch-track::after {
   transform: translateX(18px);
 }
 
-.nast-switch input:focus-visible + .nast-switch-track,
 .nast-switch-input:focus-visible + .nast-switch-track {
   outline: none;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 35%, transparent);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 /* ── Excel-style barevné řádky ── */
@@ -326,19 +387,19 @@ html:has(#content-main.nast-app) {
   padding: 10px 16px;
   border-top: 1px solid var(--line);
   cursor: pointer;
-  transition: background-color 0.12s;
+  transition: color 0.12s;
   margin: 0;
   min-height: 52px;
   box-sizing: border-box;
+  background: transparent;
 }
 
 .nast-excel-row:hover,
-.nast-excel-row:has(input:checked),
+.nast-excel-row.is-active,
 .nast-excel-row:has(.nast-excel-input:checked) {
-  background: var(--brand-100);
+  background: transparent;
 }
 
-.nast-excel-row input,
 .nast-excel-input {
   position: absolute;
   width: 1px;
@@ -351,23 +412,18 @@ html:has(#content-main.nast-app) {
 .nast-excel-strip {
   display: flex;
   flex-shrink: 0;
-  width: 132px;
+  width: 22px;
   height: 22px;
-  border-radius: 4px;
+  border-radius: 50%;
   overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
 .nast-excel-swatch {
   flex: 1;
   min-width: 0;
-}
-
-.nast-excel-swatch svg {
-  display: block;
-  width: 100%;
-  height: 100%;
+  background-color: var(--swatch-color, transparent);
 }
 
 .nast-excel-meta {
@@ -382,6 +438,12 @@ html:has(#content-main.nast-app) {
   font-weight: 600;
   font-size: 0.9rem;
   color: var(--text-strong);
+  transition: color 0.12s;
+}
+
+.nast-excel-row:has(.nast-excel-input:checked) .nast-excel-name,
+.nast-excel-row.is-active .nast-excel-name {
+  color: var(--theme-accent, var(--brand));
 }
 
 .nast-excel-desc {
@@ -396,31 +458,47 @@ html:has(#content-main.nast-app) {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--brand);
+  color: var(--theme-accent, var(--brand));
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.12s, visibility 0.12s;
+  transition: opacity 0.12s, visibility 0.12s, color 0.12s;
 }
 
-.nast-excel-row:has(input:checked) .nast-excel-check,
-.nast-excel-row:has(.nast-excel-input:checked) .nast-excel-check {
+.nast-excel-row:has(.nast-excel-input:checked) .nast-excel-check,
+.nast-excel-row.is-active .nast-excel-check {
   opacity: 1;
   visibility: visible;
+  color: var(--theme-accent, var(--brand));
 }
 
 /* ── Link řádky ── */
 .nast-row-link {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-height: 52px !important;
+  box-sizing: border-box !important;
   text-decoration: none !important;
   color: inherit !important;
   transition: background 0.12s;
 }
 
 .nast-row-link:hover {
-  background: var(--brand-100);
+  background: transparent;
+}
+
+.nast-row-link .nast-row-text {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
 }
 
 .nast-row-chevron {
-  flex-shrink: 0;
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
   font-size: 1.25rem;
   line-height: 1;
   color: var(--muted, #94a3b8);
@@ -478,18 +556,117 @@ html:has(#content-main.nast-app) {
   text-align: center;
 }
 
-.nast-row-control--action {
-  max-width: 340px;
-  width: 100%;
+.nast-row-control--inline select {
+  min-width: 7.5rem;
+  min-height: 42px !important;
+  width: auto;
 }
 
-.nast-row-control--action input[type="email"],
-.nast-row-control--action .nast-row-input {
-  flex: 1;
-  width: auto;
-  min-width: 0;
-  max-width: none;
+/* Platnost stálého rozvrhu – české datumy (10. listopad 2026) musí být celé vidět */
+.nast-row:has(> .nast-row-control--dates) {
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+}
+
+.nast-row:has(> .nast-row-control--dates) > .nast-row-text {
+  flex: 1 1 220px;
+}
+
+.nast-row-control--dates {
+  max-width: none !important;
+  min-width: 0 !important;
+  flex: 1 1 340px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.nast-app .nast-row-control--dates .ts-date-picker,
+.nast-app .nast-row-control--dates .ts-date-picker--enhanced {
+  display: block !important;
+  box-sizing: border-box;
+  width: 13.75rem !important;
+  min-width: 13.75rem !important;
+  max-width: 100% !important;
+  flex: 0 0 auto;
+  margin: 0 !important;
+}
+
+.nast-app .nast-row-control--dates .ts-date-trigger {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  min-height: 42px !important;
+  height: auto !important;
+  padding: 9px 12px !important;
+  gap: 8px !important;
+  overflow: visible !important;
+  line-height: 1.35 !important;
+}
+
+.nast-app .nast-row-control--dates .ts-date-label {
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+  line-height: 1.35 !important;
+  font-weight: 600 !important;
+}
+
+.nast-app .nast-row-control--dates .nast-inline-sep {
+  flex: 0 0 auto;
+  line-height: 42px;
+}
+
+.nast-sezona-range {
+  flex-wrap: wrap;
+  max-width: none !important;
+  min-width: 0 !important;
+  width: 100%;
+  gap: 6px;
+}
+
+.nast-app .nast-sezona-range select {
+  width: auto !important;
+  max-width: none !important;
+  flex: 0 1 auto;
+  min-height: 38px !important;
+  padding: 8px 28px 8px 10px !important;
+  font-size: 0.88rem !important;
   text-align: left;
+  text-overflow: clip;
+  overflow: visible !important;
+}
+
+.nast-app .nast-sezona-range select.nast-sezona-den,
+.nast-app .nast-sezona-range select.nast-sezona-mesic {
+  box-sizing: border-box !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 8px !important;
+  background: var(--bg, #fff) !important;
+  color: var(--text, #1f2937) !important;
+  -webkit-text-fill-color: var(--text, #1f2937) !important;
+  line-height: 1.35 !important;
+  appearance: auto !important;
+  -webkit-appearance: menulist !important;
+}
+
+.nast-app .nast-sezona-range select.nast-sezona-den {
+  min-width: 5.75rem !important;
+  width: 5.75rem !important;
+  flex: 0 0 5.75rem !important;
+  padding: 8px 32px 8px 12px !important;
+  text-align: left;
+  text-align-last: left;
+  font-variant-numeric: tabular-nums;
+}
+
+.nast-app .nast-sezona-range select.nast-sezona-mesic {
+  min-width: 7.5rem !important;
+  width: auto !important;
+  flex: 1 1 7.5rem;
+  max-width: 11rem !important;
+  padding: 8px 28px 8px 10px !important;
 }
 
 .nast-inline-sep {
@@ -512,8 +689,9 @@ html:has(#content-main.nast-app) {
 @media (max-width: 760px) {
   .nast-app {
     grid-template-columns: 1fr;
+    width: 100%;
     max-width: none;
-    padding: 0;
+    padding: 0 0 24px;
   }
 
   .nast-sidebar {
@@ -531,16 +709,43 @@ html:has(#content-main.nast-app) {
   .nast-sidebar-item {
     width: auto;
     padding: 7px 14px;
+    border-radius: 0;
+    border: none !important;
     font-size: 0.85rem;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: var(--text) !important;
+    -webkit-text-fill-color: var(--text) !important;
+  }
+
+  .nast-sidebar-item:hover {
+    color: var(--brand) !important;
+    -webkit-text-fill-color: var(--brand) !important;
+    background: transparent !important;
   }
 
   .nast-sidebar-item.is-active {
     color: var(--brand) !important;
+    -webkit-text-fill-color: var(--brand) !important;
     font-weight: 800;
     background: transparent !important;
     border: none !important;
+  }
+
+  .nast-sidebar-item.is-active:hover,
+  .nast-sidebar-item.is-active:focus,
+  .nast-sidebar-item.is-active:focus-visible {
+    color: var(--brand) !important;
+    -webkit-text-fill-color: var(--brand) !important;
+    background: transparent !important;
+  }
+
+  .nast-sidebar-item:focus,
+  .nast-sidebar-item:focus-visible {
     outline: none !important;
+    outline-offset: 0 !important;
     box-shadow: none !important;
+    border: none !important;
   }
 
   .nast-row {
@@ -549,23 +754,16 @@ html:has(#content-main.nast-app) {
     gap: 10px;
   }
 
+  /* Odkazy (Změna hesla…): vždy řádek – text vlevo, šipka vpravo */
+  .nast-row.nast-row-link {
+    flex-direction: row !important;
+    align-items: center !important;
+    max-width: 100% !important;
+  }
+
   .nast-row-control {
     min-width: 0;
     max-width: none;
-  }
-
-  .nast-row-control.nast-upload-box {
-    width: 100%;
-    min-width: 0;
-    max-width: none;
-    align-items: stretch;
-  }
-
-  .nast-upload-preview,
-  .nast-upload-actions,
-  .nast-file-ui {
-    align-self: flex-start;
-    justify-content: flex-start;
   }
 
   .nast-row-input {
@@ -573,14 +771,20 @@ html:has(#content-main.nast-app) {
   }
 
   .nast-excel-strip {
-    width: 100%;
-    max-width: 200px;
+    width: 22px;
+    max-width: 22px;
   }
 }
 
 .nast-row--stack {
   flex-direction: column;
   align-items: stretch;
+}
+
+.nast-row--section-head {
+  border-top: none !important;
+  min-height: 0 !important;
+  padding-bottom: 8px !important;
 }
 
 .nast-row-control--wide {
@@ -608,28 +812,6 @@ html:has(#content-main.nast-app) {
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
 }
 
-/* ── Buttons (design export) ── */
-.nast-app .button,
-.nast-app .ts-btn {
-  min-height: 42px;
-  padding: 10px 18px;
-  border-radius: 100px;
-}
-
-/* ── Dark mode (design export) ── */
-html[data-mode="dark"] .nast-group,
-html[data-mode="dark"] .nast-summary-card {
-  background: var(--surface);
-  border-color: var(--line);
-}
-
-html[data-mode="dark"] .nast-excel-row:hover,
-html[data-mode="dark"] .nast-excel-row:has(input:checked),
-html[data-mode="dark"] .nast-excel-row:has(.nast-excel-input:checked),
-html[data-mode="dark"] .nast-row-link:hover {
-  background: var(--brand-100);
-}
-
 /* ── Upload loga / favicon ── */
 .nast-row-upload {
   align-items: flex-start;
@@ -637,21 +819,18 @@ html[data-mode="dark"] .nast-row-link:hover {
   padding-bottom: 14px;
 }
 
-.nast-row-control.nast-upload-box {
+.nast-upload-box {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 10px;
-  width: 260px;
-  min-width: 260px;
-  max-width: 260px;
-  box-sizing: border-box;
+  min-width: 220px;
+  max-width: 280px;
 }
 
 .nast-upload-preview {
   width: 72px;
   height: 72px;
-  flex: 0 0 72px;
   border-radius: 12px;
   border: 1px solid var(--line);
   background: var(--bg);
@@ -662,24 +841,16 @@ html[data-mode="dark"] .nast-row-link:hover {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
 }
 
-.nast-upload-preview[hidden] {
-  display: flex !important;
-  visibility: hidden;
-  pointer-events: none;
-}
-
 .nast-upload-preview--small {
   width: 40px;
   height: 40px;
-  flex: 0 0 40px;
   border-radius: 8px;
 }
 
 .nast-upload-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
+  object-fit: contain;
 }
 
 .nast-upload-trigger {
@@ -700,16 +871,20 @@ html[data-mode="dark"] .nast-row-link:hover {
   word-break: break-all;
 }
 
-.nast-upload-field input[type="file"].nast-file-native-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+.nast-upload-field input[type="file"].nast-file-native-hidden,
+.nast-translated-file input[type="file"].nast-file-native-hidden,
+input.nast-file-input.nast-file-native-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none;
 }
 
 .nast-translated-file {
@@ -717,74 +892,15 @@ html[data-mode="dark"] .nast-row-link:hover {
   width: 100%;
 }
 
-.nast-upload-actions {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  width: 100%;
-}
-
-.nast-upload-actions .nast-upload-field {
-  flex: 1 1 auto;
-  min-width: 0;
-  max-width: 100%;
-}
-
-.nast-upload-actions .nast-file-remove-btn {
-  flex: 0 0 auto;
-  margin-top: 0;
-}
-
-.nast-file-clear-input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.nast-file-remove-btn {
-  padding: 8px 14px;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  background: var(--bg);
-  color: var(--text-strong);
-  font-size: 0.88rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
-}
-
-.nast-file-remove-btn:hover {
-  background: #fef2f2;
-  border-color: #fca5a5;
-  color: #b91c1c;
-}
-
-.nast-file-remove-btn[hidden] {
-  display: none !important;
-}
-
 .nast-file-ui {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 10px;
-  flex-wrap: nowrap;
-  margin-top: 0;
-  width: 100%;
-  min-width: 0;
+  flex-wrap: wrap;
+  margin-top: 6px;
 }
 
 .nast-file-choose-btn {
-  flex: 0 0 auto;
   padding: 8px 14px;
   border-radius: 8px;
   border: 1px solid var(--line);
@@ -804,11 +920,6 @@ html[data-mode="dark"] .nast-row-link:hover {
 .nast-file-status {
   font-size: 0.82rem;
   color: var(--muted, #64748b);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-  max-width: 110px;
 }
 
 .nast-upload-field input[type="file"] {

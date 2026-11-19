@@ -1,0 +1,1326 @@
+/* Ceník – Hledat + Operace + Provést: menší, stejná výška, přesné zarovnání */
+
+body.change-list {
+  /* Tokeny sjednocené s Ceníkem (cenik-change-list.css je autorita) */
+  --cenik-ctl-h: 40px;
+  --cenik-ctl-w: min(420px, 100%);
+  --cenik-ctl-radius: 12px;
+  --cenik-ctl-border: var(--line, #e2e5ea);
+  --cenik-ctl-text: var(--text-strong, #111);
+  --cenik-ctl-muted: var(--muted, #64748b);
+  --cenik-ctl-brand: var(--brand, #e67817);
+  --cenik-label-h: 14px;
+  --cenik-field-gap: 6px;
+  --ts-ctl-bg: #fff;
+  --ts-head-color: #111827;
+}
+
+html[data-mode="dark"] body.change-list {
+  --ts-ctl-bg: var(--surface, #1a252f);
+  --ts-ctl-border: var(--ts-border, var(--line, #4a5c6e));
+  --ts-head-color: var(--text-strong, #f3f4f6);
+  --cenik-ctl-border: var(--ts-border, var(--line, #4a5c6e));
+  --cenik-ctl-text: var(--text-strong, #f3f4f6);
+  --cenik-ctl-muted: var(--muted, #9ca3af);
+}
+
+/* Úzké viewports: tokeny drží cenik-change-list.css (12px radius, 34–40px výška) */
+
+/* Page head + Přidat buttony: viz cenik-change-list.css (stejný design všude) */
+
+body.change-list #changelist.module,
+body.change-list #changelist {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+body.change-list #changelist .changelist-form-container.cenik-layout,
+body.change-list #changelist .changelist-form-container.ts-cl-layout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-areas:
+    "toolbar"
+    "filters"
+    "table"
+    "pager" !important;
+  column-gap: 0 !important;
+  row-gap: 16px !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+/* Až při výběru: lišta akcí pod filtry */
+body.change-list #changelist .cenik-layout.cenik-has-selection {
+  grid-template-areas:
+    "toolbar"
+    "filters"
+    "selected"
+    "table"
+    "pager" !important;
+  row-gap: 12px !important;
+}
+
+body.change-list #changelist .cenik-layout.cenik-has-selection .results {
+  margin-top: 14px !important;
+}
+
+body.change-list #changelist-form {
+  display: contents !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+/* Operace + Provést: v DOM pro submit, vizuálně pryč */
+body.change-list #changelist .actions,
+body.change-list #changelist #changelist-form .actions,
+body.change-list #changelist .actions.cenik-actions,
+body.change-list #changelist .cenik-field--action,
+body.change-list #changelist .cenik-field--go,
+body.change-list #changelist .cenik-layout.cenik-has-selection .cenik-field--action,
+body.change-list #changelist .cenik-layout.cenik-has-selection .cenik-field--go {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  display: block !important;
+  pointer-events: none !important;
+}
+
+/* Společný layout polí – stejná struktura = stejná úroveň */
+body.change-list #changelist .cenik-field {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: var(--cenik-field-gap) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+  height: calc(var(--cenik-label-h) + var(--cenik-field-gap) + var(--cenik-ctl-h)) !important;
+  box-sizing: border-box !important;
+}
+
+body.change-list #changelist .cenik-field__label {
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  height: var(--cenik-label-h) !important;
+  min-height: var(--cenik-label-h) !important;
+  max-height: var(--cenik-label-h) !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+  color: var(--cenik-ctl-muted) !important;
+  line-height: var(--cenik-label-h) !important;
+  overflow: hidden !important;
+}
+
+body.change-list #changelist .cenik-field--search {
+  /* Před JS wrapem do toolbaru; po enhance je uvnitř .ts-cl-toolbar */
+  grid-area: toolbar !important;
+  width: var(--cenik-ctl-w) !important;
+  max-width: var(--cenik-ctl-w) !important;
+}
+
+/* Starý Django counter schovat */
+body.change-list #changelist .cenik-field--meta,
+body.change-list #changelist .action-counter,
+body.change-list #changelist .actions .action-counter {
+  display: none !important;
+}
+
+/* Lišta: [✓ N vybráno]  Vybrat vše · Upravit · Smazat */
+body.change-list #changelist .cenik-selected {
+  grid-area: selected !important;
+  display: none !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 6px 4px !important;
+  margin: 0 !important;
+  padding: 4px 0 0 2px !important;
+  min-height: 28px !important;
+  color: var(--cenik-ctl-text) !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.2 !important;
+  user-select: none !important;
+}
+
+body.change-list #changelist .cenik-layout.cenik-has-selection > .cenik-selected:not([hidden]) {
+  display: flex !important;
+}
+
+body.change-list #changelist .cenik-selected__status {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-right: 10px !important;
+  padding-right: 14px !important;
+  border-right: 1px solid var(--line, #e2e5ea) !important;
+}
+
+body.change-list #changelist .cenik-selected__check {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 16px !important;
+  height: 16px !important;
+  flex: 0 0 16px !important;
+  border-radius: 3px !important;
+  background: var(--cenik-ctl-brand) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  position: relative !important;
+}
+
+body.change-list #changelist .cenik-selected__check::after {
+  content: "" !important;
+  display: block !important;
+  width: 8px !important;
+  height: 4.5px !important;
+  border-left: 1.75px solid #fff !important;
+  border-bottom: 1.75px solid #fff !important;
+  transform: rotate(-45deg) translateY(-0.5px) !important;
+  box-sizing: border-box !important;
+}
+
+body.change-list #changelist .cenik-selected__label {
+  color: var(--text-strong, #111) !important;
+  font-weight: 600 !important;
+}
+
+body.change-list #changelist .cenik-selected__actions {
+  display: inline-flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 2px 4px !important;
+}
+
+/* Ploché action buttony – jen barevný text/ikona, žádná výplň */
+body.change-list #changelist .cenik-act,
+body.change-list #changelist .cenik-act:hover,
+body.change-list #changelist .cenik-act:focus,
+body.change-list #changelist .cenik-act:active,
+body.change-list #changelist .cenik-act:disabled,
+body.change-list #changelist .cenik-act.is-disabled {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  border: 0 !important;
+}
+
+body.change-list #changelist .cenik-act {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  margin: 0 !important;
+  padding: 6px 10px !important;
+  border-radius: 0 !important;
+  color: var(--muted, #64748b) !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.2 !important;
+  cursor: pointer !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  transition: color 0.12s ease !important;
+}
+
+body.change-list #changelist .cenik-act:hover {
+  color: var(--cenik-ctl-brand) !important;
+}
+
+body.change-list #changelist .cenik-act:focus-visible {
+  outline: none !important;
+  color: var(--cenik-ctl-brand) !important;
+}
+
+body.change-list #changelist .cenik-act.is-disabled,
+body.change-list #changelist .cenik-act:disabled {
+  opacity: 0.38 !important;
+  cursor: not-allowed !important;
+  color: var(--muted, #64748b) !important;
+}
+
+body.change-list #changelist .cenik-act--select-all {
+  color: var(--muted, #64748b) !important;
+}
+
+body.change-list #changelist .cenik-act__icon {
+  display: inline-block !important;
+  width: 15px !important;
+  height: 15px !important;
+  flex: 0 0 15px !important;
+  background: currentColor !important;
+  opacity: 0.92 !important;
+}
+
+/* Upravit – tužka */
+body.change-list #changelist .cenik-act--edit .cenik-act__icon {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20h9'/%3E%3Cpath d='M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20h9'/%3E%3Cpath d='M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+/* Smazat – koš */
+body.change-list #changelist .cenik-act--delete .cenik-act__icon {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4h8v2'/%3E%3Cpath d='M19 6l-1 14H6L5 6'/%3E%3Cpath d='M10 11v6'/%3E%3Cpath d='M14 11v6'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 6h18'/%3E%3Cpath d='M8 6V4h8v2'/%3E%3Cpath d='M19 6l-1 14H6L5 6'/%3E%3Cpath d='M10 11v6'/%3E%3Cpath d='M14 11v6'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+/* Obecná akce – blesk/tečky */
+body.change-list #changelist .cenik-act--generic .cenik-act__icon {
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='1'/%3E%3Ccircle cx='19' cy='12' r='1'/%3E%3Ccircle cx='5' cy='12' r='1'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='1'/%3E%3Ccircle cx='19' cy='12' r='1'/%3E%3Ccircle cx='5' cy='12' r='1'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+body.change-list #changelist .cenik-act--edit:not(:disabled):hover,
+body.change-list #changelist .cenik-act--delete:hover,
+body.change-list #changelist .cenik-act--generic:hover {
+  color: var(--cenik-ctl-brand) !important;
+}
+
+/* ── Hledat ── */
+body.change-list #changelist .cenik-field--search #toolbar {
+  display: block !important;
+  width: 100% !important;
+  height: var(--cenik-ctl-h) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+body.change-list #changelist .cenik-field--search #changelist-search,
+body.change-list #changelist .cenik-field--search #changelist-search > div {
+  display: block !important;
+  width: 100% !important;
+  height: var(--cenik-ctl-h) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  position: relative !important;
+}
+
+body.change-list #changelist .cenik-field--search #changelist-search label {
+  position: absolute !important;
+  left: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 2 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+body.change-list #changelist .cenik-field--search #changelist-search #searchbar,
+body.change-list #changelist .cenik-field--search #changelist-search input[type="text"],
+body.change-list #changelist #changelist-search #searchbar,
+body.change-list #changelist #changelist-search input[type="text"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: none !important;
+  min-height: var(--cenik-ctl-h) !important;
+  max-height: var(--cenik-ctl-h) !important;
+  height: var(--cenik-ctl-h) !important;
+  padding: 0 14px 0 36px !important;
+  border-radius: var(--cenik-ctl-radius) !important;
+  border: 1px solid var(--cenik-ctl-border) !important;
+  background: var(--ts-ctl-bg, #fff) !important;
+  color: var(--cenik-ctl-text) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  vertical-align: top !important;
+  align-self: auto !important;
+}
+
+body.change-list #changelist .cenik-field--search #changelist-search #searchbar::placeholder,
+body.change-list #changelist .cenik-field--search #changelist-search input[type="text"]::placeholder {
+  color: var(--cenik-ctl-muted) !important;
+  font-weight: 500 !important;
+  opacity: 1 !important;
+}
+
+body.change-list #changelist .cenik-field--search #changelist-search #searchbar:hover,
+body.change-list #changelist .cenik-field--search #changelist-search input[type="text"]:hover,
+body.change-list #changelist .cenik-field--search #changelist-search #searchbar:focus,
+body.change-list #changelist .cenik-field--search #changelist-search input[type="text"]:focus,
+body.change-list #changelist .cenik-field--search #changelist-search #searchbar:focus-visible,
+body.change-list #changelist .cenik-field--search #changelist-search input[type="text"]:focus-visible {
+  border-color: var(--cenik-ctl-border) !important;
+  outline: none !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.07) !important;
+  background: var(--ts-ctl-bg, #fff) !important;
+}
+
+body.change-list #changelist .cenik-field--search #changelist-search input[type="submit"] {
+  display: none !important;
+}
+
+/* ── Operace select – přebít #changelist .actions select ── */
+body.change-list #changelist .cenik-field--action > label {
+  display: block !important;
+  width: 100% !important;
+  height: var(--cenik-ctl-h) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  color: transparent !important;
+}
+
+body.change-list #changelist .cenik-field--action select,
+body.change-list #changelist .actions .cenik-field--action select,
+body.change-list #changelist .actions select {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  flex: none !important;
+  min-height: var(--cenik-ctl-h) !important;
+  max-height: var(--cenik-ctl-h) !important;
+  height: var(--cenik-ctl-h) !important;
+  margin: 0 !important;
+  padding: 0 32px 0 14px !important;
+  border-radius: var(--cenik-ctl-radius) !important;
+  border: 1px solid var(--cenik-ctl-border) !important;
+  background: transparent !important;
+  color: var(--cenik-ctl-text) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  text-transform: none !important;
+  line-height: calc(var(--cenik-ctl-h) - 2px) !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%2364748b' d='M1.4 1.4 6 6l4.6-4.6' stroke='%2364748b' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  background-size: 12px 8px !important;
+}
+
+body.change-list #changelist .cenik-field--action select:hover,
+body.change-list #changelist .actions select:hover,
+body.change-list #changelist .cenik-field--action select:focus,
+body.change-list #changelist .actions select:focus,
+body.change-list #changelist .cenik-field--action select:focus-visible,
+body.change-list #changelist .actions select:focus-visible {
+  border-color: var(--cenik-ctl-brand) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* ── Provést → globální pill (ts-buttons.css); tady jen výška vedle selectu ── */
+body.change-list #changelist .cenik-field--go .button,
+body.change-list #changelist .cenik-field--go input[type="submit"],
+body.change-list #changelist .cenik-field--go button[type="submit"],
+body.change-list #changelist .actions .cenik-field--go .button,
+body.change-list #changelist .actions .button {
+  flex: 0 0 auto !important;
+  align-self: center !important;
+}
+
+
+/*
+  Hlavička = stejná výška/výplň/typografie jako datové řádky (jen tučně).
+  Django base.css dává .text a { padding: 8px 10px } → to zvětšovalo thead;
+  proto .text = display:contents a veškerý padding jen na th/td.
+*/
+body.change-list {
+  --cenik-head-bg: transparent;
+  --cenik-head-border: var(--line, #e2e5ea);
+  --cenik-head-radius: 0;
+  --cenik-cell-pad-x: 14px;
+  --cenik-cell-pad-y: 14px;
+  --cenik-check-w: 40px; /* ≤860px → 18px v changelist-compact.css */
+  --cenik-row-font-size: 14px;
+  --cenik-row-font-weight: 400;
+  --cenik-row-line-height: 1.4;
+  --cenik-row-h: 52px;
+  --cenik-row-color: var(--text-strong, #111);
+  --cenik-row-line-inset: 0px;
+  --ts-table-font: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+}
+
+body.change-list #changelist #result_list,
+body.change-list #result_list {
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  table-layout: auto !important;
+  border: 0 !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  font-family: var(--ts-table-font) !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  text-rendering: optimizeLegibility !important;
+}
+
+/* Stejná výška: thead i tbody – padding jen na buňce, pevných 40px */
+body.change-list #changelist #result_list thead th,
+body.change-list #changelist #result_list thead th.sorted,
+body.change-list #changelist #result_list thead th.sortable,
+body.change-list #changelist #result_list thead th.action-checkbox-column,
+body.change-list #result_list thead th,
+body.change-list #result_list thead th.sorted,
+body.change-list #result_list thead th.sortable,
+body.change-list #result_list thead th.action-checkbox-column,
+body.change-list #result_list thead tr:hover th,
+body.change-list #changelist #result_list tbody td,
+body.change-list #changelist #result_list tbody th,
+body.change-list #result_list tbody td,
+body.change-list #result_list tbody th {
+  padding: var(--cenik-cell-pad-y) var(--cenik-cell-pad-x) !important;
+  height: var(--cenik-row-h) !important;
+  min-height: var(--cenik-row-h) !important;
+  max-height: var(--cenik-row-h) !important;
+  text-align: left !important;
+  vertical-align: middle !important;
+  box-sizing: border-box !important;
+  font-family: var(--ts-table-font) !important;
+  font-size: var(--cenik-row-font-size) !important;
+  line-height: var(--cenik-row-line-height) !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  color: var(--cenik-row-color) !important;
+  border: 0 !important;
+  border-width: 0 !important;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+body.change-list #changelist #result_list thead th,
+body.change-list #result_list thead th,
+body.change-list #result_list thead th.sorted,
+body.change-list #result_list thead th.sortable,
+body.change-list #result_list thead th.action-checkbox-column,
+body.change-list #result_list thead th:first-child,
+body.change-list #result_list thead th:last-child,
+body.change-list #result_list thead tr:hover th {
+  background-color: transparent !important;
+  background-image: linear-gradient(var(--ts-head-color, #111827), var(--ts-head-color, #111827)) !important;
+  background-size: 100% 1.5px !important;
+  background-position: left bottom !important;
+  background-repeat: no-repeat !important;
+  border: 0 !important;
+  border-bottom: 0 !important;
+  font-weight: 600 !important;
+  font-size: var(--cenik-row-font-size, 14px) !important;
+  color: var(--ts-head-color, #111827) !important;
+  -webkit-text-fill-color: var(--ts-head-color, #111827) !important;
+  white-space: nowrap !important;
+}
+
+body.change-list #result_list tbody td,
+body.change-list #result_list tbody th {
+  font-weight: var(--cenik-row-font-weight) !important;
+}
+
+/* Jen vedlejší FK odkazy (Rodina, Hráč…) – stejná barva jako text buňky, ne Django link */
+body.change-list #result_list tbody td.field-rodina_link a,
+body.change-list #result_list tbody td.field-rodina_link a:link,
+body.change-list #result_list tbody td.field-rodina_link a:visited,
+body.change-list #result_list tbody td.field-hrac_link a,
+body.change-list #result_list tbody td.field-hrac_link a:link,
+body.change-list #result_list tbody td.field-hrac_link a:visited {
+  color: var(--cenik-row-color, var(--text-strong, #111)) !important;
+  -webkit-text-fill-color: var(--cenik-row-color, var(--text-strong, #111)) !important;
+  text-decoration: none !important;
+}
+
+body.change-list #result_list tbody td.field-rodina_link a:hover,
+body.change-list #result_list tbody td.field-hrac_link a:hover,
+body.change-list #result_list tbody tr:hover td.field-rodina_link a,
+body.change-list #result_list tbody tr:hover td.field-hrac_link a {
+  color: var(--brand) !important;
+  -webkit-text-fill-color: var(--brand) !important;
+}
+
+/* První datový sloupec (po checkboxu) – lehce tučně jako Ceník */
+body.change-list #result_list tbody tr > td:first-child:not(.action-checkbox),
+body.change-list #result_list tbody tr > th:first-child,
+body.change-list #result_list tbody tr > td.action-checkbox + td,
+body.change-list #result_list tbody tr > td.action-checkbox + th,
+body.change-list #result_list tbody tr > th,
+body.change-list #result_list tbody tr > td:first-child:not(.action-checkbox) a,
+body.change-list #result_list tbody tr > th:first-child a,
+body.change-list #result_list tbody tr > td.action-checkbox + td a,
+body.change-list #result_list tbody tr > td.action-checkbox + th a,
+body.change-list #result_list tbody tr > th a {
+  font-weight: 500 !important;
+}
+
+body.change-list #result_list thead th:not(.action-checkbox-column),
+body.change-list #result_list thead th:not(.action-checkbox-column) *,
+body.change-list #result_list tbody td:not(.action-checkbox),
+body.change-list #result_list tbody th,
+body.change-list #result_list tbody td:not(.action-checkbox) *,
+body.change-list #result_list tbody th * {
+  text-align: left !important;
+}
+
+/*
+  Django .text / .text a mají padding 8px 10px a display:block → thead vyšší.
+  display:contents = wrapper zmizí z box modelu (jako tbody buňka).
+*/
+body.change-list #changelist #result_list thead th .text,
+body.change-list #result_list thead th .text,
+body.change-list #result_list thead th.sorted .text,
+body.change-list #result_list thead th.sortable .text {
+  display: contents !important;
+  float: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: auto !important;
+  max-width: none !important;
+  position: static !important;
+}
+
+body.change-list #changelist #result_list thead th .text a,
+body.change-list #result_list thead th .text a,
+body.change-list #result_list thead th.sorted .text a,
+body.change-list #result_list thead th a,
+body.change-list #result_list thead tr:hover th a {
+  display: inline !important;
+  float: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  color: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  letter-spacing: inherit !important;
+  line-height: inherit !important;
+  text-transform: none !important;
+  text-decoration: none !important;
+  text-align: left !important;
+  position: static !important;
+  cursor: pointer;
+}
+
+/* Nepřepisuj sort ikony / vnořené span.y v .ts-sort */
+body.change-list #result_list thead th .text > span:not(.ts-sort):not(.ts-sort *) {
+  display: inline !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+body.change-list #result_list thead th .clear,
+body.change-list #result_list thead th .sortoptions,
+body.change-list #result_list thead th.sorted .sortoptions {
+  display: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Skryj „vybrat vše“ v hlavičce – řádkové checkboxy zůstanou pro hromadné akce */
+body.change-list #result_list thead th.action-checkbox-column,
+body.change-list #changelist #result_list thead th.action-checkbox-column {
+  width: var(--cenik-check-w) !important;
+  min-width: var(--cenik-check-w) !important;
+  max-width: var(--cenik-check-w) !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  color: transparent !important;
+}
+
+body.change-list #result_list thead th.action-checkbox-column input,
+body.change-list #result_list thead th.action-checkbox-column #action-toggle,
+body.change-list #changelist #action-toggle,
+body.change-list #result_list #action-toggle {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+body.change-list #result_list tbody td.action-checkbox {
+  width: var(--cenik-check-w) !important;
+  min-width: var(--cenik-check-w) !important;
+  max-width: var(--cenik-check-w) !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  text-align: left !important;
+}
+
+body.change-list #result_list thead th.action-checkbox-column,
+body.change-list #result_list thead th:first-child,
+body.change-list #result_list thead th:last-child {
+  border-left-width: 0 !important;
+  border-right-width: 0 !important;
+  border-radius: 0 !important;
+}
+
+body.change-list #result_list thead th a:hover,
+body.change-list #result_list thead th.sortable a:hover {
+  color: var(--cenik-ctl-brand) !important;
+  background: transparent !important;
+}
+
+body.change-list #result_list thead th.sorted,
+body.change-list #result_list thead th.sorted a,
+body.change-list #result_list thead tr:hover th.sorted,
+body.change-list #result_list thead tr:hover th.sorted a {
+  color: var(--ts-head-color, #111827) !important;
+  -webkit-text-fill-color: var(--ts-head-color, #111827) !important;
+  background-color: transparent !important;
+}
+
+body.change-list #result_list tbody tr:first-child > td.action-checkbox {
+  padding-right: 0 !important;
+  text-align: left !important;
+}
+
+/*
+  Sort ikony – čisté CSS na a::after (bez JS, nic je nepřebije).
+  Default: smaragd (dva trojúhelníky na sobě = kosočtverec).
+  Aktivní: jedna šipka ↑ / ↓ v barvě brandu.
+*/
+body.change-list {
+  --ts-sort-muted: #111111;
+  --ts-sort-active: var(--brand, #e67817);
+  /* Vyplněné trojúhelníky s mezerou; lehčí (ne strong) = menší / jemnější tvar */
+  --ts-sort-diamond: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 12'%3E%3Cpath fill='%23111' d='M4 1.4L6.4 5H1.6L4 1.4Z'/%3E%3Cpath fill='%23111' d='M4 10.6L1.6 7H6.4L4 10.6Z'/%3E%3C/svg%3E");
+  --ts-sort-arrow: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 12'%3E%3Cpath fill='%23000' d='M5 1.5L8.2 5H6V10.5H4V5H1.8L5 1.5Z'/%3E%3C/svg%3E");
+}
+
+body.change-list #result_list thead th.sortable a,
+body.change-list #changelist #result_list thead th.sortable a {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  max-width: 100% !important;
+}
+
+body.change-list #result_list thead th.sortable a::after,
+body.change-list #changelist #result_list thead th.sortable a::after {
+  content: "" !important;
+  display: inline-block !important;
+  flex: 0 0 auto !important;
+  width: 8px !important;
+  height: 12px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  vertical-align: middle !important;
+  background-color: transparent !important;
+  background-image: var(--ts-sort-diamond) !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: contain !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+  transform: none !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: none !important;
+  font-weight: 400 !important;
+}
+
+/* Aktivní sloupec: smaragd pryč → šipka v barvě brandu */
+body.change-list #result_list thead th.sorted.ascending a::after,
+body.change-list #result_list thead th.ascending.sorted a::after,
+body.change-list #changelist #result_list thead th.sorted.ascending a::after {
+  width: 9px !important;
+  height: 12px !important;
+  background-color: var(--ts-sort-active) !important;
+  background-image: none !important;
+  -webkit-mask: var(--ts-sort-arrow) center / contain no-repeat !important;
+  mask: var(--ts-sort-arrow) center / contain no-repeat !important;
+  transform: none !important;
+}
+
+body.change-list #result_list thead th.sorted.descending a::after,
+body.change-list #result_list thead th.descending.sorted a::after,
+body.change-list #changelist #result_list thead th.sorted.descending a::after {
+  width: 9px !important;
+  height: 12px !important;
+  background-color: var(--ts-sort-active) !important;
+  background-image: none !important;
+  -webkit-mask: var(--ts-sort-arrow) center / contain no-repeat !important;
+  mask: var(--ts-sort-arrow) center / contain no-repeat !important;
+  transform: rotate(180deg) !important;
+}
+
+/* Starý JS markup schovej (kdyby zůstal v DOM) */
+body.change-list #result_list thead th .ts-sort {
+  display: none !important;
+}
+
+html[data-mode="dark"] body.change-list {
+  --ts-sort-muted: var(--ts-head-color, var(--text-strong, #f3f4f6));
+  /* Černý diamant = maska; barva = text hlavičky */
+  --ts-sort-diamond: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 12'%3E%3Cpath fill='%23000' d='M4 1.4L6.4 5H1.6L4 1.4Z'/%3E%3Cpath fill='%23000' d='M4 10.6L1.6 7H6.4L4 10.6Z'/%3E%3C/svg%3E");
+}
+
+/* Neřazené: diamant v barvě textu hlavičky */
+html[data-mode="dark"] body.change-list #result_list thead th.sortable:not(.sorted) a::after,
+html[data-mode="dark"] body.change-list #changelist #result_list thead th.sortable:not(.sorted) a::after {
+  background-image: none !important;
+  background-color: var(--ts-head-color, var(--text-strong, #f3f4f6)) !important;
+  -webkit-mask: var(--ts-sort-diamond) center / contain no-repeat !important;
+  mask: var(--ts-sort-diamond) center / contain no-repeat !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+html[data-mode="dark"] body.change-list #result_list thead th.sortable:not(.sorted) a:hover::after,
+html[data-mode="dark"] body.change-list #changelist #result_list thead th.sortable:not(.sorted) a:hover::after {
+  background-color: var(--brand) !important;
+}
+
+/* Aktivní řazení: šipka ↑/↓ jako ve světlém režimu */
+html[data-mode="dark"] body.change-list #result_list thead th.sorted.ascending a::after,
+html[data-mode="dark"] body.change-list #result_list thead th.ascending.sorted a::after,
+html[data-mode="dark"] body.change-list #changelist #result_list thead th.sorted.ascending a::after,
+html[data-mode="dark"] body.change-list #changelist #result_list thead th.ascending.sorted a::after {
+  width: 9px !important;
+  height: 12px !important;
+  background-color: var(--ts-sort-active, var(--brand)) !important;
+  background-image: none !important;
+  -webkit-mask: var(--ts-sort-arrow) center / contain no-repeat !important;
+  mask: var(--ts-sort-arrow) center / contain no-repeat !important;
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+html[data-mode="dark"] body.change-list #result_list thead th.sorted.descending a::after,
+html[data-mode="dark"] body.change-list #result_list thead th.descending.sorted a::after,
+html[data-mode="dark"] body.change-list #changelist #result_list thead th.sorted.descending a::after,
+html[data-mode="dark"] body.change-list #changelist #result_list thead th.descending.sorted a::after {
+  width: 9px !important;
+  height: 12px !important;
+  background-color: var(--ts-sort-active, var(--brand)) !important;
+  background-image: none !important;
+  -webkit-mask: var(--ts-sort-arrow) center / contain no-repeat !important;
+  mask: var(--ts-sort-arrow) center / contain no-repeat !important;
+  transform: rotate(180deg) !important;
+  opacity: 1 !important;
+}
+
+/*
+  Tělo tabulky
+  - postranní border drží #result_list (souvisle i u 1. řádku)
+  - mezirádkové čáry s insetem (ne až k straně)
+  - spodní okraj = border-bottom na všech buňkách posledního řádku
+*/
+body.change-list #changelist #result_list tbody td,
+body.change-list #changelist #result_list tbody th,
+body.change-list #result_list tbody td,
+body.change-list #result_list tbody th {
+  border: none !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+  background-repeat: no-repeat !important;
+}
+
+/*
+  Mezirádkové oddělovače jen přes background (ne border-bottom),
+  a jen u řádků nad posledním – poslední datový řádek NESmí mít spodní čáru.
+*/
+body.change-list #changelist #result_list tbody tr:not(:last-of-type) > td,
+body.change-list #changelist #result_list tbody tr:not(:last-of-type) > th,
+body.change-list #result_list tbody tr:not(:last-of-type) > td,
+body.change-list #result_list tbody tr:not(:last-of-type) > th {
+  background-image: linear-gradient(
+    var(--cenik-head-border),
+    var(--cenik-head-border)
+  ) !important;
+  background-size: 100% 1px !important;
+  background-position: center bottom !important;
+}
+
+body.change-list #result_list tbody tr:not(:last-of-type) > td:first-child,
+body.change-list #result_list tbody tr:not(:last-of-type) > th:first-child {
+  background-position: right bottom !important;
+  background-size: calc(100% - var(--cenik-row-line-inset)) 1px !important;
+}
+
+body.change-list #result_list tbody tr:not(:last-of-type) > td:last-child,
+body.change-list #result_list tbody tr:not(:last-of-type) > th:last-child {
+  background-position: left bottom !important;
+  background-size: calc(100% - var(--cenik-row-line-inset)) 1px !important;
+}
+
+/* Poslední datový řádek: bez spodní čáry (stejně jako Ceník). */
+body.change-list #changelist #result_list tbody tr:last-of-type > td,
+body.change-list #changelist #result_list tbody tr:last-of-type > th,
+body.change-list #result_list tbody tr:last-of-type > td,
+body.change-list #result_list tbody tr:last-of-type > th {
+  background-image: none !important;
+  border-bottom: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+body.change-list #result_list thead th.action-checkbox-column,
+body.change-list #result_list thead th:first-child,
+body.change-list #result_list thead th:last-child,
+body.change-list #result_list tbody tr:last-of-type > td:first-child,
+body.change-list #result_list tbody tr:last-of-type > td:last-child {
+  border-radius: 0 !important;
+}
+
+/* Skrytá dřívější patička + text Zobrazeno… */
+body.change-list #result_list tfoot.cenik-table-foot {
+  display: none !important;
+}
+
+body.change-list #changelist-paginator .paginator-info {
+  display: none !important;
+}
+
+/* Hover – jen barva, čáry zůstanou */
+body.change-list #result_list tbody tr:hover > td,
+body.change-list #result_list tbody tr:hover > th {
+  background-color: var(--table-row-hover, #fbfcfd) !important;
+}
+
+body.change-list #result_list tbody tr:not(:last-of-type):hover > td,
+body.change-list #result_list tbody tr:not(:last-of-type):hover > th {
+  background-image: linear-gradient(
+    var(--cenik-head-border),
+    var(--cenik-head-border)
+  ) !important;
+}
+
+body.change-list #result_list tbody tr:not(:last-of-type):hover > td:first-child,
+body.change-list #result_list tbody tr:not(:last-of-type):hover > th:first-child {
+  background-position: right bottom !important;
+  background-size: calc(100% - var(--cenik-row-line-inset)) 1px !important;
+}
+
+body.change-list #result_list tbody tr:not(:last-of-type):hover > td:last-child,
+body.change-list #result_list tbody tr:not(:last-of-type):hover > th:last-child {
+  background-position: left bottom !important;
+  background-size: calc(100% - var(--cenik-row-line-inset)) 1px !important;
+}
+
+body.change-list #result_list tbody tr:last-of-type:hover > td,
+body.change-list #result_list tbody tr:last-of-type:hover > th,
+body.change-list #result_list tbody tr:last-child:hover > td,
+body.change-list #result_list tbody tr:last-child:hover > th {
+  background-image: none !important;
+}
+
+html[data-mode="dark"] body.change-list {
+  --cenik-head-bg: transparent;
+  --cenik-head-border: var(--line, #2a2f3a);
+  --cenik-row-color: var(--text-strong, #f3f4f6);
+}
+
+/* Dark mode: výrazná linka pod hlavičkou (jako světlý režim); hover = brand */
+html[data-mode="dark"] body.change-list #result_list thead th,
+html[data-mode="dark"] body.change-list #result_list thead th.sorted,
+html[data-mode="dark"] body.change-list #result_list thead th.sortable,
+html[data-mode="dark"] body.change-list #result_list thead tr:hover th {
+  background-color: var(--bg, #1a252f) !important;
+  background-image: linear-gradient(var(--text-strong, #f3f4f6), var(--text-strong, #f3f4f6)) !important;
+  background-size: 100% 1.5px !important;
+  background-position: left bottom !important;
+  background-repeat: no-repeat !important;
+  border: 0 !important;
+  border-bottom: 0 !important;
+  color: var(--text-strong, #f3f4f6) !important;
+  -webkit-text-fill-color: var(--text-strong, #f3f4f6) !important;
+}
+
+html[data-mode="dark"] body.change-list #result_list thead th a,
+html[data-mode="dark"] body.change-list #result_list thead th.sorted a {
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-bottom: 0 !important;
+  color: var(--text-strong, #f3f4f6) !important;
+  -webkit-text-fill-color: var(--text-strong, #f3f4f6) !important;
+  text-decoration: none !important;
+}
+
+html[data-mode="dark"] body.change-list #result_list thead th a:hover,
+html[data-mode="dark"] body.change-list #result_list thead th.sortable a:hover,
+html[data-mode="dark"] body.change-list #result_list thead th.sorted a:hover {
+  color: var(--brand) !important;
+  -webkit-text-fill-color: var(--brand) !important;
+  text-decoration: none !important;
+  border-bottom: 0 !important;
+  background-image: none !important;
+}
+
+body.change-list #changelist .results,
+body.change-list #changelist-form .results {
+  grid-area: table !important;
+  width: 100% !important;
+  margin: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  overflow: visible !important;
+}
+
+/* Paginator: detaily layoutu + „Načíst Další“ v cenik-change-list.css (grid, bez ořezu) */
+body.change-list #changelist .paginator,
+body.change-list #changelist-form .paginator,
+body.change-list #changelist-paginator {
+  grid-area: pager !important;
+  width: 100% !important;
+  margin: 4px 0 0 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+body.change-list #changelist-paginator .paginator-info {
+  display: none !important;
+}
+
+body.change-list #changelist-paginator:empty,
+body.change-list #changelist-paginator:not(:has(.paginator-load-more)):not(:has(.paginator-pages a)):not(:has(.paginator-pages .this-page)):not(:has(.showall)) {
+  display: none !important;
+  margin: 0 !important;
+}
+
+@media (max-width: 860px) {
+  body.change-list #changelist .changelist-form-container.cenik-layout,
+  body.change-list #changelist .changelist-form-container.ts-cl-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas:
+      "toolbar"
+      "filters"
+      "table"
+      "pager" !important;
+    justify-content: stretch !important;
+    column-gap: 0 !important;
+  }
+
+  body.change-list #changelist .cenik-layout.cenik-has-selection {
+    grid-template-areas:
+      "toolbar"
+      "filters"
+      "selected"
+      "table"
+      "pager" !important;
+  }
+}
+
+@media (max-width: 520px) {
+  body.change-list #changelist .changelist-form-container.cenik-layout,
+  body.change-list #changelist .changelist-form-container.ts-cl-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/*
+  Page footer – zrcadlo headeru (stejné jako na Ceníku).
+*/
+body.change-list #changelist,
+body.change-list #changelist.module {
+  margin-bottom: 0 !important;
+}
+
+body.change-list .ts-cl-foot {
+  --ts-cl-foot-gap: 28px;
+  margin: var(--ts-cl-foot-gap) 0 20px 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+body.change-list .ts-cl-foot__inner {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px 20px !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 12px 2px 2px 2px !important;
+  box-sizing: border-box !important;
+  border-top: 0 !important;
+  background: transparent !important;
+}
+
+body.change-list .ts-cl-foot__brand {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 3px !important;
+  min-width: 0 !important;
+}
+
+body.change-list #content a.ts-cl-foot__brand-link,
+body.change-list .ts-cl-foot__brand-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  text-decoration: none !important;
+  color: inherit !important;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+body.change-list .ts-cl-foot__logo {
+  width: 26px !important;
+  height: 26px !important;
+  object-fit: contain !important;
+  flex-shrink: 0 !important;
+  display: block !important;
+}
+
+body.change-list .ts-cl-foot__club {
+  font-size: 16px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em !important;
+  color: var(--text-strong, #111) !important;
+  line-height: 1.25 !important;
+}
+
+body.change-list .ts-cl-foot__meta {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: baseline !important;
+  gap: 6px !important;
+  padding-left: 36px !important;
+}
+
+body.change-list .ts-cl-foot__section {
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: var(--brand, #e67817) !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.3 !important;
+}
+
+body.change-list .ts-cl-foot__dot {
+  color: var(--muted, #64748b) !important;
+  opacity: 0.5 !important;
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+}
+
+body.change-list .ts-cl-foot__count {
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  color: var(--muted, #64748b) !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.3 !important;
+}
+
+body.change-list .ts-cl-foot__user {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  gap: 4px !important;
+  margin-left: auto !important;
+  text-align: right !important;
+  min-width: 0 !important;
+}
+
+body.change-list .ts-cl-foot__hello {
+  margin: 0 !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  color: var(--muted, #64748b) !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1.3 !important;
+}
+
+body.change-list .ts-cl-foot__hello strong {
+  font-weight: 700 !important;
+  color: var(--text-strong, #111) !important;
+}
+
+body.change-list .ts-cl-foot__links {
+  display: inline-flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 6px 8px !important;
+}
+
+body.change-list .ts-cl-foot__sep {
+  color: var(--muted, #64748b) !important;
+  opacity: 0.45 !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+}
+
+body.change-list #content a.ts-cl-foot__link,
+body.change-list .ts-cl-foot__link {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  color: var(--text-strong, #111) !important;
+  text-decoration: none !important;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+  line-height: 1.3 !important;
+  white-space: nowrap !important;
+  transition: color 0.12s ease !important;
+}
+
+body.change-list #content a.ts-cl-foot__link:hover,
+body.change-list .ts-cl-foot__link:hover,
+body.change-list #content a.ts-cl-foot__link:focus-visible {
+  color: var(--brand, #e67817) !important;
+  text-decoration: none !important;
+  background: transparent !important;
+}
+
+body.change-list #content a.ts-cl-foot__link--logout,
+body.change-list .ts-cl-foot__link--logout {
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+/* Mobil: stejné rozmístění jako desktop (brand vlevo, user vpravo), jen menší */
+@media (max-width: 720px) {
+  body.change-list .ts-cl-foot {
+    --ts-cl-foot-gap: 16px;
+    margin-bottom: 12px !important;
+  }
+
+  body.change-list .ts-cl-foot__inner {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px 10px !important;
+    padding: 8px 2px 2px 2px !important;
+  }
+
+  body.change-list .ts-cl-foot__brand {
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+    gap: 2px !important;
+  }
+
+  body.change-list #content a.ts-cl-foot__brand-link,
+  body.change-list .ts-cl-foot__brand-link {
+    gap: 6px !important;
+  }
+
+  body.change-list .ts-cl-foot__logo {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  body.change-list .ts-cl-foot__club {
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+  }
+
+  body.change-list .ts-cl-foot__meta {
+    padding-left: 26px !important;
+    gap: 4px !important;
+    flex-wrap: nowrap !important;
+    white-space: nowrap !important;
+  }
+
+  body.change-list .ts-cl-foot__section,
+  body.change-list .ts-cl-foot__count,
+  body.change-list .ts-cl-foot__dot {
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+  }
+
+  body.change-list .ts-cl-foot__user {
+    flex: 0 1 auto !important;
+    align-items: flex-end !important;
+    text-align: right !important;
+    margin-left: auto !important;
+    width: auto !important;
+    max-width: 52% !important;
+    gap: 2px !important;
+    min-width: 0 !important;
+  }
+
+  body.change-list .ts-cl-foot__hello {
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+  }
+
+  body.change-list .ts-cl-foot__links {
+    justify-content: flex-end !important;
+    flex-wrap: nowrap !important;
+    gap: 4px 5px !important;
+  }
+
+  body.change-list .ts-cl-foot__sep {
+    font-size: 10px !important;
+  }
+
+  body.change-list #content a.ts-cl-foot__link,
+  body.change-list .ts-cl-foot__link {
+    font-size: 11px !important;
+    line-height: 1.25 !important;
+  }
+
+  body.change-list #content a.ts-cl-foot__link--logout,
+  body.change-list .ts-cl-foot__link--logout {
+    font-size: 10px !important;
+    letter-spacing: 0.03em !important;
+  }
+}

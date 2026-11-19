@@ -1,0 +1,746 @@
+/*
+  Globální admin formuláře / detaily / speciální stránky
+  – page-pad, bílé karty, labely, bubliny polí, tlačítka
+*/
+
+:root {
+  /* Změna layoutu polí všude: uprav jen tyto tokeny */
+  --ts-field-h: 36px;
+  --ts-field-pad-y: 6px;
+  --ts-field-pad-x: 10px;
+  --ts-field-max: 360px;
+  --ts-field-radius: var(--field-radius, 8px);
+  --ts-field-bg: var(--surface, #fff);
+  --ts-field-border: var(--line-200, #929aa4);
+  --ts-label-size: 14px;
+  --ts-label-weight: 700;
+  --ts-label-gap: 8px;   /* mezera label → pole */
+  --ts-row-gap: 16px;    /* mezera mezi řádky */
+  --ts-card-radius: 10px;
+  --ts-card-border: #e5e7eb;
+}
+
+/* ── Page width (pojistka; root je v custom.css) ── */
+body.change-form,
+body.add-form,
+body.ts-page-nastaveni,
+body.ts-page-schedule,
+body.ts-page-trener-detail,
+body.ts-page-vyuct-detail,
+body.ts-page-vyuct-nastaveni,
+body.ts-page-cenik-menu {
+  --page-pad: clamp(24px, 3vw, 48px);
+}
+
+@media (max-width: 720px) {
+  body.change-form,
+  body.add-form,
+  body.ts-page-nastaveni,
+  body.ts-page-schedule,
+  body.ts-page-trener-detail,
+  body.ts-page-vyuct-detail,
+  body.ts-page-vyuct-nastaveni,
+  body.ts-page-cenik-menu {
+    --page-pad: 16px;
+  }
+}
+
+body.change-form #content,
+body.add-form #content,
+body.ts-page-nastaveni #content,
+body.ts-page-schedule #content,
+body.ts-page-trener-detail #content,
+body.ts-page-vyuct-detail #content,
+body.ts-page-vyuct-nastaveni #content,
+body.ts-page-cenik-menu #content {
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+
+body.add-form #content-main,
+body.add-form #content-main.add-day-page,
+body.ts-page-trener-detail #content-main,
+body.ts-page-vyuct-nastaveni #content-main,
+body.ts-page-cenik-menu #content-main {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 0 24px !important;
+  box-sizing: border-box !important;
+}
+
+body.add-form #content-main > form,
+body.add-form #add-day-form {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* ── Karty ── */
+body.change-form #content-main > form > .module.aligned,
+body.change-form #content-main fieldset.module.aligned,
+body.change-form #content-main .inline-group,
+body.change-form #content-main .module,
+body.add-form #content-main .module.aligned,
+body.add-form #content-main .add-day-card,
+body.add-form .add-day-page .add-day-card,
+body.ts-page-trener-detail #content-main > .module,
+body.ts-page-vyuct-nastaveni .card,
+body.ts-page-vyuct-nastaveni .vyuct-set-card,
+body.ts-page-cenik-menu .card,
+body.change-form .vyuct-panel,
+body.change-form .ledger-card {
+  background: var(--surface, #fff) !important;
+  border: 1px solid var(--ts-card-border, var(--line, #e2e5ea)) !important;
+  border-radius: var(--ts-card-radius) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  padding: 16px !important;
+  margin-bottom: 12px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  color: var(--text, #1f2937) !important;
+}
+
+body.change-form #content-main fieldset.module.aligned > h2,
+body.change-form #content-main .module.aligned > h2,
+body.change-form #content-main .inline-group h2,
+body.change-form #content-main .module > h2,
+body.ts-page-vyuct-nastaveni .vyuct-set-card > h3,
+body.ts-page-cenik-menu .card > h3 {
+  margin: 0 0 14px !important;
+  padding: 0 0 10px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: var(--text-strong, #111827) !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid var(--line, #eef0ea) !important;
+}
+
+body.ts-page-vyuct-nastaveni .vyuct-set-card > .inner,
+body.ts-page-cenik-menu .card > .inner {
+  padding: 0 !important;
+}
+
+/*
+  ── Stacked fields (jako Přidat trénink): label NAD polem ──
+  Platí pro change/add všude. Tabular inlines (tr.form-row) necháme.
+*/
+body.change-form .module.aligned .form-row:not(tr),
+body.change-form fieldset.module.aligned .form-row:not(tr),
+body.change-form .aligned .form-row:not(tr),
+body.add-form .module.aligned .form-row:not(tr),
+body.add-form fieldset.module.aligned .form-row:not(tr),
+body.add-form .aligned .form-row:not(tr),
+body.add-form .add-day-page .add-day-row {
+  display: block !important;
+  margin: 0 0 var(--ts-row-gap) !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+/* Služba (výplet): délka se musí schovat i přes display:block !important výše */
+body.add-form .add-day-page .add-day-row.add-day-row--delka.is-sluzba-hidden,
+body.add-form .add-day-page .add-day-row--delka[hidden],
+body.change-form.model-trening .form-row.field-delka_minut.is-sluzba-hidden,
+body.change-form.model-trening .form-row.field-delka_minut[hidden] {
+  display: none !important;
+}
+
+body.change-form .module.aligned .form-row:not(tr):last-child,
+body.change-form fieldset.module.aligned .form-row:not(tr):last-child,
+body.change-form .aligned .form-row:not(tr):last-child,
+body.add-form .module.aligned .form-row:not(tr):last-child,
+body.add-form fieldset.module.aligned .form-row:not(tr):last-child,
+body.add-form .aligned .form-row:not(tr):last-child,
+body.add-form .add-day-page .add-day-row:last-of-type {
+  margin-bottom: 0 !important;
+}
+
+/* Django flex-container: sloupec místo label | pole */
+body.change-form .module.aligned .form-row:not(tr) .flex-container:not(.checkbox-row),
+body.change-form fieldset.module.aligned .form-row:not(tr) .flex-container:not(.checkbox-row),
+body.add-form .module.aligned .form-row:not(tr) .flex-container:not(.checkbox-row),
+body.add-form fieldset.module.aligned .form-row:not(tr) .flex-container:not(.checkbox-row),
+body.change-form .module.aligned .form-row:not(tr) > div,
+body.add-form .module.aligned .form-row:not(tr) > div {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 0 !important;
+  width: 100% !important;
+  max-width: var(--ts-field-max) !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Checkbox řádek: zůstat vedle sebe */
+body.change-form .module.aligned .form-row:not(tr) .flex-container.checkbox-row,
+body.add-form .module.aligned .form-row:not(tr) .flex-container.checkbox-row {
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  max-width: none !important;
+}
+
+body.change-form .module.aligned .aligned table,
+body.change-form .module.aligned .aligned tbody,
+body.change-form .module.aligned .aligned tr,
+body.change-form .module.aligned .aligned th,
+body.change-form .module.aligned .aligned td,
+body.add-form .module.aligned .aligned table,
+body.add-form .module.aligned .aligned tbody,
+body.add-form .module.aligned .aligned tr,
+body.add-form .module.aligned .aligned th,
+body.add-form .module.aligned .aligned td {
+  border: none !important;
+  border-bottom: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ── Labely (nadpis buněk) ── */
+body.change-form .module.aligned .form-row:not(tr) > label,
+body.change-form .module.aligned .form-row:not(tr) .flex-container > label,
+body.change-form fieldset.module.aligned .form-row:not(tr) > label,
+body.change-form .module.aligned .aligned th,
+body.add-form .module.aligned .form-row:not(tr) > label,
+body.add-form .module.aligned .form-row:not(tr) .flex-container > label,
+body.add-form fieldset.module.aligned .form-row:not(tr) > label,
+body.add-form .module.aligned .aligned th,
+body.add-form .add-day-page .add-day-row > label,
+body.add-form .add-day-page .add-day-card-title,
+body.ts-page-trener-detail .trener-filter-form label,
+body.ts-page-vyuct-nastaveni .form-row > label,
+body.ts-page-vyuct-nastaveni label.vyuct-field-label {
+  display: block !important;
+  float: none !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 0 var(--ts-label-gap) !important;
+  padding: 0 !important;
+  text-align: left !important;
+  color: var(--text-strong, #111827) !important;
+  font-weight: var(--ts-label-weight) !important;
+  font-size: var(--ts-label-size) !important;
+  line-height: 1.3 !important;
+}
+
+body.change-form .module.aligned .form-row:not(tr) .flex-container.checkbox-row > label,
+body.add-form .module.aligned .form-row:not(tr) .flex-container.checkbox-row > label,
+body.change-form .module.aligned .form-row:not(tr) label.vCheckboxLabel,
+body.add-form .module.aligned .form-row:not(tr) label.vCheckboxLabel {
+  display: inline !important;
+  margin: 0 !important;
+  font-weight: 500 !important;
+}
+
+body.add-form .add-day-page .add-day-card-title {
+  font-size: 15px !important;
+  margin: 0 0 14px !important;
+}
+
+/* ── Bubliny polí (change / add / speciální stránky) ── */
+body.change-form .module.aligned .form-row:not(tr) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]):not([type="file"]),
+body.change-form .module.aligned .form-row:not(tr) select:not([multiple]),
+body.change-form .module.aligned .form-row:not(tr) textarea,
+body.change-form fieldset.module.aligned .form-row:not(tr) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]):not([type="file"]),
+body.change-form fieldset.module.aligned .form-row:not(tr) select:not([multiple]),
+body.change-form fieldset.module.aligned .form-row:not(tr) textarea,
+body.change-form .module.aligned .aligned input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]):not([type="file"]),
+body.change-form .module.aligned .aligned select:not([multiple]),
+body.change-form .module.aligned .aligned textarea,
+body.add-form .module.aligned .form-row:not(tr) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]):not([type="file"]),
+body.add-form .module.aligned .form-row:not(tr) select:not([multiple]),
+body.add-form .module.aligned .form-row:not(tr) textarea,
+body.add-form fieldset.module.aligned .form-row:not(tr) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]):not([type="file"]),
+body.add-form fieldset.module.aligned .form-row:not(tr) select:not([multiple]),
+body.add-form fieldset.module.aligned .form-row:not(tr) textarea,
+body.change-form .vyuct-panel input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]),
+body.change-form .vyuct-panel select:not([multiple]),
+body.change-form .actions-row input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]),
+body.change-form .actions-row select:not([multiple]),
+body.add-form .add-day-page .add-day-card input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]),
+body.add-form .add-day-page .add-day-card select:not([multiple]):not(.add-day-hraci-picker),
+body.add-form .add-day-page .add-day-card textarea,
+body.add-form .add-day-page .add-day-row input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]),
+body.add-form .add-day-page .add-day-row select:not([multiple]):not(.add-day-hraci-picker),
+body.add-form .add-day-page .add-day-row textarea,
+body.ts-page-trener-detail .trener-filter-form input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+body.ts-page-trener-detail .trener-filter-form select,
+body.ts-page-vyuct-nastaveni .vyuct-set-fields input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]),
+body.ts-page-vyuct-nastaveni .vyuct-rezim-params input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]),
+body.ts-page-vyuct-nastaveni .vyuct-set-fields select:not([multiple]),
+body.ts-page-vyuct-nastaveni .vyuct-rezim-params select:not([multiple]),
+body.ts-page-vyuct-nastaveni textarea,
+body.ts-page-cenik-menu input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]),
+body.ts-page-cenik-menu select:not([multiple]),
+body.ts-page-cenik-menu textarea {
+  width: 100% !important;
+  max-width: var(--ts-field-max) !important;
+  box-sizing: border-box !important;
+  height: var(--ts-field-h) !important;
+  min-height: var(--ts-field-h) !important;
+  padding: var(--ts-field-pad-y) var(--ts-field-pad-x) !important;
+  background: var(--ts-field-bg, var(--surface, #fff)) !important;
+  border: 1px solid var(--ts-field-border) !important;
+  color: var(--text, #1f2937) !important;
+  border-radius: var(--ts-field-radius) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+
+body.change-form .module.aligned .form-row:not(tr) textarea,
+body.change-form fieldset.module.aligned .form-row:not(tr) textarea,
+body.change-form .module.aligned .aligned textarea,
+body.add-form .module.aligned .form-row:not(tr) textarea,
+body.add-form fieldset.module.aligned .form-row:not(tr) textarea,
+body.add-form .add-day-page .add-day-card textarea,
+body.add-form .add-day-page .add-day-row textarea,
+body.ts-page-vyuct-nastaveni textarea {
+  height: auto !important;
+  min-height: 64px !important;
+  resize: vertical !important;
+}
+
+body.change-form .module.aligned .form-row input:focus,
+body.change-form .module.aligned .form-row input:focus-visible,
+body.change-form .module.aligned .form-row select:focus,
+body.change-form .module.aligned .form-row select:focus-visible,
+body.change-form .module.aligned .form-row textarea:focus,
+body.change-form .module.aligned .form-row textarea:focus-visible,
+body.add-form .module.aligned .form-row input:focus,
+body.add-form .module.aligned .form-row input:focus-visible,
+body.add-form .module.aligned .form-row select:focus,
+body.add-form .module.aligned .form-row select:focus-visible,
+body.add-form .module.aligned .form-row textarea:focus,
+body.add-form .module.aligned .form-row textarea:focus-visible,
+body.change-form .actions-row input:focus,
+body.change-form .vyuct-panel input:focus,
+body.add-form .add-day-page .add-day-card input:focus,
+body.add-form .add-day-page .add-day-card select:focus,
+body.add-form .add-day-page .add-day-card textarea:focus,
+body.add-form .add-day-page .add-day-row input:focus,
+body.add-form .add-day-page .add-day-row select:focus,
+body.add-form .add-day-page .add-day-row textarea:focus,
+body.ts-page-trener-detail .trener-filter-form input:focus,
+body.ts-page-vyuct-nastaveni input:focus,
+body.ts-page-vyuct-nastaveni select:focus,
+body.ts-page-vyuct-nastaveni textarea:focus,
+body.ts-page-cenik-menu input:focus {
+  outline: none !important;
+  border-color: var(--ts-field-border) !important;
+  box-shadow: none !important;
+}
+
+/* Auth group / user: filter_horizontal – netahej max-width na select[multiple] */
+body.change-form .selector select,
+body.change-form select[multiple],
+body.add-form .selector select,
+body.add-form select[multiple] {
+  max-width: none !important;
+  height: auto !important;
+  min-height: 120px !important;
+}
+
+/* ── Date / time pickery ve formulářích ── */
+body.change-form .ts-date-picker--enhanced,
+body.add-form .ts-date-picker--enhanced,
+.add-day-page .ts-date-picker--enhanced,
+body.change-form .form-row .ts-date-picker,
+body.add-form .ts-date-picker,
+.add-day-page .add-day-datum-input-wrap .ts-date-picker,
+body.ts-page-trener-detail .ts-date-picker {
+  display: block !important;
+  width: min(100%, var(--ts-field-max)) !important;
+  max-width: var(--ts-field-max) !important;
+}
+
+body.change-form .ts-time-picker--enhanced,
+body.add-form .ts-time-picker--enhanced,
+.add-day-page .ts-time-picker--enhanced {
+  display: block !important;
+  width: min(100%, var(--ts-field-max)) !important;
+  max-width: var(--ts-field-max) !important;
+}
+
+body.change-form .ts-date-trigger,
+body.add-form .ts-date-trigger,
+.add-day-page .ts-date-trigger,
+body.change-form .ts-time-trigger,
+body.add-form .ts-time-trigger,
+.add-day-page .ts-time-trigger,
+body.ts-page-trener-detail .ts-date-trigger {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: var(--ts-field-max) !important;
+  min-height: var(--ts-field-h) !important;
+  height: var(--ts-field-h) !important;
+  padding: var(--ts-field-pad-y) var(--ts-field-pad-x) !important;
+  gap: 8px !important;
+  background: var(--ts-field-bg, var(--surface, #fff)) !important;
+  border: 1px solid var(--ts-field-border) !important;
+  border-radius: var(--ts-field-radius) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--text, #1f2937) !important;
+  box-shadow: none !important;
+}
+
+body.change-form .ts-date-trigger:hover,
+body.add-form .ts-date-trigger:hover,
+.add-day-page .ts-date-trigger:hover,
+body.change-form .ts-time-trigger:hover,
+body.add-form .ts-time-trigger:hover,
+.add-day-page .ts-time-trigger:hover,
+body.change-form .ts-date-trigger[aria-expanded="true"],
+body.add-form .ts-date-trigger[aria-expanded="true"],
+.add-day-page .ts-date-trigger[aria-expanded="true"],
+body.change-form .ts-time-trigger[aria-expanded="true"],
+body.add-form .ts-time-trigger[aria-expanded="true"],
+.add-day-page .ts-time-trigger[aria-expanded="true"] {
+  border-color: var(--ts-field-border) !important;
+  background: var(--surface, #fff) !important;
+  box-shadow: none !important;
+}
+
+body.change-form .ts-date-label,
+body.add-form .ts-date-label,
+.add-day-page .ts-date-label,
+body.ts-page-trener-detail .ts-date-label,
+body.change-form .ts-time-label,
+body.add-form .ts-time-label,
+.add-day-page .ts-time-label {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--text, #1f2937) !important;
+}
+
+body.change-form .ts-date-label.is-placeholder,
+body.add-form .ts-date-label.is-placeholder,
+.add-day-page .ts-date-label.is-placeholder,
+body.change-form .ts-time-label.is-placeholder,
+body.add-form .ts-time-label.is-placeholder,
+.add-day-page .ts-time-label.is-placeholder {
+  color: var(--muted, #64748b) !important;
+  font-weight: 500 !important;
+}
+
+/* Chip date trigger – detail v cenik-change-list.css (.ts-cl-chip--date) */
+body.change-list .ts-cl-chip .ts-date-trigger,
+body.change-list .ts-cl-chip--date .ts-date-trigger {
+  min-height: var(--ts-chip-h, 32px) !important;
+  height: var(--ts-chip-h, 32px) !important;
+  min-width: 0 !important;
+  width: auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: var(--ts-chip-radius, 999px) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 13px !important;
+  font-weight: 550 !important;
+  color: inherit !important;
+  max-width: none !important;
+}
+
+/* Tlačítka → ts-buttons.css (globální pill jako + Přidat Hráč) */
+
+/* Trenér detail – filtr */
+body.ts-page-trener-detail .trener-filter-form {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: flex-end !important;
+  gap: 12px !important;
+  margin: 0 0 16px !important;
+  padding: 0 !important;
+}
+
+body.ts-page-trener-detail .trener-filter-form label {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  margin: 0 !important;
+}
+
+body.ts-page-trener-detail .trener-filter-form input[type="date"] {
+  width: auto !important;
+  min-width: 10.5rem !important;
+  max-width: var(--ts-field-max) !important;
+}
+
+/* Vyúčtování nastavení – plná šířka (ne 720px) */
+body.ts-page-vyuct-nastaveni .vyuct-set.dash-wrap,
+body.ts-page-cenik-menu .cenik-menu-page.dash-wrap {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 0 0 24px !important;
+  box-sizing: border-box !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   Sdílené komponenty – karty + KPI (Hráč / Rodina / Trenér…)
+   ══════════════════════════════════════════════════════════ */
+
+/* Jediný zdroj zaoblení karet – měň --ts-card-radius v :root výše */
+body.change-form .ts-card,
+body.change-form .vyuct-panel.ts-card,
+body.change-form .ledger-card.ts-card,
+body.app-core.model-hrac.change-form .vyuct-panel,
+body.app-core.model-hrac.change-form .vyuct-panel.ts-card,
+body.app-core.model-hrac.change-form .ledger-card,
+body.app-core.model-hrac.change-form .ledger-card.ts-card,
+#content-main:has(form[action*="core/hrac/"]) .vyuct-panel,
+#content-main:has(form[action*="core/hrac/"]) .vyuct-panel.ts-card,
+#content-main:has(form[action*="core/hrac/"]) .ledger-card,
+.ts-card,
+.vyuct-panel.ts-card,
+.ledger-card.ts-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  margin: 16px 0 !important;
+  padding: 16px !important;
+  background: var(--surface, #fff) !important;
+  border: 1px solid var(--ts-card-border, var(--line, #e5e7eb)) !important;
+  border-radius: var(--ts-card-radius, 10px) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+  color: var(--text, #1f2937) !important;
+}
+
+.ts-card__title,
+.vyuct-panel.ts-card .vyuct-panel__title,
+.ledger-card.ts-card .ledger-title,
+body.change-form .ts-card > .ts-card__title,
+body.change-form .vyuct-panel > .vyuct-panel__title,
+body.change-form .ledger-card > .ledger-title {
+  margin: 0 !important;
+  /* padding (ne margin) = žádný collapse s následujícím obsahem */
+  padding: 0 0 14px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: var(--text-strong, #111827) !important;
+  border: none !important;
+  border-bottom: none !important;
+  background: transparent !important;
+}
+
+.ts-card__hint,
+.vyuct-panel.ts-card .vyuct-panel__hint,
+.ledger-card.ts-card .ledger-hint,
+body.change-form .vyuct-panel > .vyuct-panel__hint,
+body.change-form .ledger-card > .ledger-hint {
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  color: var(--muted, #64748b) !important;
+}
+
+body.change-form .ledger-card > .ledger-wrap {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.ts-card .vyuct-field > label,
+.ts-card .ts-field > label {
+  display: block !important;
+  margin: 0 0 8px !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  color: var(--text-strong, #111827) !important;
+}
+
+.ts-card input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]):not([type="file"]),
+.ts-card select:not([multiple]),
+.ts-card textarea {
+  width: 100% !important;
+  max-width: var(--ts-field-max, 360px) !important;
+  box-sizing: border-box !important;
+  height: var(--ts-field-h, 36px) !important;
+  min-height: var(--ts-field-h, 36px) !important;
+  padding: var(--ts-field-pad-y, 6px) var(--ts-field-pad-x, 10px) !important;
+  background: var(--ts-field-bg, var(--surface, #fff)) !important;
+  border: 1px solid var(--ts-field-border, var(--line-200, #929aa4)) !important;
+  border-radius: var(--ts-field-radius, 8px) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--text, #1f2937) !important;
+  box-shadow: none !important;
+}
+
+.ts-card .ts-date-picker {
+  display: block !important;
+  width: min(100%, var(--ts-field-max, 360px)) !important;
+  max-width: var(--ts-field-max, 360px) !important;
+}
+
+.ts-card .ts-date-trigger {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: var(--ts-field-max, 360px) !important;
+  min-height: var(--ts-field-h, 36px) !important;
+  height: var(--ts-field-h, 36px) !important;
+  padding: var(--ts-field-pad-y, 6px) var(--ts-field-pad-x, 10px) !important;
+  border: 1px solid var(--ts-field-border, var(--line-200, #929aa4)) !important;
+  border-radius: var(--ts-field-radius, 8px) !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+
+.ts-kpi-bar,
+.player-summary.ts-kpi-bar {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 12px 0 10px !important;
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+  padding: 16px 20px !important;
+  background: var(--surface, #fff) !important;
+  border: 1px solid var(--ts-card-border, var(--line, #e5e7eb)) !important;
+  border-radius: var(--ts-card-radius, 10px) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+.ts-kpi,
+.player-summary.ts-kpi-bar .ts-kpi,
+.player-summary.ts-kpi-bar .ps-item {
+  display: flex !important;
+  flex: 0 1 auto !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+  max-width: 24% !important;
+  text-align: left !important;
+}
+
+.ts-kpi__label,
+.player-summary.ts-kpi-bar .ts-kpi__label,
+.player-summary.ts-kpi-bar .ps-label {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: var(--muted, #64748b) !important;
+  line-height: 1.3 !important;
+}
+
+.player-summary.ts-kpi-bar .ps-label::after {
+  content: none !important;
+}
+
+.ts-kpi__value,
+.player-summary.ts-kpi-bar .ts-kpi__value,
+.player-summary.ts-kpi-bar .ps-value {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: var(--text-strong, #111827) !important;
+  font-variant-numeric: tabular-nums !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+
+.ts-kpi--positive .ts-kpi__value,
+.ts-kpi--positive .ps-value,
+.player-summary .ps-credit.is-positive .ps-value,
+.player-summary .ts-kpi--positive .ts-kpi__value {
+  color: var(--accent, #15803d) !important;
+}
+
+.ts-kpi--negative .ts-kpi__value,
+.ts-kpi--negative .ps-value,
+.player-summary .ps-credit.is-negative .ps-value,
+.player-summary .ts-kpi--negative .ts-kpi__value {
+  color: var(--brand-600, var(--brand, #b91c1c)) !important;
+}
+
+@media (max-width: 900px) {
+  .ts-kpi-bar,
+  .player-summary.ts-kpi-bar {
+    flex-wrap: wrap !important;
+  }
+
+  .player-summary.ts-kpi-bar .ts-kpi,
+  .player-summary.ts-kpi-bar .ps-item {
+    flex: 1 1 calc(50% - 12px) !important;
+    max-width: calc(50% - 6px) !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .ts-kpi-bar,
+  .player-summary.ts-kpi-bar {
+    flex-direction: column !important;
+    gap: 14px !important;
+  }
+
+  .player-summary.ts-kpi-bar .ts-kpi,
+  .player-summary.ts-kpi-bar .ps-item {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* Autocomplete (Select2) – stejná šířka/výška jako ostatní pole */
+body.change-form .related-widget-wrapper,
+body.add-form .related-widget-wrapper {
+  width: 100% !important;
+  max-width: var(--ts-field-max) !important;
+  box-sizing: border-box !important;
+}
+
+body.change-form .select2-container,
+body.add-form .select2-container,
+body.change-form .related-widget-wrapper .select2-container,
+body.add-form .related-widget-wrapper .select2-container {
+  width: 100% !important;
+  max-width: var(--ts-field-max) !important;
+  box-sizing: border-box !important;
+}
+
+body.change-form .select2-container--admin-autocomplete .select2-selection--single,
+body.add-form .select2-container--admin-autocomplete .select2-selection--single {
+  height: var(--ts-field-h) !important;
+  min-height: var(--ts-field-h) !important;
+  border: 1px solid var(--ts-field-border) !important;
+  border-radius: var(--ts-field-radius) !important;
+  background: var(--surface, #fff) !important;
+  box-shadow: none !important;
+}
+
+body.change-form .select2-container--admin-autocomplete .select2-selection--single .select2-selection__rendered,
+body.add-form .select2-container--admin-autocomplete .select2-selection--single .select2-selection__rendered {
+  line-height: calc(var(--ts-field-h) - 2px) !important;
+  padding-left: var(--ts-field-pad-x) !important;
+  padding-right: 28px !important;
+  color: var(--text, #1f2937) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+body.change-form .select2-container--admin-autocomplete .select2-selection--single .select2-selection__arrow,
+body.add-form .select2-container--admin-autocomplete .select2-selection--single .select2-selection__arrow {
+  height: calc(var(--ts-field-h) - 2px) !important;
+  top: 0 !important;
+  right: 4px !important;
+}

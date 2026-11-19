@@ -1,0 +1,31 @@
+{% load i18n %}
+{# Sdílený date picker. Context: name, value, allow_future, year_min, year_max, submit_form, navigate, picker_id, label_format #}
+<div class="ts-date-picker"
+     data-ts-date-picker
+     data-datum="{{ value }}"
+     data-year-min="{{ year_min|default:2020 }}"
+     data-year-max="{{ year_max|default:2030 }}"
+     {% if allow_future == False or allow_future == 'False' %}data-allow-future="0"{% else %}data-allow-future="1"{% endif %}
+     {% if allow_empty == True or allow_empty == 'True' or allow_empty == '1' %}data-allow-empty="1"{% endif %}
+     {% if submit_form and submit_form != 'False' %}data-submit-form{% endif %}
+     {% if navigate %}data-navigate="{{ navigate }}"{% endif %}
+     {% if label_format %}data-label-format="{{ label_format }}"{% endif %}
+     {% if picker_id %}id="{{ picker_id }}"{% endif %}>
+  <button type="button" class="ts-date-trigger" data-ts-date-trigger aria-haspopup="dialog" aria-expanded="false">
+    <svg class="ts-date-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+    <span class="ts-date-label" data-ts-date-label>—</span>
+    <svg class="ts-date-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+  </button>
+  <input type="hidden" class="ts-date-value" data-ts-date-value name="{{ name }}" value="{{ value }}">
+  <div class="ts-date-popover" data-ts-date-popover role="dialog" aria-label="{% trans 'Výběr data' %}" hidden>
+    <div class="ts-date-cal-header">
+      <button type="button" class="ts-date-cal-nav" data-cal-prev aria-label="{% trans 'Předchozí měsíc' %}">‹</button>
+      <button type="button" class="ts-date-cal-title" data-ts-date-title>—</button>
+      <button type="button" class="ts-date-cal-nav" data-cal-next aria-label="{% trans 'Další měsíc' %}">›</button>
+    </div>
+    <div class="ts-date-cal-weekdays" aria-hidden="true">
+      <span>{% trans "Po" %}</span><span>{% trans "Út" %}</span><span>{% trans "St" %}</span><span>{% trans "Čt" %}</span><span>{% trans "Pá" %}</span><span>{% trans "So" %}</span><span>{% trans "Ne" %}</span>
+    </div>
+    <div class="ts-date-cal-days" data-ts-date-days></div>
+  </div>
+</div>

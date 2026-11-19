@@ -1,14 +1,16 @@
 {% extends "admin/change_list.html" %}
 
-{% load i18n %}
+{% load i18n static %}
+{% block extrastyle %}
+{{ block.super }}
+{# cache-bust compact (skrytí e-mail / jméno / příjmení na ≤860px) #}
+<link rel="stylesheet" href="{% static 'admin/css/changelist-compact.css' %}?v=user-no-active-1">
+{% endblock %}
 {% block object-tools-items %}
   <li>
     <a href="{% url 'admin:nastaveni' %}" class="viewsitelink">{% trans "← Nastavení" %}</a>
   </li>
   {{ block.super }}
-  <li>
-    <a href="{% url 'admin:auth_group_changelist' %}" class="addlink">{% trans "Skupiny" %}</a>
-  </li>
 {% endblock %}
 
 {% block breadcrumbs %}

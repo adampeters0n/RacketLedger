@@ -1,7 +1,12 @@
 {% extends "admin/base_site.html" %}
 {% load static i18n %}
+{% block bodyclass %}{{ block.super }} dashboard-page{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+{% block content_title %}{% endblock %}
 {% block extrastyle %}
-<link rel="stylesheet" href="{% static 'admin/css/dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/kalendar.css' %}?v=slot-scroll-2">
+<link rel="stylesheet" href="{% static 'admin/css/kalendar-qa.css' %}?v=slot-scroll-2">
+<link rel="stylesheet" href="{% static 'admin/css/dashboard.css' %}?v=safari-color-2">
 {{ block.super }}
 {% endblock %}
 
@@ -12,100 +17,174 @@
 {% block content %}
 <div class="dash-wrap">
 
-  <div class="card">
-    <div class="quick">
-      <a class="button default" href="{{ quick.add_training }}">{% trans "+ Nový trénink" %}</a>
-      <a class="button" href="{{ quick.add_payment }}">{% trans "+ Platba od hráče" %}</a>
-      <a class="button" href="{{ quick.add_player }}">{% trans "+ Nový hráč" %}</a>
-      <a class="button" href="{{ quick.coaches }}">{% trans "Přehled trenérů" %}</a>
-      
-      <a class="button" href="{% url 'admin:analytika' %}">{% trans "Analytika" %}</a>
+  <header class="dash-masthead">
+    <div class="dash-masthead__date">
+      <p class="dash-masthead__weekday">{{ date_parts.weekday }}</p>
+      <p class="dash-masthead__day">{{ date_parts.day_month }} <span>{{ date_parts.year }}</span></p>
+      <p class="dash-masthead__club">{{ club_name }} · {% trans "Přehled" %}</p>
     </div>
+    <nav class="dash-toolbar" aria-label="{% trans 'Rychlé akce' %}">
+      {% if nav_treningy %}<a class="dash-tool dash-tool--primary" href="{{ quick.add_training }}">{% trans "Nový trénink" %}</a>{% endif %}
+      {% if nav_platby %}<a class="dash-tool" href="{{ quick.add_payment }}">{% trans "Platba" %}</a>{% endif %}
+      {% if nav_hraci %}<a class="dash-tool" href="{{ quick.add_player }}">{% trans "Hráč" %}</a>{% endif %}
+      <span class="dash-toolbar__sep" aria-hidden="true"></span>
+      {% if nav_rozvrh %}<a class="dash-tool dash-tool--text" href="{{ quick.schedule }}">{% trans "Rozvrh" %}</a>{% endif %}
+      {% if nav_analytika %}<a class="dash-tool dash-tool--text" href="{{ quick.analytika }}">{% trans "Analytika" %}</a>{% endif %}
+      {% if nav_treneri %}<a class="dash-tool dash-tool--text" href="{{ quick.coaches }}">{% trans "Trenéři" %}</a>{% endif %}
+    </nav>
+  </header>
+
+  <div class="dash-stage">
+    <section class="dash-board dash-board--today" aria-labelledby="dash-today-title">
+      <header class="dash-board__head">
+        <div>
+          <h2 id="dash-today-title" class="dash-board__title">{% trans "Dnes na kurtu" %}</h2>
+          <p class="dash-board__meta">
+            {% if dnes_count %}
+              {{ dnes_count }} {% if dnes_count == 1 %}{% trans "slot" %}{% elif dnes_count < 5 %}{% trans "sloty" %}{% else %}{% trans "slotů" %}{% endif %}
+              · {% trans "předpokládaný rozvrh" %}
+            {% else %}
+              {% trans "Předpokládaný rozvrh je prázdný" %}
+            {% endif %}
+          </p>
+        </div>
+        <a class="dash-board__link" href="{{ quick.schedule }}">{% trans "Týden" %}</a>
+      </header>
+      {% include "admin/includes/dash_day_schedule.html" with sched=sched %}
+    </section>
+
+    {% if show_dash_finance %}
+    <section class="dash-board dash-board--month" aria-labelledby="dash-month-title">
+      <header class="dash-board__head">
+        <div>
+          <h2 id="dash-month-title" class="dash-board__title">{% trans "Tento měsíc" %}</h2>
+          <p class="dash-board__meta">{{ date_parts.month_label }}</p>
+        </div>
+        {% if nav_analytika %}<a class="dash-board__link" href="{{ quick.analytika }}">{% trans "Analytika" %}</a>{% endif %}
+      </header>
+
+      <div class="dash-month-chart" aria-label="{% trans 'Přehled tohoto měsíce' %}">
+        <div class="dash-month-chart__head">
+          <span class="dash-month-chart__caption">{% trans "Hodiny po týdnech" %}</span>
+          <span class="dash-month-chart__total">{% trans "Platby · hodiny" %}</span>
+        </div>
+        <div class="dash-month-chart__canvas-wrap">
+          <canvas id="dashMonthChart" aria-label="{% trans 'Graf hodin a plateb' %}"></canvas>
+        </div>
+      </div>
+      {{ month_chart|json_script:"dash-month-chart-data" }}
+
+      <dl class="dash-ledger">
+        <div class="dash-ledger__row">
+          <dt>{% trans "Tréninky" %}</dt>
+          <dd>{{ pulse.trainings }}</dd>
+        </div>
+        <div class="dash-ledger__row">
+          <dt>{% trans "Hodiny" %}</dt>
+          <dd>{{ pulse.hours }}</dd>
+        </div>
+        <div class="dash-ledger__row">
+          <dt>{% trans "Platby" %}</dt>
+          <dd>{{ pulse.paid }} <span>Kč</span></dd>
+        </div>
+        <div class="dash-ledger__row{% if pulse.debtors %} dash-ledger__row--alert{% endif %}">
+          <dt>{% trans "Dluhy" %}</dt>
+          <dd>
+            {{ pulse.debt_sum }} <span>Kč</span>{% if pulse.debtors %}<small>· {{ pulse.debtors }} {% if pulse.debtors == 1 %}{% trans "hráč" %}{% elif pulse.debtors < 5 %}{% trans "hráči" %}{% else %}{% trans "hráčů" %}{% endif %}</small>{% endif %}
+          </dd>
+        </div>
+        <div class="dash-ledger__row">
+          <dt>{% trans "K výplatě" %}</dt>
+          <dd>{{ pulse.coach_due }} <span>Kč</span></dd>
+        </div>
+      </dl>
+    </section>
+    {% endif %}
   </div>
 
-  <div class="cols" style="margin-top:18px;">
-    <div>
-      <div class="card">
-        <h3>{% trans "Poslední platby" %}</h3>
-        <div class="inner">
-          <table class="list">
-            <thead><tr><th>{% trans "Datum" %}</th><th>{% trans "Hráč" %}</th><th class="num">{% trans "Částka" %}</th></tr></thead>
-            <tbody>
-            {% for p in posledni_platby %}
-              <tr>
-                <td><a href="{{ p.url }}">{{ p.when }}</a></td>
-                <td>{{ p.hrac }}</td>
-                <td class="num">{{ p.castka }}</td>
-              </tr>
-            {% empty %}
-              <tr><td colspan="3" class="muted">{% trans "Žádné platby." %}</td></tr>
-            {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
+  <div class="dash-columns">
+    {% if nav_platby %}
+    <section class="dash-board">
+      <header class="dash-board__head">
+        <h2 class="dash-board__title">{% trans "Poslední platby" %}</h2>
+        <a class="dash-board__link" href="{{ quick.payments }}">{% trans "Vše" %}</a>
+      </header>
+      <ul class="dash-rows">
+        {% for p in posledni_platby %}
+        <li class="dash-row">
+          <time class="dash-row__when">{{ p.day }} <span>{{ p.time }}</span></time>
+          <a class="dash-row__label" href="{{ p.url }}">{{ p.hrac }}</a>
+          <span class="dash-row__value">{{ p.castka }}</span>
+        </li>
+        {% empty %}
+        <li class="dash-rows__empty">{% trans "Žádné platby." %}</li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
 
-      <div class="card" style="margin-top:18px;">
-        <h3>{% trans "Poslední tréninky" %}</h3>
-        <div class="inner">
-          <table class="list">
-            <thead><tr><th>{% trans "Datum" %}</th><th>{% trans "Trenér" %}</th><th>{% trans "Formát" %}</th></tr></thead>
-            <tbody>
-            {% for t in posledni_treninky %}
-              <tr>
-                <td><a href="{{ t.url }}">{{ t.when }}</a></td>
-                <td>{{ t.trener }}</td>
-                <td>{{ t.format }}</td>
-              </tr>
-            {% empty %}
-              <tr><td colspan="3" class="muted">{% trans "Žádné tréninky." %}</td></tr>
-            {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    <section class="dash-board">
+      <header class="dash-board__head">
+        <h2 class="dash-board__title">{% trans "Poslední tréninky" %}</h2>
+        {% if nav_rozvrh %}<a class="dash-board__link" href="{{ quick.schedule }}">{% trans "Rozvrh" %}</a>{% endif %}
+      </header>
+      <ul class="dash-rows">
+        {% for t in posledni_treninky %}
+        <li class="dash-row dash-row--stack">
+          <time class="dash-row__when">{{ t.day }} <span>{{ t.time }}</span></time>
+          <div class="dash-row__block">
+            <a class="dash-row__label" href="{{ t.url }}">{{ t.trener }}</a>
+            <span class="dash-row__sub">{{ t.format }}</span>
+          </div>
+        </li>
+        {% empty %}
+        <li class="dash-rows__empty">{% trans "Žádné tréninky." %}</li>
+        {% endfor %}
+      </ul>
+    </section>
 
-    <div>
-      <div class="card">
-        <h3>{% trans "Top dlužníci (hráči)" %}</h3>
-        <div class="inner">
-          <table class="list">
-            <thead><tr><th>{% trans "Hráč" %}</th><th class="num">{% trans "Kredit" %}</th></tr></thead>
-            <tbody>
-            {% for r in debtors %}
-              <tr>
-                <td><a href="{{ r.url }}">{{ r.name }}</a></td>
-                <td class="num">{{ r.kredit }}</td>
-              </tr>
-            {% empty %}
-              <tr><td colspan="2" class="muted">{% trans "Nikdo nedluží 🎉" %}</td></tr>
-            {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
+    {% if show_dash_finance %}
+    <section class="dash-board">
+      <header class="dash-board__head">
+        <h2 class="dash-board__title">{% trans "Top dlužníci" %}</h2>
+        <a class="dash-board__link" href="{{ quick.players }}">{% trans "Hráči" %}</a>
+      </header>
+      <ul class="dash-rows">
+        {% for r in debtors %}
+        <li class="dash-row dash-row--pair">
+          <a class="dash-row__label" href="{{ r.url }}">{{ r.name }}</a>
+          <span class="dash-row__value dash-row__value--debt">{{ r.kredit }}</span>
+        </li>
+        {% empty %}
+        <li class="dash-rows__empty">{% trans "Nikdo nedluží." %}</li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
 
-      <div class="card" style="margin-top:18px;">
-        <h3>{% trans "K vyplacení trenérům" %}</h3>
-        <div class="inner">
-          <table class="list">
-            <thead><tr><th>{% trans "Trenér" %}</th><th class="num">{% trans "Částka" %}</th></tr></thead>
-            <tbody>
-            {% for r in treneri %}
-              <tr>
-                <td><a href="{{ r.url }}">{{ r.name }}</a></td>
-                <td class="num">{{ r.balance }}</td>
-              </tr>
-            {% empty %}
-              <tr><td colspan="2" class="muted">{% trans "Nic k vyplacení." %}</td></tr>
-            {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    {% if nav_treneri %}
+    <section class="dash-board">
+      <header class="dash-board__head">
+        <h2 class="dash-board__title">{% trans "K vyplacení" %}</h2>
+        <a class="dash-board__link" href="{{ quick.coaches }}">{% trans "Trenéři" %}</a>
+      </header>
+      <ul class="dash-rows">
+        {% for r in treneri %}
+        <li class="dash-row dash-row--pair">
+          <a class="dash-row__label" href="{{ r.url }}">{{ r.name }}</a>
+          <span class="dash-row__value">{{ r.balance }}</span>
+        </li>
+        {% empty %}
+        <li class="dash-rows__empty">{% trans "Nic k vyplacení." %}</li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
   </div>
 
 </div>
+{% if show_dash_finance %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="{% static 'admin/js/dashboard-chart.js' %}?v=tooltip-dark-1" defer></script>
+{% endif %}
 {% endblock %}

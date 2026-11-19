@@ -1,0 +1,44 @@
+{% load static i18n %}
+{% static 'home/tennisballimage.png' as stage_photo %}
+<!doctype html>
+<html lang="{{ LANGUAGE_CODE|default:'cs' }}">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block page_title %}{% trans "Přihlášení" %} · {{ product_name|default:system_nazev_klubu }}{% endblock %}</title>
+  {% with fav=favicon_url|default:system_favicon_url %}
+  {% if fav %}<link rel="icon" href="{{ fav }}" type="image/png">{% endif %}
+  {% endwith %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'home/landing.css' %}">
+  {% block extrahead %}{% endblock %}
+</head>
+<body class="auth-body">
+  <div class="page page--auth">
+    <div class="stage stage--auth">
+      <div class="stage__bg" aria-hidden="true">
+        <div class="stage__photo" style="--stage-photo: url('{{ stage_photo }}')"></div>
+        <div class="stage__overlay stage__overlay--auth"></div>
+        <div class="stage__grain"></div>
+      </div>
+
+      <header class="nav nav--auth nav--links-only">
+        <nav class="nav__links">
+          <a href="{% url 'home' %}">{% trans "Úvod" %}</a>
+        </nav>
+      </header>
+
+      <main class="auth">
+        <div class="auth__card">
+          <p class="auth__eyebrow">{% block auth_eyebrow %}{% trans "Vstup do systému" %}{% endblock %}</p>
+          <h1 class="auth__title">{% block auth_title %}{% trans "Přihlášení" %}{% endblock %}</h1>
+          {% block auth_lead %}{% endblock %}
+          {% block auth_content %}{% endblock %}
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

@@ -12,7 +12,6 @@ from django.db.models import Q, Sum
 from django.utils import timezone as dj_tz
 from django.utils.translation import gettext_lazy as _
 
-from core.money import format_castka, get_mena_symbol
 from .analytika_data import (
     TrenerRateLookup,
     charges_sum_between,
@@ -58,7 +57,7 @@ def period_bounds(period: str, today: date | None = None) -> tuple[date, date, s
 
 
 def _money(v: Decimal | float | int) -> str:
-    return format_castka(v, thousands=True, nbsp=True)
+    return f"{Decimal(v).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP):,.0f} Kč".replace(",", "\u00a0")
 
 
 def _pct(v: Decimal) -> str:
@@ -132,7 +131,7 @@ def build_financial_report(period: str, today: date | None = None) -> dict:
     ).count()
 
     trener_earned = rate_lookup.earned_from_rows(
-        training_qs.values("trener_id", "datum", "delka_minut")
+        training_qs.values("trener_id", "datum", "delka_minut", "format", "kurt")
     )
     trener_paid = Decimal(
         TrenerPlatba.objects.filter(
@@ -159,7 +158,7 @@ def build_financial_report(period: str, today: date | None = None) -> dict:
     total_balance = agregace.get("celkem") or Decimal(0)
 
     total_trener_earned_all = rate_lookup.earned_from_rows(
-        Trening.objects.values("trener_id", "datum", "delka_minut")
+        Trening.objects.values("trener_id", "datum", "delka_minut", "format", "kurt")
     )
     total_trener_paid_all = Decimal(TrenerPlatba.objects.aggregate(s=Sum("castka"))["s"] or 0)
     trener_to_pay = total_trener_earned_all - total_trener_paid_all
@@ -232,7 +231,7 @@ def render_report_excel(report: dict) -> bytes:
     thin = Side(style="thin", color="E2E8F0")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    money_fmt = f'#,##0 "{get_mena_symbol()}"'
+    money_fmt = '#,##0 "Kč"'
     hours_fmt = '#,##0.0" h"'
     count_fmt = '#,##0'
 

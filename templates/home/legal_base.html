@@ -1,0 +1,52 @@
+{% load static i18n %}
+<!doctype html>
+<html lang="{{ LANGUAGE_CODE|default:'cs' }}">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block page_title %}{{ product_name }}{% endblock %}</title>
+  {% if favicon_url %}<link rel="icon" href="{{ favicon_url }}" type="image/png">{% endif %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'home/landing.css' %}">
+</head>
+<body>
+  <div class="page page--legal">
+    <header class="nav nav--legal">
+      <a class="nav__brand" href="{% url 'home' %}">
+        {% if logo_url %}
+        <img class="nav__logo" src="{{ logo_url }}" alt="">
+        {% else %}
+        <span class="nav__dot" aria-hidden="true"></span>
+        {% endif %}
+        {{ product_name }}
+      </a>
+      <nav class="nav__links">
+        <a href="{% url 'home' %}">{% trans "Úvod" %}</a>
+        <a href="{% url 'privacy' %}">{% trans "Ochrana soukromí" %}</a>
+        <a href="{% url 'terms' %}">{% trans "Podmínky" %}</a>
+      </nav>
+    </header>
+
+    <main class="legal">
+      <div class="legal__inner">
+        {% block legal_content %}{% endblock %}
+      </div>
+    </main>
+
+    <footer class="foot">
+      <span>© {{ now|date:"Y" }} {{ product_name }}</span>
+      <p class="foot__legal">
+        <a href="{% url 'privacy' %}">{% trans "Ochrana soukromí" %}</a>
+        <span aria-hidden="true"> · </span>
+        <a href="{% url 'terms' %}">{% trans "Podmínky užívání" %}</a>
+        {% if contact_email %}
+        <span aria-hidden="true"> · </span>
+        <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+        {% endif %}
+      </p>
+    </footer>
+  </div>
+</body>
+</html>

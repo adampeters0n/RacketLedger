@@ -15,6 +15,8 @@ from ..admin_utils import filter_queryset_by_parsed_date, parse_czech_date_parts
 from ..admin_mixins import ConfigurableListPerPageMixin
 from ..forms import VyuctovaniNastaveniForm
 from ..models import Hrac, Vyuctovani, VyuctovaniNastaveni
+from ..roles import can_access_vyuctovani, is_platform_admin
+from .role_gate import RoleGateMixin
 
 REASON_LABELS = {
     "manual": _("Ručně z adminu"),
@@ -39,30 +41,26 @@ class VyuctovaniDatumFilter(admin.DateFieldListFilter):
 
 
 @admin.register(Vyuctovani)
-class VyuctovaniAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
+class VyuctovaniAdmin(RoleGateMixin, ConfigurableListPerPageMixin, admin.ModelAdmin):
+    role_check = staticmethod(can_access_vyuctovani)
     change_form_template = "admin/core/vyuctovani/change_form.html"
     change_list_template = "admin/core/vyuctovani/change_list.html"
 
     def has_add_permission(self, request):
         return False
 
-    def has_change_permission(self, request, obj=None):
-        return True
 
     def has_delete_permission(self, request, obj=None):
-        return request.user.is_superuser
+        return is_platform_admin(request.user)
 
-    date_hierarchy = "created_at"
     ordering = ("-period_to",)
     list_filter = (("created_at", VyuctovaniDatumFilter),)
     search_fields = ("hrac__jmeno", "hrac__prijmeni")
     list_per_page_default = 50
 
     list_display = (
-        "col_obdobi",
+        "datum_display",
         "hrac",
-        "col_nauctovano",
-        "col_platby",
         "col_k_uhrade",
         "col_kredit",
         "col_kredit_po_uhrade",
@@ -80,6 +78,9 @@ class VyuctovaniAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
         return extra + urls
 
     def nastaveni_view(self, request):
+        if not self.has_module_permission(request):
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied
         nastaveni = VyuctovaniNastaveni.load()
 
         if request.method == "POST":
@@ -87,21 +88,30 @@ class VyuctovaniAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             if form.is_valid():
                 form.save()
                 nastaveni = VyuctovaniNastaveni.load()
-                if (
-                    form.cleaned_data.get("aplikovat_na_vsechny")
-                    and form.instance.auto_rezim != VyuctovaniNastaveni.AutoRezim.MANUAL
-                ):
+                # Globální režim platí u všech. U MANUAL hráčský field nemá stejné choices —
+                # synchronizujeme jen režimy, které Hrac.vyuctovani_rezim umí.
+                sync = form.cleaned_data.get("aplikovat_na_vsechny", True)
+                updated = 0
+                if sync and nastaveni.auto_rezim in {
+                    c.value for c in Hrac.RezimVyuctovani
+                }:
                     updated = Hrac.objects.update(
-                        vyuctovani_rezim=form.instance.auto_rezim,
-                        vyuctovani_n=form.instance.auto_pocet_treninku,
-                        vyuctovani_threshold=form.instance.auto_limit,
+                        vyuctovani_rezim=nastaveni.auto_rezim,
+                        vyuctovani_n=nastaveni.auto_pocet_treninku,
+                        vyuctovani_threshold=nastaveni.auto_limit,
                     )
+                if updated:
                     self.message_user(
                         request,
                         gettext(
-                            "Nastavení uloženo. Režim synchronizován u %(updated)s hráčů."
+                            "Nastavení uloženo. Režim „%(rezim)s“ synchronizován u %(updated)s hráčů."
                         )
-                        % {"updated": updated},
+                        % {
+                            "rezim": REZIM_LABELS.get(
+                                nastaveni.auto_rezim, nastaveni.auto_rezim
+                            ),
+                            "updated": updated,
+                        },
                         level=messages.SUCCESS,
                     )
                 else:
@@ -127,11 +137,26 @@ class VyuctovaniAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             {
                 "jmeno": h.cele_jmeno,
                 "pocet_treninku": h.pocet_treninku_od_vyuctovani,
-                "posledni": self._fmt_dt(h.posledni_vyuctovani_at) if h.posledni_vyuctovani_at else "—",
+                "posledni": self._fmt_dt(h.posledni_vyuctovani_at) if h.posledni_vyuctovani_at else _("zatím žádná"),
                 "url": reverse("admin:core_hrac_change", args=[h.pk]),
             }
             for h in hraci_qs
         ]
+
+        from core.billing import stripe_api_configured
+        from core.money import get_mena_code
+        from core.models import ClubStripeConnect, SystemNastaveni
+        from core.player_payments import player_payments_ready
+
+        connect = ClubStripeConnect.load()
+        connect_account = (connect.stripe_account_id or "").strip()
+        connect_masked = ""
+        if connect_account:
+            connect_masked = (
+                f"{connect_account[:7]}…{connect_account[-4:]}"
+                if len(connect_account) > 14
+                else connect_account
+            )
 
         ctx = {
             **self.admin_site.each_context(request),
@@ -140,10 +165,21 @@ class VyuctovaniAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             "opts": self.model._meta,
             "changelist_url": reverse("admin:core_vyuctovani_changelist"),
             "hraci_url": reverse("admin:core_hrac_changelist"),
+            "system_nastaveni_url": reverse("admin:nastaveni"),
             "hraci_prehled": hraci_prehled,
             "hraci_celkem": Hrac.objects.count(),
             "aktualni_rezim": REZIM_LABELS.get(nastaveni.auto_rezim, nastaveni.auto_rezim),
             "aktualni_popis": nastaveni.popis_rezimu(),
+            "system_mena": get_mena_code(),
+            "stripe_api_configured": stripe_api_configured(),
+            "player_payments_ready": player_payments_ready(),
+            "connect_has_account": bool(connect_account),
+            "connect_account_id_masked": connect_masked,
+            "connect_charges_enabled": bool(connect.charges_enabled),
+            "connect_details_submitted": bool(connect.details_submitted),
+            "connect_onboarding_url": reverse("admin:nastaveni_connect_onboarding"),
+            "connect_refresh_url": reverse("admin:nastaveni_connect_refresh"),
+            "klub_nazev": SystemNastaveni.load().nazev_klubu or "",
         }
         if request.method == "POST" and not form.is_valid():
             ctx["aktualni_rezim"] = REZIM_LABELS.get(
@@ -203,6 +239,7 @@ class VyuctovaniAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             "nauctovano": self._kc(obj.charges_total),
             "platby": self._kc(obj.payments_total),
             "k_uhrade": self._kc(obj.amount_due),
+            "online_platba": obj.get_payment_status_display(),
             "kredit_start": self._kc_kredit(obj.credit_start),
             "kredit_end": self._kc_kredit(obj.credit_end),
             "kredit_po_uhrade": self._kc_kredit(kredit_po),
@@ -232,17 +269,28 @@ class VyuctovaniAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
         value = Decimal(value or 0).quantize(Decimal("0.01"))
         if value < 0:
             return format_html(
-                '<span class="vyuct-kredit-dluh">{} ({})</span>',
+                '<span class="vyuct-kredit-dluh">-{}</span>',
                 format_castka(abs(value), thousands=True),
-                gettext("dluh"),
             )
         if value > 0:
             return format_html(
-                '<span class="vyuct-kredit-plus">+{} ({})</span>',
+                '<span class="vyuct-kredit-plus">+{}</span>',
                 format_castka(value, thousands=True).lstrip("+"),
-                gettext("přeplatek"),
             )
         return format_castka(0)
+
+    @admin.display(description=_("Datum"), ordering="created_at")
+    def datum_display(self, obj):
+        if not obj.created_at:
+            return "—"
+        dt = dj_tz.localtime(obj.created_at) if dj_tz.is_aware(obj.created_at) else obj.created_at
+        return format_html(
+            '<span class="tx-datum" data-iso-date="{}">{}</span>'
+            ' <span style="color:#888; font-size:0.9em">{}</span>',
+            dt.strftime("%Y-%m-%d"),
+            dt.strftime("%d.%m.%Y"),
+            dt.strftime("%H:%M"),
+        )
 
     @admin.display(description=_("Období"))
     def col_obdobi(self, obj):
@@ -278,6 +326,18 @@ class VyuctovaniAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
         else:
             val = obj.amount_due
         return self._kc(val)
+
+    @admin.display(description=_("Online platba"))
+    def col_online_platba(self, obj):
+        status = (obj.payment_status or "").strip() or Vyuctovani.PaymentStatus.UNPAID
+        label = obj.get_payment_status_display()
+        if status == Vyuctovani.PaymentStatus.PAID:
+            return format_html('<span class="vyuct-kredit-plus">{}</span>', label)
+        if status == Vyuctovani.PaymentStatus.PENDING:
+            return format_html('<span class="vyuct-kredit-dluh">{}</span>', label)
+        if Decimal(obj.amount_due or 0) <= 0:
+            return "—"
+        return label
 
     @admin.display(description=_("Kredit"))
     def col_kredit(self, obj):

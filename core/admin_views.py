@@ -1,14 +1,13 @@
 """Custom admin site views (dashboard, analytika)."""
 import json
+from collections import defaultdict
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
-from core.money import format_castka
 from datetime import date, datetime, time, timedelta
 
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
-from django.db.models import Sum, Case, When, F, Value, DecimalField, Q
+from django.db.models import Count, Sum, Case, When, F, Value, DecimalField, Q
 from django.db.models.functions import TruncMonth
 from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import redirect
@@ -18,7 +17,8 @@ from django.utils import timezone as dj_tz
 from django.utils.translation import gettext as _, gettext_lazy as _lazy
 
 from .admin_utils import month_range
-from .analytika_data import build_analytika_context
+from .analytika_data import TrenerRateLookup, build_analytika_context
+from .schedule_build import build_trening_schedule
 from .analytika_export import (
     EXPORT_PERIODS,
     build_financial_report,
@@ -27,6 +27,7 @@ from .analytika_export import (
     render_report_pdf,
 )
 from .models import (
+    CenikFormat,
     Dochazka,
     Hrac,
     OstatniNaklad,
@@ -34,7 +35,7 @@ from .models import (
     TrenerPlatba,
     Transakce,
     Trening,
-    UserPreference,
+    UzivatelskyVzhled,
     Vyuctovani,
     VyuctovaniNastaveni,
     sazba_trenera_k_datu,
@@ -46,9 +47,9 @@ from .system_theme import (
     DEFAULT_THEME,
     THEME_VARIANTS,
     css_vars_style_block,
+    preset_colors,
     presets_for_js,
-    resolve_effective_theme,
-    resolve_theme_colors,
+    resolve_appearance_for_user,
     theme_options_for_template,
 )
 
@@ -64,20 +65,57 @@ ANALYTIKA_SECTIONS = (
     "naklady",
 )
 
+# Sekce dostupné při filtru Pronájmy (bez hráčů/trenérů tenisové školy).
+ANALYTIKA_SECTIONS_PRONAJMY = (
+    "prehled",
+    "aktivita",
+    "finance",
+    "ucetnictvi",
+    "naklady",
+)
+
 ANALYTIKA_SECTION_META = {
     "prehled": (_lazy("Přehled"), _lazy("Klíčové ukazatele tenisového systému za aktuální měsíc")),
     "aktivita": (_lazy("Aktivita"), _lazy("Odehrané hodiny, tréninky a denní trend")),
     "finance": (_lazy("Finance"), _lazy("Naúčtování, platby a finanční srovnání")),
     "ucetnictvi": (_lazy("Účetnictví"), _lazy("Cash flow, zisky, marže a výnosy na hodinu")),
-    "hraci": (_lazy("Hráči"), _lazy("Kredity, dluhy a přeplatky hráčů")),
+    "hraci": (_lazy("Hráči"), _lazy("Profil, aktivita, retence a kredity hráčů")),
     "treneri": (_lazy("Trenéři"), _lazy("Náklady na trenéry – hodiny, nároky a výplaty")),
     "naklady": (_lazy("Ostatní náklady"), _lazy("Provozní náklady mimo výplaty trenérů – započítávají se do čistého zisku")),
+}
+
+ANALYTIKA_SECTION_META_PRONAJMY = {
+    "prehled": (_lazy("Přehled"), _lazy("Klíčové ukazatele")),
+    "aktivita": (_lazy("Aktivita"), _lazy("Hodiny")),
+    "finance": (_lazy("Finance"), _lazy("Naúčtování a platby")),
+    "ucetnictvi": (_lazy("Účetnictví"), _lazy("Zisky a marže")),
+    "naklady": (_lazy("Ostatní náklady"), _lazy("Energie, vybavení, bonusy")),
+}
+
+ANALYTIKA_SECTION_META_VSE = {
+    "prehled": (_lazy("Přehled"), _lazy("Souhrn tenisové školy a pronájmů za aktuální měsíc")),
+    "aktivita": (_lazy("Aktivita"), _lazy("Hodiny tenisové školy a pronájmů")),
+    "finance": (_lazy("Finance"), _lazy("Tržby a příjmy – škola + pronájmy")),
+    "ucetnictvi": (_lazy("Účetnictví"), _lazy("Zisky a marže – škola + pronájmy")),
+    "hraci": ANALYTIKA_SECTION_META["hraci"],
+    "treneri": ANALYTIKA_SECTION_META["treneri"],
+    "naklady": ANALYTIKA_SECTION_META["naklady"],
 }
 
 
 def admin_analytika_index_view(request):
     """Přesměrování /admin/analytika/ → /admin/analytika/prehled/."""
-    return redirect("admin:analytika_section", section="prehled")
+    from .roles import can_access_analytika
+    from .analytika_data import parse_analytika_zdroj
+
+    if not can_access_analytika(request.user):
+        raise Http404
+
+    zdroj = parse_analytika_zdroj(request)
+    url = reverse("admin:analytika_section", kwargs={"section": "prehled"})
+    if zdroj != "vse":
+        url = f"{url}?zdroj={zdroj}"
+    return redirect(url)
 
 
 def _month_stats_for_range(month_start, month_end):
@@ -274,7 +312,7 @@ def _naklady_day_items(den: date):
             "kategorie": item["kategorie"],
             "label": kat_labels.get(item["kategorie"], item["kategorie"]),
             "castka": item["castka"],
-            "castka_fmt": format_castka(Decimal(item['castka'])),
+            "castka_fmt": f"{Decimal(item['castka']):.0f} Kč",
             "poznamka": item["poznamka"],
         }
         for item in OstatniNaklad.objects.filter(mesic=den).order_by("kategorie").values(
@@ -293,7 +331,7 @@ def _naklady_day_block(den: date):
         "label": den.strftime("%d.%m.%Y"),
         "weekday": weekdays[den.weekday()],
         "total": total,
-        "total_fmt": format_castka(total),
+        "total_fmt": f"{total:.0f} Kč",
         "items": items,
     }
 
@@ -471,8 +509,17 @@ def _accounting_alltime_series(today, czech_months):
 
 def admin_analytika_view(request, section="prehled"):
     """Analytická stránka – data se načítají jen pro aktivní sekci."""
+    from .roles import can_access_analytika
+
+    if not can_access_analytika(request.user):
+        raise Http404
     if section not in ANALYTIKA_SECTIONS:
         raise Http404
+
+    from .analytika_data import parse_analytika_zdroj
+
+    zdroj = parse_analytika_zdroj(request)
+    zdroj_q = f"?zdroj={zdroj}" if zdroj != "vse" else ""
 
     if request.method == "POST":
         action = request.POST.get("action")
@@ -480,18 +527,34 @@ def admin_analytika_view(request, section="prehled"):
             _save_ostatni_naklady(request)
             datum_q = (request.POST.get("datum") or "").strip()
             url = reverse("admin:analytika_section", kwargs={"section": "naklady"})
+            qs = []
             if datum_q:
-                url = f"{url}?datum={datum_q}"
+                qs.append(f"datum={datum_q}")
+            if zdroj != "vse":
+                qs.append(f"zdroj={zdroj}")
+            if qs:
+                url = f"{url}?{'&'.join(qs)}"
             return redirect(url)
 
-    section_title, section_subtitle = ANALYTIKA_SECTION_META[section]
+    nav_sections = ANALYTIKA_SECTIONS_PRONAJMY if zdroj == "pronajmy" else ANALYTIKA_SECTIONS
+
+    if zdroj == "pronajmy" and section not in ANALYTIKA_SECTIONS_PRONAJMY:
+        return redirect(reverse("admin:analytika_section", kwargs={"section": "prehled"}) + zdroj_q)
+
+    if zdroj == "pronajmy":
+        section_title, section_subtitle = ANALYTIKA_SECTION_META_PRONAJMY[section]
+    elif zdroj == "vse":
+        section_title, section_subtitle = ANALYTIKA_SECTION_META_VSE[section]
+    else:
+        section_title, section_subtitle = ANALYTIKA_SECTION_META[section]
+
     extra_ctx = {}
     if section == "prehled":
         extra_ctx["analytika_export_periods"] = EXPORT_PERIODS
         extra_ctx["analytika_export_urls"] = {
             p: {
-                "pdf": reverse("admin:analytika_export", kwargs={"period": p, "fmt": "pdf"}),
-                "xlsx": reverse("admin:analytika_export", kwargs={"period": p, "fmt": "xlsx"}),
+                "pdf": reverse("admin:analytika_export", kwargs={"period": p, "fmt": "pdf"}) + zdroj_q,
+                "xlsx": reverse("admin:analytika_export", kwargs={"period": p, "fmt": "xlsx"}) + zdroj_q,
             }
             for p in EXPORT_PERIODS
         }
@@ -503,9 +566,10 @@ def admin_analytika_view(request, section="prehled"):
         analytika_section=section,
         analytika_section_title=section_title,
         analytika_section_subtitle=section_subtitle,
+        analytika_nav_sections=nav_sections,
         analytika_section_urls={
-            slug: reverse("admin:analytika_section", kwargs={"section": slug})
-            for slug in ANALYTIKA_SECTIONS
+            slug: reverse("admin:analytika_section", kwargs={"section": slug}) + zdroj_q
+            for slug in nav_sections
         },
         ts_js_i18n=get_analytika_js_i18n(),
         ts_js_locale=get_js_locale(),
@@ -515,6 +579,10 @@ def admin_analytika_view(request, section="prehled"):
 
 def admin_analytika_export_view(request, period: str, fmt: str):
     """Stažení finančního přehledu (PDF / Excel)."""
+    from .roles import can_access_analytika
+
+    if not can_access_analytika(request.user):
+        raise Http404
     if period not in EXPORT_PERIODS:
         raise Http404
     if fmt not in {"pdf", "xlsx"}:
@@ -536,92 +604,296 @@ def admin_analytika_export_view(request, period: str, fmt: str):
     return response
 
 
+_DASH_WEEKDAYS = (
+    "pondělí", "úterý", "středa", "čtvrtek", "pátek", "sobota", "neděle",
+)
+_DASH_MONTHS = (
+    "", "ledna", "února", "března", "dubna", "května", "června",
+    "července", "srpna", "září", "října", "listopadu", "prosince",
+)
+_DASH_MONTHS_NOM = (
+    "", "leden", "únor", "březen", "duben", "květen", "červen",
+    "červenec", "srpen", "září", "říjen", "listopad", "prosinec",
+)
+
+
+def _dash_date_label(d: date) -> str:
+    return f"{_DASH_WEEKDAYS[d.weekday()]} {d.day}. {_DASH_MONTHS[d.month]} {d.year}"
+
+
+def _dash_date_parts(d: date) -> dict[str, str]:
+    return {
+        "weekday": _DASH_WEEKDAYS[d.weekday()],
+        "day_month": f"{d.day}. {_DASH_MONTHS[d.month]}",
+        "year": str(d.year),
+        "month_label": f"{_DASH_MONTHS_NOM[d.month]} {d.year}",
+    }
+
+
+def _dash_local_dt(dt):
+    if dj_tz.is_aware(dt):
+        return dj_tz.localtime(dt)
+    return dt
+
+
 def admin_dashboard_view(request):
-    """Hlavní dashboard."""
+    """Hlavní dashboard – lehká data, bez N+1 sazeb trenérů."""
+    from .roles import can_view_all_treneri, can_view_finance
+
     today = dj_tz.localdate()
     m_from, m_to = month_range(today)
-    tqs = Trening.objects.filter(datum__date__gte=m_from, datum__date__lte=m_to)
+    nast = SystemNastaveni.load()
+    show_dash_finance = can_view_finance(request.user)
+    view_all_treneri = can_view_all_treneri(request.user)
 
+    month_trainings_qs = Trening.objects.filter(
+        datum__date__gte=m_from, datum__date__lte=m_to
+    )
+    month_training_count = month_trainings_qs.count()
+    month_mins = month_trainings_qs.aggregate(s=Sum("delka_minut"))["s"] or 0
+    month_hours = (Decimal(month_mins) / Decimal(60)).quantize(Decimal("0.1"))
+    month_paid = Decimal(
+        Transakce.objects.filter(
+            vytvoreno__date__gte=m_from,
+            vytvoreno__date__lte=m_to,
+            typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA],
+        ).aggregate(s=Sum("castka"))["s"]
+        or 0
+    )
+
+    # Trenéři aktivní tento měsíc: salda spočítaná hromadně (TrenerRateLookup).
+    # Trenér / správce → jen vlastní řádek.
+    if view_all_treneri:
+        trener_ids = list(
+            month_trainings_qs.values_list("trener_id", flat=True).distinct()
+        )
+    else:
+        trener_ids = [request.user.pk]
     trener_rows = []
-    trener_ids = list(tqs.values_list("trener_id", flat=True).distinct())
-    
-    for uid in trener_ids:
-        u = User.objects.get(pk=uid)
-        
-        # Earned za všechny tréninky
-        due = Decimal("0.00")
-        for tr in Trening.objects.filter(trener_id=uid):
-            rate = sazba_trenera_k_datu(u, tr.datum)
-            h = Decimal(tr.delka_minut) / Decimal(60)
-            due += (h * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
-        # Celkem vyplaceno
-        paid = Decimal(
-            TrenerPlatba.objects.filter(user=u).aggregate(s=Sum("castka"))["s"] or 0
-        )
-        
-        balance = (due - paid).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-
-        trener_rows.append({
-            "name": u.get_full_name() or u.username,
-            "balance": format_castka(balance),
-            "url": reverse("admin:core_treneri_detail", args=[u.id]),
-        })
-    
-    trener_rows.sort(key=lambda r: Decimal(r["balance"].split()[0]), reverse=True)
-    trener_rows = trener_rows[:5]
-
-    hraci_s_kreditem = Hrac.objects.annotate(
-        _kredit_calculated=Sum(
-            Case(
-                When(transakce__typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA], then=F("transakce__castka")),
-                When(transakce__typ=Transakce.Typ.NAUCTOVANO, then=-F("transakce__castka")),
-                default=Value(0),
-                output_field=DecimalField(max_digits=12, decimal_places=2),
+    coach_payout_total = Decimal("0.00")
+    if trener_ids:
+        users = {
+            u.id: u
+            for u in User.objects.filter(pk__in=trener_ids).only(
+                "id", "first_name", "last_name", "username"
             )
-        )
-    ).filter(_kredit_calculated__isnull=False)
-
-    debtors_qs = SystemNastaveni.load().filter_debtors(hraci_s_kreditem).order_by("_kredit_calculated")[:8]
-    debtors = [{
-        "name": h.cele_jmeno,
-        "kredit": format_castka((h._kredit_calculated or 0)),
-        "url": reverse("admin:core_hrac_change", args=[h.id]),
-    } for h in debtors_qs]
-
-    posledni_platby = [
-        {
-            "when": (dj_tz.localtime(p.vytvoreno) if dj_tz.is_aware(p.vytvoreno) else p.vytvoreno).strftime("%d.%m.%Y %H:%M"),
-            "hrac": p.hrac.cele_jmeno,
-            "castka": format_castka(Decimal(p.castka)),
-            "url": reverse("admin:core_transakce_change", args=[p.id]),
         }
-        for p in Transakce.objects.filter(typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA]).select_related("hrac").order_by("-vytvoreno")[:5]
-    ]
+        rate_lookup = TrenerRateLookup(trener_ids)
+        earned: dict[int, Decimal] = defaultdict(lambda: Decimal("0.00"))
+        for row in Trening.objects.filter(trener_id__in=trener_ids).values(
+            "trener_id", "datum", "delka_minut", "format", "kurt"
+        ):
+            uid = row["trener_id"]
+            if not uid:
+                continue
+            earned[uid] += rate_lookup.earned_for(
+                uid, row["datum"], row["delka_minut"], row["format"], row["kurt"]
+            )
+        paid_map = {
+            uid: Decimal(val or 0)
+            for uid, val in TrenerPlatba.objects.filter(user_id__in=trener_ids)
+            .values("user_id")
+            .annotate(s=Sum("castka"))
+            .values_list("user_id", "s")
+        }
+        for uid in trener_ids:
+            u = users.get(uid)
+            if not u:
+                continue
+            balance = (earned[uid] - paid_map.get(uid, Decimal("0"))).quantize(
+                Decimal("0.01"), rounding=ROUND_HALF_UP
+            )
+            if balance > 0:
+                coach_payout_total += balance
+            trener_rows.append({
+                "name": u.get_full_name() or u.username,
+                "balance": f"{balance:.0f} Kč",
+                "balance_value": balance,
+                "url": reverse("admin:core_treneri_detail", args=[u.id]),
+            })
+        trener_rows.sort(key=lambda r: r["balance_value"], reverse=True)
+        trener_rows = [r for r in trener_rows if r["balance_value"] > 0][:5]
 
-    posledni_treninky = []
-    for t in Trening.objects.select_related("trener").order_by("-datum")[:5]:
-        dt = dj_tz.localtime(t.datum) if dj_tz.is_aware(t.datum) else t.datum
-        posledni_treninky.append({
-            "when": dt.strftime("%d.%m.%Y %H:%M"),
-            "trener": (t.trener.get_full_name() or t.trener.username),
-            "format": t.get_format_display(),
-            "url": reverse("admin:core_trening_change", args=[t.id]),
+    # Dlužníci: agregace z Transakce (ne full-table annotate přes všechny hráče).
+    kredit_expr = Sum(
+        Case(
+            When(
+                typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA],
+                then=F("castka"),
+            ),
+            When(typ=Transakce.Typ.NAUCTOVANO, then=-F("castka")),
+            default=Value(0),
+            output_field=DecimalField(max_digits=12, decimal_places=2),
+        )
+    )
+    debtors_base = (
+        Transakce.objects.values("hrac_id")
+        .annotate(_kredit_calculated=kredit_expr)
+        .filter(_kredit_calculated__isnull=False)
+    )
+    debtors_filtered = nast.filter_debtors(debtors_base)
+    debt_stats = debtors_filtered.aggregate(
+        cnt=Count("hrac_id"),
+        s=Sum("_kredit_calculated"),
+    )
+    debtors_count = debt_stats["cnt"] or 0
+    raw_debt = Decimal(debt_stats["s"] or 0)
+    debt_sum = abs(raw_debt) if raw_debt < 0 else Decimal("0.00")
+
+    debtors_rows = list(debtors_filtered.order_by("_kredit_calculated")[:8])
+    hraci_map = {
+        h.id: h
+        for h in Hrac.objects.filter(
+            pk__in=[r["hrac_id"] for r in debtors_rows]
+        ).only("id", "jmeno", "prijmeni")
+    }
+    debtors = []
+    for r in debtors_rows:
+        h = hraci_map.get(r["hrac_id"])
+        if not h:
+            continue
+        kredit_val = Decimal(r["_kredit_calculated"] or 0)
+        debtors.append({
+            "name": h.cele_jmeno,
+            "kredit": f"{kredit_val:.0f} Kč",
+            "kredit_value": float(kredit_val),
+            "url": reverse("admin:core_hrac_change", args=[h.id]),
         })
+
+    posledni_platby = []
+    for p in (
+        Transakce.objects.filter(
+            typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA]
+        )
+        .select_related("hrac")
+        .order_by("-vytvoreno")[:6]
+    ):
+        dt = _dash_local_dt(p.vytvoreno)
+        posledni_platby.append({
+            "when": dt.strftime("%d.%m.%Y %H:%M"),
+            "day": dt.strftime("%d.%m."),
+            "time": dt.strftime("%H:%M"),
+            "hrac": p.hrac.cele_jmeno,
+            "castka": f"{Decimal(p.castka):.0f} Kč",
+            "url": reverse("admin:core_transakce_change", args=[p.id]),
+        })
+
+    recent_trainings = list(
+        Trening.objects.select_related("trener").order_by("-datum")[:6]
+    )
+    format_codes = {t.format for t in recent_trainings if t.format}
+    format_names = {
+        **CenikFormat.VYCHOZI_KODY,
+        **dict(
+            CenikFormat.objects.filter(kod__in=format_codes).values_list("kod", "nazev")
+        ),
+    }
+
+    def _training_row(t):
+        dt = _dash_local_dt(t.datum)
+        return {
+            "when": dt.strftime("%d.%m.%Y %H:%M"),
+            "day": dt.strftime("%d.%m."),
+            "time": dt.strftime("%H:%M"),
+            "trener": (t.trener.get_full_name() or t.trener.username),
+            "format": format_names.get(t.format, t.format),
+            "url": reverse("admin:core_trening_change", args=[t.id]),
+        }
+
+    posledni_treninky = [_training_row(t) for t in recent_trainings]
+
+    # Dnešní předpokládaný rozvrh (interaktivní denní grid).
+    sched = build_trening_schedule(
+        base_date=today,
+        rozvrh_mode="predpokladany",
+        mode="day",
+    )
+
+    # Tento měsíc – graf po týdnech (hodiny + platby), stejný styl jako analytika.
+    from django.db.models.functions import TruncDate
+
+    def _as_date(value):
+        if hasattr(value, "date") and callable(value.date):
+            return value.date()
+        return value
+
+    hours_by_day = {
+        _as_date(row["day"]): float(
+            (Decimal(row["mins"] or 0) / Decimal(60)).quantize(Decimal("0.1"))
+        )
+        for row in Trening.objects.filter(datum__date__gte=m_from, datum__date__lte=m_to)
+        .annotate(day=TruncDate("datum"))
+        .values("day")
+        .annotate(mins=Sum("delka_minut"))
+    }
+    paid_by_day = {
+        _as_date(row["day"]): float(Decimal(row["s"] or 0))
+        for row in Transakce.objects.filter(
+            vytvoreno__date__gte=m_from,
+            vytvoreno__date__lte=m_to,
+            typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA],
+        )
+        .annotate(day=TruncDate("vytvoreno"))
+        .values("day")
+        .annotate(s=Sum("castka"))
+    }
+    month_chart = []
+    week_start = m_from
+    while week_start <= m_to:
+        week_end = min(week_start + timedelta(days=6 - week_start.weekday()), m_to)
+        hours_val = 0.0
+        paid_val = 0.0
+        day = week_start
+        while day <= week_end:
+            hours_val += hours_by_day.get(day, 0.0)
+            paid_val += paid_by_day.get(day, 0.0)
+            day += timedelta(days=1)
+        if week_start == week_end:
+            label = f"{week_start.day}."
+        else:
+            label = f"{week_start.day}.–{week_end.day}."
+        month_chart.append({
+            "label": label,
+            "hours": round(hours_val, 1),
+            "paid": round(paid_val, 0),
+        })
+        week_start = week_end + timedelta(days=1)
+
+    pulse = {
+        "trainings": month_training_count,
+        "hours": f"{month_hours:.1f}".replace(".", ","),
+        "paid": f"{month_paid:.0f}",
+        "debtors": debtors_count,
+        "debt_sum": f"{debt_sum:.0f}",
+        "coach_due": f"{coach_payout_total:.0f}",
+    }
 
     ctx = dict(
         admin.site.each_context(request),
         title=_("Přehled"),
+        club_name=nast.nazev_klubu or _("TenisSystém"),
+        date_label=_dash_date_label(today),
+        date_parts=_dash_date_parts(today),
+        pulse=pulse,
+        month_chart=month_chart,
+        sched=sched,
+        dnes_count=sched.get("event_count") or 0,
         quick={
             "add_training": reverse("admin:core_trening_add"),
             "add_payment": reverse("admin:core_transakce_add"),
             "add_player": reverse("admin:core_hrac_add"),
             "coaches": reverse("admin:core_treneri_summary"),
+            "schedule": reverse("admin:core_trening_schedule")
+            + f"?rozvrh=predpokladany&view=week&date={today.isoformat()}",
+            "analytika": reverse("admin:analytika"),
+            "players": reverse("admin:core_hrac_changelist"),
+            "payments": reverse("admin:core_transakce_changelist"),
         },
-        debtors=debtors,
+        debtors=debtors if show_dash_finance else [],
         treneri=trener_rows,
-        posledni_platby=posledni_platby,
+        posledni_platby=posledni_platby if show_dash_finance else [],
         posledni_treninky=posledni_treninky,
+        show_dash_finance=show_dash_finance,
     )
     return TemplateResponse(request, "admin/dashboard.html", ctx)
 
@@ -666,11 +938,21 @@ def _build_diagnostika_context():
 
 def admin_nastaveni_view(request):
     """Centrální stránka nastavení systému."""
-    if not request.user.is_staff:
+    from .roles import _has_club_scoped_role, can_access_nastaveni
+    from .user_prefs import resolve_language_for_user, save_user_obecne_prefs
+
+    if not can_access_nastaveni(request.user):
         raise Http404
 
     nastaveni = SystemNastaveni.load()
     vyuct_nast = VyuctovaniNastaveni.load()
+    club_prefs_only = _has_club_scoped_role(request.user)
+    user_prefs = UzivatelskyVzhled.for_user(request.user, nastaveni=nastaveni)
+    user_variant, user_tmavy, _user_colors = resolve_appearance_for_user(request.user, nastaveni)
+    appearance_initial = {
+        "barevna_varianta": user_variant,
+        "tmavy_rezim": user_tmavy,
+    }
 
     if request.method == "POST":
         action = (request.POST.get("_action") or "save").strip()
@@ -700,16 +982,22 @@ def admin_nastaveni_view(request):
                     )
             return redirect("admin:nastaveni")
 
+        if club_prefs_only:
+            prefs = save_user_obecne_prefs(request.user, request.POST, nastaveni=nastaveni)
+            messages.success(request, _("Osobní nastavení uloženo."))
+            response = redirect("admin:nastaveni")
+            set_language_cookie(response, prefs.effective_jazyk(nastaveni))
+            return response
+
         form = SystemNastaveniForm(
             request.POST,
             request.FILES,
             instance=nastaveni,
             vyuct_rezim_initial=vyuct_nast.auto_rezim,
+            appearance_initial=appearance_initial,
         )
         if form.is_valid():
-            _apply_system_nastaveni_form(
-                form, vyuct_nast, user=request.user, update_user_theme=True
-            )
+            _apply_system_nastaveni_form(form, vyuct_nast)
             nastaveni.refresh_from_db()
             messages.success(request, _("Nastavení systému uloženo."))
             response = redirect("admin:nastaveni")
@@ -720,21 +1008,24 @@ def admin_nastaveni_view(request):
         form = SystemNastaveniForm(
             instance=nastaveni,
             vyuct_rezim_initial=vyuct_nast.auto_rezim,
+            appearance_initial=appearance_initial,
         )
-
-    user_variant, user_dark, _colors = resolve_effective_theme(
-        user=request.user, nastaveni=nastaveni
-    )
-    form.initial = {
-        **form.initial,
-        "barevna_varianta": user_variant,
-        "tmavy_rezim": user_dark,
-    }
+        # Správce/trenér: ve formuláři zobrazit jejich osobní hodnoty
+        if club_prefs_only:
+            form.initial["vychozi_jazyk"] = resolve_language_for_user(request.user, nastaveni)
+            form.initial["radku_na_stranku"] = (
+                user_prefs.radku_na_stranku or nastaveni.radku_na_stranku
+            )
+            form.initial["vychozi_delka_minut"] = (
+                user_prefs.vychozi_delka_minut or nastaveni.vychozi_delka_minut
+            )
+            form.initial["vychozi_kurt"] = user_prefs.vychozi_kurt or nastaveni.vychozi_kurt
+            form.fields["vychozi_jazyk"].label = _("Jazyk rozhraní")
+            form.fields["vychozi_jazyk"].help_text = _("Jen pro váš účet.")
 
     theme_options = theme_options_for_template()
 
     uzivatele_pocet = User.objects.filter(is_staff=True).count()
-    skupiny_pocet = Group.objects.count()
 
     sidebar_panels = [
         {"id": "obecne", "label": _("Obecné"), "type": "form"},
@@ -754,11 +1045,6 @@ def admin_nastaveni_view(request):
                     "url": reverse("admin:auth_user_changelist"),
                 },
                 {
-                    "label": _("Skupiny"),
-                    "detail": _("%(count)s skupin oprávnění") % {"count": skupiny_pocet},
-                    "url": reverse("admin:auth_group_changelist"),
-                },
-                {
                     "label": _("Změna hesla"),
                     "detail": request.user.get_username(),
                     "url": reverse("admin:password_change"),
@@ -770,18 +1056,15 @@ def admin_nastaveni_view(request):
             "label": _("Nástroje"),
             "type": "mixed",
         },
+        {"id": "predplatne", "label": _("Předplatné"), "type": "billing"},
+        {"id": "platby-hracu", "label": _("Platby hráčů"), "type": "billing"},
     ]
 
     provoz_links = [
         {
-            "label": _("Nastavení vyúčtování"),
-            "detail": REZIM_LABELS.get(vyuct_nast.auto_rezim, vyuct_nast.auto_rezim),
-            "url": reverse("admin:core_vyuctovani_nastaveni"),
-        },
-        {
-            "label": _("Ceník"),
-            "detail": _("Typy, kurty a ceny – volné pojmenování"),
-            "url": reverse("admin:core_cenik_changelist"),
+            "label": _("Ceník menu"),
+            "detail": _("Typy a formáty tréninků"),
+            "url": reverse("admin:core_cenik_formaty"),
         },
         {
             "label": _("Rodiny"),
@@ -811,7 +1094,15 @@ def admin_nastaveni_view(request):
     ]
 
     from core.data_import import is_sqlite_database
-    from core.roles import can_export_data, can_import_data, can_manage_users, is_platform_admin
+    from core.roles import (
+        can_access_analytika,
+        can_access_cenik,
+        can_access_rodiny,
+        can_export_data,
+        can_import_data,
+        can_manage_users,
+        nastaveni_allowed_panels,
+    )
 
     show_data_export = can_export_data(request.user)
     show_data_import = can_import_data(request.user) and is_sqlite_database()
@@ -824,27 +1115,116 @@ def admin_nastaveni_view(request):
             }
         )
 
-    password_url = reverse("admin:password_change")
-    users_url = reverse("admin:auth_user_changelist")
-    groups_url = reverse("admin:auth_group_changelist")
+    if not can_access_cenik(request.user):
+        provoz_links = [
+            item for item in provoz_links
+            if item["url"] != reverse("admin:core_cenik_formaty")
+        ]
+    if not can_access_rodiny(request.user):
+        provoz_links = [
+            item for item in provoz_links
+            if item["url"] != reverse("admin:core_hrac_rodina_changelist")
+        ]
+
+    if not can_access_analytika(request.user):
+        nastroje_links = [
+            item for item in nastroje_links
+            if item["url"] != reverse("admin:analytika")
+        ]
 
     if not can_manage_users(request.user):
         for panel in sidebar_panels:
             if panel["id"] == "uzivatele":
                 panel["items"] = [
                     item for item in panel["items"]
-                    if item["url"] == password_url
-                ]
-    elif not is_platform_admin(request.user):
-        # Club admin: uživatelé ano, skupiny oprávnění ne (platform).
-        for panel in sidebar_panels:
-            if panel["id"] == "uzivatele":
-                panel["items"] = [
-                    item for item in panel["items"]
-                    if item["url"] != groups_url
+                    if item["url"] == reverse("admin:password_change")
                 ]
 
+    # Správce/trenér → Obecné + Vzhled + Uživatelé; provozovatel/admin → vše
+    allowed_panels = nastaveni_allowed_panels(request.user)
+    sidebar_panels = [p for p in sidebar_panels if p["id"] in allowed_panels or p["id"] in {"predplatne", "platby-hracu"}]
+    if "provoz" not in allowed_panels:
+        provoz_links = []
+    if "nastroje" not in allowed_panels:
+        nastroje_links = []
+        show_data_export = False
+        show_data_import = False
+
+
+    # Stripe / billing context (RacketLedger)
+    billing_active_flag = True
+    stripe_subscription_status = ""
+    stripe_customer_id_masked = ""
+    stripe_billing_configured = False
+    stripe_checkout_configured_flag = False
+    stripe_api_configured_flag = False
+    billing_checkout_url = ""
+    billing_portal_url = ""
+    player_payments_ready_flag = False
+    connect_has_account = False
+    connect_account_id_masked = ""
+    connect_charges_enabled = False
+    connect_details_submitted = False
+    connect_test_bypass = False
+    connect_onboarding_url = reverse("admin:nastaveni_connect_onboarding")
+    connect_refresh_url = reverse("admin:nastaveni_connect_refresh")
+    try:
+        from core.billing import (
+            billing_active,
+            stripe_api_configured,
+            stripe_checkout_configured,
+            stripe_configured,
+        )
+        from core.models import ClubStripeConnect, SoftwareBilling
+        from core.player_payments import player_payments_ready
+
+        billing_active_flag = billing_active()
+        stripe_api_configured_flag = stripe_api_configured()
+        stripe_billing_configured = stripe_configured()
+        stripe_checkout_configured_flag = stripe_checkout_configured()
+        billing_checkout_url = reverse("admin:nastaveni_billing_checkout")
+        billing_portal_url = reverse("admin:nastaveni_billing_portal")
+        bill = SoftwareBilling.load()
+        stripe_subscription_status = (getattr(bill, "stripe_subscription_status", "") or "")
+        cust = (getattr(bill, "stripe_customer_id", "") or "").strip()
+        if cust:
+            stripe_customer_id_masked = (
+                f"{cust[:7]}…{cust[-4:]}" if len(cust) > 14 else cust
+            )
+        connect = ClubStripeConnect.load()
+        connect_account = (connect.stripe_account_id or "").strip()
+        connect_has_account = bool(connect_account)
+        if connect_account:
+            connect_account_id_masked = (
+                f"{connect_account[:7]}…{connect_account[-4:]}"
+                if len(connect_account) > 14
+                else connect_account
+            )
+        connect_charges_enabled = bool(connect.charges_enabled)
+        connect_details_submitted = bool(connect.details_submitted)
+        connect_test_bypass = bool(getattr(connect, "test_bypass", False))
+        player_payments_ready_flag = player_payments_ready()
+    except Exception:
+        pass
+
     ctx = {
+        "billing_active_flag": billing_active_flag,
+        "stripe_subscription_status": stripe_subscription_status,
+        "stripe_customer_id_masked": stripe_customer_id_masked,
+        "stripe_billing_configured": stripe_billing_configured,
+        "stripe_checkout_configured": stripe_checkout_configured_flag,
+        "stripe_api_configured": stripe_api_configured_flag,
+        "billing_checkout_url": billing_checkout_url,
+        "billing_portal_url": billing_portal_url,
+        "player_payments_ready": player_payments_ready_flag,
+        "connect_has_account": connect_has_account,
+        "connect_account_id_masked": connect_account_id_masked,
+        "connect_charges_enabled": connect_charges_enabled,
+        "connect_details_submitted": connect_details_submitted,
+        "connect_test_bypass": connect_test_bypass,
+        "connect_onboarding_url": connect_onboarding_url,
+        "connect_refresh_url": connect_refresh_url,
+
         **admin.site.each_context(request),
         "title": _("Nastavení"),
         "form": form,
@@ -857,8 +1237,11 @@ def admin_nastaveni_view(request):
         },
         "aktualni_varianta": user_variant,
         "sidebar_panels": sidebar_panels,
+        "allowed_panels": allowed_panels,
+        "club_prefs_only": club_prefs_only,
         "provoz_links": provoz_links,
         "vyuct_summary": vyuct_summary,
+        "vyuctovani_nastaveni_url": reverse("admin:core_vyuctovani_nastaveni"),
         "nastroje_links": nastroje_links,
         "show_data_export": show_data_export,
         "show_data_import": show_data_import,
@@ -913,38 +1296,8 @@ def admin_nastaveni_import_view(request):
     return redirect("admin:nastaveni")
 
 
-def _apply_system_nastaveni_form(
-    form,
-    vyuct_nast,
-    *,
-    user=None,
-    update_user_theme: bool = False,
-) -> None:
-    """Uloží systémová nastavení; vzhled se ukládá per-user, ne do singletonu."""
-    current = SystemNastaveni.load()
-    sys_variant = current.barevna_varianta
-    sys_tmavy = current.tmavy_rezim
-    user_variant = form.cleaned_data.get("barevna_varianta")
-    user_tmavy = form.cleaned_data.get("tmavy_rezim")
-
-    obj = form.save(commit=False)
-    obj.barevna_varianta = sys_variant
-    obj.tmavy_rezim = sys_tmavy
-    obj.save()
-    form.save_m2m()
-
-    if update_user_theme and user is not None and getattr(user, "is_authenticated", False):
-        pref = UserPreference.for_user(user)
-        if user_variant and user_variant in THEME_VARIANTS:
-            pref.barevna_varianta = user_variant
-        if "tmavy_rezim" in form.cleaned_data:
-            pref.tmavy_rezim = bool(user_tmavy)
-        pref.save()
-
-    rezim = form.cleaned_data.get("vyuctovani_rezim")
-    if rezim and rezim != vyuct_nast.auto_rezim:
-        vyuct_nast.auto_rezim = rezim
-        vyuct_nast.save()
+def _apply_system_nastaveni_form(form, vyuct_nast) -> None:
+    form.save()
     from .admin_urls import refresh_admin_branding
     refresh_admin_branding()
 
@@ -953,6 +1306,8 @@ def _merge_nastaveni_autosave_post(post, nastaveni: SystemNastaveni, vyuct_nast:
     """Doplní chybějící pole pro AJAX autosave z aktuální instance."""
     merged = post.copy()
     boolean_fields = {
+        "tmavy_rezim",
+        "sezona_automaticky_kurt",
         "zvyraznit_zaporny_kredit",
     }
     scalar_fields = [
@@ -962,11 +1317,18 @@ def _merge_nastaveni_autosave_post(post, nastaveni: SystemNastaveni, vyuct_nast:
         "kontakt_telefon",
         "kontakt_adresa",
         "vychozi_jazyk",
-        "mena",
         "email_podpis",
         "barevna_varianta",
         "vychozi_delka_minut",
-        "vychozi_sezona",
+        "vychozi_kurt",
+        "pronajem_ceny",
+        "pronajem_ceny_venek",
+        "staly_pronajem_od",
+        "staly_pronajem_do",
+        "sezona_venek_od",
+        "sezona_venek_od_den",
+        "sezona_venek_do",
+        "sezona_venek_do_den",
         "rozvrh_od_hodina",
         "rozvrh_do_hodina",
         "vychozi_zobrazeni_rozvrhu",
@@ -980,13 +1342,6 @@ def _merge_nastaveni_autosave_post(post, nastaveni: SystemNastaveni, vyuct_nast:
         if field not in merged:
             if getattr(nastaveni, field):
                 merged[field] = "on"
-    # Tmavý režim: ModelForm očekává checkbox přítomnost (systémová hodnota jen pro validaci formuláře)
-    if "tmavy_rezim" not in post and nastaveni.tmavy_rezim:
-        merged["tmavy_rezim"] = "on"
-    elif "tmavy_rezim" not in post:
-        merged.pop("tmavy_rezim", None)
-    if "vyuctovani_rezim" not in merged:
-        merged["vyuctovani_rezim"] = vyuct_nast.auto_rezim
     if "email_jmeno" not in merged:
         jmeno, _adresa = nastaveni.from_email_parts()
         merged["email_jmeno"] = jmeno
@@ -1004,9 +1359,11 @@ def _nastaveni_autosave_payload(nastaveni: SystemNastaveni, *, language_changed:
         "nazev_klubu": nastaveni.nazev_klubu or "",
         "vychozi_jazyk": nastaveni.vychozi_jazyk or settings.LANGUAGE_CODE,
         "language_changed": language_changed,
-        "logo_url": nastaveni.logo.url if nastaveni.logo else "",
-        "favicon_url": nastaveni.favicon.url if nastaveni.favicon else "",
     }
+    if nastaveni.logo:
+        payload["logo_url"] = nastaveni.logo.url
+    if nastaveni.favicon:
+        payload["favicon_url"] = nastaveni.favicon.url
     return payload
 
 
@@ -1017,8 +1374,31 @@ def admin_nastaveni_autosave_view(request):
     if request.method != "POST":
         return JsonResponse({"ok": False, "error": "Method not allowed"}, status=405)
 
+    from .roles import _has_club_scoped_role, can_access_nastaveni
+    from .user_prefs import resolve_language_for_user, save_user_obecne_prefs
+
+    if not can_access_nastaveni(request.user):
+        return JsonResponse({"ok": False, "error": "Forbidden"}, status=403)
+
     nastaveni = SystemNastaveni.load()
     vyuct_nast = VyuctovaniNastaveni.load()
+
+    # Správce/trenér: jen osobní preference, ne systémové Obecné
+    if _has_club_scoped_role(request.user):
+        old_lang = resolve_language_for_user(request.user, nastaveni)
+        prefs = save_user_obecne_prefs(request.user, request.POST, nastaveni=nastaveni)
+        new_lang = prefs.effective_jazyk(nastaveni)
+        response = JsonResponse(
+            {
+                "ok": True,
+                "nazev_klubu": nastaveni.nazev_klubu or "",
+                "vychozi_jazyk": new_lang,
+                "language_changed": new_lang != old_lang,
+            }
+        )
+        set_language_cookie(response, new_lang)
+        return response
+
     old_lang = nastaveni.vychozi_jazyk
 
     post_data = _merge_nastaveni_autosave_post(request.POST, nastaveni, vyuct_nast)
@@ -1050,21 +1430,25 @@ def admin_nastaveni_vzhled_view(request):
         return JsonResponse({"ok": False, "error": "Method not allowed"}, status=405)
 
     nast = SystemNastaveni.load()
-    pref = UserPreference.for_user(request.user)
+    vzhled = UzivatelskyVzhled.for_user(request.user, nastaveni=nast)
 
     variant = (request.POST.get("barevna_varianta") or "").strip()
     if variant and variant in THEME_VARIANTS:
-        pref.barevna_varianta = variant
+        vzhled.barevna_varianta = variant
     elif variant:
         return JsonResponse({"ok": False, "error": "Neplatná paleta."}, status=400)
 
     if "tmavy_rezim" in request.POST:
         val = request.POST.get("tmavy_rezim", "")
-        pref.tmavy_rezim = val in ("1", "true", "on", "True")
+        vzhled.tmavy_rezim = val in ("1", "true", "on", "True")
 
-    pref.save()
+    vzhled.save()
 
-    variant, tmavy, colors = resolve_effective_theme(user=request.user, nastaveni=nast)
+    tmavy = bool(vzhled.tmavy_rezim)
+    variant = vzhled.barevna_varianta or DEFAULT_THEME
+    if variant not in THEME_VARIANTS:
+        variant = DEFAULT_THEME
+    colors = preset_colors(variant, dark=tmavy)
     return JsonResponse(
         {
             "ok": True,
@@ -1098,3 +1482,133 @@ def admin_nastaveni_export_view(request):
     response = HttpResponse(raw, content_type="application/json; charset=utf-8")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
     return response
+
+def _mask_stripe_customer_id() -> str:
+    from core.billing import resolve_customer_id
+
+    cid = resolve_customer_id()
+    if not cid:
+        return ""
+    if len(cid) <= 8:
+        return cid
+    return f"{cid[:4]}…{cid[-4:]}"
+
+def admin_billing_portal_view(request):
+    """Redirect do Stripe Customer Portal (správa karty / zrušení předplatného)."""
+    from core.billing import create_billing_portal_url, stripe_configured
+    from core.roles import is_club_admin
+
+    if not request.user.is_staff or not is_club_admin(request.user):
+        raise Http404
+    if request.method not in ("GET", "POST"):
+        return redirect("admin:nastaveni")
+    if not stripe_configured():
+        messages.error(
+            request,
+            _(
+                "Stripe není napojené — nejdřív aktivujte předplatné přes Checkout, "
+                "nebo nastavte STRIPE_CUSTOMER_ID."
+            ),
+        )
+        return redirect(f"{reverse('admin:nastaveni')}#predplatne")
+    try:
+        return_url = request.build_absolute_uri(
+            f"{reverse('admin:nastaveni')}#predplatne"
+        )
+        portal_url = create_billing_portal_url(return_url=return_url)
+        return redirect(portal_url)
+    except Exception as exc:
+        messages.error(
+            request,
+            _("Nepodařilo se otevřít Stripe portál: %(error)s") % {"error": exc},
+        )
+        return redirect(f"{reverse('admin:nastaveni')}#predplatne")
+
+def admin_billing_checkout_view(request):
+    """Redirect do Stripe Checkout (aktivace předplatného)."""
+    from core.billing import create_checkout_session, stripe_checkout_configured
+    from core.roles import is_club_admin
+
+    if not request.user.is_staff or not is_club_admin(request.user):
+        raise Http404
+    if request.method not in ("GET", "POST"):
+        return redirect("admin:nastaveni")
+    if not stripe_checkout_configured():
+        messages.error(
+            request,
+            _("Stripe Checkout není nakonfigurované (STRIPE_SECRET_KEY / STRIPE_PRICE_ID)."),
+        )
+        return redirect(f"{reverse('admin:nastaveni')}#predplatne")
+    try:
+        success = request.build_absolute_uri(
+            f"{reverse('admin:nastaveni')}?billing=success#predplatne"
+        )
+        cancel = request.build_absolute_uri(
+            f"{reverse('admin:nastaveni')}?billing=cancel#predplatne"
+        )
+        email = (request.user.email or "").strip()
+        checkout_url = create_checkout_session(
+            success_url=success,
+            cancel_url=cancel,
+            customer_email=email,
+        )
+        return redirect(checkout_url)
+    except Exception as exc:
+        messages.error(
+            request,
+            _("Nepodařilo se otevřít Stripe Checkout: %(error)s") % {"error": exc},
+        )
+        return redirect(f"{reverse('admin:nastaveni')}#predplatne")
+
+def admin_connect_onboarding_view(request):
+    """Redirect do Stripe Connect Express onboarding."""
+    from core.billing import stripe_api_configured
+    from core.player_payments import create_account_onboarding_link
+    from core.roles import is_club_admin
+
+    if not request.user.is_staff or not is_club_admin(request.user):
+        raise Http404
+    if request.method not in ("GET", "POST"):
+        return redirect("admin:nastaveni")
+    if not stripe_api_configured():
+        messages.error(request, _("Stripe není nakonfigurované (STRIPE_SECRET_KEY)."))
+        return redirect(f"{reverse('admin:nastaveni')}#platby-hracu")
+    try:
+        refresh = request.build_absolute_uri(
+            f"{reverse('admin:nastaveni')}?connect=refresh#platby-hracu"
+        )
+        return_url = request.build_absolute_uri(
+            f"{reverse('admin:nastaveni')}?connect=return#platby-hracu"
+        )
+        url = create_account_onboarding_link(refresh_url=refresh, return_url=return_url)
+        return redirect(url)
+    except Exception as exc:
+        messages.error(
+            request,
+            _("Nepodařilo se otevřít Stripe Connect: %(error)s") % {"error": exc},
+        )
+        return redirect(f"{reverse('admin:nastaveni')}#platby-hracu")
+
+def admin_connect_refresh_view(request):
+    """Ruční sync stavu Connect účtu ze Stripe."""
+    from core.billing import stripe_api_configured
+    from core.player_payments import refresh_connect_account_status
+    from core.roles import is_club_admin
+
+    if not request.user.is_staff or not is_club_admin(request.user):
+        raise Http404
+    if request.method not in ("GET", "POST"):
+        return redirect("admin:nastaveni")
+    if not stripe_api_configured():
+        messages.error(request, _("Stripe není nakonfigurované (STRIPE_SECRET_KEY)."))
+        return redirect(f"{reverse('admin:nastaveni')}#platby-hracu")
+    try:
+        refresh_connect_account_status()
+        messages.success(request, _("Stav Stripe Connect byl obnoven."))
+    except Exception as exc:
+        messages.error(
+            request,
+            _("Nepodařilo se obnovit Stripe Connect: %(error)s") % {"error": exc},
+        )
+    return redirect(f"{reverse('admin:nastaveni')}#platby-hracu")
+

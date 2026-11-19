@@ -1,61 +1,160 @@
 {% extends "admin/base_site.html" %}
 {% load static i18n %}
+
+{% block bodyclass %}{{ block.super }} app-core model-treneri change-list{% endblock %}
+
 {% block extrastyle %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'admin/css/trener.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/changelists.css' %}">
+{# Stejné globální CSS + verze jako admin/change_list.html – dark/light drží systém #}
+<link rel="stylesheet" href="{% static 'admin/css/changelist-global.css' %}?v=dark-sort-2">
+<link rel="stylesheet" href="{% static 'admin/css/cenik-change-list.css' %}?v=dark-sort-2">
+<link rel="stylesheet" href="{% static 'admin/css/changelist-compact.css' %}?v=dark-sort-2">
+<link rel="stylesheet" href="{% static 'admin/css/trener.css' %}?v=treneri-date-chip-1">
+<style id="ts-cl-fouc">
+  body.change-list:not(.ts-cl-ready) #content {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+  body.change-list.ts-cl-ready #content {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+</style>
 {% endblock %}
 
+{% block extrahead %}
+{{ block.super }}
+<script src="{% static 'admin/js/changelist-global.js' %}" defer></script>
+<script src="{% static 'admin/js/cenik-change-list.js' %}" defer></script>
+<script>
+  (function () {
+    function ready() {
+      if (document.body && document.body.classList.contains("change-list")) {
+        document.body.classList.add("ts-cl-ready", "ts-cenik-ready");
+      }
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", function () {
+        window.requestAnimationFrame(ready);
+        window.setTimeout(ready, 80);
+      });
+    } else {
+      window.requestAnimationFrame(ready);
+      window.setTimeout(ready, 80);
+    }
+    window.setTimeout(ready, 600);
+  })();
+</script>
+{% endblock %}
+
+{% block content_title %}{% endblock %}
+
 {% block content %}
+  {% trans "Seznam" as ts_ph_eyebrow %}
+  {% trans "Trenéři" as ts_ph_title %}
+  {% include "admin/includes/ts_page_head.html" with eyebrow=ts_ph_eyebrow title=ts_ph_title head_class="ts-page-head--cenik" %}
+
   <div id="content-main">
-    <div class="module">
-      <h2>{% trans "Trenéři – souhrn" %}</h2>
+    <div class="module" id="changelist">
+      <div class="changelist-form-container cenik-layout ts-cl-layout">
 
-      <form method="get" class="trener-filter-form">
-        <label>{% trans "Od:" %} <input type="date" name="from" value="{{ dfrom|date:'Y-m-d' }}"></label>
-        <label>{% trans "Do:" %} <input type="date" name="to" value="{{ dto|date:'Y-m-d' }}"></label>
-        <button type="submit" class="button">{% trans "Filtrovat" %}</button>
-      </form>
+        {# Stejný finální DOM jako enhanceToolbar na ostatních seznamech #}
+        <div class="ts-cl-toolbar">
+          <div class="cenik-field cenik-field--search ts-cl-toolbar__search">
+            <div id="toolbar">
+              <form id="changelist-search" method="get" role="search">
+                {% if dfrom %}<input type="hidden" name="from" value="{{ dfrom|date:'Y-m-d' }}">{% endif %}
+                {% if dto %}<input type="hidden" name="to" value="{{ dto|date:'Y-m-d' }}">{% endif %}
+                <div>
+                  <label for="searchbar"><img src="{% static 'admin/img/search.svg' %}" alt="{% trans 'Hledat' %}"></label>
+                  <input
+                    type="text"
+                    name="q"
+                    value="{{ search_q }}"
+                    id="searchbar"
+                    size="40"
+                    placeholder="{% trans 'Hledat v trenéři…' %}"
+                  >
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
 
-      <div class="results treneri-table-wrapper">
-        <table class="tbl-treneri" id="result_list">
-          <colgroup>
-            <col class="col-trener">
-            <col class="col-pocet">
-            <col class="col-hodiny">
-            <col class="col-castka">
-          </colgroup>
-          <thead>
-            <tr>
-              <th>{% trans "Trenér" %}</th>
-              <th class="center">{% trans "Počet tréninků" %}</th>
-              <th class="center">{% trans "Hodiny" %}</th>
-              <th class="center">{% trans "Částka" %}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for r in rows %}
-              <tr>
-                <td>
-                  <a href="{{ r.detail_url }}">{{ r.trener }}</a>
-                </td>
-                <td class="center">{{ r.pocet }}</td>
-                <td class="center">{{ r.hodiny }}</td>
-                <td class="center nowrap"><strong>{{ r.castka }}</strong></td>
-              </tr>
-            {% empty %}
-              <tr><td colspan="4">{% trans "Žádná data." %}</td></tr>
-            {% endfor %}
-          </tbody>
-          <tfoot>
-            <tr class="totals">
-              <td class="label">{% trans "Součty:" %}</td>
-              <td class="center">{{ total_pocet }}</td>
-              <td class="center">{{ total_hodiny }}</td>
-              <td class="center nowrap"><strong>{{ total_castka }}</strong></td>
-            </tr>
-          </tfoot>
-        </table>
+        <form method="get" id="changelist-form" class="treneri-period-form">
+          {% if search_q %}<input type="hidden" name="q" value="{{ search_q }}">{% endif %}
+          <div class="ts-cl-filters" role="toolbar" aria-label="{% trans 'Filtry' %}">
+            <span class="ts-cl-filters__icon" aria-hidden="true"></span>
+            <div class="ts-cl-filters__chips">
+              {% with from_val=dfrom|date:"Y-m-d" to_val=dto|date:"Y-m-d" %}
+              <div class="ts-cl-chip ts-cl-chip--menu ts-cl-chip--date">
+                <span class="ts-cl-chip__label">{% trans "Od" %}</span>
+                {% include "admin/includes/ts_date_picker.html" with name="from" value=from_val allow_future=True year_min=2020 year_max=2035 picker_id="treneriFrom" submit_form=True label_format="numeric" %}
+              </div>
+              <div class="ts-cl-chip ts-cl-chip--menu ts-cl-chip--date">
+                <span class="ts-cl-chip__label">{% trans "Do" %}</span>
+                {% include "admin/includes/ts_date_picker.html" with name="to" value=to_val allow_future=True year_min=2020 year_max=2035 picker_id="treneriTo" submit_form=True label_format="numeric" %}
+              </div>
+              {% endwith %}
+            </div>
+          </div>
+
+          <div class="results">
+            <table id="result_list" class="tbl-treneri">
+              <colgroup>
+                <col class="col-check">
+                <col class="col-trener">
+                <col class="col-pocet">
+                <col class="col-hodiny">
+                <col class="col-castka">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th scope="col" class="action-checkbox-column">
+                    <input type="checkbox" id="action-toggle" aria-label="{% trans 'Vybrat vše' %}">
+                  </th>
+                  <th scope="col" class="column-trener">{% trans "Trenér" %}</th>
+                  <th scope="col" class="column-pocet">{% trans "Počet tréninků" %}</th>
+                  <th scope="col" class="column-hodiny">{% trans "Hodiny" %}</th>
+                  <th scope="col" class="column-castka">{% trans "Částka" %}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in rows %}
+                  <tr>
+                    <td class="action-checkbox">
+                      <input type="checkbox" class="action-select" name="_selected_action" value="{{ forloop.counter }}" aria-label="{% trans 'Označit řádek' %}">
+                    </td>
+                    <th scope="row" class="field-trener">
+                      <a href="{{ r.detail_url }}">{{ r.trener }}</a>
+                    </th>
+                    <td class="field-pocet">{{ r.pocet }}</td>
+                    <td class="field-hodiny">{{ r.hodiny }}</td>
+                    <td class="field-castka">{{ r.castka }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="5">{% trans "Žádná data." %}</td></tr>
+                {% endfor %}
+                {# Součty v tbody = stejné buňky / padding / align jako řádky nad (ne tfoot) #}
+                {% if rows %}
+                <tr class="totals">
+                  <td class="action-checkbox">&nbsp;</td>
+                  <th scope="row" class="field-trener label">{% trans "Součty" %}</th>
+                  <td class="field-pocet">{{ total_pocet }}</td>
+                  <td class="field-hodiny">{{ total_hodiny }}</td>
+                  <td class="field-castka">{{ total_castka }}</td>
+                </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </form>
       </div>
     </div>
   </div>
+
+  {% include "admin/includes/ts_changelist_foot.html" %}
 {% endblock %}

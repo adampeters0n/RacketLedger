@@ -225,3 +225,162 @@ def month_range(today):
     start = today.replace(day=1)
     end = today
     return start, end
+
+# České řazení: C < Č < D < Ď < … < H < Ch < … < R < Ř < S < Š < … < Z < Ž
+# (samohláskové diakritiky Á/É/… se berou stejně jako bez háčku)
+_CZECH_CHAR_MAP = {
+    "a": "a0", "á": "a0", "ä": "a0",
+    "b": "b0",
+    "c": "c0", "č": "c1",
+    "d": "d0", "ď": "d1",
+    "e": "e0", "é": "e0", "ě": "e0", "ë": "e0",
+    "f": "f0",
+    "g": "g0",
+    "h": "h0",
+    "i": "i0", "í": "i0",
+    "j": "j0",
+    "k": "k0",
+    "l": "l0",
+    "m": "m0",
+    "n": "n0", "ň": "n1",
+    "o": "o0", "ó": "o0", "ö": "o0",
+    "p": "p0",
+    "q": "q0",
+    "r": "r0", "ř": "r1",
+    "s": "s0", "š": "s1",
+    "t": "t0", "ť": "t1",
+    "u": "u0", "ú": "u0", "ů": "u0", "ü": "u0",
+    "v": "v0",
+    "w": "w0",
+    "x": "x0",
+    "y": "y0", "ý": "y0",
+    "z": "z0", "ž": "z1",
+}
+
+
+def czech_sort_key(value: str | None) -> str:
+    """Klíč pro řazení podle české abecedy (včetně Ch, Č, Ř, Š, Ž…)."""
+    text = (value or "").casefold()
+    parts: list[str] = []
+    i = 0
+    length = len(text)
+    while i < length:
+        if text[i] == "c" and i + 1 < length and text[i + 1] == "h":
+            parts.append("h1")
+            i += 2
+            continue
+        parts.append(_CZECH_CHAR_MAP.get(text[i], f"z9{text[i]}"))
+        i += 1
+    return "".join(parts)
+
+
+def czech_collate(a: str | None, b: str | None) -> int:
+    """Komparátor pro SQLite create_collation('CZECH', …)."""
+    ka = czech_sort_key(a)
+    kb = czech_sort_key(b)
+    return (ka > kb) - (ka < kb)
+
+
+# Numerické kódy jen z číslic → Safe nested Replace (bez rekurze jako u „a“→„a0“).
+_CZECH_SQL_REPLACEMENTS: tuple[tuple[str, str], ...] = (
+    ("ch", "12"),
+    ("a", "01"),
+    ("á", "01"),
+    ("ä", "01"),
+    ("b", "02"),
+    ("c", "03"),
+    ("č", "04"),
+    ("d", "05"),
+    ("ď", "06"),
+    ("e", "07"),
+    ("é", "07"),
+    ("ě", "07"),
+    ("ë", "07"),
+    ("f", "08"),
+    ("g", "09"),
+    ("h", "11"),
+    ("i", "14"),
+    ("í", "14"),
+    ("j", "15"),
+    ("k", "16"),
+    ("l", "17"),
+    ("m", "18"),
+    ("n", "19"),
+    ("ň", "20"),
+    ("o", "21"),
+    ("ó", "21"),
+    ("ö", "21"),
+    ("p", "22"),
+    ("q", "23"),
+    ("r", "24"),
+    ("ř", "25"),
+    ("s", "26"),
+    ("š", "27"),
+    ("t", "28"),
+    ("ť", "29"),
+    ("u", "30"),
+    ("ú", "30"),
+    ("ů", "30"),
+    ("ü", "30"),
+    ("v", "31"),
+    ("w", "32"),
+    ("x", "33"),
+    ("y", "34"),
+    ("ý", "34"),
+    ("z", "35"),
+    ("ž", "36"),
+)
+
+_PG_CZECH_COLLATIONS = ("cs-x-icu", "cs_CZ", "cs-CZ-x-icu")
+_pg_czech_collation_name: str | None | bool = False  # False = unknown, None = unavailable
+
+
+def postgres_czech_collation() -> str | None:
+    """Vrátí název dostupné české ICU/libc kolace na Postgresu, jinak None."""
+    global _pg_czech_collation_name
+    if _pg_czech_collation_name is not False:
+        return _pg_czech_collation_name  # type: ignore[return-value]
+
+    from django.db import connection
+
+    if connection.vendor != "postgresql":
+        _pg_czech_collation_name = None
+        return None
+
+    for name in _PG_CZECH_COLLATIONS:
+        if not name.replace("-", "").replace("_", "").isalnum():
+            continue
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(f'SELECT %s COLLATE "{name}"', ["č"])
+            _pg_czech_collation_name = name
+            return name
+        except Exception:
+            try:
+                connection.rollback()
+            except Exception:
+                pass
+    _pg_czech_collation_name = None
+    return None
+
+
+def czech_sort_key_expr(field_name: str):
+    """SQL výraz ekvivalentní czech_sort_key() – záloha, když DB nemá českou kolaci."""
+    from django.db.models import F, Value
+    from django.db.models.functions import Coalesce, Lower, Replace
+
+    expr = Lower(Coalesce(F(field_name), Value("")))
+    for src, dst in _CZECH_SQL_REPLACEMENTS:
+        expr = Replace(expr, Value(src), Value(dst))
+    return expr
+
+
+def czech_order_expr(field_name: str, *, descending: bool = False):
+    """Výraz pro ORDER BY podle české abecedy (SQLite CZECH / Postgres ICU / fallback klíč)."""
+    from django.db import connection
+    from django.db.models.functions import Collate
+
+    if connection.vendor == "sqlite":
+        expr = Collate(field_name, "CZECH")
+        return expr.desc() if descending else expr
+

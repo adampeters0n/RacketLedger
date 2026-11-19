@@ -1,13 +1,202 @@
-{% extends "admin/change_form.html" %}
-{% load static i18n %}
+{% extends "admin/base_site.html" %}
+{% load i18n static admin_urls %}
+
+{% block bodyclass %}{{ block.super }} app-core model-trening change-form add-form{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+{% block content_title %}{% endblock %}
 {% block content_subtitle %}{% endblock %}
+{% block object-tools %}{% endblock %}
 
 {% block extrahead %}
-  {{ block.super }}
-  <script src="{% static 'admin/js/trening-change-form.js' %}" defer></script>
+{{ block.super }}
+<script src="{% url 'admin:jsi18n' %}"></script>
+{{ media }}
 {% endblock %}
 
 {% block extrastyle %}
-  {{ block.super }}
-  <link rel="stylesheet" href="{% static 'admin/css/trening-change-form.css' %}">
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/form-detail.css' %}?v=change-fix-fix-6">
+<link rel="stylesheet" href="{% static 'admin/css/add-day.css' %}?v=change-fix-fix-6">
+<link rel="stylesheet" href="{% static 'admin/css/ts-buttons.css' %}?v=change-fix-fix-6">
+<style id="trening-change-add-day-fix">
+  /* Django subtitle (datum • formát • kurt • trenér) – to byl text za „Vyplňte položky“ */
+  body.app-core.model-trening.change-form #content > h2 {
+    display: none !important;
+  }
+  body.app-core.model-trening.change-form .object-tools,
+  body.app-core.model-trening.change-form a.historylink {
+    display: none !important;
+  }
+
+  /*
+    Page padding + card padding = stejné jako /add/
+    (page-pad na main + 16px na add-day-page + 16px v kartě – řídí add-day.css)
+  */
+  body.app-core.model-trening.change-form #content-main.add-day-page > form#add-day-form {
+    width: 100% !important;
+    max-width: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin: 0 !important;
+  }
+  body.app-core.model-trening.change-form #content-main.add-day-page .related-widget-wrapper-link {
+    display: none !important;
+  }
+  body.app-core.model-trening.change-form #content-main.add-day-page .related-widget-wrapper {
+    display: block !important;
+    width: 100% !important;
+    max-width: var(--ts-field-max, 360px) !important;
+  }
+  @media (max-width: 1024px) {
+    body.app-core.model-trening.change-form #content-main.add-day-page .related-widget-wrapper {
+      max-width: 100% !important;
+    }
+  }
+
+  /* Uložit | Uložit: Přidat další .......... Odstranit */
+  body.app-core.model-trening.change-form #content-main.add-day-page .add-day-submit-row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin-top: 16px !important;
+  }
+  body.app-core.model-trening.change-form #content-main.add-day-page .add-day-submit-row .add-day-submit-spacer {
+    flex: 1 1 auto !important;
+    min-width: 8px !important;
+  }
+  body.app-core.model-trening.change-form #content-main.add-day-page .add-day-submit-row a.deletelink {
+    display: inline-flex !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    background: var(--danger, #d92d20) !important;
+    background-color: var(--danger, #d92d20) !important;
+    border: 1px solid var(--danger, #d92d20) !important;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+    text-decoration: none !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+  {% trans "Detail" as ts_ph_eyebrow %}
+  {% trans "Trénink: změnit" as ts_ph_title %}
+  {% include "admin/includes/ts_page_head.html" with eyebrow=ts_ph_eyebrow title=ts_ph_title %}
+
+<div id="content-main" class="add-day-page body-app-core-model-trening">
+  <form method="post" id="add-day-form" novalidate>
+    {% csrf_token %}
+    {% if is_popup %}<input type="hidden" name="{{ is_popup_var }}" value="1">{% endif %}
+    {% if to_field %}<input type="hidden" name="{{ to_field_var }}" value="{{ to_field }}">{% endif %}
+    <input type="hidden" name="change_form_hraci_ui" value="1">
+
+    {% if errors %}
+      <p class="errornote">{% if errors|length == 1 %}{% trans "Opravte chybu níže." %}{% else %}{% trans "Opravte chyby níže." %}{% endif %}</p>
+      {{ adminform.form.non_field_errors }}
+    {% endif %}
+
+    <div class="add-day-card add-day-datum-card slot-card" data-slot-index="0">
+      <h2 class="add-day-card-title">{% trans "Vyplňte položky" %}</h2>
+
+      <div class="add-day-fields">
+        <p class="add-day-row">
+          <label for="{{ adminform.form.trener.id_for_label }}">{% trans "Trenér" %}</label>
+          {{ adminform.form.trener }}
+        </p>
+        {{ adminform.form.trener.errors }}
+
+        <p class="add-day-row add-day-datum-row">
+          <label class="add-day-label-inline">{% trans "Datum" %}</label>
+          <span class="add-day-datum-input-wrap">
+            {% include "admin/includes/ts_date_picker.html" with name="datum_0" value=date_value allow_future=True year_min=2020 year_max=2035 picker_id="changeTreningDate" label_format="long" %}
+          </span>
+        </p>
+        {{ adminform.form.datum.errors }}
+
+        <p class="add-day-row">
+          <label for="id_datum_1">{% trans "Čas" %}</label>
+          <input type="time" name="datum_1" id="id_datum_1" class="vTimeField" value="{{ time_value }}" required>
+        </p>
+
+        <p class="add-day-row add-day-row--delka">
+          <label for="{{ adminform.form.delka_minut.id_for_label }}">{% trans "Délka (hodiny)" %}</label>
+          {{ adminform.form.delka_minut }}
+        </p>
+        {{ adminform.form.delka_minut.errors }}
+
+        <p class="add-day-row">
+          <label for="{{ adminform.form.format.id_for_label }}">{% trans "Formát" %}</label>
+          {{ adminform.form.format }}
+        </p>
+        {{ adminform.form.format.errors }}
+
+        <p class="add-day-row">
+          <label for="{{ adminform.form.kurt.id_for_label }}">{% trans "Kurt" %}</label>
+          {{ adminform.form.kurt }}
+        </p>
+        {{ adminform.form.kurt.errors }}
+
+        <p class="add-day-row">
+          <label for="{{ adminform.form.poznamka.id_for_label }}">{% trans "Poznámka" %}</label>
+          {{ adminform.form.poznamka }}
+        </p>
+        {{ adminform.form.poznamka.errors }}
+      </div>
+
+      <div class="add-day-hraci-wrap">
+        <span class="add-day-hraci-label">{% trans "Hráči" %}</span>
+        <div class="add-day-hraci-table">
+          <div class="add-day-hraci-rows" data-slot="0" data-multiselect-id="id_change_form_hraci">
+            {% for p in change_hraci_initial %}
+            <div class="add-day-hraci-row" data-id="{{ p.id }}" data-jmeno="{{ p.jmeno }}">
+              <div class="add-day-hraci-search-wrap">
+                <input type="text" class="add-day-hraci-search" value="{{ p.jmeno }}" placeholder="{% trans 'Vyhledat hráče…' %}" autocomplete="off" aria-label="{% trans 'Vyhledat hráče' %}">
+                <ul class="add-day-hraci-dropdown" role="listbox" aria-hidden="true"></ul>
+              </div>
+              <button type="button" class="btn-remove" aria-label="{% trans 'Odstranit' %}">×</button>
+            </div>
+            {% empty %}
+            <div class="add-day-hraci-row">
+              <div class="add-day-hraci-search-wrap">
+                <input type="text" class="add-day-hraci-search" placeholder="{% trans 'Vyhledat hráče…' %}" autocomplete="off" aria-label="{% trans 'Vyhledat hráče' %}">
+                <ul class="add-day-hraci-dropdown" role="listbox" aria-hidden="true"></ul>
+              </div>
+              <button type="button" class="btn-remove" aria-label="{% trans 'Odstranit' %}">×</button>
+            </div>
+            {% endfor %}
+          </div>
+          <button type="button" class="ts-btn add-day-btn-pridat-hrace" data-slot="0">{% trans "+ Přidat hráče" %}</button>
+        </div>
+        <script type="application/json" class="add-day-players-json" data-slot="0">{{ change_hraci_all_json|safe }}</script>
+        <div class="add-day-hraci-hidden">
+          <select multiple="multiple" name="change_form_hraci" id="id_change_form_hraci"
+                  style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;">
+            {% for p in change_hraci_initial %}
+            <option value="{{ p.id }}" selected>{{ p.jmeno }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="add-day-submit-row">
+      <button type="submit" name="_save" value="1" class="ts-btn add-day-btn-save default">{% trans "Uložit" %}</button>
+      <button type="submit" name="_addanother" value="1" class="ts-btn add-day-btn-save-addanother">{% trans "Uložit: Přidat další" %}</button>
+      <span class="add-day-submit-spacer" aria-hidden="true"></span>
+      {% if has_delete_permission and original %}
+        {% url opts|admin_urlname:'delete' original.pk|admin_urlquote as delete_url %}
+        <a href="{% add_preserved_filters delete_url %}" class="ts-btn deletelink">{% trans "Odstranit" %}</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<script src="{% static 'admin/js/add-day.js' %}?v=change-fix-fix-5"></script>
 {% endblock %}

@@ -5,14 +5,13 @@ from django.conf import settings
 from .i18n_config import DEFAULT_LANGUAGE, SYSTEM_LANGUAGES
 from .js_i18n import get_global_js_i18n
 from .models import SystemNastaveni
-from .money import get_mena_code, get_mena_symbol
 from .system_theme import (
     DEFAULT_THEME,
     THEME_VARIANTS,
     css_vars_dict,
     css_vars_style_block,
     preset_colors,
-    resolve_effective_theme,
+    resolve_appearance_for_user,
 )
 
 
@@ -20,12 +19,12 @@ def system_nastaveni(request):
     """Název klubu, režim a CSS proměnné pro všechny stránky."""
     nast = None
     nazev = getattr(settings, "PRODUCT_NAME", "TenisSystém")
+    colors = preset_colors(DEFAULT_THEME, dark=False)
     slogan = ""
     logo_url = ""
     favicon_url = ""
     variant = DEFAULT_THEME
     tmavy = False
-    colors = preset_colors(DEFAULT_THEME, dark=False)
 
     try:
         nast = SystemNastaveni.load()
@@ -39,22 +38,55 @@ def system_nastaveni(request):
         pass
 
     user = getattr(request, "user", None)
-    try:
-        variant, tmavy, colors = resolve_effective_theme(user=user, nastaveni=nast)
-    except Exception:
-        pass
+    variant, tmavy, colors = resolve_appearance_for_user(user, nast)
 
     if variant not in THEME_VARIANTS:
         variant = DEFAULT_THEME
 
     jazyk = DEFAULT_LANGUAGE
-    if nast and getattr(nast, "vychozi_jazyk", None):
-        jazyk = nast.vychozi_jazyk
+    try:
+        from .user_prefs import resolve_language_for_user
+
+        jazyk = resolve_language_for_user(user, nast)
+    except Exception:
+        if nast and getattr(nast, "vychozi_jazyk", None):
+            jazyk = nast.vychozi_jazyk
+
+    nav = {}
+    is_plat_admin = False
+    try:
+        from .roles import is_platform_admin, nav_permissions
+
+        is_plat_admin = is_platform_admin(user)
+        nav = nav_permissions(user)
+    except Exception:
+        pass
+
+    
+    billing_active_flag = True
+    billing_read_only = False
+    stripe_billing_configured = False
+    stripe_checkout_configured_flag = False
+    try:
+        from core.billing import billing_active, stripe_checkout_configured, stripe_configured
+        billing_active_flag = billing_active()
+        billing_read_only = bool(getattr(request, "billing_read_only", False))
+        stripe_billing_configured = stripe_configured()
+        stripe_checkout_configured_flag = stripe_checkout_configured()
+    except Exception:
+        pass
 
     return {
+        "billing_active": billing_active_flag,
+        "billing_read_only": billing_read_only,
+        "stripe_billing_configured": stripe_billing_configured,
+        "stripe_checkout_configured": stripe_checkout_configured_flag,
+
         "system_nastaveni": nast,
         "system_theme_variant": variant,
         "system_nazev_klubu": nazev,
+        "is_platform_admin": is_plat_admin,
+        **nav,
         "system_slogan": slogan,
         "system_logo_url": logo_url,
         "system_favicon_url": favicon_url,
@@ -64,8 +96,6 @@ def system_nastaveni(request):
         "system_tmavy_rezim": tmavy,
         "system_jazyk": jazyk,
         "system_jazyky": SYSTEM_LANGUAGES,
-        "system_mena": get_mena_symbol(getattr(nast, "mena", None) if nast else None),
-        "system_mena_code": get_mena_code() if nast else "CZK",
         "LANGUAGES": settings.LANGUAGES,
         "system_theme_colors": colors,
         "system_theme_css_vars": css_vars_dict(colors),

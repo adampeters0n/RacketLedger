@@ -2,8 +2,7 @@
 from ..admin_mixins import ConfigurableListPerPageMixin
 from collections import defaultdict
 from decimal import Decimal, ROUND_HALF_UP
-from core.money import format_castka
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 import json
 import re
 
@@ -12,12 +11,12 @@ from django.contrib import admin, messages
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Prefetch, Q, Sum
-from django.http import HttpResponseRedirect
+from django.db.models import Prefetch, Sum
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
-from django.utils.translation import gettext as _g
+from django.utils.http import urlencode
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone as dj_tz
 from django.utils.html import format_html, escape
@@ -26,15 +25,30 @@ from django import forms
 from django.forms import formset_factory
 
 from ..analytika_data import TrenerRateLookup
-from ..admin_utils import format_czech_datetime, format_month_year, month_range, parse_czech_date_parts, pretty_username, trener_label, filter_queryset_by_parsed_date
+from ..admin_utils import format_month_year, month_range, parse_czech_date_parts, pretty_username, trener_label, filter_queryset_by_parsed_date
+from ..roles import can_access_treningy, can_view_all_treneri
+from .role_gate import RoleGateMixin
 from ..forms import (
     AddDayForm,
-    AdminSplitDateTimeWithDatalist,
-    CopyTrainingsForm,
     TrainingSlotForm,
     TrainingSlotFormSet,
 )
-from ..models import Cenik, Dochazka, Hrac, SystemNastaveni, TrenerPlatba, TrenerSazba, Trening
+from ..models import (
+    Cenik,
+    CenikFormat,
+    Dochazka,
+    Hrac,
+    PredpokladanySkip,
+    PredpokladanySlot,
+    StalyRozvrhSlot,
+    SystemNastaveni,
+    TrenerPlatba,
+    TrenerProfil,
+    TrenerSazba,
+    Trening,
+)
+from ..predpokladany import materialize_for_date
+from ..schedule_build import build_trening_schedule
 from .inlines import DochazkaInline
 
 User = get_user_model()
@@ -75,26 +89,39 @@ def _hraci_from_training(training):
 
 
 def _format_name_map() -> dict[str, str]:
-    """Identity map – format je volný text (název)."""
-    return {}
+    names = dict(CenikFormat.VYCHOZI_KODY)
+    names.update(CenikFormat.objects.values_list("kod", "nazev"))
+    return names
 
 
 def _training_row_dict(user, training, rate_lookup: TrenerRateLookup, format_names: dict[str, str]):
     dt = dj_tz.localtime(training.datum) if dj_tz.is_aware(training.datum) else training.datum
-    hours = (Decimal(training.delka_minut) / Decimal(60)).quantize(Decimal("0.01"))
-    rate = rate_lookup.for_user_date(user.id, dt)
-    castka = (hours * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    is_service = training.je_sluzba()
+    castka = rate_lookup.earned_for(
+        user.id, dt, training.delka_minut, training.format, training.kurt
+    )
+    if is_service:
+        hours_label = "—"
+        sazba_label = f"{rate_lookup.vyplet_for_user(user.id):.0f} Kč"
+        cas_label = "—"
+    else:
+        hours = (Decimal(training.delka_minut) / Decimal(60)).quantize(Decimal("0.01"))
+        rate = rate_lookup.for_user_date(user.id, dt)
+        hours_label = f"{hours:.2f}"
+        sazba_label = f"{rate:.0f} Kč/h"
+        cas_label = dt.strftime("%H:%M")
     return {
         "datum": dt.strftime("%d.%m.%Y"),
-        "cas": dt.strftime("%H:%M"),
+        "cas": cas_label,
         "format": format_names.get(training.format, training.format),
         "kurt": training.get_kurt_display(),
         "hraci": _hraci_from_training(training),
-        "hodiny": f"{hours:.2f}",
-        "sazba": format_castka(rate, per_hour=True),
-        "castka": format_castka(castka),
+        "hodiny": hours_label,
+        "sazba": sazba_label,
+        "castka": f"{castka:.0f} Kč",
         "trening_change_url": reverse("admin:core_trening_change", args=[training.id]),
         "month_key": (dt.year, dt.month),
+        "is_service": is_service,
     }
 
 
@@ -109,16 +136,15 @@ def _build_trener_training_stats(user, trainings, rate_lookup: TrenerRateLookup)
 
     for t in trainings:
         dt = dj_tz.localtime(t.datum) if dj_tz.is_aware(t.datum) else t.datum
-        rate = rate_lookup.for_user_date(user.id, dt)
-        hours_val = (Decimal(t.delka_minut) / Decimal(60)).quantize(Decimal("0.01"))
-        castka = (hours_val * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        castka = rate_lookup.earned_for(user.id, dt, t.delka_minut, t.format, t.kurt)
+        mins = 0 if t.je_sluzba() else (t.delka_minut or 0)
         pocet += 1
-        total_min += t.delka_minut
+        total_min += mins
         total_castka += castka
 
         key = (dt.year, dt.month)
         monthly[key]["pocet"] += 1
-        monthly[key]["minuty"] += t.delka_minut
+        monthly[key]["minuty"] += mins
         monthly[key]["castka"] += castka
         groups[key].append(_training_row_dict(user, t, rate_lookup, format_names))
 
@@ -133,14 +159,14 @@ def _build_trener_training_stats(user, trainings, rate_lookup: TrenerRateLookup)
             "month": month,
             "pocet": data["pocet"],
             "hodiny": f"{m_hours:.2f}",
-            "castka": format_castka(m_castka),
+            "castka": f"{m_castka:.0f} Kč",
             "castka_raw": m_castka,
         })
 
     stats = {
         "pocet": pocet,
         "hodiny": f"{hodiny:.2f}",
-        "castka": format_castka(total_castka),
+        "castka": f"{total_castka.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP):.0f} Kč",
         "castka_raw": total_castka,
         "hodiny_raw": hodiny,
         "mesice": mesice,
@@ -185,16 +211,15 @@ def _aggregate_trener_trainings(user, trainings, rate_lookup: TrenerRateLookup |
 
     for t in trainings:
         dt = dj_tz.localtime(t.datum) if dj_tz.is_aware(t.datum) else t.datum
-        rate = rate_lookup.for_user_date(user.id, dt)
-        hours_val = (Decimal(t.delka_minut) / Decimal(60)).quantize(Decimal("0.01"))
-        castka = (hours_val * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        castka = rate_lookup.earned_for(user.id, dt, t.delka_minut, t.format, t.kurt)
+        mins = 0 if t.je_sluzba() else (t.delka_minut or 0)
         pocet += 1
-        total_min += t.delka_minut
+        total_min += mins
         total_castka += castka
 
         key = (dt.year, dt.month)
         monthly[key]["pocet"] += 1
-        monthly[key]["minuty"] += t.delka_minut
+        monthly[key]["minuty"] += mins
         monthly[key]["castka"] += castka
 
     hodiny = (Decimal(total_min) / Decimal(60)).quantize(Decimal("0.01"))
@@ -208,14 +233,14 @@ def _aggregate_trener_trainings(user, trainings, rate_lookup: TrenerRateLookup |
             "month": month,
             "pocet": data["pocet"],
             "hodiny": f"{m_hours:.2f}",
-            "castka": format_castka(m_castka),
+            "castka": f"{m_castka:.0f} Kč",
             "castka_raw": m_castka,
         })
 
     return {
         "pocet": pocet,
         "hodiny": f"{hodiny:.2f}",
-        "castka": format_castka(total_castka),
+        "castka": f"{total_castka.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP):.0f} Kč",
         "castka_raw": total_castka,
         "hodiny_raw": hodiny,
         "mesice": mesice,
@@ -224,7 +249,7 @@ def _aggregate_trener_trainings(user, trainings, rate_lookup: TrenerRateLookup |
 
 
 def _format_kc(value: Decimal) -> str:
-    return format_castka(value)
+    return f"{value.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP):.0f} Kč"
 
 
 def _trener_financial_overview(user, rate_lookup: TrenerRateLookup, stats: dict | None = None):
@@ -235,13 +260,15 @@ def _trener_financial_overview(user, rate_lookup: TrenerRateLookup, stats: dict 
     else:
         monthly_raw: dict = defaultdict(lambda: Decimal("0.00"))
         celkem = Decimal("0.00")
-        for row in Trening.objects.filter(trener=user).values("datum", "delka_minut"):
+        for row in Trening.objects.filter(trener=user).values(
+            "datum", "delka_minut", "format", "kurt"
+        ):
             dt = row["datum"]
             if dj_tz.is_aware(dt):
                 dt = dj_tz.localtime(dt)
-            rate = rate_lookup.for_user_date(user.id, dt)
-            hours_val = (Decimal(row["delka_minut"]) / Decimal(60)).quantize(Decimal("0.01"))
-            castka = (hours_val * rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            castka = rate_lookup.earned_for(
+                user.id, dt, row["delka_minut"], row["format"], row["kurt"]
+            )
             celkem += castka
             monthly_raw[(dt.year, dt.month)] += castka
 
@@ -270,7 +297,7 @@ def _enrich_mesice_with_payments(user, mesice):
         key = (dt.year, dt.month)
         platby_by_month[key]["items"].append({
             "datum": dt.strftime("%d.%m.%Y"),
-            "castka": format_castka(p.castka),
+            "castka": f"{p.castka:.0f} Kč",
             "url": reverse("admin:core_trenerplatba_change", args=[p.id]),
         })
         platby_by_month[key]["total"] += p.castka
@@ -284,80 +311,6 @@ def _enrich_mesice_with_payments(user, mesice):
             "vyplaceno_celkem": _format_kc(data["total"]) if data["items"] else "",
         })
     return enriched
-
-
-def _week_start(d):
-    return d - timedelta(days=d.weekday())
-
-
-def _trainings_for_copy(source_date, target_date, scope, trener=None):
-    """
-  Načte tréninky ze zdrojového dne/týdne a připraví data pro formulář slotů.
-  scope: 'day' | 'week'
-  """
-    if scope == CopyTrainingsForm.SCOPE_WEEK:
-        source_start = _week_start(source_date)
-        target_start = _week_start(target_date)
-        date_from = source_start
-        date_to = source_start + timedelta(days=6)
-    else:
-        source_start = source_date
-        date_from = source_date
-        date_to = source_date
-
-    start_dt = dj_tz.make_aware(datetime.combine(date_from, time.min))
-    end_dt = dj_tz.make_aware(datetime.combine(date_to, time.max))
-
-    qs = (
-        Trening.objects
-        .filter(datum__range=(start_dt, end_dt))
-        .select_related("trener")
-        .prefetch_related("dochazky__hrac")
-        .order_by("datum")
-    )
-    if trener:
-        qs = qs.filter(trener_id=trener.pk if hasattr(trener, "pk") else trener)
-
-    slots = []
-    for t in qs:
-        local = dj_tz.localtime(t.datum) if dj_tz.is_aware(t.datum) else t.datum
-        src_d = local.date()
-        if scope == CopyTrainingsForm.SCOPE_WEEK:
-            day_offset = (src_d - source_start).days
-            slot_datum = _week_start(target_date) + timedelta(days=day_offset)
-        else:
-            slot_datum = None
-
-        hraci = list(t.hraci.all())
-        slots.append({
-            "cas": local.time().replace(second=0, microsecond=0),
-            "delka_minut": t.delka_minut,
-            "format": t.format,
-            "sezona": t.sezona or "",
-            "kurt": t.kurt,
-            "poznamka": t.poznamka or "",
-            "hraci": hraci,
-            "slot_datum": slot_datum,
-            "trener": t.trener,
-        })
-    return slots
-
-
-def _slot_formset_for_copy(initial_slots):
-    """Formset s dostatečným počtem prázdných slotů pro načtená data."""
-    from ..forms import TrainingSlotFormSetBase
-
-    count = max(len(initial_slots), 1)
-    extra = max(5, count + 2)
-    FormSetClass = formset_factory(
-        TrainingSlotForm,
-        formset=TrainingSlotFormSetBase,
-        extra=extra,
-        max_num=50,
-        min_num=1,
-        validate_min=True,
-    )
-    return FormSetClass(prefix="slots", initial=initial_slots)
 
 
 def _training_formset_from_request(post_data=None, initial_slots=None):
@@ -411,26 +364,7 @@ class TreningFormatFilter(admin.SimpleListFilter):
     parameter_name = "format"
 
     def lookups(self, request, model_admin):
-        from ..forms import cenik_format_choices
-
-        seen = set()
-        out = []
-        for value, label in cenik_format_choices():
-            if not value or value in seen:
-                continue
-            seen.add(value)
-            out.append((value, label))
-        used = (
-            Trening.objects.exclude(format="")
-            .order_by("format")
-            .values_list("format", flat=True)
-            .distinct()
-        )
-        for value in used:
-            if value and value not in seen:
-                seen.add(value)
-                out.append((value, value))
-        return out
+        return CenikFormat.choices()
 
     def queryset(self, request, queryset):
         val = self.value()
@@ -444,43 +378,16 @@ class SezonaListFilter(admin.SimpleListFilter):
     parameter_name = "sezona"
 
     def lookups(self, request, model_admin):
-        from ..forms import cenik_sezona_choices
-
-        seen = set()
-        out = []
-        for value, label in cenik_sezona_choices():
-            if not value or value in seen:
-                continue
-            seen.add(value)
-            out.append((value, label))
-        used = (
-            Trening.objects.exclude(sezona="")
-            .order_by("sezona")
-            .values_list("sezona", flat=True)
-            .distinct()
-        )
-        for value in used:
-            if value and value not in seen:
-                seen.add(value)
-                out.append((value, value))
-        return out
+        return [
+            (Cenik.Kurt.VENEK, _("Léto")),
+            (Cenik.Kurt.HALA, _("Zima")),
+        ]
 
     def queryset(self, request, queryset):
         val = self.value()
-        if not val:
-            return queryset
-        # Legacy: starší tréninky bez sezóny, jen podle kurtu
-        if val.casefold() in {"léto", "leto"}:
-            return queryset.filter(
-                Q(sezona__iexact=val)
-                | Q(kurt__in=[Cenik.Kurt.VENEK, Cenik.Kurt.VENEK_CODE, "Venek"])
-            )
-        if val.casefold() == "zima":
-            return queryset.filter(
-                Q(sezona__iexact=val)
-                | Q(kurt__in=[Cenik.Kurt.HALA, Cenik.Kurt.HALA_CODE])
-            )
-        return queryset.filter(sezona=val)
+        if val:
+            return queryset.filter(kurt=val)
+        return queryset
 
 
 class TreningDatumFilter(admin.DateFieldListFilter):
@@ -494,7 +401,8 @@ class TreningDatumFilter(admin.DateFieldListFilter):
 
 
 @admin.register(Trening)
-class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
+class TreningAdmin(RoleGateMixin, ConfigurableListPerPageMixin, admin.ModelAdmin):
+    role_check = staticmethod(can_access_treningy)
     change_form_template = "admin/core/trening/change_form.html"
     add_form_template = "admin/core/trening/add_form.html"
     change_list_template = "admin/core/trening/change_list.html"
@@ -512,34 +420,16 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
     list_per_page_default = 50
     inlines = [DochazkaInline]
     actions = ["znovu_zpracovat_uctovani"]
-    fields = ("trener", "datum", "delka_minut", "format", "sezona", "kurt", "poznamka")
+    fields = ("trener", "datum", "delka_minut", "format", "kurt", "poznamka")
 
     def get_form(self, request, obj=None, **kwargs):
-        from ..forms import cenik_format_choices, cenik_kurt_choices, cenik_sezona_choices
-
         Form = super().get_form(request, obj, **kwargs)
         if "format" in Form.base_fields:
             Form.base_fields["format"] = forms.ChoiceField(
-                label=_("Typ tréninku"),
-                required=True,
-                choices=cenik_format_choices(getattr(obj, "format", "")),
+                label=_("Formát"),
+                choices=CenikFormat.choices(),
                 widget=forms.Select(attrs={"class": "vTextField"}),
             )
-        if "sezona" in Form.base_fields:
-            Form.base_fields["sezona"] = forms.ChoiceField(
-                label=_("Sezóna"),
-                required=False,
-                choices=cenik_sezona_choices(getattr(obj, "sezona", "")),
-                widget=forms.Select(attrs={"class": "vTextField"}),
-            )
-            if obj is None:
-                try:
-                    default_sezona = (SystemNastaveni.training_defaults().get("sezona") or "").strip()
-                    sezona_values = {c[0] for c in Form.base_fields["sezona"].choices if c[0]}
-                    if default_sezona in sezona_values:
-                        Form.base_fields["sezona"].initial = default_sezona
-                except Exception:
-                    pass
         if "delka_minut" in Form.base_fields:
             field = Form.base_fields["delka_minut"]
             field.label = _("Délka (hodiny)")
@@ -547,24 +437,25 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             field.help_text = ""
             if obj is None:
                 try:
-                    defaults = SystemNastaveni.training_defaults()
+                    defaults = SystemNastaveni.training_defaults(user=request.user)
                     field.initial = defaults["delka_minut"]
                 except Exception:
                     field.initial = 60
         if "trener" in Form.base_fields:
-            Form.base_fields["trener"].label = _("Trenér")
+            Form.base_fields["trener"].label = "Trenér"
         if "datum" in Form.base_fields:
             Form.base_fields["datum"].label = ""
         if "kurt" in Form.base_fields:
-            choices = cenik_kurt_choices(getattr(obj, "kurt", ""))
-            Form.base_fields["kurt"] = forms.ChoiceField(
-                label=_("Kurt"),
-                required=True,
-                choices=choices,
-                widget=forms.Select(attrs={"class": "vTextField"}),
-            )
+            Form.base_fields["kurt"].label = "Kurt"
+            if obj is None:
+                try:
+                    Form.base_fields["kurt"].initial = SystemNastaveni.training_defaults(
+                        user=request.user
+                    )["kurt"]
+                except Exception:
+                    pass
         if "poznamka" in Form.base_fields:
-            Form.base_fields["poznamka"].label = _("Poznámka")
+            Form.base_fields["poznamka"].label = "Poznámka"
         return Form
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -580,10 +471,65 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
 
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
+    def get_inline_instances(self, request, obj=None):
+        # Change form má vlastní UI hráčů (jako Přidat trénink) – bez tabular inline a částek
+        if obj is not None:
+            return []
+        return super().get_inline_instances(request, obj)
+
+    def render_change_form(self, request, context, add=False, change=False, form_url="", obj=None):
+        if change and obj is not None:
+            local = dj_tz.localtime(obj.datum) if dj_tz.is_aware(obj.datum) else obj.datum
+            hraci_qs = Hrac.objects.filter(aktivni=True).order_by("prijmeni", "jmeno")
+            change_hraci_all = [{"id": str(h.pk), "jmeno": h.cele_jmeno} for h in hraci_qs]
+            change_hraci_initial = [
+                {"id": str(d.hrac_id), "jmeno": d.hrac.cele_jmeno}
+                for d in obj.dochazky.select_related("hrac").all()
+                if d.hrac_id
+            ]
+            context.update({
+                "date_value": local.date().isoformat(),
+                "time_value": local.strftime("%H:%M"),
+                "change_hraci_all_json": mark_safe(json.dumps(change_hraci_all, ensure_ascii=False)),
+                "change_hraci_initial": change_hraci_initial,
+            })
+        return super().render_change_form(
+            request, context, add=add, change=change, form_url=form_url, obj=obj
+        )
+
     def save_model(self, request, obj, form, change):
         if not form.is_valid():
-            messages.error(request, _g("Chyba v hlavním formuláři: %(errors)s") % {"errors": form.errors})
+            messages.error(request, f"Chyba v hlavním formuláři: {form.errors}")
+        if Cenik.je_sluzba(getattr(obj, "format", None), getattr(obj, "kurt", None)):
+            obj.kurt = Cenik.Kurt.SLUZBA
+            obj.delka_minut = 60
         super().save_model(request, obj, form, change)
+
+    def _sync_change_form_hraci(self, trening, hrac_ids):
+        seen = set()
+        wanted = []
+        for hrac_id in hrac_ids:
+            if not hrac_id or hrac_id in seen:
+                continue
+            seen.add(hrac_id)
+            try:
+                wanted.append(Hrac.objects.get(pk=hrac_id))
+            except (Hrac.DoesNotExist, ValueError, TypeError):
+                continue
+        with transaction.atomic():
+            existing = {d.hrac_id: d for d in trening.dochazky.all()}
+            wanted_ids = {h.pk for h in wanted}
+            for hrac_id, doch in list(existing.items()):
+                if hrac_id not in wanted_ids:
+                    doch.delete()
+            for hrac in wanted:
+                if hrac.pk not in existing:
+                    Dochazka.objects.create(trening=trening, hrac=hrac, prisel=True)
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        if change and request.POST.get("change_form_hraci_ui"):
+            self._sync_change_form_hraci(form.instance, request.POST.getlist("change_form_hraci"))
 
     def save_formset(self, request, form, formset, change):
         if formset.model == Dochazka and not change:
@@ -609,7 +555,7 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             return
 
         if not formset.is_valid():
-            messages.error(request, _g("Chyba v seznamu hráčů: %(errors)s") % {"errors": formset.errors})
+            messages.error(request, f"Chyba v seznamu hráčů: {formset.errors}")
             return
 
         if formset.model == Dochazka:
@@ -637,49 +583,34 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "datum":
-            # Na stránce Přidat trénink funkčně stejné buňky jako add-day: type=date + type=time (nativní pickery)
-            if request.path.rstrip("/").endswith("/add"):
-                w = forms.SplitDateTimeWidget(
-                    date_attrs={"type": "date", "class": "add-day-datum-input vDateField"},
-                    time_attrs={"type": "time", "class": "vTimeField", "placeholder": _g("např. 13:00")},
-                )
-            else:
-                w = AdminSplitDateTimeWithDatalist()
-            kwargs["widget"] = w
-        return super().formfield_for_dbfield(db_field, request, **kwargs)
+            # Stejné buňky jako Přidat trénink / add-day: type=date + type=time
+            kwargs["widget"] = forms.SplitDateTimeWidget(
+                date_attrs={"type": "date", "class": "add-day-datum-input vDateField"},
+                time_attrs={"type": "time", "class": "vTimeField", "placeholder": "např. 13:00"},
+            )
+        formfield = super().formfield_for_dbfield(db_field, request, **kwargs)
+        # Trenér bez related ikon (+/✎) – stejně široký select jako na Přidat trénink
+        if db_field.name == "trener" and formfield is not None:
+            w = formfield.widget
+            if hasattr(w, "widget"):
+                formfield.widget = w.widget
+        return formfield
 
-    def _add_form_context(self, request, day_form, formset, copy_form=None, copy_loaded=False, copy_scope=None, copy_slot_count=0, copy_slots_players_json=None, copy_hraci_lists=None):
-        players_json_list = copy_slots_players_json or []
-        hraci_lists = copy_hraci_lists or []
+    def _add_form_context(self, request, day_form, formset):
         slots_render = []
-        copy_hidden_trener_id = ""
-        copy_hidden_day_datum = ""
-        if copy_loaded:
-            trener_val = day_form.initial.get("trener")
-            if trener_val is not None:
-                copy_hidden_trener_id = getattr(trener_val, "pk", trener_val)
-            datum_val = day_form.initial.get("datum")
-            if datum_val is not None and hasattr(datum_val, "isoformat"):
-                copy_hidden_day_datum = datum_val.isoformat()
-
         for i, form in enumerate(formset):
-            if copy_loaded:
-                hraci_initial = hraci_lists[i] if i < len(hraci_lists) else list(form.initial.get("hraci") or [])
-                slots_render.append({
-                    "form": form,
-                    "index": i,
-                    "hidden": i >= copy_slot_count,
-                    "players_json": players_json_list[i] if i < len(players_json_list) else "[]",
-                    "hraci_initial": hraci_initial,
-                })
-            else:
-                slots_render.append({
-                    "form": form,
-                    "index": i,
-                    "hidden": i > 0,
-                    "players_json": None,
-                    "hraci_initial": [],
-                })
+            slots_render.append({
+                "form": form,
+                "index": i,
+                "hidden": i > 0,
+            })
+        raw_datum = day_form["datum"].value()
+        if hasattr(raw_datum, "isoformat"):
+            date_value = raw_datum.isoformat()
+        elif raw_datum:
+            date_value = str(raw_datum)
+        else:
+            date_value = dj_tz.localdate().isoformat()
         return {
             **self.admin_site.each_context(request),
             "title": _("Trénink: přidat"),
@@ -687,13 +618,7 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             "day_form": day_form,
             "formset": formset,
             "slots_render": slots_render,
-            "copy_form": copy_form,
-            "copy_loaded": copy_loaded,
-            "copy_scope": copy_scope or CopyTrainingsForm.SCOPE_DAY,
-            "copy_slot_count": copy_slot_count,
-            "copy_slots_players_json": players_json_list,
-            "copy_hidden_trener_id": copy_hidden_trener_id,
-            "copy_hidden_day_datum": copy_hidden_day_datum,
+            "date_value": date_value,
         }
 
     def add_view(self, request, form_url="", extra_context=None):
@@ -705,7 +630,6 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
         if is_add_form and request.method == "POST" and ("day-datum" in request.POST or "slots-TOTAL_FORMS" in request.POST):
             day_form = AddDayFormClass(request.POST, prefix="day")
             formset = _training_formset_from_request(post_data=request.POST)
-            copy_scope = request.POST.get("copy_scope") or CopyTrainingsForm.SCOPE_DAY
             if day_form.is_valid() and formset.is_valid():
                 default_trener = day_form.cleaned_data.get("trener")
                 if not default_trener:
@@ -726,18 +650,20 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
                             dt = datetime.combine(slot_datum, cd["cas"])
                             if settings.USE_TZ:
                                 dt = dj_tz.make_aware(dt, dj_tz.get_current_timezone())
-                            defaults = SystemNastaveni.training_defaults(for_date=slot_datum)
-                            fmt = (cd.get("format") or "").strip()
-                            sezona = (cd.get("sezona") or "").strip()
-                            kurt = (cd.get("kurt") or defaults["kurt"] or "").strip()
-                            if not fmt or not kurt:
-                                continue
+                            defaults = SystemNastaveni.training_defaults(
+                                for_date=slot_datum, user=request.user
+                            )
+                            fmt = cd["format"] or CenikFormat.default_kod()
+                            kurt = cd["kurt"] or defaults["kurt"]
+                            delka = cd.get("delka_minut") or defaults["delka_minut"]
+                            if Cenik.je_sluzba(fmt, kurt):
+                                kurt = Cenik.Kurt.SLUZBA
+                                delka = 60
                             trening = Trening.objects.create(
                                 trener=slot_trener,
                                 datum=dt,
-                                delka_minut=cd.get("delka_minut") or defaults["delka_minut"],
+                                delka_minut=delka,
                                 format=fmt,
-                                sezona=sezona,
                                 kurt=kurt,
                                 poznamka=(cd.get("poznamka") or "")[:240],
                             )
@@ -751,17 +677,26 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
                             created += 1
                     if created:
                         trener_str = (getattr(default_trener, "get_full_name", lambda: "")() or getattr(default_trener, "username", ""))
-                        parts = [
-                            format_html("<strong>{}:</strong> {}", _g("Trenér"), escape(trener_str)),
-                            format_html("{}:", _g("Bylo uloženo %(count)s tréninků") % {"count": created}),
-                        ]
+                        item_bits = []
                         for datum_str, cas_str, hraci_str, trening_pk in created_items:
                             change_url = reverse("admin:core_trening_change", args=[trening_pk])
-                            parts.append(format_html(
-                                '  • <a href="{}"><strong>{} {}</strong></a> – {}',
+                            item_bits.append(format_html(
+                                '<a href="{}"><strong>{} {}</strong></a> – {}',
                                 change_url, escape(datum_str), escape(cas_str), escape(hraci_str),
                             ))
-                        msg_html = mark_safe("<br>".join(str(p) for p in parts))
+                        if created == 1:
+                            msg_html = format_html(
+                                "Trénink {} uložen · trenér {}",
+                                item_bits[0],
+                                escape(trener_str) or "—",
+                            )
+                        else:
+                            msg_html = format_html(
+                                "Uloženo <strong>{}</strong> tréninků · trenér {}<br>{}",
+                                created,
+                                escape(trener_str) or "—",
+                                mark_safe("<br>".join(str(b) for b in item_bits)),
+                            )
                         messages.success(request, msg_html)
                         if request.POST.get("_addanother"):
                             add_url = reverse("admin:core_trening_add")
@@ -770,101 +705,23 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
                     else:
                         messages.error(
                             request,
-                            _g("Vyplňte alespoň jeden trénink (čas)."),
+                            "Vyplňte alespoň jeden trénink (čas).",
                         )
-            context = self._add_form_context(
-                request, day_form, formset,
-                copy_form=CopyTrainingsForm(prefix="copy", initial={
-                    "source_date": request.POST.get("copy-source_date") or request.GET.get("copy-source_date"),
-                    "target_date": day_form.data.get("day-datum") if hasattr(day_form, "data") else None,
-                    "scope": copy_scope,
-                }),
-                copy_scope=copy_scope,
-                copy_loaded=bool(request.POST.get("copy_loaded")),
-                copy_slot_count=int(request.POST.get("copy_slot_count") or 0),
-            )
+            context = self._add_form_context(request, day_form, formset)
             return TemplateResponse(request, self.add_form_template, context)
 
         if is_add_form and request.method == "GET":
-            copy_form = None
-            copy_loaded = False
-            copy_scope = CopyTrainingsForm.SCOPE_DAY
-            copy_slot_count = 0
-            copy_slots_players_json = []
-            copy_hraci_lists = []
-
-            if request.GET.get("copy"):
-                copy_form = CopyTrainingsForm(request.GET, prefix="copy")
-                if copy_form.is_valid():
-                    source_date = copy_form.cleaned_data["source_date"]
-                    target_date = copy_form.cleaned_data["target_date"]
-                    copy_scope = copy_form.cleaned_data["scope"]
-                    filter_trener = copy_form.cleaned_data.get("trener")
-                    slots_data = _trainings_for_copy(source_date, target_date, copy_scope, filter_trener)
-                    if slots_data:
-                        copy_loaded = True
-                        copy_slot_count = len(slots_data)
-                        copy_hraci_lists = [slot["hraci"] for slot in slots_data]
-                        initial_slots = []
-                        for slot in slots_data:
-                            initial_slots.append({
-                                "cas": slot["cas"],
-                                "delka_minut": slot["delka_minut"],
-                                "format": slot["format"],
-                                "sezona": slot.get("sezona") or "",
-                                "kurt": slot["kurt"],
-                                "poznamka": slot["poznamka"],
-                                "hraci": slot["hraci"],
-                                "slot_datum": slot["slot_datum"],
-                                "trener": slot["trener"],
-                            })
-                            copy_slots_players_json.append(json.dumps([
-                                {"id": h.pk, "jmeno": h.cele_jmeno}
-                                for h in slot["hraci"]
-                            ]))
-                        day_form = AddDayFormClass(
-                            prefix="day",
-                            initial={
-                                "datum": target_date,
-                                "trener": filter_trener or slots_data[0]["trener"],
-                            },
-                        )
-                        formset = _training_formset_from_request(initial_slots=initial_slots)
-                    else:
-                        messages.warning(
-                            request,
-                            _g("Ve zvoleném období nejsou žádné tréninky ke zkopírování."),
-                        )
-                        copy_form = CopyTrainingsForm(initial={
-                            "source_date": source_date,
-                            "target_date": target_date,
-                            "scope": copy_scope,
-                            "trener": filter_trener,
-                        })
-                        day_form = AddDayFormClass(prefix="day", initial={"datum": target_date})
-                        formset = FormSetClass(prefix="slots")
-                else:
-                    day_form = AddDayFormClass(prefix="day")
-                    formset = FormSetClass(prefix="slots")
-            else:
-                day_form = AddDayFormClass(prefix="day")
-                if request.GET.get("date"):
-                    try:
-                        from datetime import datetime as dt_parse
-                        day_form.initial["datum"] = dt_parse.strptime(request.GET["date"], "%Y-%m-%d").date()
-                    except Exception:
-                        pass
-                formset = FormSetClass(prefix="slots")
-
-            context = self._add_form_context(
-                request, day_form, formset,
-                copy_form=copy_form or CopyTrainingsForm(prefix="copy"),
-                copy_loaded=copy_loaded,
-                copy_scope=copy_scope,
-                copy_slot_count=copy_slot_count,
-                copy_slots_players_json=copy_slots_players_json,
-                copy_hraci_lists=copy_hraci_lists if copy_loaded else None,
-            )
+            day_form = AddDayFormClass(prefix="day")
+            initial_date = dj_tz.localdate()
+            if request.GET.get("date"):
+                try:
+                    from datetime import datetime as dt_parse
+                    initial_date = dt_parse.strptime(request.GET["date"], "%Y-%m-%d").date()
+                except Exception:
+                    pass
+            day_form.initial["datum"] = initial_date
+            formset = FormSetClass(prefix="slots")
+            context = self._add_form_context(request, day_form, formset)
             return TemplateResponse(request, self.add_form_template, context)
         return super().add_view(request, form_url=form_url, extra_context=extra_context)
 
@@ -872,8 +729,51 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
         urls = super().get_urls()
         extra = [
             path("schedule/", self.admin_site.admin_view(self.schedule_view), name="core_trening_schedule"),
+            path(
+                "schedule/quick-add/",
+                self.admin_site.admin_view(self.schedule_quick_add_view),
+                name="core_trening_schedule_quick_add",
+            ),
+            path(
+                "schedule/delete/",
+                self.admin_site.admin_view(self.schedule_delete_view),
+                name="core_trening_schedule_delete",
+            ),
+            path(
+                "schedule/move/",
+                self.admin_site.admin_view(self.schedule_move_view),
+                name="core_trening_schedule_move",
+            ),
+            path(
+                "schedule/staly/",
+                self.admin_site.admin_view(self.schedule_staly_save_view),
+                name="core_trening_schedule_staly_save",
+            ),
+            path(
+                "schedule/staly/<int:slot_id>/delete/",
+                self.admin_site.admin_view(self.schedule_staly_delete_view),
+                name="core_trening_schedule_staly_delete",
+            ),
+            path(
+                "schedule/materialize/",
+                self.admin_site.admin_view(self.schedule_materialize_view),
+                name="core_trening_schedule_materialize",
+            ),
+            path(
+                "schedule/predpokladany/skip/",
+                self.admin_site.admin_view(self.schedule_predpokladany_skip_view),
+                name="core_trening_schedule_predpokladany_skip",
+            ),
         ]
         return extra + urls
+
+    def get_queryset(self, request):
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("trener")
+            .prefetch_related(_dochazka_prefetch())
+        )
 
     def get_search_results(self, request, queryset, search_term):
         parts = parse_czech_date_parts(search_term)
@@ -884,86 +784,54 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
     @admin.display(description=_("Datum"), ordering="datum")
     def datum_display(self, obj):
         dt = dj_tz.localtime(obj.datum) if dj_tz.is_aware(obj.datum) else obj.datum
-        date_str, time_str = format_czech_datetime(dt)
         url = reverse("admin:core_trening_change", args=[obj.pk])
         return format_html(
             '<a href="{}"><span class="tx-datum" data-iso-date="{}">{}</span>'
             ' <span style="color:#888;font-size:0.9em">{}</span></a>',
             url,
             dt.strftime("%Y-%m-%d"),
-            date_str,
-            time_str,
+            dt.strftime("%d.%m.%Y"),
+            dt.strftime("%H:%M"),
         )
 
     @admin.display(description=_("Hráč(i)"))
     def hraci_jmena(self, obj):
-        names = [d.hrac.cele_jmeno for d in obj.dochazky.select_related("hrac").filter(prisel=True)]
-        return ", ".join(names) if names else "—"
+        return _hraci_from_training(obj)
 
     @admin.display(description=_("Trenér"))
     def trener_jmeno(self, obj):
         return trener_label(obj.trener)
 
-    @admin.display(description=_("Typ tréninku"))
+    @admin.display(description=_("Typ"))
     def format_display(self, obj):
         return obj.get_format_display()
 
     @admin.display(description=_("Částka / hráč"))
     def castka_na_hrace_kc(self, obj):
-        return format_castka(obj.cena_na_hrace())
+        # Zobrazení bez desetinných míst; výpočty dál přes cena_na_hrace() (Decimal)
+        return f"{obj.cena_na_hrace():.0f} Kč"
 
     def response_add(self, request, obj, post_url_continue=None):
         local_dt = dj_tz.localtime(obj.datum) if dj_tz.is_aware(obj.datum) else obj.datum
         date_str = local_dt.strftime("%d.%m.%Y")
         time_str = local_dt.strftime("%H:%M")
 
-        hours = obj.hodiny
-        try:
-            if hours == hours.to_integral():
-                hours_str = f"{int(hours)} h"
-            else:
-                hours_str = f"{str(hours).replace('.', ',')} h"
-        except Exception:
-            hours_str = f"{obj.delka_minut} min"
-
         trener_str = self.trener_jmeno(obj)
         format_str = obj.get_format_display()
-        kurt_str = obj.get_kurt_display()
         hraci_str = self.hraci_jmena(obj)
         edit_url = reverse("admin:core_trening_change", args=[obj.pk])
 
         summary_message = format_html(
-            "{added}<br>{check}<br>"
-            "<strong>{coach}:</strong> {trener}<br>"
-            "<strong>{date}:</strong> {date_val}<br>"
-            "<strong>{time}:</strong> {time_val}<br>"
-            "<strong>{duration}:</strong> {hours}<br>"
-            "<strong>{fmt}:</strong> {format_val}<br>"
-            "<strong>{court}:</strong> {kurt}<br>"
-            "<strong>{players}:</strong> {hraci}<br>"
-            "{more}<br>"
-            '<a href="{edit_url}" class="button" '
-            'style="display:inline-block;margin-top:14px;padding:6px 12px;'
-            'font-size:12px;line-height:1.4;">{edit_link}</a>',
-            added=mark_safe(_g("Položka typu <strong>Trénink</strong> byla úspěšně přidána.")),
-            check=_g("Zkontrolujte prosím zadané údaje:"),
-            coach=_g("Trenér"),
-            trener=trener_str,
-            date=_g("Datum"),
-            date_val=date_str,
-            time=_g("Čas"),
-            time_val=time_str,
-            duration=_g("Délka (hodiny)"),
-            hours=hours_str,
-            fmt=_g("Formát"),
-            format_val=format_str,
-            court=_g("Kurt"),
-            kurt=kurt_str,
-            players=_g("Hráči"),
-            hraci=hraci_str,
-            more=mark_safe(_g("Níže můžete přidat další položku typu <strong>Trénink</strong>.")),
-            edit_url=edit_url,
-            edit_link=_g("Otevřít a upravit tento trénink"),
+            (
+                'Trénink <a href="{}"><strong>{} {}</strong></a> uložen'
+                ' · {} · {} · {}'
+            ),
+            edit_url,
+            date_str,
+            time_str,
+            hraci_str or "—",
+            trener_str or "—",
+            format_str or "—",
         )
 
         response = super().response_add(request, obj, post_url_continue)
@@ -971,7 +839,8 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
         storage = messages.get_messages(request)
         kept = []
         for m in storage:
-            if m.level == messages.SUCCESS:
+            text = str(m.message)
+            if "Položka typu Trénink" in text and "byla úspěšně přidána" in text and "Zkontrolujte prosím zadané údaje" not in text:
                 continue
             kept.append(m)
 
@@ -989,47 +858,28 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
         date_str = local_dt.strftime("%d.%m.%Y")
         time_str = local_dt.strftime("%H:%M")
 
-        hours = obj.hodiny
-        try:
-            if hours == hours.to_integral():
-                hours_str = f"{int(hours)} h"
-            else:
-                hours_str = f"{str(hours).replace('.', ',')} h"
-        except Exception:
-            hours_str = f"{obj.delka_minut} min"
-
         trener_str = self.trener_jmeno(obj)
         format_str = obj.get_format_display()
-        kurt_str = obj.get_kurt_display()
-
+        edit_url = reverse("admin:core_trening_change", args=[obj.pk])
+        hraci_str = self.hraci_jmena(obj)
         summary_message = format_html(
-            "{changed}<br>{current}<br>"
-            "<strong>{coach}:</strong> {trener}<br>"
-            "<strong>{date}:</strong> {date_val}<br>"
-            "<strong>{time}:</strong> {time_val}<br>"
-            "<strong>{duration}:</strong> {hours}<br>"
-            "<strong>{fmt}:</strong> {format_val}<br>"
-            "<strong>{court}:</strong> {kurt}",
-            changed=mark_safe(_g("Položka typu <strong>Trénink</strong> byla úspěšně změněna.")),
-            current=_g("Aktuálně uložené údaje:"),
-            coach=_g("Trenér"),
-            trener=trener_str,
-            date=_g("Datum"),
-            date_val=date_str,
-            time=_g("Čas"),
-            time_val=time_str,
-            duration=_g("Délka (hodiny)"),
-            hours=hours_str,
-            fmt=_g("Formát"),
-            format_val=format_str,
-            court=_g("Kurt"),
-            kurt=kurt_str,
+            (
+                'Trénink <a href="{}"><strong>{} {}</strong></a> upraven'
+                ' · {} · {} · {}'
+            ),
+            edit_url,
+            date_str,
+            time_str,
+            hraci_str or "—",
+            trener_str or "—",
+            format_str or "—",
         )
 
         storage = messages.get_messages(request)
         kept = []
         for m in storage:
-            if m.level == messages.SUCCESS:
+            text = str(m.message)
+            if "Položka" in text and "typu Trénink" in text and "byla úspěšně změněna" in text:
                 continue
             kept.append(m)
 
@@ -1040,172 +890,591 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
         return response
 
     def schedule_view(self, request):
-        from ..schedule_colors import color_for_format, format_slug, schedule_legend_items
-
+        """Týdenní/denní rozvrh tréninků s filtry + rozložení překryvů do pruhů.
+        Režim `rozvrh=staly` zobrazí stálý týdenní rozvrh (jen info, bez tréninků).
+        """
+        if not self.has_module_permission(request):
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied
         q = request.GET
-        CZECH_DOW = ["po", "út", "st", "čt", "pá", "so", "ne"]
-
         try:
             base_date = datetime.strptime(q.get("date", ""), "%Y-%m-%d").date()
         except Exception:
             base_date = dj_tz.localdate()
 
-        try:
-            nast = SystemNastaveni.load()
-        except Exception:
-            nast = None
-
-        default_view = nast.vychozi_zobrazeni_rozvrhu if nast else "week"
-        mode = q.get("view") or default_view
-        if mode not in ("day", "week"):
-            mode = default_view
-
-        start_day = base_date if mode == "day" else (base_date - timedelta(days=base_date.weekday()))
-        end_day = start_day if mode == "day" else (start_day + timedelta(days=6))
-
-        start_dt = dj_tz.make_aware(datetime.combine(start_day, time.min))
-        end_dt = dj_tz.make_aware(datetime.combine(end_day, time.max))
-
+        rozvrh_mode = (q.get("rozvrh") or "aktualni").strip().lower()
         trainer_id = q.get("trener") or ""
-        qs = (
-            Trening.objects
-            .filter(datum__range=(start_dt, end_dt))
-            .select_related("trener")
-            .prefetch_related("dochazky__hrac")
-            .order_by("datum")
+        # Přepínač Den/Týden je pryč – vždy týden (mobil má denní pager / pás dnů)
+        sched = build_trening_schedule(
+            base_date=base_date,
+            rozvrh_mode=rozvrh_mode,
+            trainer_id=trainer_id,
+            mode="week",
         )
-        if trainer_id:
-            qs = qs.filter(trener_id=trainer_id)
 
-        hours = nast.schedule_hours() if nast else list(range(6, 23))
-        day_start_min = hours[0] * 60 if hours else 6 * 60
-        hour_count = len(hours) if hours else 16
-
-        day_count = (end_day - start_day).days + 1
-        days = []
-        for i in range(day_count):
-            d = start_day + timedelta(days=i)
-            label = f"{CZECH_DOW[d.weekday()]} {d.strftime('%d.%m.')}"
-            days.append({"date": d, "label": label, "events": []})
-        idx_by_date = {(start_day + timedelta(days=i)): i for i in range(day_count)}
-
-        for t in qs:
-            local = dj_tz.localtime(t.datum) if dj_tz.is_aware(t.datum) else t.datum
-            d = local.date()
-            i = idx_by_date.get(d)
-            if i is None:
-                continue
-
-            start_min = local.hour * 60 + local.minute
-            offset = max(0, start_min - day_start_min)
-            dur = int(t.delka_minut)
-            end_local = local + timedelta(minutes=dur)
-
-            fmt_label = t.get_format_display()
-            fmt_slug = format_slug(fmt_label)
-            color = color_for_format(fmt_label)
-
-            players = []
-            for dch in t.dochazky.select_related("hrac").filter(prisel=True):
-                hrac = dch.hrac
-                label = (hrac.prijmeni or "").strip() or (hrac.jmeno or "").strip() or hrac.cele_jmeno
-                players.append(label)
-
-            ev = {
-                "id": t.id,
-                "offset_min": offset,
-                "dur_min": dur,
-                "end_min": offset + dur,
-                "names": players,
-                "title": ", ".join(players) or "—",
-                "sub": f"{local.strftime('%H:%M')}–{end_local.strftime('%H:%M')}",
-                "fmt": fmt_slug,
-                "fmt_label": fmt_label,
-                "color": color,
-            }
-            days[i]["events"].append(ev)
-
-        def assign_lanes(evs):
-            if not evs:
-                return
-            evs.sort(key=lambda e: (e["offset_min"], e["dur_min"]))
-
-            cluster = []
-            cluster_max_end = -1
-
-            def finalize_cluster(cluster_events):
-                lanes_end = []
-                for e in cluster_events:
-                    placed = False
-                    for idx, end in enumerate(lanes_end):
-                        if e["offset_min"] >= end:
-                            e["lane"] = idx
-                            lanes_end[idx] = e["end_min"]
-                            placed = True
-                            break
-                    if not placed:
-                        lanes_end.append(e["end_min"])
-                        e["lane"] = len(lanes_end) - 1
-                total = len(lanes_end)
-                for e in cluster_events:
-                    e["lanes"] = total
-
-            for e in evs:
-                if not cluster:
-                    cluster = [e]
-                    cluster_max_end = e["end_min"]
-                    continue
-                if e["offset_min"] < cluster_max_end:
-                    cluster.append(e)
-                    if e["end_min"] > cluster_max_end:
-                        cluster_max_end = e["end_min"]
-                else:
-                    finalize_cluster(cluster)
-                    cluster = [e]
-                    cluster_max_end = e["end_min"]
-
-            if cluster:
-                finalize_cluster(cluster)
-
-        for day in days:
-            assign_lanes(day["events"])
-
-        step = 7 if mode == "week" else 1
-        prev_week_day = base_date - timedelta(days=7)
-        copy_day_url = (
-            reverse("admin:core_trening_add")
-            + f"?copy=1&copy-scope=day&copy-source_date={prev_week_day.isoformat()}&copy-target_date={base_date.isoformat()}"
-        )
-        copy_week_url = (
-            reverse("admin:core_trening_add")
-            + f"?copy=1&copy-scope=week&copy-source_date={(start_day - timedelta(days=7)).isoformat()}&copy-target_date={start_day.isoformat()}"
-        )
-        if trainer_id:
-            copy_day_url += f"&copy-trener={trainer_id}"
-            copy_week_url += f"&copy-trener={trainer_id}"
         ctx = dict(self.admin_site.each_context(request))
+        if sched["is_staly"]:
+            title = _("Stálý rozvrh")
+        elif sched["is_predpokladany"]:
+            title = _("Předpokládaný rozvrh")
+        else:
+            title = _("Rozvrh tréninků")
+        ctx.update(sched)
         ctx.update({
-            "title": _("Rozvrh tréninků"),
+            "title": title,
             "active_menu": "rozvrh",
-            "view_mode": mode,
-            "trainers": User.objects.order_by("username"),
-            "selected_trainer": int(trainer_id) if trainer_id else "",
-            "date_value": base_date.strftime("%Y-%m-%d"),
-            "prev_date": (base_date - timedelta(days=step)).strftime("%Y-%m-%d"),
-            "next_date": (base_date + timedelta(days=step)).strftime("%Y-%m-%d"),
-            "copy_day_url": copy_day_url,
-            "copy_week_url": copy_week_url,
-            "hours": hours,
-            "day_start_min": day_start_min,
-            "hour_count": hour_count,
-            "sched_start_hour": hours[0] if hours else 6,
-            "days": days,
-            "format_legend": schedule_legend_items(),
         })
         return TemplateResponse(request, "admin/core/trening/kalendar.html", ctx)
 
+    def schedule_materialize_view(self, request):
+        """AJAX / POST: ze stálého rozvrhu vytvoří tréninky na dnes (nebo zadané datum)."""
+        if request.method != "POST":
+            return JsonResponse({"ok": False, "error": _("Method not allowed.")}, status=405)
+
+        try:
+            payload = json.loads(request.body.decode("utf-8") or "{}")
+        except (TypeError, ValueError, UnicodeDecodeError):
+            payload = request.POST.dict()
+
+        date_raw = (payload.get("date") or "").strip()
+        target = None
+        if date_raw:
+            try:
+                target = datetime.strptime(date_raw, "%Y-%m-%d").date()
+            except (TypeError, ValueError):
+                return JsonResponse({"ok": False, "error": _("Neplatné datum.")}, status=400)
+
+        trainer_raw = payload.get("trener") or ""
+        result = materialize_for_date(target, trainer_id=trainer_raw or None)
+        return JsonResponse(result)
+
+    def schedule_predpokladany_skip_view(self, request):
+        """AJAX: přeskočit stálý ghost / smazat jednorázový předpokládaný slot."""
+        if request.method != "POST":
+            return JsonResponse({"ok": False, "error": _("Method not allowed.")}, status=405)
+
+        try:
+            payload = json.loads(request.body.decode("utf-8") or "{}")
+        except (TypeError, ValueError, UnicodeDecodeError):
+            payload = request.POST.dict()
+
+        date_raw = (payload.get("date") or "").strip()
+        try:
+            day = datetime.strptime(date_raw, "%Y-%m-%d").date()
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": _("Neplatné datum.")}, status=400)
+
+        predp_raw = payload.get("predpokladany_id")
+        if predp_raw not in (None, ""):
+            try:
+                predp_id = int(predp_raw)
+            except (TypeError, ValueError):
+                return JsonResponse({"ok": False, "error": _("Neplatný slot.")}, status=400)
+            deleted, _ = PredpokladanySlot.objects.filter(pk=predp_id, datum=day).delete()
+            if not deleted:
+                return JsonResponse({"ok": False, "error": _("Slot nenalezen.")}, status=404)
+            return JsonResponse({"ok": True, "date": day.isoformat(), "predpokladany_id": predp_id})
+
+        try:
+            slot_id = int(payload.get("staly_slot_id") or payload.get("ghost_slot_id"))
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": _("Neplatný slot.")}, status=400)
+
+        slot = StalyRozvrhSlot.objects.filter(pk=slot_id).first()
+        if not slot:
+            return JsonResponse({"ok": False, "error": _("Slot nenalezen.")}, status=404)
+
+        PredpokladanySkip.objects.get_or_create(datum=day, staly_slot=slot)
+        return JsonResponse({"ok": True, "date": day.isoformat(), "staly_slot_id": slot_id})
+
+    def schedule_staly_save_view(self, request):
+        """AJAX: vytvořit / upravit slot stálého rozvrhu (bez zápisu tréninku/vyúčtování)."""
+        if request.method != "POST":
+            return JsonResponse({"ok": False, "error": _("Method not allowed.")}, status=405)
+
+        try:
+            payload = json.loads(request.body.decode("utf-8") or "{}")
+        except (TypeError, ValueError, UnicodeDecodeError):
+            payload = request.POST.dict()
+
+        slot_id = payload.get("id")
+        move_only = bool(payload.get("move_only"))
+
+        # Přesun: jen den + čas, ostatní zůstane v DB
+        if move_only and slot_id not in (None, "", "null"):
+            try:
+                slot = StalyRozvrhSlot.objects.filter(pk=int(slot_id)).first()
+            except (TypeError, ValueError):
+                slot = None
+            if slot is None:
+                return JsonResponse({"ok": False, "error": _("Slot nenalezen.")}, status=404)
+            try:
+                dow = int(payload.get("dow"))
+            except (TypeError, ValueError):
+                return JsonResponse({"ok": False, "error": _("Neplatný den.")}, status=400)
+            if dow < 0 or dow > 6:
+                return JsonResponse({"ok": False, "error": _("Neplatný den.")}, status=400)
+            time_raw = (payload.get("time") or "").strip()
+            cas = None
+            for time_fmt in ("%H:%M", "%H:%M:%S"):
+                try:
+                    cas = datetime.strptime(time_raw, time_fmt).time()
+                    break
+                except (TypeError, ValueError):
+                    continue
+            if cas is None:
+                return JsonResponse({"ok": False, "error": _("Neplatný čas.")}, status=400)
+            slot.den = dow
+            slot.cas_od = cas
+            slot.save(update_fields=["den", "cas_od"])
+            return JsonResponse(self._staly_slot_json(slot))
+
+        try:
+            dow = int(payload.get("dow"))
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": _("Neplatný den.")}, status=400)
+        if dow < 0 or dow > 6:
+            return JsonResponse({"ok": False, "error": _("Neplatný den.")}, status=400)
+
+        time_raw = (payload.get("time") or "").strip()
+        cas = None
+        for time_fmt in ("%H:%M", "%H:%M:%S"):
+            try:
+                cas = datetime.strptime(time_raw, time_fmt).time()
+                break
+            except (TypeError, ValueError):
+                continue
+        if cas is None:
+            return JsonResponse({"ok": False, "error": _("Neplatný čas.")}, status=400)
+
+        try:
+            delka = int(payload.get("delka_minut") or 60)
+        except (TypeError, ValueError):
+            delka = 60
+        if delka not in {c[0] for c in SystemNastaveni.DELKA_MINUT_CHOICES}:
+            if delka < 15 or delka > 300:
+                return JsonResponse({"ok": False, "error": _("Neplatná délka.")}, status=400)
+
+        trener_raw = payload.get("trener")
+        try:
+            trener = User.objects.filter(pk=int(trener_raw)).first()
+        except (TypeError, ValueError):
+            trener = None
+        if trener is None:
+            return JsonResponse({"ok": False, "error": _("Vyberte trenéra.")}, status=400)
+
+        fmt = (payload.get("format") or "").strip()
+        valid_formats = {c[0] for c in CenikFormat.choices() if c[0]}
+        if fmt not in valid_formats:
+            return JsonResponse({"ok": False, "error": _("Vyberte typ tréninku.")}, status=400)
+
+        kurt = (payload.get("kurt") or "").strip()
+        valid_kurty = {c[0] for c in Cenik.Kurt.choices if c[0]}
+        if kurt not in valid_kurty:
+            return JsonResponse({"ok": False, "error": _("Vyberte kurt.")}, status=400)
+
+        poznamka = (payload.get("poznamka") or "").strip()[:240]
+        hraci_raw = payload.get("hraci") or []
+        if isinstance(hraci_raw, str):
+            hraci_raw = [x for x in hraci_raw.split(",") if x.strip()]
+        hrac_ids = []
+        for raw in hraci_raw:
+            try:
+                hrac_ids.append(int(raw))
+            except (TypeError, ValueError):
+                continue
+        hraci = list(Hrac.objects.filter(pk__in=hrac_ids)) if hrac_ids else []
+
+        slot = None
+        if slot_id not in (None, "", "null"):
+            try:
+                slot = StalyRozvrhSlot.objects.filter(pk=int(slot_id)).first()
+            except (TypeError, ValueError):
+                slot = None
+            if slot is None:
+                return JsonResponse({"ok": False, "error": _("Slot nenalezen.")}, status=404)
+
+        if slot is None:
+            slot = StalyRozvrhSlot()
+
+        slot.den = dow
+        slot.cas_od = cas
+        slot.delka_minut = delka
+        slot.trener = trener
+        slot.format = fmt
+        slot.kurt = kurt
+        slot.poznamka = poznamka
+        slot.save()
+        slot.hraci.set(hraci)
+
+        return JsonResponse(self._staly_slot_json(slot))
+
+    def _staly_slot_json(self, slot: StalyRozvrhSlot) -> dict:
+        dur = int(slot.delka_minut or 60)
+        end_t = (datetime.combine(date.min, slot.cas_od) + timedelta(minutes=dur)).time()
+        fmt_label = slot.get_format_display()
+        players = []
+        player_ids = []
+        for hrac in slot.hraci.all():
+            label = (hrac.prijmeni or "").strip() or (hrac.jmeno or "").strip() or hrac.cele_jmeno
+            players.append(label)
+            player_ids.append(hrac.pk)
+        return {
+            "ok": True,
+            "id": slot.pk,
+            "dow": int(slot.den),
+            "time": slot.cas_od.strftime("%H:%M"),
+            "delka_minut": dur,
+            "trener": slot.trener_id or "",
+            "format": slot.format or "",
+            "kurt": slot.kurt or "",
+            "poznamka": slot.poznamka or "",
+            "hraci": player_ids,
+            "title": ", ".join(players) or fmt_label or "—",
+            "sub": f"{slot.cas_od.strftime('%H:%M')}–{end_t.strftime('%H:%M')}",
+            "names": players,
+            "fmt_label": fmt_label,
+        }
+
+    def schedule_staly_delete_view(self, request, slot_id: int):
+        """AJAX: smazat slot stálého rozvrhu."""
+        if request.method != "POST":
+            return JsonResponse({"ok": False, "error": _("Method not allowed.")}, status=405)
+        deleted, _ = StalyRozvrhSlot.objects.filter(pk=slot_id).delete()
+        if not deleted:
+            return JsonResponse({"ok": False, "error": _("Slot nenalezen.")}, status=404)
+        return JsonResponse({"ok": True, "id": slot_id})
+
+    def schedule_quick_add_view(self, request):
+        """AJAX: rychlé přidání tréninku z rozvrhu (bez odchodu z kalendáře)."""
+        if request.method != "POST":
+            return JsonResponse({"ok": False, "error": _("Method not allowed.")}, status=405)
+
+        try:
+            payload = json.loads(request.body.decode("utf-8") or "{}")
+        except (TypeError, ValueError, UnicodeDecodeError):
+            payload = request.POST.dict()
+
+        date_raw = (payload.get("date") or "").strip()
+        time_raw = (payload.get("time") or "").strip()
+        trener_raw = payload.get("trener")
+        delka_raw = payload.get("delka_minut", 60)
+        fmt = (payload.get("format") or "").strip()
+        kurt = (payload.get("kurt") or "").strip()
+        poznamka = (payload.get("poznamka") or "").strip()[:240]
+        hraci_raw = payload.get("hraci") or []
+
+        try:
+            day = datetime.strptime(date_raw, "%Y-%m-%d").date()
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": _("Neplatné datum.")}, status=400)
+
+        cas = None
+        for time_fmt in ("%H:%M", "%H:%M:%S"):
+            try:
+                cas = datetime.strptime(time_raw, time_fmt).time()
+                break
+            except (TypeError, ValueError):
+                continue
+        if cas is None:
+            return JsonResponse({"ok": False, "error": _("Neplatný čas.")}, status=400)
+
+        try:
+            trener = User.objects.get(pk=int(trener_raw))
+        except (TypeError, ValueError, User.DoesNotExist):
+            return JsonResponse({"ok": False, "error": _("Vyberte trenéra.")}, status=400)
+
+        try:
+            delka = int(delka_raw)
+        except (TypeError, ValueError):
+            delka = 60
+        allowed_delka = {c[0] for c in SystemNastaveni.DELKA_MINUT_CHOICES}
+        if delka not in allowed_delka:
+            delka = 60
+
+        defaults = SystemNastaveni.training_defaults(for_date=day, user=request.user)
+        if not fmt:
+            return JsonResponse({"ok": False, "error": _("Vyberte typ tréninku.")}, status=400)
+        if not kurt:
+            kurt = (defaults.get("kurt") or "").strip()
+        if not kurt:
+            return JsonResponse({"ok": False, "error": _("Vyberte kurt.")}, status=400)
+        if Cenik.je_sluzba(fmt, kurt):
+            kurt = Cenik.Kurt.SLUZBA
+            delka = 60
+
+        hrac_ids = []
+        if isinstance(hraci_raw, str):
+            hraci_raw = [x for x in hraci_raw.split(",") if x.strip()]
+        for item in hraci_raw:
+            try:
+                hrac_ids.append(int(item))
+            except (TypeError, ValueError):
+                continue
+        hraci = list(Hrac.objects.filter(pk__in=hrac_ids))
+
+        as_projected = bool(
+            payload.get("as_projected")
+            or (payload.get("mode") or "").strip() == "predpokladany"
+        )
+        today = dj_tz.localdate()
+        save_as_ghost = as_projected and day >= today
+
+        def _slug(s: str) -> str:
+            s = (s or "").strip().lower()
+            repl = (("á", "a"), ("č", "c"), ("ď", "d"), ("é", "e"), ("ě", "e"), ("í", "i"),
+                    ("ň", "n"), ("ó", "o"), ("ř", "r"), ("š", "s"), ("ť", "t"), ("ú", "u"),
+                    ("ů", "u"), ("ý", "y"), ("ž", "z"))
+            for a, b in repl:
+                s = s.replace(a, b)
+            s = re.sub(r"[^a-z0-9]+", "-", s).strip("-")
+            if not s or not s[0].isalpha():
+                s = f"f-{s or 'neznamy'}"
+            return s
+
+        try:
+            hours = SystemNastaveni.load().schedule_hours()
+        except Exception:
+            hours = list(range(6, 23))
+        day_start_min = (hours[0] if hours else 6) * 60
+        start_min = cas.hour * 60 + cas.minute
+        offset = max(0, start_min - day_start_min)
+
+        names = []
+        for h in hraci:
+            label = (h.prijmeni or "").strip() or (h.jmeno or "").strip() or h.cele_jmeno
+            names.append(label)
+
+        if save_as_ghost:
+            predp_id = payload.get("predpokladany_id")
+            ghost_staly_raw = payload.get("ghost_slot_id") or payload.get("staly_slot_id")
+            zdroj_staly = None
+            if ghost_staly_raw not in (None, ""):
+                try:
+                    zdroj_staly = StalyRozvrhSlot.objects.filter(pk=int(ghost_staly_raw)).first()
+                except (TypeError, ValueError):
+                    zdroj_staly = None
+
+            with transaction.atomic():
+                slot = None
+                if predp_id not in (None, ""):
+                    try:
+                        slot = PredpokladanySlot.objects.filter(pk=int(predp_id)).first()
+                    except (TypeError, ValueError):
+                        slot = None
+                if slot is None:
+                    slot = PredpokladanySlot(datum=day)
+                slot.datum = day
+                slot.cas_od = cas
+                slot.delka_minut = delka
+                slot.trener = trener
+                slot.format = fmt
+                slot.kurt = kurt
+                slot.poznamka = poznamka
+                if zdroj_staly and not slot.zdroj_staly_id:
+                    slot.zdroj_staly = zdroj_staly
+                slot.save()
+                slot.hraci.set(hraci)
+                if zdroj_staly:
+                    PredpokladanySkip.objects.get_or_create(datum=day, staly_slot=zdroj_staly)
+
+            end_t = (datetime.combine(date.min, cas) + timedelta(minutes=delka)).time()
+            fmt_label = slot.get_format_display()
+            fmt_slug = _slug(fmt_label)
+            fmt_code = (slot.format or "").lower().replace("_", "-")
+            sub = f"{cas.strftime('%H:%M')}–{end_t.strftime('%H:%M')}"
+            title = ", ".join(names) or "—"
+            return JsonResponse(
+                {
+                    "ok": True,
+                    "projected": True,
+                    "id": f"predp-{slot.pk}",
+                    "predpokladany_id": slot.pk,
+                    "event": {
+                        "id": f"predp-{slot.pk}",
+                        "date": day.isoformat(),
+                        "offset_min": offset,
+                        "dur_min": delka,
+                        "names": names,
+                        "title": title,
+                        "sub": sub,
+                        "fmt": fmt_slug,
+                        "fmt_code": fmt_code,
+                        "fmt_label": fmt_label,
+                        "is_ghost": True,
+                        "predpokladany_id": slot.pk,
+                    },
+                }
+            )
+
+        dt = datetime.combine(day, cas)
+        if settings.USE_TZ:
+            dt = dj_tz.make_aware(dt, dj_tz.get_current_timezone())
+
+        obj_id = payload.get("id")
+        trening = None
+        if obj_id not in (None, "", "null"):
+            try:
+                trening = Trening.objects.filter(pk=int(obj_id)).first()
+            except (TypeError, ValueError):
+                trening = None
+            if trening is None:
+                return JsonResponse({"ok": False, "error": _("Trénink nenalezen.")}, status=404)
+
+        with transaction.atomic():
+            if trening is None:
+                trening = Trening.objects.create(
+                    trener=trener,
+                    datum=dt,
+                    delka_minut=delka,
+                    format=fmt,
+                    kurt=kurt,
+                    poznamka=poznamka,
+                )
+                for hrac in hraci:
+                    Dochazka.objects.create(trening=trening, hrac=hrac, prisel=True)
+            else:
+                trening.trener = trener
+                trening.datum = dt
+                trening.delka_minut = delka
+                trening.format = fmt
+                trening.kurt = kurt
+                trening.poznamka = poznamka
+                trening.save()
+                existing = {d.hrac_id: d for d in trening.dochazky.all()}
+                wanted = {h.pk for h in hraci}
+                for hrac_id, doch in list(existing.items()):
+                    if hrac_id not in wanted:
+                        doch.delete()
+                for hrac in hraci:
+                    if hrac.pk not in existing:
+                        Dochazka.objects.create(trening=trening, hrac=hrac, prisel=True)
+
+            # Úprava ghostu ze stálého v minulosti: přeskočit noční zápis stálého
+            ghost_staly_raw = payload.get("ghost_slot_id") or payload.get("staly_slot_id")
+            if ghost_staly_raw not in (None, ""):
+                try:
+                    staly = StalyRozvrhSlot.objects.filter(pk=int(ghost_staly_raw)).first()
+                    if staly:
+                        PredpokladanySkip.objects.get_or_create(datum=day, staly_slot=staly)
+                except (TypeError, ValueError):
+                    pass
+
+        local = dj_tz.localtime(trening.datum) if dj_tz.is_aware(trening.datum) else trening.datum
+        end_local = local + timedelta(minutes=int(trening.delka_minut))
+        fmt_label = trening.get_format_display()
+        fmt_slug = _slug(fmt_label)
+        fmt_code = (trening.format or "").lower().replace("_", "-")
+        sub = f"{local.strftime('%H:%M')}–{end_local.strftime('%H:%M')}"
+        title = ", ".join(names) or "—"
+
+        return JsonResponse(
+            {
+                "ok": True,
+                "id": trening.pk,
+                "change_url": reverse("admin:core_trening_change", args=[trening.pk]),
+                "event": {
+                    "id": trening.pk,
+                    "date": local.strftime("%Y-%m-%d"),
+                    "offset_min": offset,
+                    "dur_min": int(trening.delka_minut),
+                    "names": names,
+                    "title": title,
+                    "sub": sub,
+                    "fmt": fmt_slug,
+                    "fmt_code": fmt_code,
+                    "fmt_label": fmt_label,
+                    "trener_id": trening.trener_id or "",
+                    "format": trening.format or "",
+                    "kurt": trening.kurt or "",
+                    "poznamka": trening.poznamka or "",
+                    "hraci_ids": [h.pk for h in hraci],
+                    "time": local.strftime("%H:%M"),
+                },
+            }
+        )
+
+    def schedule_delete_view(self, request):
+        """AJAX: smazat trénink přímo z rozvrhu."""
+        if request.method != "POST":
+            return JsonResponse({"ok": False, "error": _("Method not allowed.")}, status=405)
+        try:
+            payload = json.loads(request.body.decode("utf-8") or "{}")
+        except (TypeError, ValueError, UnicodeDecodeError):
+            payload = request.POST.dict()
+        try:
+            obj_id = int(payload.get("id"))
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": _("Neplatný trénink.")}, status=400)
+        deleted, _ = Trening.objects.filter(pk=obj_id).delete()
+        if not deleted:
+            return JsonResponse({"ok": False, "error": _("Trénink nenalezen.")}, status=404)
+        return JsonResponse({"ok": True, "id": obj_id})
+
+    def schedule_move_view(self, request):
+        """AJAX: přesun existujícího tréninku v rozvrhu (den / čas)."""
+        if request.method != "POST":
+            return JsonResponse({"ok": False, "error": _("Method not allowed.")}, status=405)
+
+        try:
+            payload = json.loads(request.body.decode("utf-8") or "{}")
+        except (TypeError, ValueError, UnicodeDecodeError):
+            payload = request.POST.dict()
+
+        try:
+            trening_id = int(payload.get("id"))
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": _("Neplatný trénink.")}, status=400)
+
+        date_raw = (payload.get("date") or "").strip()
+        time_raw = (payload.get("time") or "").strip()
+
+        try:
+            day = datetime.strptime(date_raw, "%Y-%m-%d").date()
+        except (TypeError, ValueError):
+            return JsonResponse({"ok": False, "error": _("Neplatné datum.")}, status=400)
+
+        cas = None
+        for time_fmt in ("%H:%M", "%H:%M:%S"):
+            try:
+                cas = datetime.strptime(time_raw, time_fmt).time()
+                break
+            except (TypeError, ValueError):
+                continue
+        if cas is None:
+            return JsonResponse({"ok": False, "error": _("Neplatný čas.")}, status=400)
+
+        trening = Trening.objects.filter(pk=trening_id).first()
+        if not trening:
+            return JsonResponse({"ok": False, "error": _("Trénink nenalezen.")}, status=404)
+
+        dt = datetime.combine(day, cas)
+        if settings.USE_TZ:
+            dt = dj_tz.make_aware(dt, dj_tz.get_current_timezone())
+
+        trening.datum = dt
+        trening.save(update_fields=["datum"])
+
+        local = dj_tz.localtime(trening.datum) if dj_tz.is_aware(trening.datum) else trening.datum
+        end_local = local + timedelta(minutes=int(trening.delka_minut or 60))
+        sub = f"{local.strftime('%H:%M')}–{end_local.strftime('%H:%M')}"
+
+        return JsonResponse(
+            {
+                "ok": True,
+                "id": trening.pk,
+                "date": local.strftime("%Y-%m-%d"),
+                "sub": sub,
+                "offset_min": None,
+            }
+        )
+
     def treneri_summary_view(self, request):
+        if not self.has_module_permission(request):
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied
         dfrom, dto = _period_from_request(request)
+        search_q = (request.GET.get("q") or "").strip()
 
         base_qs = Trening.objects.all()
         if dfrom:
@@ -1213,12 +1482,28 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
         if dto:
             base_qs = base_qs.filter(datum__date__lte=dto)
 
+        # Admin / provozovatel → všichni; trenér / správce → jen sebe
+        if can_view_all_treneri(request.user):
+            trener_ids = _all_trener_ids()
+        else:
+            trener_ids = {request.user.pk}
         users = {
             u.id: u
-            for u in User.objects.filter(pk__in=_all_trener_ids()).order_by(
+            for u in User.objects.filter(pk__in=trener_ids).order_by(
                 "last_name", "first_name", "username"
             )
         }
+        if search_q:
+            needle = search_q.casefold()
+            users = {
+                uid: u
+                for uid, u in users.items()
+                if needle in trener_label(u).casefold()
+                or needle in (u.get_full_name() or "").casefold()
+                or needle in (u.username or "").casefold()
+                or needle in (u.first_name or "").casefold()
+                or needle in (u.last_name or "").casefold()
+            }
         rate_lookup = TrenerRateLookup(list(users.keys()))
 
         rows = []
@@ -1226,7 +1511,7 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
         total_hodiny = Decimal("0.00")
         total_castka = Decimal("0.00")
 
-        for uid in sorted(users.keys(), key=lambda i: trener_label(users[i]).lower()):
+        for uid in sorted(users.keys(), key=lambda i: trener_label(users[i]).casefold()):
             u = users[uid]
             tqs = list(
                 base_qs.filter(trener_id=uid).order_by("datum").prefetch_related(_dochazka_prefetch())
@@ -1236,12 +1521,14 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             total_hodiny += stats["hodiny_raw"]
             total_castka += stats["castka_raw"]
 
-            q = []
+            q_params = []
             if dfrom:
-                q.append(f"from={dfrom.isoformat()}")
+                q_params.append(("from", dfrom.isoformat()))
             if dto:
-                q.append(f"to={dto.isoformat()}")
-            detail_qs = ("?" + "&".join(q)) if q else ""
+                q_params.append(("to", dto.isoformat()))
+            if search_q:
+                q_params.append(("q", search_q))
+            detail_qs = ("?" + urlencode(q_params)) if q_params else ""
 
             rows.append({
                 "trener": trener_label(u),
@@ -1251,22 +1538,42 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
                 "castka": stats["castka"],
             })
 
+        from types import SimpleNamespace
+
+        cl = SimpleNamespace(
+            result_count=len(rows),
+            opts=SimpleNamespace(verbose_name_plural=_("Trenéři")),
+        )
         ctx = dict(
             self.admin_site.each_context(request),
             title=_("Trenéři – souhrn"),
             rows=rows,
             total_pocet=total_pocet,
             total_hodiny=f"{total_hodiny:.2f}",
-            total_castka=format_castka(total_castka),
-            dfrom=dfrom, dto=dto,
+            total_castka=f"{total_castka.quantize(Decimal('0.01'), rounding=ROUND_HALF_UP):.0f} Kč",
+            dfrom=dfrom,
+            dto=dto,
+            search_q=search_q,
             active_menu="treneri",
+            cl=cl,
         )
         return TemplateResponse(request, "admin/core/trening/treneri_summary.html", ctx)
 
     def trener_detail_view(self, request, user_id: int):
+        from django.core.exceptions import PermissionDenied
+
+        if not self.has_module_permission(request):
+            raise PermissionDenied
+        # Trenér / správce: cizí detail v seznamu není – přesměrovat na souhrn
+        if not can_view_all_treneri(request.user) and int(user_id) != request.user.pk:
+            return redirect(reverse("admin:core_treneri_summary"))
+
         u = User.objects.get(pk=user_id)
+        can_manage_sazby = can_view_all_treneri(request.user)
 
         if request.method == "POST" and "_nastavit_sazbu" in request.POST:
+            if not can_manage_sazby:
+                return redirect(request.get_full_path())
             date_raw = (request.POST.get("rate_from") or "").strip()
             amt_raw = (request.POST.get("rate_amount") or "").strip()
 
@@ -1287,16 +1594,40 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             try:
                 TrenerSazba.set_rate_from(user=u, effective_from=eff_from, rate=amount)
             except ValidationError as e:
-                messages.error(request, _g("Sazbu se nepodařilo nastavit: %(error)s") % {"error": e})
+                messages.error(request, f"Sazbu se nepodařilo nastavit: {e}")
             else:
                 messages.success(
                     request,
-                    _g("Sazba %(amount)s nastavena od %(date)s.")
-                    % {
-                        "amount": format_castka(amount, per_hour=True),
-                        "date": eff_from.strftime("%d.%m.%Y"),
-                    },
+                    f"Sazba {amount:.0f} Kč/h nastavena od {eff_from.strftime('%d.%m.%Y')}."
                 )
+            return redirect(request.get_full_path())
+
+        if request.method == "POST" and "_nastavit_vyplet" in request.POST:
+            if not can_manage_sazby:
+                return redirect(request.get_full_path())
+            amt_raw = (request.POST.get("vyplet_amount") or "").strip()
+            try:
+                amount = Decimal(amt_raw.replace(",", "."))
+                if amount < 0:
+                    raise ValueError()
+            except Exception:
+                messages.error(request, _("Neplatná částka sazby za výplet."))
+                return redirect(request.get_full_path())
+
+            profil, _created = TrenerProfil.objects.get_or_create(
+                user=u,
+                defaults={
+                    "sazba_za_hodinu": Decimal("500.00"),
+                    "sazba_za_vyplet": amount,
+                },
+            )
+            profil.sazba_za_vyplet = amount
+            profil.save(update_fields=["sazba_za_vyplet"])
+            messages.success(
+                request,
+                _("Sazba za výplet nastavena na %(amount)s Kč.")
+                % {"amount": f"{amount:.0f}"},
+            )
             return redirect(request.get_full_path())
 
         dfrom = _parse_admin_date(request.GET.get("from", ""))
@@ -1324,6 +1655,7 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
         rate_today_amount = f"{rate_today:.0f}"
         rate_today_date = dj_tz.localdate().strftime("%Y-%m-%d")
         rate_form_initial_date = rate_today_date
+        vyplet_amount = f"{rate_lookup.vyplet_for_user(u.id):.0f}"
 
         sazby = (
             TrenerSazba.objects.filter(user=u).order_by("-platnost_od")
@@ -1341,7 +1673,7 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             self.admin_site.each_context(request),
             title=_("Trenér – %(name)s") % {"name": trener_label(u)},
             trener=u,
-            trener_label=trener_label(u),
+            trener_display_name=trener_label(u),
             pocet=stats["pocet"],
             total_hours=f"{stats['hodiny']} h",
             total_castka=stats["castka"],
@@ -1355,7 +1687,9 @@ class TreningAdmin(ConfigurableListPerPageMixin, admin.ModelAdmin):
             rate_today_amount=rate_today_amount,
             rate_today_date=rate_today_date,
             rate_form_initial_date=rate_form_initial_date,
+            vyplet_amount=vyplet_amount,
             sazby=sazby,
+            can_manage_sazby=can_manage_sazby,
             summary_url=reverse("admin:core_treneri_summary"),
             dfrom=dfrom, dto=dto,
             active_menu="treneri",

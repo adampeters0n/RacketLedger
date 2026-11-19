@@ -33,8 +33,20 @@ document.addEventListener('DOMContentLoaded', function () {
         panel.classList.toggle('is-active', show);
         panel.hidden = !show;
       });
+      if (id && history.replaceState) {
+        history.replaceState(null, '', '#' + id);
+      }
     });
   });
+
+  function activatePanelFromHash() {
+    var hash = (location.hash || '').replace(/^#/, '');
+    if (!hash) return;
+    var tab = document.querySelector('.nast-sidebar-item[data-panel="' + hash + '"]');
+    if (tab) tab.click();
+  }
+  activatePanelFromHash();
+  window.addEventListener('hashchange', activatePanelFromHash);
 
   form.addEventListener('submit', function (event) {
     event.preventDefault();

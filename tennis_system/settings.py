@@ -5,6 +5,8 @@ Django settings for tennis_system project.
 from pathlib import Path
 import json
 import os
+import socket
+import sys
 from dotenv import load_dotenv
 
 # =====================================
@@ -34,6 +36,19 @@ SECRET_KEY = os.getenv(
 
 # DEBUG z env (výchozí True pro lokální vývoj)
 DEBUG = _get_bool("DEBUG", True)
+
+# Při `manage.py test` nespouštěj produkční deploy checky jako fatal
+# (testy je volají přímo s override_settings).
+if len(sys.argv) > 1 and sys.argv[1] == "test":
+    SILENCED_SYSTEM_CHECKS = [
+        "core.E001",
+        "core.E002",
+        "core.E003",
+        "core.E004",
+        "core.W001",
+        "core.W002",
+        "core.W003",
+    ]
 
 # Povolené hosty (z env, čárkami oddělené). Pro vývoj přidej localhost.
 _default_hosts = ["127.0.0.1", "localhost"]
@@ -65,6 +80,7 @@ INSTALLED_APPS = [
 
     # Lokální appky
     "core.apps.CoreConfig",
+    "axes",
 ]
 
 # =====================================
@@ -81,6 +97,8 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "axes.middleware.AxesMiddleware",
+    "core.middleware.BillingGateMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -151,9 +169,20 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
     "core.auth_backends.EmailOrUsernameModelBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
+
+# Rate-limit přihlášení / brute-force (django-axes)
+AXES_ENABLED = _get_bool("AXES_ENABLED", True)
+AXES_FAILURE_LIMIT = int(os.getenv("AXES_FAILURE_LIMIT", "5"))
+AXES_COOLOFF_TIME = float(os.getenv("AXES_COOLOFF_TIME", "1"))  # hodiny
+AXES_RESET_ON_SUCCESS = True
+AXES_LOCKOUT_PARAMETERS = [["username", "ip_address"]]
+AXES_USERNAME_FORM_FIELD = "username"
+# Sleduj i password reset POST (stejný username/email field „email“ — Axes default login only).
+# Login admin form field = username (email-or-username).
 
 # =====================================
 # LOKALIZACE
@@ -178,16 +207,71 @@ STATICFILES_DIRS = [BASE_DIR / "static"]        # tvé zdrojové statické soubo
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# Django 5+: STORAGES – WhiteNoise s manifestem v produkci
-if not DEBUG:
-    STORAGES = {
-        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-        "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
-        },
-    }
+# S3 / R2 / MinIO pro uploady (logo, favicon) — doporučeno při DEBUG=False
+USE_S3 = _get_bool("USE_S3", False)
+if USE_S3:
+    AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "")
+    AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "")
+    AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME", "")
+    AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "") or None
+    AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL", "") or None
+    AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN", "") or None
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = _get_bool("AWS_QUERYSTRING_AUTH", False)
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
+
+_default_storage = (
+    {"BACKEND": "storages.backends.s3.S3Storage"}
+    if USE_S3
+    else {"BACKEND": "django.core.files.storage.FileSystemStorage"}
+)
+_static_storage = (
+    {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"}
+    if not DEBUG
+    else {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}
+)
+STORAGES = {
+    "default": _default_storage,
+    "staticfiles": _static_storage,
+}
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# =====================================
+# INSTANCE / OBSERVABILITY
+# =====================================
+INSTANCE_NAME = (os.getenv("INSTANCE_NAME") or "").strip() or socket.gethostname()
+
+# =====================================
+# SENTRY (volitelné)
+# =====================================
+SENTRY_DSN = (os.getenv("SENTRY_DSN") or "").strip()
+if SENTRY_DSN:
+    import sentry_sdk
+
+    try:
+        _sentry_traces = float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.0") or "0.0")
+    except ValueError:
+        _sentry_traces = 0.0
+
+    _sentry_release = (
+        (os.getenv("SENTRY_RELEASE") or "").strip()
+        or (os.getenv("GIT_COMMIT") or "").strip()
+        or (os.getenv("RENDER_GIT_COMMIT") or "").strip()
+        or (os.getenv("SOURCE_VERSION") or "").strip()  # Heroku
+        or None
+    )
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        send_default_pii=False,
+        traces_sample_rate=max(0.0, min(1.0, _sentry_traces)),
+        environment=os.getenv("SENTRY_ENVIRONMENT", "production" if not DEBUG else "development"),
+        release=_sentry_release,
+        server_name=INSTANCE_NAME,
+    )
+    sentry_sdk.set_tag("instance", INSTANCE_NAME)
 
 # =====================================
 # E-MAIL (SMTP) – výchozí 465/SSL
@@ -270,13 +354,51 @@ TENNIS_SCHOOLS = _get_tennis_schools()
 CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "info@tenissystem.cz")
 
 # =====================================
-# LOGGING (stručný základ, ať vidíš chyby v produkci)
+# PŘEDPLATNÉ ZA SOFTWARE (Stripe) — 1 Customer ↔ 1 instance
+# =====================================
+BILLING_ACTIVE = _get_bool("BILLING_ACTIVE", True)
+# Když True a Checkout je nastavený: bez aktivního předplatného je instance zamčená.
+STRIPE_REQUIRE_SUBSCRIPTION = _get_bool("STRIPE_REQUIRE_SUBSCRIPTION", False)
+STRIPE_SECRET_KEY = (os.getenv("STRIPE_SECRET_KEY") or "").strip()
+STRIPE_WEBHOOK_SECRET = (os.getenv("STRIPE_WEBHOOK_SECRET") or "").strip()
+STRIPE_PRICE_ID = (os.getenv("STRIPE_PRICE_ID") or "").strip()
+# Volitelný seed customer (starší ruční napojení); Checkout/webhook ukládá do DB.
+STRIPE_CUSTOMER_ID = (os.getenv("STRIPE_CUSTOMER_ID") or "").strip()
+# Online platby hráčů (Stripe Connect) — oddělené od SaaS předplatného
+STRIPE_PLAYER_CURRENCY = (os.getenv("STRIPE_PLAYER_CURRENCY") or "czk").strip().lower()
+STRIPE_CONNECT_COUNTRY = (os.getenv("STRIPE_CONNECT_COUNTRY") or "CZ").strip().upper()
+# Jen sandbox: přeskočí Connect KYC a Checkout jde na platformní účet (bez destination).
+STRIPE_CONNECT_TEST_BYPASS = (os.getenv("STRIPE_CONNECT_TEST_BYPASS") or "").strip().lower() in (
+    "1",
+    "true",
+    "yes",
+    "on",
+)
+# Veřejná báze URL instance (Checkout success/cancel, odkazy v e-mailech)
+PUBLIC_BASE_URL = (os.getenv("PUBLIC_BASE_URL") or "").strip().rstrip("/")
+
+# =====================================
+# LOGGING (stručný základ + instance tag)
 # =====================================
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "filters": {
+        "instance_context": {
+            "()": "core.logging_filters.InstanceContextFilter",
+        },
+    },
+    "formatters": {
+        "structured": {
+            "format": "%(asctime)s %(levelname)s instance=%(instance)s %(name)s %(message)s",
+        },
+    },
     "handlers": {
-        "console": {"class": "logging.StreamHandler"},
+        "console": {
+            "class": "logging.StreamHandler",
+            "filters": ["instance_context"],
+            "formatter": "structured",
+        },
     },
     "root": {
         "handlers": ["console"],

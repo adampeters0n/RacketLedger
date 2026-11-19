@@ -1,10 +1,6 @@
-from core.money import format_castka
 """Admin inlines."""
-from decimal import Decimal
-
 from django import forms
 from django.contrib import admin
-from django.utils import timezone as dj_tz
 from django.utils.translation import gettext_lazy as _
 
 from ..forms import DochazkaFormSet, DochazkaInlineForm
@@ -16,12 +12,13 @@ class DochazkaInline(admin.TabularInline):
     form = DochazkaInlineForm
     formset = DochazkaFormSet
     extra = 0
-    verbose_name = _("Docházka")
-    verbose_name_plural = _("Hráči")
+    verbose_name = "Docházka"
+    verbose_name_plural = "Hráči"
     autocomplete_fields = ("hrac",)
     
-    fields = ("hrac", "cena_preview", "castka_nauc_display", "nauceno_kdy_display")
-    readonly_fields = ("cena_preview", "castka_nauc_display", "nauceno_kdy_display")
+    # Jen hráči (bez ceny / naúčtováno) – stejně jako Přidat trénink
+    fields = ("hrac",)
+    readonly_fields = ()
     exclude = ("prisel",)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
@@ -49,20 +46,3 @@ class DochazkaInline(admin.TabularInline):
         if "hrac" in form.base_fields:
             form.base_fields["hrac"].label = _("Hráč")
         return formset
-
-    @admin.display(description=_("Cena"))
-    def cena_preview(self, obj):
-        tr = obj.trening if getattr(obj, "trening_id", None) else getattr(self, "parent_obj", None)
-        return format_castka(tr.cena_na_hrace()) if tr else "—"
-
-    @admin.display(description=_("Naúčtováno"))
-    def castka_nauc_display(self, obj):
-        val = getattr(obj, "castka_nauc", None)
-        return format_castka(val) if val is not None else "—"
-
-    @admin.display(description=_("Kdy naúčtováno"))
-    def nauceno_kdy_display(self, obj):
-        dt = getattr(obj, "nauceno_kdy", None)
-        if not dt: return "—"
-        if dj_tz.is_aware(dt): dt = dj_tz.localtime(dt)
-        return dt.strftime("%d.%m.%Y %H:%M")

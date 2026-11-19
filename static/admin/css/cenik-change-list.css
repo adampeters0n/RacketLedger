@@ -1,0 +1,1701 @@
+/*
+  Changelist design – Manage-Products-like layout (shared by all admin lists; sourced from Ceník).
+*/
+
+body.change-list {
+  /* Boční okraje: na širokém monitoru nerostou do nekonečna */
+  --page-pad: clamp(24px, 3vw, 48px);
+
+  --cenik-type-muted: #6b7280;
+  --cenik-type-soft: #4b5563;
+
+  --ts-cl-gap-y: 16px;
+  --ts-ctl-h: 40px;
+  --ts-ctl-radius: 12px;
+  /* Přebít globální pill (999px) z changelist-global */
+  --cenik-ctl-radius: 12px;
+  --cenik-ctl-h: 40px;
+  --ts-ctl-border: var(--line, #e2e5ea);
+  --ts-ctl-border-strong: #111;
+  --ts-ctl-bg: #fff;
+  --ts-ctl-muted: var(--muted, #64748b);
+
+  --ts-chip-h: 32px;
+  --ts-chip-radius: 999px;
+  --ts-chip-idle-bg: #f3f4f6;
+  --ts-chip-idle-fg: #374151;
+  --ts-chip-idle-hover: #e5e7eb;
+  /* Aktivní filtr = stejný tón jako idle (bez tmavé/barevné výplně) */
+  --ts-chip-active-bg: #f3f4f6;
+  --ts-chip-active-fg: #374151;
+  --ts-chip-option-hover: #f3f4f6;
+  --ts-chip-option-selected: #eef0f3;
+
+  --ts-row-h: 52px;
+  --ts-cell-pad-x: 14px;
+  --ts-cell-pad-y: 14px;
+  --ts-head-size: 14px;
+  --ts-head-weight: 600;
+  /* Stejná černá jako text v datech (Položka / Hráč / Datum…) */
+  --ts-head-color: #111827;
+  --ts-body-size: 14px;
+  --ts-divider: var(--line, #e2e5ea);
+  --ts-table-radius: 12px;
+  --ts-table-bg: #fff;
+  --ts-row-hover: var(--table-row-hover, #fbfcfd);
+
+  /* Override global control tokens for this page */
+  --cenik-ctl-h: var(--ts-ctl-h);
+  --cenik-ctl-w: min(420px, 100%);
+  --cenik-ctl-radius: var(--ts-ctl-radius);
+  --cenik-ctl-border: var(--ts-ctl-border);
+  --cenik-row-h: var(--ts-row-h);
+  --cenik-cell-pad-x: var(--ts-cell-pad-x);
+  --cenik-cell-pad-y: var(--ts-cell-pad-y);
+  --cenik-row-font-size: var(--ts-body-size);
+  --cenik-head-border: var(--ts-divider);
+  --cenik-row-line-inset: 0px;
+}
+
+/* Obsah může využít šířku obrazovky (jen s mírným page-pad) */
+body.change-list #content,
+body.change-list .ts-cl-foot {
+  max-width: none !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/*
+  Page head všude:
+    SEZNAM
+    Ceník ........................ [+ Přidat ceník]
+    ——
+*/
+body.change-list .ts-page-head--cenik,
+body.change-list #content > .ts-page-head,
+body.change-list .ts-page-head {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  grid-template-areas:
+    "eyebrow ."
+    "title actions"
+    "rule ." !important;
+  align-items: center !important;
+  column-gap: 16px !important;
+  row-gap: 6px !important;
+  margin: 4px 0 20px 0 !important;
+  padding-top: 10px !important;
+  width: 100% !important;
+}
+
+body.change-list .ts-page-head__text {
+  display: contents !important;
+}
+
+body.change-list .ts-page-head__eyebrow {
+  grid-area: eyebrow !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+  color: var(--ts-ctl-muted, #64748b) !important;
+  line-height: 1.2 !important;
+}
+
+body.change-list .ts-page-head__title-row {
+  display: contents !important;
+}
+
+body.change-list .ts-page-head__title {
+  grid-area: title !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: clamp(1.65rem, 1.25rem + 1vw, 2.05rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 34px !important;
+  min-height: 34px !important;
+  color: var(--text-strong, #111) !important;
+}
+
+body.change-list .ts-page-head__rule {
+  grid-area: rule !important;
+  display: block !important;
+  width: 2rem !important;
+  max-width: 2rem !important;
+  height: 2px !important;
+  margin: 2px 0 0 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 2px !important;
+  background: var(--brand, #e67817) !important;
+}
+
+body.change-list #content > .ts-page-head > .object-tools,
+body.change-list #content > .ts-page-head .object-tools,
+body.change-list .ts-page-head .object-tools.ts-cl-head-actions {
+  grid-area: actions !important;
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  flex-flow: row nowrap !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+  width: auto !important;
+  max-width: none !important;
+  height: auto !important;
+}
+
+body.change-list #content > .ts-page-head .object-tools li {
+  display: flex !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  float: none !important;
+}
+
+/* Button už není v toolbaru – search zůstane sám */
+body.change-list #changelist .ts-cl-toolbar .object-tools,
+body.change-list #changelist .ts-cl-toolbar__actions {
+  display: none !important;
+}
+
+/*
+  Head buttony (+ Přidat / Rodiny…) = globální pill z ts-buttons.css.
+  Explicitní selektory tady drží stejný look i když page CSS soutěží.
+*/
+body.change-list #content > .ts-page-head .object-tools a,
+body.change-list #content > .ts-page-head .object-tools li a,
+body.change-list #content > .ts-page-head .object-tools a.addlink,
+body.change-list #content > .ts-page-head .object-tools a.viewsitelink,
+body.change-list #content > .ts-page-head .object-tools .ts-cl-btn,
+body.change-list #content .ts-page-head .object-tools.ts-cl-head-actions a,
+body.change-list #content .ts-page-head .object-tools.ts-cl-head-actions a.addlink,
+body.change-list #content .ts-page-head .object-tools.ts-cl-head-actions .ts-cl-btn,
+body.change-list #changelist .object-tools a.addlink {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  min-height: var(--ts-btn-h, 34px) !important;
+  height: var(--ts-btn-h, 34px) !important;
+  max-height: var(--ts-btn-h, 34px) !important;
+  margin: 0 !important;
+  padding: 0 var(--ts-btn-pad-x, 13px) !important;
+  border-radius: var(--ts-btn-radius, 999px) !important;
+  border: 1px solid var(--ts-btn-border, color-mix(in srgb, var(--line, #e5e7eb) 82%, transparent)) !important;
+  background: var(--ts-btn-bg, #fff) !important;
+  background-color: var(--ts-btn-bg, #fff) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  color: var(--ts-btn-fg, var(--text-strong, #111827)) !important;
+  -webkit-text-fill-color: var(--ts-btn-fg, var(--text-strong, #111827)) !important;
+  font-family: inherit !important;
+  font-size: var(--ts-btn-font, 12px) !important;
+  font-weight: var(--ts-btn-weight, 650) !important;
+  letter-spacing: var(--ts-btn-tracking, 0.01em) !important;
+  text-transform: none !important;
+  text-decoration: none !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+}
+
+body.change-list #content > .ts-page-head .object-tools a:hover,
+body.change-list #content > .ts-page-head .object-tools a:focus-visible,
+body.change-list #content > .ts-page-head .object-tools a.addlink:hover,
+body.change-list #content > .ts-page-head .object-tools a.viewsitelink:hover,
+body.change-list #content .ts-page-head .object-tools.ts-cl-head-actions a:hover,
+body.change-list #content .ts-page-head .object-tools.ts-cl-head-actions a.addlink:hover {
+  background: var(--ts-btn-bg-hover, var(--brand-100, #fff4e8)) !important;
+  background-color: var(--ts-btn-bg-hover, var(--brand-100, #fff4e8)) !important;
+  border-color: var(--ts-btn-border-hover, color-mix(in srgb, var(--brand, #e67817) 18%, transparent)) !important;
+  color: var(--ts-btn-fg, var(--text-strong, #111827)) !important;
+  -webkit-text-fill-color: var(--ts-btn-fg, var(--text-strong, #111827)) !important;
+  filter: none !important;
+  transform: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Search: soft radius vždy (i před JS wrapem do .ts-cl-toolbar) */
+body.change-list #changelist #searchbar,
+body.change-list #changelist #changelist-search input[type="text"] {
+  border-radius: 12px !important;
+  border: 1px solid var(--ts-ctl-border, #e2e5ea) !important;
+  background: var(--ts-ctl-bg, #fff) !important;
+  color: var(--text-strong, #111) !important;
+  box-shadow: none !important;
+}
+
+/* „2 výsledky (Celkem 21)“ u search baru – schovat */
+body.change-list #changelist-search .small.quiet {
+  display: none !important;
+}
+
+/* Sidebar filtr schovat hned (chip bar postaví JS) – žádný záblesk starého panelu */
+body.change-list #changelist-filter {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+/* ── Layout grid ── */
+body.change-list #changelist .changelist-form-container.cenik-layout,
+body.change-list #changelist .changelist-form-container.ts-cl-layout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-areas:
+    "toolbar"
+    "filters"
+    "table"
+    "pager" !important;
+  row-gap: var(--ts-cl-gap-y) !important;
+  column-gap: 0 !important;
+  align-items: stretch !important;
+  justify-items: stretch !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+}
+
+body.change-list #changelist .cenik-layout.cenik-has-selection {
+  grid-template-areas:
+    "toolbar"
+    "filters"
+    "selected"
+    "table"
+    "pager" !important;
+}
+
+body.change-list #changelist.filtered {
+  display: block !important;
+  min-height: 0 !important;
+}
+
+body.change-list #changelist-filter {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: -1px !important;
+}
+
+/* ── Toolbar: jen search (button je u nadpisu) ── */
+body.change-list #changelist .ts-cl-toolbar {
+  --ts-ctl-h: clamp(32px, 2.2vw + 22px, 40px);
+
+  grid-area: toolbar !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 420px) !important;
+  grid-template-rows: var(--ts-ctl-h) !important;
+  justify-content: start !important;
+  align-items: stretch !important;
+  column-gap: 0 !important;
+  row-gap: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: var(--ts-ctl-h) !important;
+  min-height: var(--ts-ctl-h) !important;
+  max-height: var(--ts-ctl-h) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+/* Search = levý sloupec, přesně stejná výška jako toolbar */
+body.change-list #changelist .ts-cl-toolbar .cenik-field,
+body.change-list #changelist .ts-cl-toolbar .cenik-field--search,
+body.change-list #changelist .ts-cl-toolbar .cenik-field.ts-cl-toolbar__search,
+body.change-list #changelist .ts-cl-toolbar__search {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  grid-area: auto !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: stretch !important;
+  align-self: stretch !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
+
+body.change-list #changelist .ts-cl-toolbar .cenik-field__label {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+}
+
+body.change-list #changelist .ts-cl-toolbar #toolbar,
+body.change-list #changelist .ts-cl-toolbar #changelist-search,
+body.change-list #changelist .ts-cl-toolbar #changelist-search > div {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+  position: relative !important;
+  border-radius: var(--ts-ctl-radius) !important;
+}
+
+body.change-list #changelist .ts-cl-toolbar #changelist-search #searchbar,
+body.change-list #changelist .ts-cl-toolbar #changelist-search input[type="text"],
+body.change-list #changelist .ts-cl-toolbar #searchbar {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  flex: none !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 0 clamp(10px, 1.2vw, 16px) 0 clamp(32px, 3vw, 40px) !important;
+  border-radius: var(--ts-ctl-radius) !important;
+  border: 1px solid var(--ts-ctl-border) !important;
+  background: var(--ts-ctl-bg) !important;
+  color: var(--text-strong, #111) !important;
+  font-size: clamp(12px, 0.35vw + 11px, 14px) !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1 !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+  vertical-align: middle !important;
+  transition: box-shadow 0.12s ease !important;
+}
+
+body.change-list #changelist .ts-cl-toolbar #changelist-search #searchbar::placeholder,
+body.change-list #changelist .ts-cl-toolbar #changelist-search input[type="text"]::placeholder {
+  color: var(--ts-ctl-muted) !important;
+  font-weight: 500 !important;
+  opacity: 1 !important;
+}
+
+/* Hover/focus: stejné jako + Přidat ceník – barva+border stejné, jen stín */
+body.change-list #changelist .ts-cl-toolbar #changelist-search #searchbar:hover,
+body.change-list #changelist .ts-cl-toolbar #changelist-search input[type="text"]:hover,
+body.change-list #changelist .ts-cl-toolbar #changelist-search #searchbar:focus,
+body.change-list #changelist .ts-cl-toolbar #changelist-search input[type="text"]:focus,
+body.change-list #changelist .ts-cl-toolbar #changelist-search #searchbar:focus-visible,
+body.change-list #changelist .ts-cl-toolbar #changelist-search input[type="text"]:focus-visible,
+body.change-list #changelist .cenik-field--search #changelist-search #searchbar:hover,
+body.change-list #changelist .cenik-field--search #changelist-search input[type="text"]:hover,
+body.change-list #changelist .cenik-field--search #changelist-search #searchbar:focus,
+body.change-list #changelist .cenik-field--search #changelist-search input[type="text"]:focus,
+body.change-list #changelist .cenik-field--search #changelist-search #searchbar:focus-visible,
+body.change-list #changelist .cenik-field--search #changelist-search input[type="text"]:focus-visible,
+body.change-list #changelist #changelist-search #searchbar:hover,
+body.change-list #changelist #changelist-search input[type="text"]:hover,
+body.change-list #changelist #changelist-search #searchbar:focus,
+body.change-list #changelist #changelist-search input[type="text"]:focus,
+body.change-list #changelist #changelist-search #searchbar:focus-visible,
+body.change-list #changelist #changelist-search input[type="text"]:focus-visible {
+  border: 1px solid var(--ts-ctl-border, #e2e5ea) !important;
+  border-color: var(--ts-ctl-border, #e2e5ea) !important;
+  border-radius: var(--ts-ctl-radius) !important;
+  outline: none !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.07) !important;
+  background: var(--ts-ctl-bg, #fff) !important;
+  filter: none !important;
+}
+
+body.change-list #changelist .ts-cl-toolbar #changelist-search label {
+  left: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  opacity: 0.5 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  height: auto !important;
+  line-height: 0 !important;
+}
+
+/* Buttons = pravý sloupec (3), stejná výška, smršťují se s viewportem */
+body.change-list #changelist .ts-cl-toolbar__actions,
+body.change-list #changelist .ts-cl-toolbar .object-tools {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+  display: inline-flex !important;
+  flex-flow: row nowrap !important;
+  align-items: stretch !important;
+  justify-content: flex-end !important;
+  align-self: stretch !important;
+  gap: clamp(6px, 0.8vw, 8px) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+  float: none !important;
+  width: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+body.change-list #changelist .ts-cl-toolbar .object-tools li {
+  float: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: stretch !important;
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+  height: 100% !important;
+}
+
+/* Toolbar object-tools / .ts-cl-btn vzhled → ts-buttons.css */
+body.change-list #changelist .ts-cl-toolbar .object-tools a,
+body.change-list #changelist .ts-cl-toolbar .ts-cl-btn {
+  flex: 0 0 auto !important;
+  align-self: center !important;
+  overflow: visible !important;
+}
+
+body.change-list .ts-cl-toolbar .object-tools a::before,
+body.change-list .ts-cl-toolbar .object-tools a::after,
+body.change-list .ts-cl-toolbar a.addlink::before,
+body.change-list .ts-cl-toolbar a.addlink::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* ── Filter chips ── */
+body.change-list .ts-cl-filters {
+  grid-area: filters !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 8px 10px !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  position: relative !important;
+  z-index: 30 !important;
+}
+
+body.change-list .ts-cl-filters__icon {
+  width: 18px !important;
+  height: 18px !important;
+  flex: 0 0 18px !important;
+  opacity: 0.55 !important;
+  background: currentColor !important;
+  color: var(--ts-ctl-muted) !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolygon points='22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+body.change-list .ts-cl-filters__chips {
+  display: inline-flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 8px !important;
+  overflow: visible !important;
+}
+
+body.change-list .ts-cl-chip {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  height: var(--ts-chip-h) !important;
+  border-radius: var(--ts-chip-radius) !important;
+  font-size: 13px !important;
+  font-weight: 550 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1 !important;
+  text-decoration: none !important;
+  user-select: none !important;
+  overflow: visible !important;
+}
+
+body.change-list .ts-cl-chip--menu {
+  z-index: 1 !important;
+}
+
+body.change-list .ts-cl-chip--menu.is-open {
+  z-index: 50 !important;
+}
+
+body.change-list .ts-cl-chip--active {
+  gap: 8px !important;
+  padding: 0 10px 0 14px !important;
+  background: var(--ts-chip-active-bg) !important;
+  color: var(--ts-chip-active-fg) !important;
+  border: 0 !important;
+}
+
+body.change-list .ts-cl-chip--active:hover {
+  background: var(--ts-chip-idle-hover) !important;
+  color: var(--ts-chip-active-fg) !important;
+}
+
+body.change-list .ts-cl-chip__x {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 50% !important;
+  font-size: 15px !important;
+  line-height: 1 !important;
+  opacity: 0.55 !important;
+  color: inherit !important;
+}
+
+body.change-list .ts-cl-chip--active:hover .ts-cl-chip__x {
+  opacity: 0.85 !important;
+}
+
+body.change-list .ts-cl-chip--menu .ts-cl-chip__btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  height: var(--ts-chip-h) !important;
+  margin: 0 !important;
+  padding: 0 12px 0 14px !important;
+  border: 0 !important;
+  border-radius: var(--ts-chip-radius) !important;
+  background: var(--ts-chip-idle-bg) !important;
+  color: var(--ts-chip-idle-fg) !important;
+  font: inherit !important;
+  font-size: 13px !important;
+  font-weight: 550 !important;
+  cursor: pointer !important;
+  appearance: none !important;
+}
+
+body.change-list .ts-cl-chip--menu .ts-cl-chip__btn:hover,
+body.change-list .ts-cl-chip--menu.is-open .ts-cl-chip__btn {
+  background: var(--ts-chip-idle-hover) !important;
+}
+
+body.change-list .ts-cl-chip__chev {
+  width: 10px !important;
+  height: 6px !important;
+  background: currentColor !important;
+  opacity: 0.65 !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath fill='black' d='M1.2 1.4 6 6.2l4.8-4.8'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath fill='black' d='M1.2 1.4 6 6.2l4.8-4.8'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+/*
+  Date chip (Od/Do…) – stejné písmo / barvy / hover jako .ts-cl-chip--menu
+  (tokeny --ts-chip-*). Trigger uvnitř jen průhledný, hover na celém chipu.
+*/
+body.change-list .ts-cl-chip--date {
+  width: auto !important;
+  max-width: none !important;
+  flex: 0 0 auto !important;
+  gap: 6px !important;
+  height: var(--ts-chip-h) !important;
+  padding: 0 10px 0 12px !important;
+  border: 0 !important;
+  border-radius: var(--ts-chip-radius) !important;
+  background: var(--ts-chip-idle-bg) !important;
+  color: var(--ts-chip-idle-fg) !important;
+  font-size: 13px !important;
+  font-weight: 550 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  transition: background 0.12s ease !important;
+}
+
+body.change-list .ts-cl-chip--date:hover,
+body.change-list .ts-cl-chip--date:has(.ts-date-trigger[aria-expanded="true"]),
+body.change-list .ts-cl-chip--date:has(.ts-date-picker.is-open) {
+  background: var(--ts-chip-idle-hover) !important;
+  color: var(--ts-chip-idle-fg) !important;
+}
+
+body.change-list .ts-cl-chip--date .ts-cl-chip__label {
+  flex: 0 0 auto !important;
+  font: inherit !important;
+  font-size: 13px !important;
+  font-weight: 550 !important;
+  letter-spacing: -0.01em !important;
+  text-transform: none !important;
+  color: inherit !important;
+}
+
+body.change-list .ts-cl-chip--date .ts-date-picker {
+  position: relative !important;
+  z-index: 40 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  flex: 0 0 auto !important;
+}
+
+body.change-list .ts-cl-chip--date .ts-date-trigger,
+body.change-list .ts-cl-chip--date button.ts-date-trigger {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  min-height: var(--ts-chip-h) !important;
+  height: var(--ts-chip-h) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: var(--ts-chip-radius) !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  font: inherit !important;
+  font-size: 13px !important;
+  font-weight: 550 !important;
+  letter-spacing: -0.01em !important;
+  line-height: 1 !important;
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+  gap: 6px !important;
+  cursor: pointer !important;
+}
+
+body.change-list .ts-cl-chip--date .ts-date-trigger:hover,
+body.change-list .ts-cl-chip--date .ts-date-trigger[aria-expanded="true"],
+body.change-list .ts-cl-chip--date button.ts-date-trigger:hover,
+body.change-list .ts-cl-chip--date button.ts-date-trigger[aria-expanded="true"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+}
+
+body.change-list .ts-cl-chip--date .ts-date-label {
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  font-size: 13px !important;
+  font-weight: 550 !important;
+  letter-spacing: -0.01em !important;
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+}
+
+body.change-list .ts-cl-chip--date .ts-date-icon {
+  width: 14px !important;
+  height: 14px !important;
+  color: var(--brand, #e67817) !important;
+  opacity: 0.85 !important;
+  flex-shrink: 0 !important;
+}
+
+body.change-list .ts-cl-chip--date .ts-date-chevron {
+  display: inline-block !important;
+  width: 10px !important;
+  height: 6px !important;
+  margin: 0 !important;
+  flex-shrink: 0 !important;
+  overflow: hidden !important;
+  opacity: 0.65 !important;
+  color: var(--ts-chip-idle-fg) !important;
+  stroke: none !important;
+  fill: none !important;
+  background: var(--ts-chip-idle-fg) !important;
+  background-color: var(--ts-chip-idle-fg) !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath fill='black' d='M1.2 1.4 6 6.2l4.8-4.8'/%3E%3C/svg%3E")
+    center / contain no-repeat !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath fill='black' d='M1.2 1.4 6 6.2l4.8-4.8'/%3E%3C/svg%3E")
+    center / contain no-repeat !important;
+}
+
+body.change-list .ts-cl-chip--date .ts-date-chevron path {
+  display: none !important;
+}
+
+body.change-list .ts-cl-chip__panel {
+  display: none !important;
+  position: absolute !important;
+  top: calc(100% + 8px) !important;
+  left: 0 !important;
+  z-index: 60 !important;
+  min-width: 220px !important;
+  max-width: min(320px, calc(100vw - 48px)) !important;
+  max-height: min(320px, 55vh) !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  padding: 6px !important;
+  border-radius: var(--ts-ctl-radius) !important;
+  border: 1px solid var(--ts-ctl-border) !important;
+  background: var(--ts-ctl-bg) !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08) !important;
+  -webkit-overflow-scrolling: touch !important;
+  /* Ne flex – flex by smršťoval položky místo scrollu */
+  overscroll-behavior: contain !important;
+}
+
+body.change-list .ts-cl-chip--menu.is-open .ts-cl-chip__panel {
+  display: block !important;
+}
+
+body.change-list .ts-cl-chip__option {
+  display: block !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  flex: none !important;
+  flex-shrink: 0 !important;
+  min-height: 40px !important;
+  height: auto !important;
+  margin: 0 0 1px 0 !important;
+  padding: 10px 12px !important;
+  border-radius: 8px !important;
+  color: var(--text-strong, #111) !important;
+  text-decoration: none !important;
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  line-height: 1.35 !important;
+  background: transparent !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+body.change-list .ts-cl-chip__option:hover {
+  background: var(--ts-chip-option-hover) !important;
+  color: var(--text-strong, #111) !important;
+}
+
+body.change-list .ts-cl-chip__option.is-selected {
+  background: var(--ts-chip-option-selected) !important;
+  color: var(--text-strong, #111) !important;
+  font-weight: 600 !important;
+}
+
+body.change-list .ts-cl-chip__option.is-selected:hover {
+  background: #e5e7eb !important;
+  color: var(--text-strong, #111) !important;
+}
+
+body.change-list .ts-cl-filters__clear {
+  margin-left: 4px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  color: var(--ts-ctl-muted) !important;
+  text-decoration: none !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+body.change-list .ts-cl-filters__clear:hover {
+  color: var(--text-strong, #111) !important;
+}
+
+body.change-list .cenik-selected {
+  grid-area: selected !important;
+}
+
+/* ── Table (bez postranního borderu) ── */
+body.change-list #changelist .results {
+  grid-area: table !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  justify-self: stretch !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  box-shadow: none !important;
+}
+
+body.change-list #result_list,
+body.change-list #changelist #result_list,
+body.change-list #changelist .results #result_list {
+  border: 0 !important;
+  border-width: 0 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  background: transparent !important;
+  display: table !important;
+  width: 100% !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
+  box-shadow: none !important;
+}
+
+/* Colgroup šířky (JS) + fallback na th/td – součet 100 %, přes celý kontejner */
+body.change-list #result_list col.ts-cenik-col--check {
+  width: 3% !important;
+}
+body.change-list #result_list col.ts-cenik-col--polozka {
+  width: 27% !important;
+}
+body.change-list #result_list col.ts-cenik-col--kategorie {
+  width: 14% !important;
+}
+body.change-list #result_list col.ts-cenik-col--cena {
+  width: 16% !important;
+}
+body.change-list #result_list col.ts-cenik-col--od {
+  width: 20% !important;
+}
+body.change-list #result_list col.ts-cenik-col--do {
+  width: 20% !important;
+}
+
+/* Označení řádku: úzký sloupec, checkbox vlevo – desktop i mobil */
+body.change-list #result_list thead th.action-checkbox-column,
+body.change-list #changelist #result_list thead th.action-checkbox-column,
+body.change-list #result_list tbody td.action-checkbox,
+body.change-list #changelist #result_list tbody td.action-checkbox {
+  width: var(--cenik-check-w, 40px) !important;
+  min-width: var(--cenik-check-w, 40px) !important;
+  max-width: var(--cenik-check-w, 40px) !important;
+  padding: 0 !important;
+  vertical-align: middle !important;
+  text-align: left !important;
+}
+
+body.change-list #result_list tbody td.action-checkbox input,
+body.change-list #result_list tbody td.action-checkbox input.action-select,
+body.change-list #result_list tbody td.action-checkbox input[type="checkbox"],
+body.change-list #changelist #result_list tbody td.action-checkbox input,
+body.change-list #changelist #result_list tbody td.action-checkbox input.action-select,
+body.change-list #changelist #result_list tbody td.action-checkbox input[type="checkbox"] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  box-sizing: border-box !important;
+  display: inline-block !important;
+  width: 14px !important;
+  height: 14px !important;
+  min-width: 14px !important;
+  min-height: 14px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  vertical-align: middle !important;
+  border: 1.5px solid #6b7280 !important;
+  border-radius: 3px !important;
+  background: #fff !important;
+  background-color: #fff !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+}
+
+body.change-list #result_list tbody td.action-checkbox input:checked,
+body.change-list #result_list tbody td.action-checkbox input.action-select:checked,
+body.change-list #result_list tbody td.action-checkbox input[type="checkbox"]:checked,
+body.change-list #changelist #result_list tbody td.action-checkbox input:checked,
+body.change-list #changelist #result_list tbody td.action-checkbox input.action-select:checked,
+body.change-list #changelist #result_list tbody td.action-checkbox input[type="checkbox"]:checked {
+  background: var(--brand, #e67817) !important;
+  background-color: var(--brand, #e67817) !important;
+  border-color: var(--brand, #e67817) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M2.5 6.2 5 8.7 9.5 3.5'/%3E%3C/svg%3E") !important;
+  background-size: 10px 10px !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+body.change-list #result_list thead th.column-format_nazev,
+body.change-list #result_list tbody th,
+body.change-list #result_list tbody td.field-format_nazev {
+  width: 27% !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+body.change-list #result_list thead th.column-format_nazev,
+body.change-list #result_list thead th.column-format_nazev a,
+body.change-list #result_list thead th.column-format_nazev .text,
+body.change-list #result_list tbody th,
+body.change-list #result_list tbody th a,
+body.change-list #result_list tbody td.field-format_nazev,
+body.change-list #result_list tbody td.field-format_nazev a {
+  text-align: left !important;
+}
+
+body.change-list #result_list thead th.column-kurt_display,
+body.change-list #result_list tbody td.field-kurt_display,
+body.change-list #result_list thead th.column-kurt,
+body.change-list #result_list tbody td.field-kurt {
+  width: 14% !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+}
+
+body.change-list #result_list thead th.column-cena_display,
+body.change-list #result_list tbody td.field-cena_display {
+  width: 16% !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+}
+
+body.change-list #result_list thead th.column-platnost_od,
+body.change-list #result_list tbody td.field-platnost_od {
+  width: 20% !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+}
+
+body.change-list #result_list thead th.column-platnost_do,
+body.change-list #result_list tbody td.field-platnost_do {
+  width: 20% !important;
+  text-align: left !important;
+  white-space: nowrap !important;
+}
+
+body.change-list #result_list thead th,
+body.change-list #result_list thead th.sorted,
+body.change-list #result_list thead th.sortable,
+body.change-list #result_list thead th.action-checkbox-column,
+body.change-list #result_list thead th:first-child,
+body.change-list #result_list thead th:last-child,
+body.change-list #changelist #result_list thead th {
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: none !important;
+  padding: 10px var(--ts-cell-pad-x) !important;
+  font-size: var(--ts-head-size) !important;
+  font-weight: var(--ts-head-weight) !important;
+  color: var(--ts-head-color) !important;
+  letter-spacing: 0.01em !important;
+  border: 0 !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+  /* Čára pod hlavičkou – v dark mode přebírá --ts-head-color */
+  background-image: linear-gradient(var(--ts-head-color, #111827), var(--ts-head-color, #111827)) !important;
+  background-size: 100% 1.5px !important;
+  background-position: left bottom !important;
+  background-repeat: no-repeat !important;
+}
+
+body.change-list #result_list thead th a,
+body.change-list #result_list thead th .text a,
+body.change-list #result_list thead th .text,
+body.change-list #result_list thead th.sorted a,
+body.change-list #result_list thead th.sortable a {
+  color: var(--ts-head-color, #111827) !important;
+  -webkit-text-fill-color: var(--ts-head-color, #111827) !important;
+  font-weight: inherit !important;
+  font-size: inherit !important;
+}
+
+body.change-list #result_list thead th a:hover,
+body.change-list #result_list thead th.sortable a:hover {
+  color: var(--brand, #e67817) !important;
+  -webkit-text-fill-color: var(--brand, #e67817) !important;
+}
+
+body.change-list #result_list tbody td,
+body.change-list #result_list tbody th,
+body.change-list #changelist #result_list tbody td,
+body.change-list #changelist #result_list tbody th {
+  height: var(--ts-row-h) !important;
+  min-height: var(--ts-row-h) !important;
+  max-height: none !important;
+  padding: var(--ts-cell-pad-y) var(--ts-cell-pad-x) !important;
+  font-size: var(--ts-body-size) !important;
+  line-height: 1.4 !important;
+  color: var(--text-strong, #111827) !important;
+  vertical-align: middle !important;
+}
+
+body.change-list #result_list tbody tr:not(:last-of-type) > td,
+body.change-list #result_list tbody tr:not(:last-of-type) > th {
+  background-image: linear-gradient(var(--ts-divider), var(--ts-divider)) !important;
+  background-size: 100% 1px !important;
+  background-position: left bottom !important;
+}
+
+body.change-list #result_list tbody tr:last-of-type > td,
+body.change-list #result_list tbody tr:last-of-type > th {
+  border-bottom: 0 !important;
+  background-image: none !important;
+}
+
+body.change-list #result_list tbody tr:hover > td,
+body.change-list #result_list tbody tr:hover > th {
+  background-color: var(--ts-row-hover) !important;
+}
+
+/* Typografie sloupců – písmena hlavičky stejná černá všude */
+body.change-list #result_list thead th,
+body.change-list #result_list thead th a,
+body.change-list #result_list thead th .text,
+body.change-list #result_list thead th .text a {
+  font-weight: var(--ts-head-weight) !important;
+  font-size: var(--ts-head-size) !important;
+  color: var(--ts-head-color, #111827) !important;
+  -webkit-text-fill-color: var(--ts-head-color, #111827) !important;
+}
+
+body.change-list #result_list tbody th,
+body.change-list #result_list tbody td.field-format_nazev {
+  font-weight: 500 !important;
+  letter-spacing: -0.014em !important;
+  color: #0f172a !important;
+}
+
+body.change-list #result_list tbody th a,
+body.change-list #result_list tbody td.field-format_nazev a,
+body.change-list #result_list tbody a {
+  font-weight: 500 !important;
+  color: #0f172a !important;
+  text-decoration: none !important;
+  transition: color 0.12s ease !important;
+}
+
+body.change-list #result_list tbody th a:hover,
+body.change-list #result_list tbody th a:focus,
+body.change-list #result_list tbody td.field-format_nazev a:hover,
+body.change-list #result_list tbody td.field-format_nazev a:focus,
+body.change-list #result_list tbody tr:hover th a,
+body.change-list #result_list tbody tr:hover td.field-format_nazev a,
+body.change-list #changelist #result_list tbody a:hover,
+body.change-list #changelist #result_list tbody a:focus {
+  color: var(--brand, #e67817) !important;
+}
+
+body.change-list #result_list tbody td.field-kurt,
+body.change-list #result_list tbody td.field-kurt_display {
+  font-weight: 400 !important;
+  color: var(--cenik-type-soft) !important;
+  letter-spacing: -0.008em !important;
+}
+
+/* Cena: typografie + sort ikony (zarovnání doprava jen na mobilu níž) */
+body.change-list #result_list thead th.column-cena_display {
+  overflow: visible !important;
+}
+
+body.change-list #result_list thead th.column-cena_display a::after,
+body.change-list #result_list thead th.column-cena_display.sortable a::after {
+  flex: 0 0 auto !important;
+  display: inline-block !important;
+  opacity: 0.55 !important;
+  visibility: visible !important;
+}
+
+body.change-list #result_list thead th.column-cena_display.sorted a::after {
+  opacity: 1 !important;
+}
+
+body.change-list #result_list tbody td.field-cena_display {
+  font-weight: 600 !important;
+  font-variant-numeric: tabular-nums !important;
+  font-feature-settings: "tnum" 1, "kern" 1 !important;
+  letter-spacing: -0.018em !important;
+  color: #0f172a !important;
+  white-space: nowrap !important;
+}
+
+body.change-list #result_list tbody td.field-platnost_od,
+body.change-list #result_list tbody td.field-platnost_do {
+  font-weight: 400 !important;
+  font-variant-numeric: tabular-nums !important;
+  color: var(--cenik-type-muted) !important;
+  letter-spacing: -0.006em !important;
+  white-space: nowrap !important;
+}
+
+body.change-list #result_list thead th.sortable a::after {
+  font-weight: 400 !important;
+  opacity: 0.55 !important;
+}
+
+body.change-list #result_list thead th.sorted a::after {
+  opacity: 1 !important;
+}
+
+html[data-mode="dark"] body.change-list #result_list thead th.sortable a::after,
+html[data-mode="dark"] body.change-list #changelist #result_list thead th.sortable a::after {
+  opacity: 1 !important;
+}
+
+/* ── Pagination footer ── */
+body.change-list #changelist .paginator,
+body.change-list #changelist-form .paginator,
+body.change-list #changelist-paginator.ts-cl-pager,
+body.change-list #changelist-paginator {
+  grid-area: pager !important;
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+  grid-template-areas: "meta load pages" !important;
+  align-items: center !important;
+  justify-items: stretch !important;
+  column-gap: 12px !important;
+  row-gap: 0 !important;
+  width: 100% !important;
+  margin: 10px 0 0 0 !important;
+  padding: 4px 2px !important;
+  min-height: 42px !important;
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--ts-ctl-muted) !important;
+  font-size: 13px !important;
+  line-height: 1.2 !important;
+}
+
+/* „Zobrazit vše“ pryč – jen Načíst Další */
+body.change-list #changelist-paginator .showall,
+body.change-list #changelist .paginator .showall,
+body.change-list #changelist-form .paginator .showall {
+  display: none !important;
+}
+
+body.change-list .ts-cl-pager__meta {
+  grid-area: meta !important;
+  display: inline-flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-self: start !important;
+  gap: 14px 18px !important;
+  position: relative !important;
+  z-index: 1 !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+}
+
+body.change-list .ts-cl-pager__rows {
+  color: var(--ts-ctl-muted) !important;
+  font-weight: 500 !important;
+}
+
+body.change-list .ts-cl-pager__rows strong {
+  color: var(--text-strong, #111) !important;
+  font-weight: 700 !important;
+}
+
+body.change-list .ts-cl-pager__range {
+  color: var(--ts-ctl-muted) !important;
+  font-weight: 500 !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+body.change-list #changelist-paginator .paginator-pages {
+  grid-area: pages !important;
+  display: inline-flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-self: end !important;
+  gap: 2px 4px !important;
+  position: relative !important;
+  z-index: 1 !important;
+  margin: 0 !important;
+  min-width: 0 !important;
+}
+
+body.change-list #changelist-paginator .paginator-pages a,
+body.change-list #changelist-paginator .paginator-pages .this-page {
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  padding: 0 8px !important;
+  border-radius: 999px !important;
+  font-size: 12px !important;
+  font-weight: 650 !important;
+  color: var(--ts-ctl-muted) !important;
+  -webkit-text-fill-color: var(--ts-ctl-muted) !important;
+  text-decoration: none !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  filter: none !important;
+  transition: box-shadow 0.12s ease !important;
+}
+
+/* Hover čísel stránek = stejný jako + Přidat ceník */
+body.change-list #changelist-paginator .paginator-pages a:hover,
+body.change-list #changelist-paginator .paginator-pages a:focus,
+body.change-list #changelist-paginator .paginator-pages a:focus-visible {
+  background: #fff !important;
+  background-color: #fff !important;
+  border: 1px solid color-mix(in srgb, var(--line, #e5e7eb) 82%, transparent) !important;
+  border-color: color-mix(in srgb, var(--line, #e5e7eb) 82%, transparent) !important;
+  color: var(--text-strong, #111827) !important;
+  -webkit-text-fill-color: var(--text-strong, #111827) !important;
+  filter: none !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.07) !important;
+  outline: none !important;
+}
+
+body.change-list #changelist-paginator .paginator-pages .this-page {
+  color: var(--text-strong, #111) !important;
+  -webkit-text-fill-color: var(--text-strong, #111) !important;
+  font-weight: 750 !important;
+}
+
+/* Načíst Další = globální pill (ts-buttons); tady jen pozice ve footeri */
+body.change-list #changelist-paginator .paginator-load-more,
+body.change-list #changelist-paginator button.paginator-load-more,
+body.change-list .paginator .paginator-load-more {
+  grid-area: load !important;
+  position: static !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  z-index: 1 !important;
+  justify-self: center !important;
+  align-self: center !important;
+  overflow: visible !important;
+}
+
+body.change-list #changelist-paginator .paginator-load-more__icon {
+  display: none !important;
+}
+
+body.change-list #changelist-paginator .paginator-load-more__text {
+  display: inline !important;
+  line-height: 1.2 !important;
+  overflow: visible !important;
+}
+
+/* paginator-load-more hover → ts-buttons.css */
+
+/* ── Dark mode ── */
+html[data-mode="dark"] body.change-list {
+  --cenik-type-muted: #94a3b8;
+  --cenik-type-soft: #cbd5e1;
+  --cenik-ctl-text: var(--text-strong, #f3f4f6);
+  --cenik-ctl-muted: var(--muted, #9ca3af);
+  --cenik-ctl-border: var(--ts-border, var(--line, #4a5c6e));
+  --ts-ctl-bg: var(--ts-field-bg, var(--bg, #1a252f));
+  --ts-ctl-border: var(--ts-field-border, var(--ts-border, #4a5c6e));
+  --ts-ctl-border-strong: #e5e7eb;
+  --ts-ctl-muted: var(--muted, #9ca3af);
+  --ts-chip-idle-bg: #273847;
+  --ts-chip-idle-fg: #f3f4f6;
+  --ts-chip-idle-hover: #314556;
+  --ts-chip-active-bg: #273847;
+  --ts-chip-active-fg: #f3f4f6;
+  --ts-chip-option-hover: #273847;
+  --ts-chip-option-selected: #314556;
+  --ts-table-bg: var(--surface, #1a252f);
+  --ts-divider: var(--ts-border, var(--line, #4a5c6e));
+  --ts-head-color: var(--text-strong, #f3f4f6);
+  --ts-row-hover: var(--table-row-hover, #1c2732);
+}
+
+/* Dark: search + hlavička + checkboxy */
+html[data-mode="dark"] body.change-list #changelist #searchbar,
+html[data-mode="dark"] body.change-list #changelist #changelist-search input[type="text"],
+html[data-mode="dark"] body.change-list #changelist .cenik-field--search #changelist-search #searchbar,
+html[data-mode="dark"] body.change-list #changelist .ts-cl-toolbar #changelist-search #searchbar,
+html[data-mode="dark"] body.change-list #changelist .ts-cl-toolbar #changelist-search input[type="text"] {
+  background: var(--ts-ctl-bg, #1a252f) !important;
+  color: var(--text-strong, #f3f4f6) !important;
+  -webkit-text-fill-color: var(--text-strong, #f3f4f6) !important;
+  border-color: var(--ts-ctl-border, var(--ts-border, #4a5c6e)) !important;
+}
+
+html[data-mode="dark"] body.change-list #changelist #searchbar::placeholder,
+html[data-mode="dark"] body.change-list #changelist #changelist-search input[type="text"]::placeholder {
+  color: var(--muted, #9ca3af) !important;
+  -webkit-text-fill-color: var(--muted, #9ca3af) !important;
+}
+
+html[data-mode="dark"] body.change-list #result_list thead th,
+html[data-mode="dark"] body.change-list #result_list thead th.sorted,
+html[data-mode="dark"] body.change-list #result_list thead th.sortable,
+html[data-mode="dark"] body.change-list #result_list thead th.action-checkbox-column,
+html[data-mode="dark"] body.change-list #result_list thead th:first-child,
+html[data-mode="dark"] body.change-list #result_list thead th:last-child,
+html[data-mode="dark"] body.change-list #changelist #result_list thead th {
+  background-color: var(--bg, #1a252f) !important;
+  background-image: linear-gradient(var(--ts-head-color, #f3f4f6), var(--ts-head-color, #f3f4f6)) !important;
+  background-size: 100% 1.5px !important;
+  background-position: left bottom !important;
+  background-repeat: no-repeat !important;
+  border: 0 !important;
+  border-bottom: 0 !important;
+  color: var(--ts-head-color, #f3f4f6) !important;
+  -webkit-text-fill-color: var(--ts-head-color, #f3f4f6) !important;
+}
+
+html[data-mode="dark"] body.change-list #result_list thead th a,
+html[data-mode="dark"] body.change-list #result_list thead th .text,
+html[data-mode="dark"] body.change-list #result_list thead th .text a {
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-bottom: 0 !important;
+  color: var(--ts-head-color, #f3f4f6) !important;
+  -webkit-text-fill-color: var(--ts-head-color, #f3f4f6) !important;
+  text-decoration: none !important;
+}
+
+html[data-mode="dark"] body.change-list #result_list thead th a:hover,
+html[data-mode="dark"] body.change-list #result_list thead th.sortable a:hover,
+html[data-mode="dark"] body.change-list #result_list thead th .text a:hover {
+  color: var(--brand) !important;
+  -webkit-text-fill-color: var(--brand) !important;
+  text-decoration: none !important;
+  border-bottom: 0 !important;
+  background-image: none !important;
+}
+
+html[data-mode="dark"] body.change-list #result_list tbody td.action-checkbox input,
+html[data-mode="dark"] body.change-list #result_list tbody td.action-checkbox input[type="checkbox"],
+html[data-mode="dark"] body.change-list #changelist #result_list tbody td.action-checkbox input,
+html[data-mode="dark"] body.change-list #changelist #result_list tbody td.action-checkbox input[type="checkbox"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: #94a3b8 !important;
+}
+
+/* Head / toolbar button dark → ts-buttons.css (--ts-btn-*) */
+
+html[data-mode="dark"] body.change-list .ts-cl-chip__panel {
+  background: var(--surface, #1a252f) !important;
+  border-color: var(--ts-border, var(--line, #4a5c6e)) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45) !important;
+}
+
+html[data-mode="dark"] body.change-list .ts-cl-chip__option {
+  color: var(--text-strong, #f3f4f6) !important;
+}
+
+html[data-mode="dark"] body.change-list .ts-cl-chip__option:hover,
+html[data-mode="dark"] body.change-list .ts-cl-chip__option.is-selected,
+html[data-mode="dark"] body.change-list .ts-cl-chip__option.is-selected:hover {
+  background: var(--ts-chip-option-selected) !important;
+  color: var(--text-strong, #f3f4f6) !important;
+}
+
+html[data-mode="dark"] body.change-list .ts-cl-chip--active:hover {
+  background: var(--ts-chip-idle-hover) !important;
+  color: var(--ts-chip-active-fg) !important;
+}
+
+html[data-mode="dark"] body.change-list .ts-cl-filters__icon {
+  opacity: 0.8 !important;
+  color: var(--text-strong, #f3f4f6) !important;
+}
+
+html[data-mode="dark"] body.change-list .ts-cl-chip__chev {
+  opacity: 0.8 !important;
+}
+
+html[data-mode="dark"] body.change-list #result_list tbody td,
+html[data-mode="dark"] body.change-list #result_list tbody th,
+html[data-mode="dark"] body.change-list #result_list tbody th a,
+html[data-mode="dark"] body.change-list #result_list tbody td.field-format_nazev a {
+  color: var(--text-strong, #f3f4f6) !important;
+}
+
+html[data-mode="dark"] body.change-list #result_list tbody td.field-cena_display {
+  color: var(--text-strong, #f3f4f6) !important;
+}
+
+@media (max-width: 860px) {
+  /* Přebít globální cenik-layout flex-wrap na úzkých viewportech */
+  body.change-list #changelist .changelist-form-container.cenik-layout,
+  body.change-list #changelist .changelist-form-container.ts-cl-layout {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /*
+    Page head: SEZNAM
+                 Ceník ..................... [+ Přidat ceník]
+                 ——
+  */
+  body.change-list #content > .ts-page-head--cenik,
+  body.change-list #content > .ts-page-head {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-areas:
+      "eyebrow ."
+      "title actions"
+      "rule ." !important;
+    align-items: center !important;
+    column-gap: 10px !important;
+    row-gap: 5px !important;
+    margin: 4px 0 14px 0 !important;
+    padding: 8px 0 0 0 !important;
+    width: 100% !important;
+  }
+
+  body.change-list #content > .ts-page-head .ts-page-head__text {
+    display: contents !important;
+  }
+
+  body.change-list #content > .ts-page-head .ts-page-head__eyebrow {
+    grid-area: eyebrow !important;
+    display: block !important;
+  }
+
+  body.change-list #content > .ts-page-head .ts-page-head__title-row {
+    grid-area: title !important;
+    display: contents !important;
+  }
+
+  body.change-list #content > .ts-page-head .ts-page-head__title {
+    grid-area: title !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 1.5rem !important;
+    line-height: 40px !important;
+    height: 40px !important;
+  }
+
+  body.change-list #content > .ts-page-head .ts-page-head__rule {
+    grid-area: rule !important;
+    display: block !important;
+  }
+
+  body.change-list #content > .ts-page-head > .object-tools,
+  body.change-list #content > .ts-page-head .object-tools,
+  body.change-list #content > .ts-page-head .object-tools.ts-cl-head-actions {
+    grid-area: actions !important;
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    flex-flow: row nowrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+    width: auto !important;
+    max-width: none !important;
+    height: 34px !important;
+  }
+
+  body.change-list #content > .ts-page-head .object-tools li {
+    display: flex !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    float: none !important;
+  }
+
+  body.change-list #content > .ts-page-head .object-tools a,
+  body.change-list #content > .ts-page-head .object-tools a.addlink {
+    display: inline-flex !important;
+    visibility: visible !important;
+  }
+
+  body.change-list #changelist .ts-cl-toolbar .object-tools,
+  body.change-list #changelist .ts-cl-toolbar__actions {
+    display: none !important;
+  }
+
+  /* Kompaktní sloupce (Ceník / Hráči / Platby…): viz changelist-compact.css */
+}
+
+@media (max-width: 720px) {
+  body.change-list {
+    --page-pad: 16px;
+    --ts-cell-pad-x: 8px;
+    --ts-cell-pad-y: 10px;
+    --ts-body-size: 13px;
+    --ts-head-size: 13px;
+    --ts-row-h: 44px;
+  }
+
+  body.change-list #changelist .ts-cl-toolbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: var(--ts-ctl-h) !important;
+    height: var(--ts-ctl-h) !important;
+  }
+
+  body.change-list #changelist .ts-cl-toolbar .cenik-field--search,
+  body.change-list #changelist .ts-cl-toolbar__search {
+    max-width: none !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: 100% !important;
+  }
+
+  body.change-list #changelist .ts-cl-toolbar__actions,
+  body.change-list #changelist .ts-cl-toolbar .object-tools {
+    margin: 0 !important;
+    width: auto !important;
+    height: 100% !important;
+  }
+
+  /* Stejný 3sloupcový layout, menší prvky */
+  body.change-list #changelist .paginator,
+  body.change-list #changelist-form .paginator,
+  body.change-list #changelist-paginator.ts-cl-pager,
+  body.change-list #changelist-paginator {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+    column-gap: 6px !important;
+    min-height: 36px !important;
+    margin-top: 6px !important;
+    padding: 4px 0 !important;
+    overflow: visible !important;
+    font-size: 11px !important;
+  }
+
+  body.change-list .ts-cl-pager__meta {
+    max-width: 100% !important;
+    margin: 0 !important;
+    gap: 6px 8px !important;
+    flex-wrap: nowrap !important;
+    white-space: nowrap !important;
+    font-size: 11px !important;
+  }
+
+  body.change-list .ts-cl-pager__rows,
+  body.change-list .ts-cl-pager__range {
+    font-size: 11px !important;
+  }
+
+  body.change-list #changelist-paginator .paginator-load-more,
+  body.change-list #changelist-paginator button.paginator-load-more {
+    position: static !important;
+    left: auto !important;
+    top: auto !important;
+    transform: none !important;
+    margin: 0 !important;
+    min-height: 30px !important;
+    height: 30px !important;
+    max-height: none !important;
+    padding: 0 11px !important;
+    font-size: 11px !important;
+    overflow: visible !important;
+  }
+
+  body.change-list #changelist-paginator .paginator-load-more:hover,
+  body.change-list #changelist-paginator .paginator-load-more:focus,
+  body.change-list #changelist-paginator .paginator-load-more:focus-visible,
+  body.change-list #changelist-paginator .paginator-load-more:active {
+    transform: none !important;
+  }
+
+  body.change-list #changelist-paginator .paginator-pages {
+    margin: 0 !important;
+    gap: 1px 2px !important;
+    flex-wrap: nowrap !important;
+  }
+
+  body.change-list #changelist-paginator .paginator-pages a,
+  body.change-list #changelist-paginator .paginator-pages .this-page {
+    min-width: 24px !important;
+    height: 24px !important;
+    padding: 0 5px !important;
+    font-size: 11px !important;
+  }
+
+  body.change-list.model-cenik #result_list thead th.column-format_nazev,
+  body.change-list.model-cenik #result_list tbody th,
+  body.change-list.model-cenik #result_list tbody td.field-format_nazev {
+    width: 40% !important;
+  }
+
+  body.change-list.model-cenik #result_list thead th.column-kurt_display,
+  body.change-list.model-cenik #result_list tbody td.field-kurt_display {
+    width: 24% !important;
+  }
+
+  body.change-list.model-cenik #result_list thead th.column-cena_display,
+  body.change-list.model-cenik #result_list tbody td.field-cena_display {
+    width: 28% !important;
+  }
+
+  /* Mobil head buttony → ts-buttons.css */
+  body.change-list #content > .ts-page-head .object-tools a::before,
+  body.change-list #content > .ts-page-head .object-tools a::after,
+  body.change-list #content > .ts-page-head .object-tools a.addlink::before,
+  body.change-list #content > .ts-page-head .object-tools a.addlink::after {
+    content: none !important;
+    display: none !important;
+  }
+
+  /* Search užší + soft radius 12px (ne pill 999) */
+  body.change-list #changelist .ts-cl-toolbar {
+    --ts-ctl-h: 40px;
+    --ts-ctl-radius: 12px;
+    --cenik-ctl-radius: 12px;
+    --cenik-ctl-h: 40px;
+    grid-template-columns: minmax(0, 220px) !important;
+    justify-content: start !important;
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+  }
+
+  body.change-list #changelist .ts-cl-toolbar .cenik-field--search,
+  body.change-list #changelist .ts-cl-toolbar__search {
+    max-width: 220px !important;
+    width: 100% !important;
+  }
+
+  body.change-list #changelist .ts-cl-toolbar #changelist-search #searchbar,
+  body.change-list #changelist .ts-cl-toolbar #changelist-search input[type="text"],
+  body.change-list #changelist .cenik-field--search #changelist-search #searchbar,
+  body.change-list #changelist .cenik-field--search #changelist-search input[type="text"],
+  body.change-list #changelist #changelist-search #searchbar,
+  body.change-list #changelist #changelist-search input[type="text"] {
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--ts-ctl-border, #e2e5ea) !important;
+    background: #fff !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    padding: 0 14px 0 36px !important;
+    box-shadow: none !important;
+  }
+}

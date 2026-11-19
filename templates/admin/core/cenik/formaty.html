@@ -1,27 +1,26 @@
 {% extends "admin/base_site.html" %}
 {% load static i18n %}
+{% block bodyclass %}{{ block.super }} ts-page-cenik-menu{% endblock %}
 {% block extrastyle %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'admin/css/dashboard.css' %}">
-<link rel="stylesheet" href="{% static 'admin/css/cenik-change-form.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/cenik-change-form.css' %}?v=global-forms-1">
 {% endblock %}
 
-{% block breadcrumbs %}
-<div class="breadcrumbs">
-  <a href="{% url 'admin:index' %}">{% trans "Domů" %}</a>
-  &rsaquo; <a href="{% url 'admin:core_cenik_changelist' %}">{% trans "Ceník" %}</a>
-  &rsaquo; {% trans "Ceník Menu" %}
-</div>
-{% endblock %}
+{% block breadcrumbs %}{% endblock %}
+{% block content_title %}{% endblock %}
 
 {% block content %}
+  {% trans "Ceník" as ts_ph_eyebrow %}
+  {% trans "Ceník Menu" as ts_ph_title %}
+  {% include "admin/includes/ts_page_head.html" with eyebrow=ts_ph_eyebrow title=ts_ph_title %}
+
 <div id="content-main" class="cenik-menu-page dash-wrap">
   <div class="cenik-menu-header">
     <div>
-      <h1>{% trans "Ceník Menu" %}</h1>
       <p class="cenik-menu-lead">{% trans "Typy tréninků v ceníku — přidání, úprava názvu nebo smazání nepoužívaných." %}</p>
     </div>
-    <a href="{{ next_url }}" class="button">{% trans "← Zpět" %}</a>
+    <a href="{{ next_url }}" class="button secondary">{% trans "← Zpět" %}</a>
   </div>
 
   <section class="card cenik-menu-card">
@@ -45,8 +44,8 @@
           {% else %}
           <span class="cenik-menu-name">{{ fmt.nazev }}</span>
           <span class="cenik-menu-actions">
-            <a href="{% url 'admin:core_cenik_formaty' %}?edit_format={{ fmt.pk }}&next={{ next_url|urlencode }}" class="button secondary cenik-menu-btn">{% trans "Upravit" %}</a>
-            <form method="post" class="cenik-menu-delete-form" onsubmit="return confirm('{% blocktrans with name=fmt.nazev|escapejs %}Opravdu odstranit typ „{{ name }}“?{% endblocktrans %}');">
+            <a href="{% url 'admin:core_cenik_formaty' %}?edit_format={{ fmt.pk }}&next={{ next_url|urlencode }}" class="button secondary cenik-menu-btn">Upravit</a>
+            <form method="post" class="cenik-menu-delete-form" onsubmit="return confirm('Opravdu odstranit typ „{{ fmt.nazev|escapejs }}“?');">
               {% csrf_token %}
               <input type="hidden" name="fmt_manage" value="1">
               <input type="hidden" name="fmt_action" value="delete">

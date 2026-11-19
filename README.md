@@ -45,9 +45,19 @@ python manage.py bootstrap_instance --seed cimice
 
 ## Nová instance klubu (produkce)
 
+Kompletní checklist: **[docs/ops-new-instance.md](docs/ops-new-instance.md)**  
+Upgrade flotily: **[docs/ops-upgrade.md](docs/ops-upgrade.md)**  
+Stripe předplatné: **[docs/ops-stripe.md](docs/ops-stripe.md)**  
+Monitoring: **[docs/ops-monitoring.md](docs/ops-monitoring.md)**  
+Onboarding (ne self-serve): **[docs/ops-onboarding.md](docs/ops-onboarding.md)**  
+Šablona inventáře: **[docs/instances.example.csv](docs/instances.example.csv)** (reálná data drž mimo git)
+
+Zkrácený postup:
+
 1. Nový deploy + Postgres + DNS
-2. Nastav `.env` (secret, hosts, SMTP) — viz checklist níže
+2. Nastav `.env` (secret, hosts, SMTP) — viz [`.env.example`](.env.example) a checklist v ops runbooku
 3. Spusť:
+
 
 ```bash
 python manage.py migrate
@@ -84,9 +94,54 @@ Domény **nejsou** baked-in v kódu. Bez správných hostů dostaneš `Disallowe
 Ověření po deployi:
 
 ```bash
-python manage.py check                # v produkci hlídá prázdné ALLOWED_HOSTS
+python manage.py check                # hosty, SECRET_KEY, SMTP, média
 python manage.py check_instance       # branding + hosty (při DEBUG=True: --strict-hosts)
+curl -fsS https://klub.example.com/health/   # {"status":"ok"}
 ```
+
+Health endpoint (`/health/`) je bez auth — vhodný pro uptime monitoring.
+
+### Cron – předpokládaný rozvrh
+
+Každý den ve **22:00** (Europe/Prague) ze stálého rozvrhu založí chybějící tréninky **na dnešek** (sloty, které ten den v Předpokládaném byly):
+
+```bash
+python manage.py materializovat_predpokladany
+```
+
+Na Renderu přidejte **Cron Job** se stejným image/env jako web. Cron je v UTC (22:00 CET ≈ `0 21 * * *`, v létě CEST ≈ `0 20 * * *`).
+
+### Zálohy Postgres (disaster recovery)
+
+JSON export/import v Nastavení je **ne** náhrada za DB dump — slouží jako platform tool, ne DR.
+
+Pravidelný dump (příklad denně přes cron / managed backup):
+
+```bash
+# Dump (z hostitele nebo jobu s přístupem k DB)
+pg_dump "$DATABASE_URL" --format=custom --file="tenissystem-$(date +%F).dump"
+
+# Nebo klasicky:
+# pg_dump -h HOST -U USER -d DBNAME -Fc -f tenissystem-YYYY-MM-DD.dump
+```
+
+Restore drill (na staging, ne na živé produkci napoprvé):
+
+```bash
+# 1) Nová prázdná DB / staging instance
+# 2) Obnovení:
+pg_restore --clean --if-exists --no-owner --dbname="$DATABASE_URL" tenissystem-YYYY-MM-DD.dump
+# 3) python manage.py migrate   # kdyby dump byl starší než kód
+# 4) python manage.py check_instance
+# 5) Ověř login + logo + jeden hráč / trénink
+```
+
+Checklist:
+
+- [ ] Dump běží automaticky (managed provider backup **nebo** cron `pg_dump`)
+- [ ] Dump je mimo app disk (object storage / jiný server)
+- [ ] Alespoň 1× za kvartál restore drill na staging
+- [ ] Po restore funguje `/health/` a admin login
 
 ## Struktura projektu
 
@@ -115,6 +170,14 @@ static/            # CSS, JS, obrázky
 | `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` | SMTP pro vyúčtovací e-maily |
 | `PRODUCT_NAME` | Fallback název produktu (default TenisSystém) |
 | `BOOTSTRAP_ADMIN_PASSWORD` | Heslo pro `--create-admin` (non-interactive) |
+| `SENTRY_DSN` | Volitelné — crash reporting |
+| `USE_S3` + `AWS_*` | Volitelné — média (logo) na S3/R2 |
+| `BILLING_ACTIVE` | Nouzový zámek `0` (default `1`) |
+| `STRIPE_SECRET_KEY` / `STRIPE_PRICE_ID` / `STRIPE_WEBHOOK_SECRET` | Checkout + webhook |
+| `STRIPE_REQUIRE_SUBSCRIPTION` | `1` = bez active předplatného read-only |
+| `STRIPE_CUSTOMER_ID` | Volitelný seed customera (jinak z Checkoutu) |
+| `INSTANCE_NAME` | Tag v logách / Sentry (default hostname) |
+| `AXES_FAILURE_LIMIT` / `AXES_COOLOFF_TIME` | Rate-limit admin loginu |
 
 ## Testy
 
@@ -132,4 +195,4 @@ docker compose up --build
 - App: http://127.0.0.1:8000/
 - Default admin (compose): `admin` / `admin123`
 
-CI běží přes GitHub Actions (`.github/workflows/ci.yml`) na každém PR / push do main.
+CI běží přes GitHub Actions (`.github/workflows/ci.yml`) na každém PR / push do main — testy a bootstrap smoke proti **Postgres 16**.

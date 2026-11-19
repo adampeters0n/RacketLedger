@@ -1,0 +1,58 @@
+{% extends "home/legal_base.html" %}
+{% load i18n %}
+
+{% block page_title %}{% trans "Ochrana soukromí" %} – {{ product_name }}{% endblock %}
+
+{% block legal_content %}
+<p class="legal__eyebrow">{% trans "Právní informace" %}</p>
+<h1>{% trans "Ochrana soukromí" %}</h1>
+<p class="legal__lead">
+  {% blocktrans with name=product_name %}Tento dokument popisuje, jak instance „{{ name }}“ zpracovává osobní údaje při provozu softwaru TenisSystém.{% endblocktrans %}
+</p>
+<p class="legal__note">{% trans "Text je výchozí šablona pro white-label instanci. Před ostrým provozem ho nechte zkontrolovat právníkem a upravte podle skutečného správce údajů." %}</p>
+
+<section>
+  <h2>{% trans "1. Správce" %}</h2>
+  <p>
+    {% blocktrans with name=product_name %}Správcem osobních údajů je provozovatel této instance ({{ name }}).{% endblocktrans %}
+    {% if contact_email %}
+      {% blocktrans with email=contact_email %}Kontakt: {{ email }}.{% endblocktrans %}
+    {% endif %}
+    {% if contact_address %}
+      {% blocktrans with address=contact_address %}Adresa: {{ address }}.{% endblocktrans %}
+    {% endif %}
+  </p>
+</section>
+
+<section>
+  <h2>{% trans "2. Jaké údaje zpracováváme" %}</h2>
+  <p>{% trans "Typicky údaje potřebné pro správu tenisového klubu, zejména:" %}</p>
+  <ul>
+    <li>{% trans "identifikační a kontaktní údaje hráčů / rodičů / trenérů (jméno, e-mail, telefon)," %}</li>
+    <li>{% trans "údaje o trénincích, docházce, platbách a vyúčtování," %}</li>
+    <li>{% trans "přihlašovací údaje administrátorů a provozní logy nezbytné pro bezpečnost." %}</li>
+  </ul>
+</section>
+
+<section>
+  <h2>{% trans "3. Účel a právní základ" %}</h2>
+  <p>{% trans "Údaje zpracováváme za účelem evidence tréninků, plateb, komunikace a provozu klubu — na základě smlouvy / oprávněného zájmu provozovatele, případně souhlasu, pokud je vyžadován." %}</p>
+</section>
+
+<section>
+  <h2>{% trans "4. Uchování a zabezpečení" %}</h2>
+  <p>{% trans "Údaje uchováváme po dobu nezbytnou pro provoz klubu a plnění právních povinností. Instance běží na oddělené databázi; přístup mají jen oprávnění uživatelé. Doporučujeme HTTPS, silná hesla a pravidelné zálohy." %}</p>
+</section>
+
+<section>
+  <h2>{% trans "5. Předávání třetím stranám" %}</h2>
+  <p>{% trans "Údaje nepředáváme třetím stranám ke komerčním účelům. Mohou být zpracovány poskytovateli infrastruktury (hosting, e-mail, úložiště médií, monitoring), kteří jednají jako zpracovatelé podle smluvních podmínek." %}</p>
+</section>
+
+<section>
+  <h2>{% trans "6. Vaše práva" %}</h2>
+  <p>{% trans "Máte právo na přístup, opravu, výmaz, omezení zpracování, námitku a stížnost u dozorového úřadu. Pro uplatnění práv kontaktujte správce výše." %}</p>
+</section>
+
+<p class="legal__updated">{% trans "Aktualizováno:" %} {{ now|date:"j. n. Y" }}</p>
+{% endblock %}

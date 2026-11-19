@@ -66,8 +66,7 @@
     color: #1f2937;
   }
   table.ledger tbody tr{ background:var(--surface, #fff); }
-  table.ledger tbody tr:hover{ background:var(--table-row-hover) !important; }
-  table.ledger tbody tr:hover a:not(.deletelink){ color:var(--brand) !important; }
+  table.ledger tbody tr:hover{ background:var(--brand-100, #fff1de); }
 
   tr.typ-nauctovano { background:rgba(239,68,68,0.12); }
   tr.typ-platba, tr.typ-vratka { background:rgba(34,197,94,0.12); }
@@ -88,13 +87,38 @@
   table.ledger a.deletelink{ color:#f87171; text-decoration:none; font-weight:600; font-size:13px; }
   table.ledger a.deletelink:hover{ text-decoration:none; color:var(--brand) !important; }
 
+  /* Součty – stejný styl jako hráč / trenéři */
   table.ledger tfoot tr.totals td,
-  table.ledger tfoot tr.totals th{
-    background:#fffced;
-    border-top:4px solid #111827;
-    padding:8px;
-    color:#111827;
+  table.ledger tfoot tr.totals th {
+    padding: 10px 8px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    line-height: 1.4 !important;
+    color: #111827 !important;
+    vertical-align: middle !important;
+    background: transparent !important;
+    background-image: linear-gradient(var(--line, #e2e5ea), var(--line, #e2e5ea)) !important;
+    background-size: 100% 1px !important;
+    background-position: left top !important;
+    background-repeat: no-repeat !important;
+    border: 0 !important;
+    box-shadow: none !important;
   }
-  table.ledger tfoot td.totals-label{ text-align:left !important; font-size:15px; font-weight:800; letter-spacing:.2px; }
-  table.ledger tfoot td.totals-value{ font-size:15px; font-weight:800; text-align:center !important; }
-  table.ledger tfoot td.tot-hodiny{ text-align:center !important; }
+
+  table.ledger tfoot td.totals-label {
+    text-align: left !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    letter-spacing: normal !important;
+  }
+
+  table.ledger tfoot td.totals-value {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    font-variant-numeric: tabular-nums !important;
+    text-align: center !important;
+  }
+
+  table.ledger tfoot td.tot-hodiny {
+    text-align: center !important;
+  }

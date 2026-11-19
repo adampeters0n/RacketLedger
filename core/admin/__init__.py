@@ -2,6 +2,7 @@
 from . import auth_user  # noqa: F401
 from . import cenik  # noqa: F401
 from . import hrac  # noqa: F401
+from . import pronajem  # noqa: F401
 from . import rodina  # noqa: F401
 from . import trener  # noqa: F401
 from . import transakce  # noqa: F401

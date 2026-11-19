@@ -13,12 +13,18 @@
     Chart.register(ChartDataLabels);
   }
 
-  /* Pozadí canvasu – sjednocené pro stránku i modal */
+  /* Pozadí canvasu – sjednocené neprůhledné pro stránku i modal */
   const chartCanvasBgPlugin = {
     id: 'chartCanvasBg',
     beforeDraw(chart) {
       const canvas = chart.canvas;
-      if (!canvas?.closest('.analytika-app') && canvas?.id !== 'analytikaModalCanvas') return;
+      if (
+        !canvas?.closest('.analytika-app') &&
+        !canvas?.closest('.analytika-modal') &&
+        canvas?.id !== 'analytikaModalCanvas'
+      ) {
+        return;
+      }
       const { ctx, width, height } = chart;
       ctx.save();
       ctx.globalCompositeOperation = 'destination-over';
@@ -98,7 +104,7 @@
   }
 
   function chartSurfaceColor() {
-    return anaCssVar('--ana-bg', isDarkMode() ? cssVar('--bg', '#1C1C1E') : '#f4f5f0');
+    return anaCssVar('--ana-bg', isDarkMode() ? cssVar('--bg', '#1a252f') : '#f4f5f0');
   }
 
   function hexToRgb(hex) {
@@ -189,11 +195,6 @@
 
   const PAL = buildPalette();
 
-  if (typeof Chart !== 'undefined') {
-    Chart.defaults.color = PAL.legend;
-    Chart.defaults.borderColor = PAL.grid;
-  }
-
   const legendBottom = {
     position: 'bottom',
     labels: {
@@ -204,10 +205,43 @@
     },
   };
 
+  const tooltipBase = {
+    backgroundColor: PAL.tooltipBg,
+    titleColor: '#f8fafc',
+    bodyColor: '#e2e8f0',
+    borderColor: isDarkMode() ? 'rgba(148,163,184,0.28)' : 'transparent',
+    borderWidth: isDarkMode() ? 1 : 0,
+    titleFont: { size: 13, weight: '600' },
+    bodyFont: { size: 12 },
+    padding: 12,
+    cornerRadius: 8,
+    displayColors: true,
+    boxPadding: 4,
+  };
+
+  if (typeof Chart !== 'undefined') {
+    Chart.defaults.color = PAL.legend;
+    Chart.defaults.borderColor = PAL.grid;
+    Chart.defaults.plugins.tooltip.backgroundColor = tooltipBase.backgroundColor;
+    Chart.defaults.plugins.tooltip.titleColor = tooltipBase.titleColor;
+    Chart.defaults.plugins.tooltip.bodyColor = tooltipBase.bodyColor;
+    Chart.defaults.plugins.tooltip.borderColor = tooltipBase.borderColor;
+    Chart.defaults.plugins.tooltip.borderWidth = tooltipBase.borderWidth;
+    Chart.defaults.plugins.tooltip.cornerRadius = tooltipBase.cornerRadius;
+    Chart.defaults.plugins.tooltip.padding = tooltipBase.padding;
+    Chart.defaults.plugins.tooltip.displayColors = true;
+  }
+
   const monthlyData = safeLoadJson('monthly-data');
   const yearlyData = safeLoadJson('yearly-data');
   const alltimeData = safeLoadJson('alltime-data');
+  const revenueByYearData = safeLoadJson('revenue-by-year-data');
   const debtorsChartData = safeLoadJson('debtors-data');
+  const hraciAgeData = safeLoadJson('hraci-age-data');
+  const hraciPohlaviData = safeLoadJson('hraci-pohlavi-data');
+  const hraciUrovenData = safeLoadJson('hraci-uroven-data');
+  const hraciEngageData = safeLoadJson('hraci-engage-data');
+  const hraciFreqData = safeLoadJson('hraci-freq-data');
   const trenerChartData = safeLoadJson('trener-data');
   const trenerHoursData = safeLoadJson('trener-hours-data');
   const activityData = safeLoadJson('activity-data');
@@ -256,18 +290,6 @@
       border: { display: false },
       beginAtZero: true,
     },
-  };
-
-  const tooltipBase = {
-    backgroundColor: PAL.tooltipBg,
-    titleColor: '#f8fafc',
-    bodyColor: '#e2e8f0',
-    titleFont: { size: 13, weight: '600' },
-    bodyFont: { size: 12 },
-    padding: 12,
-    cornerRadius: 8,
-    displayColors: true,
-    boxPadding: 4,
   };
 
   function hoverCursor(chart) {
@@ -342,12 +364,23 @@
     return `<div class="drill-panel drill-panel--${variant}">${content}</div>`;
   }
 
-  function drillHeader(title, subtitle, variant) {
-    const badgeClass = variant ? ` drill-header-badge--${variant}` : '';
-    return `<div class="drill-header">
-      <h3>${title}</h3>
-      ${subtitle ? `<span class="drill-header-badge${badgeClass}">${subtitle}</span>` : ''}
+  /** Nadpis grafu je v modalu (openDrill); zde jen období (měsíc / rok). */
+  function drillHeader(period, _subtitle, _variant) {
+    if (!period) return '';
+    return `<div class="drill-header drill-header--period">
+      <p class="drill-period-label">${period}</p>
     </div>`;
+  }
+
+  function metricTitle(focus) {
+    const labels = {
+      cashflow: 'Cash Flow',
+      gross_profit: t('grossProfit', 'Hrubý zisk'),
+      net_profit: t('netProfit', 'Čistý zisk'),
+      trener_paid: t('coachPayments', 'Výplaty trenérům'),
+      other_costs: t('otherCosts', 'Ostatní náklady'),
+    };
+    return labels[focus] || t('accountingDetail', 'Účetní detail');
   }
 
   function drillGrid(items, extraClass) {
@@ -381,48 +414,56 @@
   }
 
   function monthDetail(d) {
+    if (d && d.split) {
+      const schoolUnpaid = Math.max(0, (d.treningy_charged || 0) - (d.school_paid || 0));
+      return drillWrap('month', drillHeader(d.label) + drillGrid([
+        { label: t('hoursPlayed', 'Odehrané hodiny'), value: hFmt(d.hours), hl: true, tone: 'brand' },
+        { label: t('schoolHours', 'Hodiny – škola'), value: hFmt(d.treningy_hours || 0), tone: 'neutral' },
+        { label: t('rentalHours', 'Hodiny – pronájmy'), value: hFmt(d.pronajem_hours || 0), tone: 'neutral' },
+        { label: t('schoolCharged', 'Tenisová škola'), value: kcFmt(d.treningy_charged || 0), tone: 'slate' },
+        { label: t('rentals', 'Pronájmy'), value: kcFmt(d.pronajmy || 0), tone: 'dark' },
+        { label: t('charged', 'Tržby celkem'), value: kcFmt(d.charged), tone: 'slate' },
+        { label: t('paid', 'Příjmy celkem'), value: kcFmt(d.paid), tone: 'profit' },
+        { label: t('unpaidSchool', 'Nezaplaceno (škola)'), value: kcFmt(schoolUnpaid), neg: schoolUnpaid > 0, tone: 'cost' },
+      ]));
+    }
     const unpaid = Math.max(0, (d.charged || 0) - (d.paid || 0));
-    return drillWrap('month', drillHeader(d.label, t('monthlyBreakdown', 'Měsíční rozpad'), 'month') + drillGrid([
+    return drillWrap('month', drillHeader(d.label) + drillGrid([
       { label: t('hoursPlayed', 'Odehrané hodiny'), value: hFmt(d.hours), hl: true, tone: 'brand' },
       { label: t('charged', 'Naúčtováno'), value: kcFmt(d.charged), tone: 'slate' },
-      { label: t('paid', 'Zaplaceno'), value: kcFmt(d.paid), tone: 'dark' },
-      { label: t('unpaid', 'Nezaplaceno'), value: kcFmt(unpaid), neg: unpaid > 0, tone: 'danger' },
+      { label: t('paid', 'Zaplaceno'), value: kcFmt(d.paid), tone: 'profit' },
+      { label: t('unpaid', 'Nezaplaceno'), value: kcFmt(unpaid), neg: unpaid > 0, tone: 'cost' },
       { label: t('payment', 'Úhrada'), value: d.charged > 0 ? Math.round(d.paid / d.charged * 100) + ' %' : '—', tone: 'neutral' },
     ]));
   }
 
   function accMonthDetail(d, focus) {
-    const labels = {
-      cashflow: 'Cash Flow',
-      gross_profit: t('grossProfit', 'Hrubý zisk'),
-      net_profit: t('netProfit', 'Čistý zisk'),
-      trener_paid: t('coachPayments', 'Výplaty trenérům'),
-      other_costs: t('otherCosts', 'Ostatní náklady'),
-    };
     const cf = d.cashflow || 0;
     const gp = d.gross_profit || 0;
     const oc = d.other_costs || 0;
+    const tp = d.trener_paid || 0;
+    const te = d.trener_earned || 0;
     const np = d.net_profit !== undefined
       ? d.net_profit
-      : ((d.paid || 0) - (d.trener_paid || 0) - oc);
-    return drillWrap('accounting', drillHeader(d.label, labels[focus] || t('accountingDetail', 'Účetní detail'), 'accounting') + drillGrid([
-      { label: 'Cash Flow', value: kcFmt(cf), neg: cf < 0, hl: focus === 'cashflow', tone: 'slate' },
-      { label: t('grossProfit', 'Hrubý zisk'), value: kcFmt(gp), neg: gp < 0, hl: focus === 'gross_profit', tone: 'dark' },
-      { label: t('netProfit', 'Čistý zisk'), value: kcFmt(np), neg: np < 0, hl: focus === 'net_profit', tone: 'brand' },
-      { label: t('charged', 'Naúčtováno'), value: kcFmt(d.charged || 0) },
-      { label: t('received', 'Přijato'), value: kcFmt(d.paid || 0) },
-      { label: t('coachPayments', 'Výplaty trenérům'), value: kcFmt(d.trener_paid || 0), hl: focus === 'trener_paid', tone: 'brand' },
-      { label: t('otherCosts', 'Ostatní náklady'), value: kcFmt(oc), hl: focus === 'other_costs', tone: 'danger' },
-      { label: t('coachCosts', 'Náklady trenérů'), value: kcFmt(d.trener_earned || 0) },
+      : ((d.paid || 0) - tp - oc);
+    return drillWrap('accounting', drillHeader(d.label) + drillGrid([
+      { label: 'Cash Flow', value: kcFmt(cf), neg: cf < 0, hl: focus === 'cashflow', tone: cf < 0 ? 'cost' : 'slate' },
+      { label: t('grossProfit', 'Hrubý zisk'), value: kcFmt(gp), neg: gp < 0, hl: focus === 'gross_profit', tone: gp < 0 ? 'cost' : 'profit' },
+      { label: t('netProfit', 'Čistý zisk'), value: kcFmt(np), neg: np < 0, hl: focus === 'net_profit', tone: np < 0 ? 'cost' : 'profit' },
+      { label: t('charged', 'Naúčtováno'), value: kcFmt(d.charged || 0), tone: 'slate' },
+      { label: t('received', 'Přijato'), value: kcFmt(d.paid || 0), tone: 'profit' },
+      { label: t('coachPayments', 'Výplaty trenérům'), value: kcFmt(tp), hl: focus === 'trener_paid', tone: 'cost' },
+      { label: t('otherCosts', 'Ostatní náklady'), value: kcFmt(oc), hl: focus === 'other_costs', tone: 'cost' },
+      { label: t('coachCosts', 'Náklady trenérů'), value: kcFmt(te), tone: 'cost' },
     ]));
   }
 
   function dayDetail(d) {
-    return drillWrap('day', drillHeader(d.day_name + ' ' + d.date, t('dailyActivity', 'Denní aktivita'), 'day')
+    return drillWrap('day', drillHeader(d.day_name + ' ' + d.date)
       + drillGrid([
         { label: t('hours', 'Hodiny'), value: hFmt(d.hours), hl: true, tone: 'brand' },
         { label: t('charged', 'Naúčtováno'), value: kcFmt(d.charged), tone: 'slate' },
-        { label: t('paid', 'Zaplaceno'), value: kcFmt(d.paid), tone: 'dark' },
+        { label: t('paid', 'Zaplaceno'), value: kcFmt(d.paid), tone: 'profit' },
       ])
       + `<div class="drill-subsection drill-subsection--bars"><h5 class="drill-subheading">${t('dayDistribution', 'Rozložení dne')}</h5>${drillBars([
         { label: t('hours', 'Hodiny'), value: d.hours, display: hFmt(d.hours) },
@@ -440,8 +481,9 @@
     const podilValue = label === t('charged', 'Naúčtováno')
       ? t('percentBase', '100 % (základ)')
       : shareOfNauctovano(value, base);
-    return drillWrap('comparison', drillHeader(label, t('financialComparison', 'Finanční srovnání –') + ' ' + ctx, 'comparison') + drillGrid([
-      { label: label, value: kcFmt(value), hl: true, neg: isUnpaid, tone: isUnpaid ? 'danger' : 'slate' },
+    const period = ctx ? (t('financialComparison', 'Finanční srovnání') + ' – ' + ctx) : '';
+    return drillWrap('comparison', drillHeader(period) + drillGrid([
+      { label: label, value: kcFmt(value), hl: true, neg: isUnpaid, tone: isUnpaid ? 'cost' : 'slate' },
       { label: t('share', 'Podíl'), value: podilValue, tone: 'neutral' },
     ]));
   }
@@ -453,9 +495,10 @@
     const debtLabel = t('debt', 'Dluh');
     const isDebt = extra?.amountLabel === debtLabel;
     const heroTone = isDebt ? 'danger' : variant;
+    const period = extra?.subtitle || '';
 
     let html = drillWrap(variant, `
-      ${drillHeader(name, extra?.subtitle || '', variant)}
+      ${drillHeader(period)}
       <div class="drill-hero drill-hero--${heroTone}">
         <span class="drill-hero-label">${extra?.amountLabel || t('amount', 'Částka')}</span>
         <span class="drill-hero-value">${extra?.amountDisplay || kcFmt(amount)}</span>
@@ -720,12 +763,39 @@
     const pointRadius = data.length > 12 ? 4 : 6;
     const modalBar = forModal ? Math.min(barThickness + 8, 36) : barThickness;
     const modalPoint = forModal ? pointRadius + 2 : pointRadius;
+    const split = !!(data.length && data[0].split);
 
-    return {
-      type: 'bar',
-      data: {
-        labels: data.map(d => d.label),
-        datasets: [
+    const moneyDatasets = split
+      ? [
+          {
+            label: t('schoolCharged', 'Tenisová škola'),
+            data: data.map(d => d.treningy_charged || 0),
+            backgroundColor: forModal ? PAL.charged : ctx => barGradient(ctx.chart, PAL.chargedBar),
+            borderRadius: 4,
+            yAxisID: 'yMoney',
+            order: 3,
+            maxBarThickness: modalBar,
+          },
+          {
+            label: t('rentals', 'Pronájmy'),
+            data: data.map(d => d.pronajmy || 0),
+            backgroundColor: forModal ? 'rgba(230,120,23,0.75)' : ctx => barGradient(ctx.chart, 'rgba(230,120,23,0.45)'),
+            borderRadius: 4,
+            yAxisID: 'yMoney',
+            order: 2,
+            maxBarThickness: modalBar,
+          },
+          {
+            label: t('incomeTotal', 'Příjmy celkem'),
+            data: data.map(d => d.paid),
+            backgroundColor: forModal ? PAL.paid : ctx => barGradient(ctx.chart, PAL.paidBar),
+            borderRadius: 4,
+            yAxisID: 'yMoney',
+            order: 4,
+            maxBarThickness: modalBar,
+          },
+        ]
+      : [
           {
             label: t('charged', 'Naúčtováno'),
             data: data.map(d => d.charged),
@@ -746,6 +816,14 @@
             order: 3,
             maxBarThickness: modalBar,
           },
+        ];
+
+    return {
+      type: 'bar',
+      data: {
+        labels: data.map(d => d.label),
+        datasets: [
+          ...moneyDatasets,
           {
             label: t('hours', 'Hodiny'),
             data: data.map(d => d.hours),
@@ -820,13 +898,134 @@
     const builder = forModal => financeOverviewConfig(data, forModal);
     registerChart(chartId, builder(false), builder);
     bindClick(chartId, idx => {
-      openDrill(t('monthPrefix', 'Měsíc:') + ' ' + data[idx].label, monthDetail(data[idx]));
+      openDrill(t('monthlyBreakdown', 'Měsíční rozpad'), monthDetail(data[idx]));
+    });
+  }
+
+  function yearRevenueDetail(y) {
+    const months = y.months || [];
+    const monthRows = months.map(m => {
+      if (m.split) {
+        return {
+          label: m.label,
+          value: kcFmt(m.charged || 0),
+          sub: `${t('schoolCharged', 'Škola')} ${kcFmt(m.treningy_charged || 0)} · ${t('rentals', 'Pronájmy')} ${kcFmt(m.pronajmy || 0)} · ${hFmt(m.hours || 0)}`,
+        };
+      }
+      return {
+        label: m.label,
+        value: kcFmt(m.charged || 0),
+        sub: `${t('paid', 'Zaplaceno')} ${kcFmt(m.paid || 0)} · ${hFmt(m.hours || 0)}`,
+      };
+    });
+    const summary = y.split
+      ? [
+          { label: t('charged', 'Tržby celkem'), value: kcFmt(y.charged), hl: true, tone: 'slate' },
+          { label: t('schoolCharged', 'Tenisová škola'), value: kcFmt(y.treningy_charged || 0), tone: 'slate' },
+          { label: t('rentals', 'Pronájmy'), value: kcFmt(y.pronajmy || 0), tone: 'dark' },
+          { label: t('incomeTotal', 'Příjmy celkem'), value: kcFmt(y.paid), tone: 'profit' },
+          { label: t('hours', 'Hodiny'), value: hFmt(y.hours), tone: 'brand' },
+        ]
+      : [
+          { label: t('charged', 'Tržby'), value: kcFmt(y.charged), hl: true, tone: 'slate' },
+          { label: t('paid', 'Zaplaceno'), value: kcFmt(y.paid), tone: 'profit' },
+          { label: t('hours', 'Hodiny'), value: hFmt(y.hours), tone: 'brand' },
+        ];
+    const monthsHtml = monthRows.length
+      ? `<div class="drill-subsection"><h5 class="drill-subheading">${t('monthsInYear', 'Měsíce v roce')}</h5>
+          <div class="drill-year-months">${monthRows.map(r => `
+            <div class="drill-year-month">
+              <div class="drill-year-month__top"><strong>${r.label}</strong><span>${r.value}</span></div>
+              <div class="drill-year-month__sub">${r.sub}</div>
+            </div>`).join('')}</div></div>`
+      : '';
+    return drillWrap('year', drillHeader(y.label) + drillGrid(summary) + monthsHtml);
+  }
+
+  function financeByYearConfig(data, forModal) {
+    const barThickness = data.length > 10 ? 28 : 40;
+    const modalBar = forModal ? Math.min(barThickness + 8, 52) : barThickness;
+    const split = !!(data.length && data[0].split);
+    const datasets = split
+      ? [
+          {
+            label: t('schoolCharged', 'Tenisová škola'),
+            data: data.map(d => d.treningy_charged || 0),
+            backgroundColor: forModal ? PAL.charged : ctx => barGradient(ctx.chart, PAL.chargedBar),
+            borderRadius: 4,
+            maxBarThickness: modalBar,
+          },
+          {
+            label: t('rentals', 'Pronájmy'),
+            data: data.map(d => d.pronajmy || 0),
+            backgroundColor: forModal ? 'rgba(230,120,23,0.75)' : ctx => barGradient(ctx.chart, 'rgba(230,120,23,0.45)'),
+            borderRadius: 4,
+            maxBarThickness: modalBar,
+          },
+          {
+            label: t('incomeTotal', 'Příjmy celkem'),
+            data: data.map(d => d.paid || 0),
+            backgroundColor: forModal ? PAL.paid : ctx => barGradient(ctx.chart, PAL.paidBar),
+            borderRadius: 4,
+            maxBarThickness: modalBar,
+          },
+        ]
+      : [
+          {
+            label: t('charged', 'Tržby'),
+            data: data.map(d => d.charged || 0),
+            backgroundColor: forModal ? PAL.charged : ctx => barGradient(ctx.chart, PAL.chargedBar),
+            borderRadius: 4,
+            maxBarThickness: modalBar,
+          },
+          {
+            label: t('paid', 'Zaplaceno'),
+            data: data.map(d => d.paid || 0),
+            backgroundColor: forModal ? PAL.paid : ctx => barGradient(ctx.chart, PAL.paidBar),
+            borderRadius: 4,
+            maxBarThickness: modalBar,
+          },
+        ];
+    return {
+      type: 'bar',
+      data: { labels: data.map(d => d.label), datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { ...legendBottom, labels: { ...legendBottom.labels, pointStyleWidth: 10, padding: 18 } },
+          datalabels: { display: false },
+          tooltip: {
+            ...tooltipBase,
+            callbacks: { label: c => ' ' + kcFmt(c.parsed.y) },
+          },
+        },
+        scales: {
+          x: { ...baseScales.x },
+          y: {
+            ...baseScales.y,
+            ticks: { ...baseScales.y.ticks, callback: kcShrt },
+          },
+        },
+        ...(forModal ? {} : hoverCursor()),
+      },
+    };
+  }
+
+  function makeFinanceByYearChart(chartId, data) {
+    if (!data?.length) return;
+    const builder = forModal => financeByYearConfig(data, forModal);
+    registerChart(chartId, builder(false), builder);
+    bindClick(chartId, idx => {
+      openDrill(t('yearBreakdown', 'Roční rozpad – škola + pronájmy'), yearRevenueDetail(data[idx]));
     });
   }
 
   makeFinanceOverviewChart('financeChart', monthlyData);
   makeFinanceOverviewChart('financeYearChart', yearlyData);
   makeFinanceOverviewChart('financeAlltimeChart', alltimeData);
+  makeFinanceByYearChart('financeByYearChart', revenueByYearData);
 
   /* Aktivita 7 dní */
   if (activityData?.length) {
@@ -903,7 +1102,7 @@
     });
     registerChart('activityChart', activityBuilder(false), activityBuilder);
     bindClick('activityChart', idx => {
-      openDrill(activityData[idx].day_name + ' ' + activityData[idx].date, dayDetail(activityData[idx]));
+      openDrill(t('dailyActivity', 'Denní aktivita'), dayDetail(activityData[idx]));
     });
   }
 
@@ -970,7 +1169,7 @@
     registerChart(id, builder(false), builder);
     const src = sourceData || accData;
     bindClick(id, idx => {
-      if (src?.[idx]) openDrill(src[idx].label, accMonthDetail(src[idx], focusKey));
+      if (src?.[idx]) openDrill(metricTitle(focusKey), accMonthDetail(src[idx], focusKey));
     });
   }
 
@@ -998,7 +1197,7 @@
           data,
           borderColor: stroke,
           backgroundColor: forModal ? 'transparent' : fill,
-          pointBackgroundColor: data.map(v => (v < 0 ? PAL.danger : PAL.brandPoint)),
+          pointBackgroundColor: data.map(v => (v < 0 ? '#ffffff' : '#ffffff')),
           pointBorderColor: data.map(v => (v < 0 ? PAL.danger : stroke)),
           pointBorderWidth: 2,
           pointRadius: forModal ? pointRadius + 1 : pointRadius,
@@ -1049,7 +1248,7 @@
     registerChart(id, builder(false), builder);
     const src = sourceData || accData;
     bindClick(id, idx => {
-      if (src?.[idx]) openDrill(src[idx].label, accMonthDetail(src[idx], focusKey));
+      if (src?.[idx]) openDrill(metricTitle(focusKey), accMonthDetail(src[idx], focusKey));
     });
   }
 
@@ -1071,19 +1270,22 @@
     if (sumIds.net) setSumBadge(sumIds.net, sum(npVals));
     if (sumIds.trener) setSumBadge(sumIds.trener, sum(tpVals));
 
+    const profitGreen = isDarkMode() ? 'rgba(110,231,183,0.85)' : 'rgba(22,163,74,0.85)';
+    const costRed = isDarkMode() ? 'rgba(252,165,165,0.85)' : 'rgba(201,42,42,0.78)';
+
     if (chartIds.cashflow) accBarChart(chartIds.cashflow, labels, cfVals, 'cashflow', PAL.slateBar, dense, data);
-    if (chartIds.gross) accBarChart(chartIds.gross, labels, gpVals, 'gross_profit', PAL.paid, dense, data);
+    if (chartIds.gross) accBarChart(chartIds.gross, labels, gpVals, 'gross_profit', profitGreen, dense, data);
     if (chartIds.net) {
       if (lineSet.has('net')) {
         const chartData = cumulativeLine ? toCumulative(npVals) : npVals;
-        accLineChart(chartIds.net, labels, chartData, 'net_profit', PAL.brandBar, data, { cumulative: cumulativeLine });
-      } else accBarChart(chartIds.net, labels, npVals, 'net_profit', PAL.brandBar, dense, data);
+        accLineChart(chartIds.net, labels, chartData, 'net_profit', profitGreen, data, { cumulative: cumulativeLine });
+      } else accBarChart(chartIds.net, labels, npVals, 'net_profit', profitGreen, dense, data);
     }
     if (chartIds.trener) {
       if (lineSet.has('trener')) {
         const chartData = cumulativeLine ? toCumulative(tpVals) : tpVals;
-        accLineChart(chartIds.trener, labels, chartData, 'trener_paid', PAL.slateBarSoft, data, { cumulative: cumulativeLine });
-      } else accBarChart(chartIds.trener, labels, tpVals, 'trener_paid', PAL.slateBarSoft, dense, data);
+        accLineChart(chartIds.trener, labels, chartData, 'trener_paid', costRed, data, { cumulative: cumulativeLine });
+      } else accBarChart(chartIds.trener, labels, tpVals, 'trener_paid', costRed, dense, data);
     }
   }
 
@@ -1136,20 +1338,20 @@
       `<div class="drill-note"><span>${it.label}:</span> ${it.poznamka}</div>`
     ).join('');
 
-    const subtitle = d.weekday ? `${d.weekday} · den` : 'Den';
+    const period = [d.label, d.weekday].filter(Boolean).join(' · ');
 
     return drillWrap('naklady', `
-      ${drillHeader(d.label, subtitle, 'naklady')}
+      ${drillHeader(period)}
       <div class="drill-hero drill-hero--danger">
         <span class="drill-hero-label">Celkem za den</span>
         <span class="drill-hero-value">${kcFmt(d.total || 0)}</span>
       </div>
       <div class="drill-subsection">
         <h5 class="drill-subheading">Položky nákladů</h5>
-        ${drillGrid(rows, 'drill-grid--stats')}
+        ${drillGrid(rows.map(r => ({ ...r, tone: 'cost' })), 'drill-grid--stats')}
       </div>
       ${notes ? `<div class="drill-subsection drill-subsection--notes">${notes}</div>` : ''}
-      ${d.datum_value ? `<a class="drill-link" href="${nakladySectionUrl}?datum=${d.datum_value}">${t('editDayCosts', 'Upravit náklady za den')} →</a>` : ''}
+      ${d.datum_value ? `<a class="drill-link" href="${nakladySectionUrl}?datum=${d.datum_value}">Upravit náklady za den →</a>` : ''}
     `);
   }
 
@@ -1164,13 +1366,13 @@
           ${drillGrid((day.items || []).map(it => ({
             label: it.label,
             value: kcFmt(it.castka),
-            tone: 'slate',
+            tone: 'cost',
           })), 'drill-grid--stats')}
         </div>
       `).join('');
 
       return drillWrap('naklady', `
-        ${drillHeader(d.label, t('monthlyBreakdownByDays', 'Měsíční rozpad po dnech'), 'naklady')}
+        ${drillHeader(d.label)}
         <div class="drill-hero drill-hero--danger">
           <span class="drill-hero-label">Celkem za měsíc</span>
           <span class="drill-hero-value">${kcFmt(d.total || 0)}</span>
@@ -1251,7 +1453,7 @@
     bindClick(id, idx => {
       if (!data[idx]) return;
       const detailFn = onClickDetail || nakladyMonthDetail;
-      openDrill(t('costsPrefix', 'Náklady:') + ' ' + data[idx].label, detailFn(data[idx]));
+      openDrill(t('otherCosts', 'Ostatní náklady'), detailFn(data[idx]));
     });
   }
 
@@ -1269,255 +1471,102 @@
   setupNakladyCharts();
 
   /* ── Kalendář nákladů ── */
-  (function initNakladyDatePicker() {
-    const root = document.getElementById('nakladyDatePicker');
-    const trigger = document.getElementById('nakladyDateTrigger');
-    const popover = document.getElementById('nakladyDatePopover');
-    const labelEl = document.getElementById('nakladyDateLabel');
-    const titleEl = document.getElementById('nakladyCalTitle');
-    const daysEl = document.getElementById('nakladyCalDays');
-    const hidden = document.getElementById('nakladyDatum');
-    const manualInput = document.getElementById('nakladyDateManual');
-    const manualBtn = document.getElementById('nakladyDateManualBtn');
-    if (!root || !trigger || !popover || !hidden) return;
+  /* Date picker nákladů: sdílený TsDatePicker (ts-date-picker.js) */
 
-    const MONTHS_LONG = [
-      t('jan', 'Leden'), t('feb', 'Únor'), t('mar', 'Březen'), t('apr', 'Duben'), t('may', 'Květen'), t('jun', 'Červen'),
-      t('jul', 'Červenec'), t('aug', 'Srpen'), t('sep', 'Září'), t('oct', 'Říjen'), t('nov', 'Listopad'), t('dec', 'Prosinec'),
-    ];
-    const yearMin = parseInt(root.dataset.yearMin || '2020', 10);
-    const yearMax = parseInt(root.dataset.yearMax || String(new Date().getFullYear()), 10);
-    const today = new Date();
-
-    let viewYear;
-    let viewMonth;
-    let selectedYear;
-    let selectedMonth;
-    let selectedDay;
-    let yearPickMode = false;
-
-    function parseDatum(val) {
-      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(val || '');
-      if (!m) return null;
-      return { year: parseInt(m[1], 10), month: parseInt(m[2], 10), day: parseInt(m[3], 10) };
-    }
-
-    function initFromHidden() {
-      const p = parseDatum(hidden.value) || parseDatum(root.dataset.datum) || {
-        year: today.getFullYear(),
-        month: today.getMonth() + 1,
-        day: today.getDate(),
-      };
-      selectedYear = p.year;
-      selectedMonth = p.month;
-      selectedDay = p.day;
-      viewYear = p.year;
-      viewMonth = p.month;
-    }
-
-    function formatLabel(y, m, d) {
-      return `${d}. ${MONTHS_LONG[m - 1].toLowerCase()} ${y}`;
-    }
-
-    function datumValue(y, m, d) {
-      return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    }
-
-    function updateLabel() {
-      if (labelEl) labelEl.textContent = formatLabel(selectedYear, selectedMonth, selectedDay);
-    }
-
-    function closePopover() {
-      popover.hidden = true;
-      trigger.setAttribute('aria-expanded', 'false');
-      yearPickMode = false;
-    }
-
-    function openPopover() {
-      viewYear = selectedYear;
-      viewMonth = selectedMonth;
-      yearPickMode = false;
-      popover.hidden = false;
-      trigger.setAttribute('aria-expanded', 'true');
-      render();
-    }
-
-    function navigateToDate(y, m, d) {
-      const dt = new Date(y, m - 1, d);
-      const now = new Date();
-      if (dt > now) {
-        y = now.getFullYear();
-        m = now.getMonth() + 1;
-        d = now.getDate();
-      }
-      selectedYear = y;
-      selectedMonth = m;
-      selectedDay = d;
-      hidden.value = datumValue(y, m, d);
-      updateLabel();
-      closePopover();
-      window.location.href = `${nakladySectionUrl}?datum=${hidden.value}`;
-    }
-
-    function renderYearGrid() {
-      daysEl.innerHTML = '';
-      titleEl.textContent = t('selectYear', 'Vyberte rok');
-      const grid = document.createElement('div');
-      grid.className = 'naklady-cal-year-grid';
-      for (let y = yearMax; y >= yearMin; y--) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'naklady-cal-year-btn' + (y === viewYear ? ' is-selected' : '');
-        btn.textContent = String(y);
-        btn.addEventListener('click', () => {
-          viewYear = y;
-          yearPickMode = false;
-          render();
-        });
-        grid.appendChild(btn);
-      }
-      daysEl.appendChild(grid);
-    }
-
-    function renderDays() {
-      daysEl.innerHTML = '';
-      titleEl.textContent = `${MONTHS_LONG[viewMonth - 1]} ${viewYear}`;
-
-      const first = new Date(viewYear, viewMonth - 1, 1);
-      const startDow = (first.getDay() + 6) % 7;
-      const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
-      const prevDays = new Date(viewYear, viewMonth - 1, 0).getDate();
-
-      const totalCells = Math.ceil((startDow + daysInMonth) / 7) * 7;
-
-      for (let i = 0; i < totalCells; i++) {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'naklady-cal-day';
-
-        let y = viewYear;
-        let m = viewMonth;
-        let d;
-
-        if (i < startDow) {
-          d = prevDays - startDow + i + 1;
-          m = viewMonth - 1;
-          if (m < 1) { m = 12; y -= 1; }
-          btn.classList.add('is-other');
-        } else if (i >= startDow + daysInMonth) {
-          d = i - startDow - daysInMonth + 1;
-          m = viewMonth + 1;
-          if (m > 12) { m = 1; y += 1; }
-          btn.classList.add('is-other');
-        } else {
-          d = i - startDow + 1;
-        }
-
-        btn.textContent = String(d);
-
-        if (y < yearMin || y > yearMax) {
-          btn.disabled = true;
-        }
-
-        const isToday = y === today.getFullYear() && m === today.getMonth() + 1 && d === today.getDate();
-        const isSelected = y === selectedYear && m === selectedMonth && d === selectedDay;
-        if (isToday) btn.classList.add('is-today');
-        if (isSelected) btn.classList.add('is-selected');
-
-        btn.addEventListener('click', () => {
-          if (y < yearMin || y > yearMax) return;
-          navigateToDate(y, m, d);
-        });
-
-        daysEl.appendChild(btn);
-      }
-    }
-
-    function render() {
-      if (yearPickMode) renderYearGrid();
-      else renderDays();
-    }
-
-    function parseManualDate(raw) {
-      const s = (raw || '').trim();
-      let m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(s);
-      if (m) {
-        return { day: parseInt(m[1], 10), month: parseInt(m[2], 10), year: parseInt(m[3], 10) };
-      }
-      m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(s);
-      if (m) {
-        return { year: parseInt(m[1], 10), month: parseInt(m[2], 10), day: parseInt(m[3], 10) };
-      }
-      return null;
-    }
-
-    function applyManualDate() {
-      const p = parseManualDate(manualInput?.value);
-      if (!p || p.month < 1 || p.month > 12 || p.day < 1 || p.day > 31) return;
-      if (p.year < yearMin || p.year > yearMax) return;
-      const dt = new Date(p.year, p.month - 1, p.day);
-      if (dt.getFullYear() !== p.year || dt.getMonth() + 1 !== p.month || dt.getDate() !== p.day) return;
-      navigateToDate(p.year, p.month, p.day);
-    }
-
-    trigger.addEventListener('click', e => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (popover.hidden) openPopover();
-      else closePopover();
-    });
-
-    titleEl?.addEventListener('click', e => {
-      e.preventDefault();
-      yearPickMode = !yearPickMode;
-      render();
-    });
-
-    popover.querySelector('[data-cal-prev]')?.addEventListener('click', e => {
-      e.preventDefault();
-      if (yearPickMode) return;
-      viewMonth -= 1;
-      if (viewMonth < 1) { viewMonth = 12; viewYear -= 1; }
-      render();
-    });
-
-    popover.querySelector('[data-cal-next]')?.addEventListener('click', e => {
-      e.preventDefault();
-      if (yearPickMode) return;
-      viewMonth += 1;
-      if (viewMonth > 12) { viewMonth = 1; viewYear += 1; }
-      render();
-    });
-
-    popover.querySelector('[data-cal-today]')?.addEventListener('click', e => {
-      e.preventDefault();
-      navigateToDate(today.getFullYear(), today.getMonth() + 1, today.getDate());
-    });
-
-    manualBtn?.addEventListener('click', e => {
-      e.preventDefault();
-      applyManualDate();
-    });
-
-    manualInput?.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        applyManualDate();
+  /* Profil hráčů – věk / pohlaví / úroveň */
+  function registerProfilDoughnut(canvasId, data, colors, title) {
+    if (!data?.labels?.length || !data.values?.some(v => v > 0)) return;
+    const labels = [];
+    const values = [];
+    data.labels.forEach((label, i) => {
+      const v = data.values[i] || 0;
+      if (v > 0) {
+        labels.push(label);
+        values.push(v);
       }
     });
-
-    document.addEventListener('click', e => {
-      if (!root.contains(e.target)) closePopover();
+    if (!labels.length) return;
+    const total = values.reduce((a, b) => a + b, 0) || 1;
+    const builder = forModal => ({
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          backgroundColor: colors.slice(0, labels.length),
+          borderWidth: 2,
+          borderColor: PAL.surface,
+          hoverOffset: forModal ? 12 : 8,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: forModal ? '58%' : '64%',
+        plugins: {
+          legend: { ...legendBottom, labels: { ...legendBottom.labels, font: { size: 10 } } },
+          tooltip: { ...tooltipBase },
+          datalabels: {
+            color: '#fff',
+            font: { weight: 'bold', size: 10 },
+            formatter: (v, ctx) => {
+              const s = ctx.dataset.data.reduce((a, b) => a + b, 0);
+              const r = Math.round((v / s) * 100);
+              return r > 7 ? r + '%' : '';
+            },
+          },
+        },
+        ...(forModal ? {} : hoverCursor()),
+      },
     });
-
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && !popover.hidden) closePopover();
+    registerChart(canvasId, builder(false), builder);
+    bindClick(canvasId, idx => {
+      const label = labels[idx];
+      const value = values[idx] || 0;
+      openDrill(title, drillWrap('hrac', drillHeader(label) + drillGrid([
+        { label: t('playersCount', 'Počet hráčů'), value: String(value), hl: true, tone: 'slate' },
+        { label: t('share', 'Podíl'), value: Math.round((value / total) * 100) + ' %', tone: 'neutral' },
+      ])));
     });
+  }
 
-    initFromHidden();
-    hidden.value = datumValue(selectedYear, selectedMonth, selectedDay);
-    updateLabel();
-  })();
+  const profilPalette = isDarkMode()
+    ? [
+        'rgba(230,120,23,0.9)', 'rgba(147,197,253,0.85)', 'rgba(110,231,183,0.7)',
+        'rgba(251,191,36,0.75)', 'rgba(244,114,182,0.7)', 'rgba(167,139,250,0.75)',
+        'rgba(148,163,184,0.55)', 'rgba(100,116,139,0.45)',
+      ]
+    : [
+        'rgba(230,120,23,0.9)', 'rgba(59,130,246,0.75)', 'rgba(16,185,129,0.7)',
+        'rgba(245,158,11,0.75)', 'rgba(236,72,153,0.65)', 'rgba(139,92,246,0.7)',
+        'rgba(100,116,139,0.55)', 'rgba(148,163,184,0.4)',
+      ];
+
+  registerProfilDoughnut('hraciAgeChart', hraciAgeData, profilPalette, t('ageGroups', 'Věkové skupiny'));
+  registerProfilDoughnut(
+    'hraciPohlaviChart',
+    hraciPohlaviData,
+    [profilPalette[1], profilPalette[4], profilPalette[6], profilPalette[7]],
+    t('gender', 'Pohlaví')
+  );
+  registerProfilDoughnut(
+    'hraciUrovenChart',
+    hraciUrovenData,
+    [profilPalette[2], profilPalette[0], profilPalette[3], profilPalette[6]],
+    t('tennisLevel', 'Úroveň tenisu')
+  );
+  registerProfilDoughnut(
+    'hraciEngageChart',
+    hraciEngageData,
+    [profilPalette[6], profilPalette[1], profilPalette[2], profilPalette[0], profilPalette[3]],
+    t('weeklyIntensity', 'Intenzita (h / týden)')
+  );
+  registerProfilDoughnut(
+    'hraciFreqChart',
+    hraciFreqData,
+    [profilPalette[1], profilPalette[2], profilPalette[0], profilPalette[5]],
+    t('monthFrequency', 'Frekvence (tento měsíc)')
+  );
 
   /* Doughnut – rovnováha */
   const dBal = kpiVal('total_debt_value', 'data-dluhy') || Math.abs(parseVal('data-dluhy'));
@@ -1539,6 +1588,7 @@
         responsive: true, maintainAspectRatio: false, cutout: forModal ? '62%' : '68%',
         plugins: {
           legend: legendBottom,
+          tooltip: { ...tooltipBase },
           datalabels: {
             color: '#fff', font: { weight: 'bold', size: 11 },
             formatter: (v, ctx) => {
@@ -1554,8 +1604,8 @@
     bindClick('balanceChart', idx => {
       const labels = [t('playerDebts', 'Dluhy hráčů'), t('playerSurpluses', 'Přebytky hráčů')];
       const vals = [dBal, pBal];
-      openDrill(labels[idx], drillWrap('balance', drillHeader(labels[idx], t('balanceDistribution', 'Rozložení bilance'), 'balance') + drillGrid([
-        { label: labels[idx], value: kcFmt(vals[idx]), hl: true, neg: idx === 0, tone: idx === 0 ? 'danger' : 'slate' },
+      openDrill(t('balanceDistribution', 'Rozložení bilance'), drillWrap('balance', drillHeader(labels[idx]) + drillGrid([
+        { label: labels[idx], value: kcFmt(vals[idx]), hl: true, neg: idx === 0, tone: idx === 0 ? 'cost' : 'profit' },
         { label: t('share', 'Podíl'), value: Math.round(vals[idx] / (dBal + pBal) * 100) + ' %', tone: 'neutral' },
       ])));
     });
@@ -1588,6 +1638,7 @@
         responsive: true, maintainAspectRatio: false, cutout: forModal ? '54%' : '58%',
         plugins: {
           legend: { ...legendBottom, labels: { ...legendBottom.labels, font: { size: 10 } } },
+          tooltip: { ...tooltipBase },
           datalabels: {
             color: '#fff', font: { weight: 'bold', size: 10 },
             formatter: (v, ctx) => {
@@ -1643,6 +1694,7 @@
         responsive: true, maintainAspectRatio: false, cutout: forModal ? '54%' : '58%',
         plugins: {
           legend: { ...legendBottom, labels: { ...legendBottom.labels, font: { size: 10 } } },
+          tooltip: { ...tooltipBase },
           datalabels: {
             color: '#fff', font: { weight: 'bold', size: 10 },
             formatter: (v, ctx) => {
@@ -1693,6 +1745,7 @@
           borderRadius: 6,
           borderSkipped: false,
           maxBarThickness: forModal ? 28 : 22,
+          clip: false,
         }],
       },
       options: {
@@ -1700,10 +1753,15 @@
         maintainAspectRatio: false,
         indexAxis: 'y',
         animation: forModal ? false : { duration: 500 },
+        layout: { padding: { right: forModal ? 56 : 48 } },
         plugins: {
           legend: { display: false },
           datalabels: {
-            anchor: 'end', align: 'right',
+            display: true,
+            clip: false,
+            anchor: 'end',
+            align: 'right',
+            offset: 6,
             formatter: v => hFmt(v),
             font: { weight: '600', size: forModal ? 12 : 11 },
             color: PAL.label,
@@ -1711,7 +1769,11 @@
           tooltip: { ...tooltipBase, callbacks: { label: c => ' ' + hFmt(c.parsed.x) } },
         },
         scales: {
-          x: { ...baseScales.y, ticks: { ...baseScales.y.ticks, callback: v => v + ' h' } },
+          x: {
+            ...baseScales.y,
+            suggestedMax: maxH * 1.18,
+            ticks: { ...baseScales.y.ticks, callback: v => v + ' h' },
+          },
           y: { ...baseScales.x, grid: { display: false } },
         },
         ...(forModal ? {} : hoverCursor()),

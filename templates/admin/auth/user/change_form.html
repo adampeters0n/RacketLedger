@@ -1,5 +1,8 @@
 {% extends "admin/change_form.html" %}
-{% load static i18n %}
+{% load static i18n admin_urls %}
+
+{% block bodyclass %}{{ block.super }} ts-page-user-form{% endblock %}
+
 {% block breadcrumbs %}
 <div class="breadcrumbs">
   <a href="{% url 'admin:index' %}">{% trans "Domů" %}</a>
@@ -9,9 +12,213 @@
 </div>
 {% endblock %}
 
+{% block content_title %}{% endblock %}
 {% block content_subtitle %}{% endblock %}
 
 {% block extrastyle %}
   {{ block.super }}
-  <link rel="stylesheet" href="{% static 'admin/css/user-change-form.css' %}">
+  <link rel="stylesheet" href="{% static 'admin/css/nastaveni.css' %}?v=no-row-hover-1">
+  <link rel="stylesheet" href="{% static 'admin/css/user-change-form.css' %}?v=roles-icon-only-1">
+{% endblock %}
+
+{% block object-tools %}{% endblock %}
+
+{% block form_top %}
+  {% trans "Nastavení" as ts_ph_eyebrow %}
+  {% if add %}
+    {% trans "Nový uživatel" as ts_ph_title %}
+    {% include "admin/includes/ts_page_head.html" with eyebrow=ts_ph_eyebrow title=ts_ph_title %}
+  {% elif original %}
+    {% with original.get_full_name as full_name %}
+      {% if full_name %}
+        {% include "admin/includes/ts_page_head.html" with eyebrow=ts_ph_eyebrow title=full_name %}
+      {% else %}
+        {% include "admin/includes/ts_page_head.html" with eyebrow=ts_ph_eyebrow title=original.username %}
+      {% endif %}
+    {% endwith %}
+  {% else %}
+    {% trans "Upravit uživatele" as ts_ph_title %}
+    {% include "admin/includes/ts_page_head.html" with eyebrow=ts_ph_eyebrow title=ts_ph_title %}
+  {% endif %}
+{% endblock %}
+
+{% block field_sets %}
+{% with f=adminform.form %}
+<section class="user-form-panel nast-panel is-active">
+  <header class="nast-panel-head">
+    <h2>{% trans "Účet" %}</h2>
+    {% if add %}
+      <p>{% trans "Přihlášení, heslo a role. Role nahradí složité zaškrtávání oprávnění." %}</p>
+    {% else %}
+      <p>{% trans "Jméno, e-mail, aktivita účtu a role — správce klubu nebo provozovatel." %}</p>
+    {% endif %}
+  </header>
+
+  {% if add %}
+  <div class="nast-group">
+    <p class="nast-group-label">{% trans "Přihlášení" %}</p>
+    <div class="nast-row">
+      <div class="nast-row-text">
+        <span class="nast-row-label">{{ f.username.label }}</span>
+        <span class="nast-row-detail">{% trans "Pro přihlášení do administrace" %}</span>
+      </div>
+      <div class="nast-row-control">{{ f.username }}</div>
+    </div>
+    {{ f.username.errors }}
+    <div class="nast-row">
+      <div class="nast-row-text">
+        <span class="nast-row-label">{{ f.password1.label }}</span>
+        <span class="nast-row-detail">{% trans "Alespoň 8 znaků" %}</span>
+      </div>
+      <div class="nast-row-control">{{ f.password1 }}</div>
+    </div>
+    {{ f.password1.errors }}
+    <div class="nast-row">
+      <div class="nast-row-text">
+        <span class="nast-row-label">{{ f.password2.label }}</span>
+        <span class="nast-row-detail">{% trans "Pro kontrolu překlepu" %}</span>
+      </div>
+      <div class="nast-row-control">{{ f.password2 }}</div>
+    </div>
+    {{ f.password2.errors }}
+  </div>
+
+  {% else %}
+  <div class="nast-group">
+    <p class="nast-group-label">{% trans "Přihlášení" %}</p>
+    <div class="nast-row">
+      <div class="nast-row-text">
+        <span class="nast-row-label">{{ f.username.label }}</span>
+        <span class="nast-row-detail">{% trans "Pro přihlášení do administrace" %}</span>
+      </div>
+      <div class="nast-row-control">{{ f.username }}</div>
+    </div>
+    {{ f.username.errors }}
+    <div class="nast-row user-password-row">
+      <div class="nast-row-text">
+        <span class="nast-row-label">{% trans "Heslo" %}</span>
+        <span class="nast-row-detail">{% trans "Změna hesla na samostatné stránce" %}</span>
+      </div>
+      <div class="nast-row-control user-password-box">
+        {{ f.password }}
+      </div>
+    </div>
+    {{ f.password.errors }}
+  </div>
+
+  <div class="nast-group">
+    <p class="nast-group-label">{% trans "Osoba" %}</p>
+    <div class="nast-row">
+      <div class="nast-row-text">
+        <span class="nast-row-label">{{ f.first_name.label }}</span>
+        <span class="nast-row-detail">{% trans "Nepovinné" %}</span>
+      </div>
+      <div class="nast-row-control">{{ f.first_name }}</div>
+    </div>
+    {{ f.first_name.errors }}
+    <div class="nast-row">
+      <div class="nast-row-text">
+        <span class="nast-row-label">{{ f.last_name.label }}</span>
+        <span class="nast-row-detail">{% trans "Nepovinné" %}</span>
+      </div>
+      <div class="nast-row-control">{{ f.last_name }}</div>
+    </div>
+    {{ f.last_name.errors }}
+    <div class="nast-row">
+      <div class="nast-row-text">
+        <span class="nast-row-label">{{ f.email.label }}</span>
+        <span class="nast-row-detail">{% trans "Pro obnovu hesla a notifikace" %}</span>
+      </div>
+      <div class="nast-row-control">{{ f.email }}</div>
+    </div>
+    {{ f.email.errors }}
+  </div>
+
+  <div class="nast-group">
+    <p class="nast-group-label">{% trans "Přístup" %}</p>
+    <div class="nast-row nast-row-toggle">
+      <div class="nast-row-text">
+        <span class="nast-row-label">{{ f.is_active.label }}</span>
+        <span class="nast-row-detail">{{ f.is_active.help_text }}</span>
+      </div>
+      <label class="nast-switch" aria-label="{{ f.is_active.label }}">
+        {{ f.is_active }}
+        <span class="nast-switch-track"></span>
+      </label>
+    </div>
+    {{ f.is_active.errors }}
+    {% if original and not is_popup %}
+    {% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
+    <a class="nast-row nast-row-link" href="{% add_preserved_filters history_url %}">
+      <div class="nast-row-text">
+        <span class="nast-row-label">{% trans "Historie" %}</span>
+        <span class="nast-row-detail">{% trans "Kdo a kdy účet měnil" %}</span>
+      </div>
+      <span class="nast-row-chevron" aria-hidden="true">›</span>
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="nast-group">
+    <p class="nast-group-label">{{ f.role.label }}</p>
+    <p class="nast-group-hint">{{ f.role.help_text }}</p>
+    <div class="nast-excel-list user-role-list" role="radiogroup" aria-label="{{ f.role.label }}">
+      {% for value, label in role_choices %}
+      <label class="nast-excel-row{% if f.role.value == value %} is-active{% endif %}">
+        <input type="radio"
+               name="{{ f.role.html_name }}"
+               value="{{ value }}"
+               class="nast-excel-input user-role-input"
+               id="id_role_{{ forloop.counter0 }}"
+               {% if f.role.value == value %}checked{% endif %}>
+        <span class="user-role-badge" aria-hidden="true" data-role="{{ value }}">
+          {% if value == "coach" %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="3.2"/>
+            <path d="M5.5 19.2c1.2-3.2 3.4-4.8 6.5-4.8s5.3 1.6 6.5 4.8"/>
+            <path d="M17.2 6.2l1.6-1.6M18.8 9.2h2.2M17.2 12.2l1.6 1.6"/>
+          </svg>
+          {% elif value == "club" %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 20V9.5L12 4l8 5.5V20"/>
+            <path d="M9.5 20v-5.5h5V20"/>
+            <path d="M9.5 11.5h5"/>
+          </svg>
+          {% elif value == "admin" %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3l2.4 4.7 5.3.8-3.8 3.7.9 5.3L12 15.2 7.2 17.5l.9-5.3L4.3 8.5l5.3-.8L12 3z"/>
+          </svg>
+          {% else %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="8.2"/>
+            <path d="M3.8 12h16.4"/>
+            <path d="M12 3.8c2.4 2.6 3.6 5.3 3.6 8.2s-1.2 5.6-3.6 8.2c-2.4-2.6-3.6-5.3-3.6-8.2s1.2-5.6 3.6-8.2z"/>
+          </svg>
+          {% endif %}
+        </span>
+        <span class="nast-excel-meta">
+          <span class="nast-excel-name">{{ label }}</span>
+          <span class="nast-excel-desc">
+            {% if value == "coach" %}
+              {% trans "Tréninky, hráči, trenéři, rozvrh a nastavení." %}
+            {% elif value == "club" %}
+              {% trans "Vše co trenér klubu, plus ceník a platby." %}
+            {% elif value == "admin" %}
+              {% trans "Všechny části systému. Jen pro účet AdamPeterka." %}
+            {% else %}
+              {% trans "Celý systém, uživatelé, export a import." %}
+            {% endif %}
+          </span>
+        </span>
+        <span class="nast-excel-check" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </span>
+      </label>
+      {% endfor %}
+    </div>
+    {{ f.role.errors }}
+  </div>
+</section>
+{% endwith %}
 {% endblock %}

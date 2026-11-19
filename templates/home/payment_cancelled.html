@@ -1,0 +1,10 @@
+{% extends "home/legal_base.html" %}
+{% load i18n %}
+
+{% block page_title %}{% trans "Platba zrušena" %} · {{ product_name }}{% endblock %}
+
+{% block legal_content %}
+  <h1>{% trans "Platba zrušena" %}</h1>
+  <p>{% trans "Platba nebyla dokončena. Pokud chcete zaplatit, použijte znovu odkaz z e-mailu s vyúčtováním." %}</p>
+  <p><a href="{% url 'home' %}">{% trans "Zpět na úvod" %}</a></p>
+{% endblock %}

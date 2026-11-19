@@ -27,27 +27,31 @@ html[data-mode="dark"] .ts-drawer-panel {
 }
 
 html[data-mode="dark"] .ts-topnav a.is-active,
-html[data-mode="dark"] .topnav a.active {
+html[data-mode="dark"] .topnav a.active,
+html[data-mode="dark"] .ts-topnav a.is-active:hover,
+html[data-mode="dark"] .topnav a.active:hover {
+  background: var(--brand) !important;
+  border-color: var(--brand) !important;
   color: #fff !important;
 }
 
-html[data-mode="dark"] .ts-topnav a:hover,
-html[data-mode="dark"] .topnav a:hover {
+html[data-mode="dark"] .ts-topnav a:not(.is-active):hover,
+html[data-mode="dark"] .topnav a:not(.active):hover {
   background: var(--brand-100) !important;
   color: var(--text-strong) !important;
 }
 
-/* ── Tabulky – jednotná barva hlavičky ve všech sloupcích ── */
-#result_list thead th,
-#result_list thead th.sorted,
-#result_list thead th.sortable,
-#result_list thead th.action-checkbox-column,
-.module table thead th,
-.results thead th,
-table.list thead th,
-#changelist table thead th,
-table thead th,
-table thead th a {
+/* ── Tabulky – jednotná barva hlavičky (mimo admin changelist) ── */
+body:not(.change-list) #result_list thead th,
+body:not(.change-list) #result_list thead th.sorted,
+body:not(.change-list) #result_list thead th.sortable,
+body:not(.change-list) #result_list thead th.action-checkbox-column,
+body:not(.change-list) .module table thead th,
+body:not(.change-list) .results thead th,
+body:not(.change-list) table.list thead th,
+body:not(.change-list) #changelist table thead th,
+body:not(.change-list) table thead th,
+body:not(.change-list) table thead th a {
   background: var(--table-head) !important;
   background-color: var(--table-head) !important;
   background-image: none !important;
@@ -56,12 +60,12 @@ table thead th a {
   box-shadow: none !important;
 }
 
-#result_list thead tr:hover th,
-#result_list thead tr:hover th a,
-.module table thead tr:hover th,
-.results thead tr:hover th,
-table thead tr:hover th,
-table thead tr:hover th a {
+body:not(.change-list) #result_list thead tr:hover th,
+body:not(.change-list) #result_list thead tr:hover th a,
+body:not(.change-list) .module table thead tr:hover th,
+body:not(.change-list) .results thead tr:hover th,
+body:not(.change-list) table thead tr:hover th,
+body:not(.change-list) table thead tr:hover th a {
   background: var(--table-head) !important;
   background-color: var(--table-head) !important;
   color: var(--text-strong) !important;
@@ -85,7 +89,6 @@ table thead tr:hover th a {
 #changelist-filter a:hover,
 .filters a:hover {
   text-decoration: none !important;
-  color: var(--brand) !important;
 }
 
 #result_list tbody tr:nth-child(even),
@@ -120,42 +123,6 @@ table tbody tr:hover > th {
   background: var(--table-row-hover) !important;
 }
 
-/* Kalendář – nepřepisovat hover řádku (jen den); bez šedých prázdných buněk */
-.calendarbox table tbody tr:hover > td,
-.calendarbox table tbody tr:hover > th {
-  background: var(--surface, #fff) !important;
-}
-.calendarbox .calendar tbody td.nonday,
-.calendarbox .calendar tbody td.noday {
-  background: var(--surface, #fff) !important;
-}
-.calendarbox table tbody tr:hover > td:not(.selected) > a:not(:hover):not(:focus) {
-  color: var(--text, #111) !important;
-}
-
-#result_list tbody tr:hover a:not(.deletelink),
-.results tbody tr:hover a:not(.deletelink),
-.module table tbody tr:hover a:not(.deletelink),
-table tbody tr:hover a:not(.deletelink) {
-  color: var(--brand) !important;
-  text-decoration: none !important;
-}
-
-/* Vybraný den v kalendáři – vždy bílý text i při hoveru řádku */
-.calendarbox .calendar tbody tr:hover > td.selected > a,
-.calendarbox .calendar tbody td.selected > a,
-.calendarbox table tbody tr:hover > td.selected > a {
-  color: #fff !important;
-  -webkit-text-fill-color: #fff !important;
-  background: var(--brand) !important;
-}
-
-#result_list tbody tr:hover a.deletelink,
-#result_list tbody tr:hover .deletelink,
-table tbody tr:hover a.deletelink {
-  color: var(--danger) !important;
-}
-
 table tbody tr,
 table tbody td,
 table tbody th {
@@ -163,7 +130,7 @@ table tbody th {
   color: var(--text) !important;
 }
 
-/* Vybrané řádky – řádek bez zvýraznění, jen checkbox (mark) */
+/* Vybrané řádky – celý řádek bez ohraničení */
 #result_list tbody tr.selected,
 #result_list tbody tr.row-selected,
 .results tbody tr.selected,
@@ -186,14 +153,13 @@ table tbody tr.selected > th,
 table tbody tr.selected > td,
 table tbody tr.row-selected > th,
 table tbody tr.row-selected > td {
-  background: var(--surface) !important;
+  background: var(--table-row-hover) !important;
   color: var(--text) !important;
   border-top-color: var(--line) !important;
   border-bottom-color: var(--line) !important;
   border-left-color: var(--line) !important;
   border-right-color: var(--line) !important;
   box-shadow: none !important;
-  outline: none !important;
 }
 
 #result_list tbody tr.selected:hover > th,
@@ -207,6 +173,7 @@ table tbody tr.selected:hover > td,
 table tbody tr.row-selected:hover > th,
 table tbody tr.row-selected:hover > td {
   background: var(--table-row-hover) !important;
+  color: var(--text) !important;
 }
 
 #result_list tbody tr.selected a,
@@ -241,7 +208,7 @@ table tbody tr.row-selected a {
 html[data-mode="dark"] input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]),
 html[data-mode="dark"] select,
 html[data-mode="dark"] textarea {
-  background: var(--table-head) !important;
+  background: var(--bg) !important;
   color: var(--text) !important;
   border-color: var(--line) !important;
 }
@@ -292,9 +259,37 @@ table.payments a:hover,
 .analytika-table a:hover,
 .mini-table a:hover,
 .dashboard-table a:hover,
-.trener-monthly-table a:hover {
+.trener-monthly-table a:hover,
+#changelist-filter a:hover,
+.filters a:hover,
+#result_list tbody tr:hover a,
+.results tbody tr:hover a,
+.module table tbody tr:hover a,
+#content-main table tbody tr:hover a,
+table tbody tr:hover a,
+#result_list tbody tr.selected a:hover,
+#result_list tbody tr.row-selected a:hover,
+table tbody tr.selected a:hover,
+table tbody tr.row-selected a:hover {
   text-decoration: none !important;
   color: var(--brand) !important;
+}
+
+#result_list tbody tr:hover .kredit-zaporny,
+table tbody tr:hover .kredit-zaporny,
+#result_list tbody tr:hover .text-red,
+table tbody tr:hover .text-red {
+  color: var(--brand-600, var(--brand, #dc2626)) !important;
+}
+
+#result_list tbody tr:hover .vyuct-kredit-dluh,
+table tbody tr:hover .vyuct-kredit-dluh {
+  color: #b91c1c !important;
+}
+
+#result_list tbody tr:hover .vyuct-kredit-plus,
+table tbody tr:hover .vyuct-kredit-plus {
+  color: #15803d !important;
 }
 
 #result_list tbody td,
@@ -334,11 +329,11 @@ table.payments tbody th,
   border: revert !important;
 }
 
-#result_list thead th,
-.results thead th,
-.module table thead th,
-#content-main table thead th,
-#content table thead th,
+body:not(.change-list) #result_list thead th,
+body:not(.change-list) .results thead th,
+body:not(.change-list) .module table thead th,
+body:not(.change-list) #content-main table thead th,
+body:not(.change-list) #content table thead th,
 table.list thead th,
 table.ledger thead th,
 table.payments thead th,
@@ -348,6 +343,8 @@ table.payments thead th,
 .trener-monthly-table thead th {
   border-bottom: 1px solid var(--line) !important;
 }
+
+/* Changelist výšku/výplň hlavičky řídí changelist-global.css + inline pojistka v base_site */
 
 /* Respektovat nastavení místo OS dark mode */
 @media (prefers-color-scheme: dark) {

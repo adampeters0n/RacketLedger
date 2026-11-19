@@ -1,0 +1,56 @@
+{% extends "home/legal_base.html" %}
+{% load i18n %}
+
+{% block page_title %}{% trans "Podmínky užívání" %} – {{ product_name }}{% endblock %}
+
+{% block legal_content %}
+<p class="legal__eyebrow">{% trans "Právní informace" %}</p>
+<h1>{% trans "Podmínky užívání" %}</h1>
+<p class="legal__lead">
+  {% blocktrans with name=product_name %}Tyto podmínky upravují používání softwaru TenisSystém na instanci „{{ name }}“.{% endblocktrans %}
+</p>
+<p class="legal__note">{% trans "Text je výchozí šablona. Před ostrým provozem upravte podle smlouvy s klubem a nechte zkontrolovat právníkem." %}</p>
+
+<section>
+  <h2>{% trans "1. Služba" %}</h2>
+  <p>{% trans "TenisSystém slouží ke správě tenisového klubu (hráči, tréninky, platby, vyúčtování, analytika). Každá instance je určena jednomu klubu (white-label)." %}</p>
+</section>
+
+<section>
+  <h2>{% trans "2. Účty a přístup" %}</h2>
+  <p>{% trans "Přístup do administrace mají pouze uživatelé zřízení správcem klubu. Uživatel odpovídá za utajení hesla a za činnost pod svým účtem. Při ztrátě hesla použijte obnovení hesla na přihlašovací stránce." %}</p>
+</section>
+
+<section>
+  <h2>{% trans "3. Obsah a odpovědnost klubu" %}</h2>
+  <p>{% trans "Klub odpovídá za správnost zadaných údajů, za oprávněnost zpracování osobních údajů hráčů/rodičů a za komunikaci s nimi (včetně e-mailových vyúčtování)." %}</p>
+</section>
+
+<section>
+  <h2>{% trans "4. Dostupnost" %}</h2>
+  <p>{% trans "Snažíme se o spolehlivý provoz, ale nezaručujeme nepřetržitou dostupnost. Údržba, výpadky infrastruktury nebo vyšší moc mohou službu dočasně omezit." %}</p>
+</section>
+
+<section>
+  <h2>{% trans "5. Zakázané použití" %}</h2>
+  <p>{% trans "Je zakázáno službu zneužívat (neoprávněný přístup, narušení bezpečnosti, šíření škodlivého kódu, porušování práv třetích osob)." %}</p>
+</section>
+
+<section>
+  <h2>{% trans "6. Ukončení" %}</h2>
+  <p>{% trans "Přístup může být ukončen při ukončení smlouvy / předplatného, při závažném porušení podmínek nebo na žádost správce klubu. Po ukončení lze data exportovat dle dohodnutého postupu." %}</p>
+</section>
+
+<section>
+  <h2>{% trans "7. Kontakt" %}</h2>
+  <p>
+    {% if contact_email %}
+      {% blocktrans with email=contact_email %}Dotazy k těmto podmínkám: {{ email }}.{% endblocktrans %}
+    {% else %}
+      {% trans "Dotazy k těmto podmínkám směřujte na kontakt uvedený na úvodní stránce." %}
+    {% endif %}
+  </p>
+</section>
+
+<p class="legal__updated">{% trans "Aktualizováno:" %} {{ now|date:"j. n. Y" }}</p>
+{% endblock %}

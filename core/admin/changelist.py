@@ -1,12 +1,21 @@
-"""Jednoduché řazení changelist tabulek – jeden sloupec, bez čísel v hlavičce."""
+"""Jednosloupcové řazení + jednotné stránkování changelist tabulek."""
 from django.contrib import admin
-from django.contrib.admin.views.main import ChangeList, ORDER_VAR
+from django.contrib.admin.views.main import ChangeList, ORDER_VAR, PAGE_VAR
 from django.db.models import OrderBy
 from django.http import HttpResponseRedirect
 from django.utils.http import urlencode
 
+from ..admin_mixins import system_list_per_page
+
 
 class SingleColumnChangeList(ChangeList):
+    @property
+    def next_page_url(self):
+        """URL další stránky pro AJAX „načíst dalších N“, nebo prázdný řetězec."""
+        if getattr(self, "page_num", 1) >= getattr(self.paginator, "num_pages", 1):
+            return ""
+        return self.get_query_string({PAGE_VAR: self.page_num + 1})
+
     def get_ordering(self, request, queryset):
         params = self.params
         ordering = list(
@@ -17,6 +26,7 @@ class SingleColumnChangeList(ChangeList):
             ordering = []
             order_param = str(raw).split(".")[0]
             try:
+                # Django ORDER_VAR je 0-based index do list_display (vč. action_checkbox).
                 _none, pfx, idx = order_param.rpartition("-")
                 field_name = self.list_display[int(idx)]
                 order_field = self.get_ordering_field(field_name)
@@ -41,7 +51,7 @@ class SingleColumnChangeList(ChangeList):
 
 
 def patch_admin_single_column_sorting():
-    """Aplikuje jednosloupcové řazení na všechny ModelAdmin tabulky."""
+    """Jednosloupcové řazení + stránkování (50) na všechny ModelAdmin tabulky."""
     if getattr(admin.ModelAdmin, "_single_column_sort_patched", False):
         return
 
@@ -56,7 +66,19 @@ def patch_admin_single_column_sorting():
             params = request.GET.copy()
             params[ORDER_VAR] = order.split(".")[0]
             return HttpResponseRedirect(f"{request.path}?{urlencode(params, doseq=True)}")
-        return _orig_changelist_view(self, request, extra_context)
+
+        original = getattr(self, "list_per_page", 100)
+        apply_paging = not getattr(self, "list_per_page_locked", False) and original < 1000
+        if apply_paging:
+            default = getattr(self, "list_per_page_default", 50)
+            self.list_per_page = system_list_per_page(
+                default, user=getattr(request, "user", None)
+            )
+        try:
+            return _orig_changelist_view(self, request, extra_context)
+        finally:
+            if apply_paging:
+                self.list_per_page = original
 
     admin.ModelAdmin.get_changelist = get_changelist
     admin.ModelAdmin.changelist_view = changelist_view

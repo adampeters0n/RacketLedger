@@ -1,39 +1,130 @@
 {% extends "admin/base_site.html" %}
 {% load static i18n %}
+{% block bodyclass %}{{ block.super }} app-core model-trening ts-page-schedule{% endblock %}
 {% block extrastyle %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'admin/css/kalendar.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/form-detail.css' %}?v=page-width-2">
+<link rel="stylesheet" href="{% static 'admin/css/kalendar.css' %}?v=slot-scroll-2">
+<link rel="stylesheet" href="{% static 'admin/css/kalendar-qa.css' %}?v=slot-scroll-2">
 {% endblock %}
 
+{% block content_title %}{% endblock %}
+
 {% block content %}
+{% trans "Kalendář" as ts_ph_eyebrow %}
+{% trans "Rozvrh" as ts_ph_title %}
+{% include "admin/includes/ts_page_head.html" with eyebrow=ts_ph_eyebrow title=ts_ph_title %}
 <form class="sched-toolbar" method="get" action="">
-  <input type="hidden" name="view" value="{{ view_mode }}">
-  <a class="button" href="?view={{ view_mode }}&amp;date={{ prev_date }}{% if selected_trainer %}&amp;trener={{ selected_trainer }}{% endif %}">{% trans "← Předchozí" %}</a>
-  <input type="date" name="date" value="{{ date_value }}" onchange="this.form.submit()">
-  <div class="seg" role="tablist" aria-label="{% trans 'Zobrazení' %}">
-    <a href="?view=day&amp;date={{ date_value }}{% if selected_trainer %}&amp;trener={{ selected_trainer }}{% endif %}"  class="{% if view_mode == 'day' %}is-active{% endif %}">{% trans "Den" %}</a>
-    <a href="?view=week&amp;date={{ date_value }}{% if selected_trainer %}&amp;trener={{ selected_trainer }}{% endif %}" class="{% if view_mode == 'week' %}is-active{% endif %}">{% trans "Týden" %}</a>
+  <input type="hidden" name="view" value="week">
+  <input type="hidden" name="rozvrh" value="{{ rozvrh_mode }}">
+  {% if not is_staly %}
+  <a class="button sched-nav-prev" href="?rozvrh={{ rozvrh_mode }}&amp;view=week&amp;date={{ prev_date }}{% if selected_trainer %}&amp;trener={{ selected_trainer }}{% endif %}">{% trans "← Předchozí" %}</a>
+  {% else %}
+  <input type="hidden" name="date" value="{{ date_value }}">
+  {% endif %}
+  <div class="sched-toolbar__controls">
+    {% if not is_staly %}
+    {% include "admin/includes/ts_date_picker.html" with name="date" value=date_value submit_form=True allow_future=True year_min=2020 year_max=2035 %}
+    {% endif %}
+    <div class="seg seg--rozvrh{% if rozvrh_mode == 'aktualni' %} is-aktualni{% elif rozvrh_mode == 'staly' %} is-staly{% else %} is-predpokladany{% endif %}" role="tablist" aria-label="{% trans 'Typ rozvrhu' %}">
+      <span class="seg__thumb" aria-hidden="true"></span>
+      <a href="?rozvrh=aktualni&amp;view=week&amp;date={{ date_value }}{% if selected_trainer %}&amp;trener={{ selected_trainer }}{% endif %}" class="{% if rozvrh_mode == 'aktualni' %}is-active{% endif %}" role="tab" aria-selected="{% if rozvrh_mode == 'aktualni' %}true{% else %}false{% endif %}">
+        <span class="seg__label seg__label--full">{% trans "Aktuální" %}</span>
+        <span class="seg__label seg__label--short" aria-hidden="true">{% trans "Akt." %}</span>
+      </a>
+      <a href="?rozvrh=staly&amp;view=week&amp;date={{ date_value }}{% if selected_trainer %}&amp;trener={{ selected_trainer }}{% endif %}" class="{% if rozvrh_mode == 'staly' %}is-active{% endif %}" role="tab" aria-selected="{% if rozvrh_mode == 'staly' %}true{% else %}false{% endif %}">
+        <span class="seg__label seg__label--full">{% trans "Stálý" %}</span>
+        <span class="seg__label seg__label--short" aria-hidden="true">{% trans "Stálý" %}</span>
+      </a>
+      <a href="?rozvrh=predpokladany&amp;view=week&amp;date={{ date_value }}{% if selected_trainer %}&amp;trener={{ selected_trainer }}{% endif %}" class="{% if rozvrh_mode == 'predpokladany' %}is-active{% endif %}" role="tab" aria-selected="{% if rozvrh_mode == 'predpokladany' %}true{% else %}false{% endif %}">
+        <span class="seg__label seg__label--full">{% trans "Předpokládaný" %}</span>
+        <span class="seg__label seg__label--short" aria-hidden="true">{% trans "Předp." %}</span>
+      </a>
+    </div>
+    <select name="trener" onchange="this.form.submit()" {% if is_staly %}class="sched-trener-filter"{% endif %}>
+      <option value="">{% if is_staly %}{% trans "Vyberte trenéra…" %}{% else %}{% trans "Všichni trenéři" %}{% endif %}</option>
+      {% for t in trainers %}
+        <option value="{{ t.id }}" {% if selected_trainer == t.id %}selected{% endif %}>{{ t.get_full_name|default:t.username }}</option>
+      {% endfor %}
+    </select>
+    <span class="sched-toolbar__spacer" aria-hidden="true"></span>
+    {% if is_platform_admin %}
+    <div class="seg seg--kind" role="tablist" aria-label="{% trans 'Režim rozvrhu' %}">
+      <a href="{% url 'admin:core_trening_schedule' %}?rozvrh={{ rozvrh_mode }}&amp;view=week&amp;date={{ date_value }}{% if selected_trainer %}&amp;trener={{ selected_trainer }}{% endif %}" class="is-active">{% trans "Tréninky" %}</a>
+      <a href="{% url 'admin:core_pronajem_schedule' %}?rozvrh={{ rozvrh_mode }}&amp;view=week&amp;date={{ date_value }}">{% trans "Pronájmy" %}</a>
+    </div>
+    {% endif %}
   </div>
-  <select name="trener" onchange="this.form.submit()">
-    <option value="">{% trans "Všichni trenéři" %}</option>
-    {% for t in trainers %}
-      <option value="{{ t.id }}" {% if selected_trainer == t.id %}selected{% endif %}>{{ t.get_full_name|default:t.username }}</option>
-    {% endfor %}
-  </select>
-  <a class="button" href="?view={{ view_mode }}&amp;date={{ next_date }}{% if selected_trainer %}&amp;trener={{ selected_trainer }}{% endif %}">{% trans "Další →" %}</a>
-  <a class="button add-day-copy-from-cal" href="{{ copy_day_url }}">{% trans "Kopírovat den" %}</a>
-  {% if view_mode == 'week' %}
-  <a class="button add-day-copy-from-cal" href="{{ copy_week_url }}">{% trans "Kopírovat týden" %}</a>
+  {% if not is_staly %}
+  <a class="button sched-nav-next" href="?rozvrh={{ rozvrh_mode }}&amp;view=week&amp;date={{ next_date }}{% if selected_trainer %}&amp;trener={{ selected_trainer }}{% endif %}">{% trans "Další →" %}</a>
+  {% endif %}
+  {% if is_predpokladany %}
+  <button type="button" class="button sched-action-btn" id="sched-materialize-btn" data-materialize-url="{{ materialize_url }}">
+    {% blocktrans with d=today_label %}Zapsat dnešek ({{ d }}) teď{% endblocktrans %}
+  </button>
   {% endif %}
 </form>
 
-<!-- přidáme třídu s režimem: is-day / is-week; na mobilu horizontální scroll -->
+{% if is_staly %}
+<details class="sched-help">
+  <summary class="sched-help__summary">
+    <span class="sched-help__icon" aria-hidden="true">?</span>
+    <span class="sched-help__title">{% trans "Jak funguje stálý rozvrh?" %}</span>
+    <span class="sched-help__chev" aria-hidden="true"></span>
+  </summary>
+  <div class="sched-help__body">
+    <ul>
+      <li>{% trans "Stálý rozvrh je týdenní šablona, zadáváte stejné údaje jako u tréninku (trenér, typ, délka, kurt, hráči)." %}</li>
+      <li>{% trans "Zápisy ze stálého se samy nepropisují do tréninků ani do vyúčtování." %}</li>
+      <li>{% trans "Slouží hlavně jako podklad pro předpokládaný rozvrh: z něj se pak večer (nebo tlačítkem) vytvoří skutečné tréninky." %}</li>
+      <li>{% trans "Tip: vyfiltrujte trenéra, klikněte na čas (nebo podržte), vyplňte a použijte „Přidat a další“." %}</li>
+    </ul>
+  </div>
+</details>
+{% elif is_predpokladany %}
+<details class="sched-help">
+  <summary class="sched-help__summary">
+    <span class="sched-help__icon" aria-hidden="true">?</span>
+    <span class="sched-help__title">{% trans "Jak funguje předpokládaný rozvrh?" %}</span>
+    <span class="sched-help__chev" aria-hidden="true"></span>
+  </summary>
+  <div class="sched-help__body">
+    <ul>
+      <li>{% trans "Minulé dny ukazují tréninky, které už jsou uložené." %}</li>
+      <li>{% trans "Dnes a budoucí dny: přerušovaný okraj znamená, že trénink ještě není zapsaný (bere se ze stálého rozvrhu, nebo jste ho sem doplnili ručně)." %}</li>
+      <li>{% trans "Když přidáte trénink do minulosti, uloží se hned." %}</li>
+      <li>{% trans "Když přidáte trénink na dnes nebo do budoucna, zůstane zatím jen v předpokládaném, do tréninků a vyúčtování se zapíše až když kliknete na tlačítko „Zapsat dnešek teď“." %}</li>
+    </ul>
+  </div>
+</details>
+{% endif %}
+
+<nav class="sched-day-strip" id="sched-day-strip" aria-label="{% trans 'Dny týdne' %}">
+  <span class="sched-day-strip__pill" id="sched-day-strip-pill" aria-hidden="true"></span>
+  {% for d in days %}
+  <button type="button"
+          class="sched-day-strip__btn{% if forloop.first %} is-active{% endif %}"
+          data-day-index="{{ forloop.counter0 }}"
+          data-date="{{ d.date|date:'Y-m-d' }}"
+          data-dow="{{ d.dow }}">
+    <span class="sched-day-strip__dow">{{ d.label|slice:":2" }}</span>
+    {% if not is_staly %}
+    <span class="sched-day-strip__date">{{ d.date|date:"j.n." }}</span>
+    {% endif %}
+  </button>
+  {% endfor %}
+</nav>
+
 <div class="sched-scroll">
   <div class="sched-scroll-inner">
-<div class="sched-wrap is-{{ view_mode }}" style="--days: {{ days|length }}; --hour-count: {{ hour_count }}; --sched-start: {{ sched_start_hour }};">
+<div class="sched-wrap is-{{ view_mode }}{% if is_staly %} is-staly{% endif %}{% if is_predpokladany %} is-predpokladany{% endif %}"
+     style="--days: {{ days|length }}; --hour-count: {{ hour_count }}; --sched-start: {{ sched_start_hour }};"
+     data-focus-date="{{ date_value }}">
   <div class="sched-head">
     <div></div>
-    {% for d in days %}<div>{{ d.label }}</div>{% endfor %}
+    <div class="sched-head-days">
+      {% for d in days %}<div>{{ d.label }}</div>{% endfor %}
+    </div>
   </div>
 
   <div class="sched-grid">
@@ -45,14 +136,85 @@
       </div>
     </div>
 
+    <div class="sched-days-pager" id="sched-days-pager">
     {% for d in days %}
-      <div class="sched-day">
-        <div class="sched-day-body">
+      <div class="sched-day" data-date="{{ d.date|date:'Y-m-d' }}" data-dow="{{ d.dow }}">
+        <div class="sched-day-hours" aria-hidden="true">
+          <div class="sched-day-hours__inner">
+            {% for h in hours %}
+              <div class="sched-hour" style="--h: {{ h }};">{{ h|stringformat:"02d" }}:00</div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="sched-day-body" data-longpress-slot>
+          <div class="sched-press-hint" hidden aria-hidden="true"></div>
           {% for ev in d.events %}
-            <a class="ev ev--{{ ev.fmt }} ev--nlanes-{{ ev.lanes|default:1 }} ev--players-{{ ev.names|length|default:1 }}"
-               href="{% url 'admin:core_trening_change' ev.id %}"
+            {% if ev.is_staly %}
+            <button type="button"
+               class="ev ev--staly-slot ev--{{ ev.fmt }} ev--{{ ev.fmt_code }} ev--nlanes-{{ ev.lanes|default:1 }} ev--players-{{ ev.names|length|default:1 }}"
+               data-id="{{ ev.id }}"
+               data-dur="{{ ev.dur_min }}"
+               data-dow="{{ ev.dow }}"
+               data-time="{{ ev.time }}"
+               data-trener="{{ ev.trener_id }}"
+               data-format="{{ ev.format }}"
+               data-kurt="{{ ev.kurt }}"
+               data-poznamka="{{ ev.poznamka }}"
+               data-hraci="{{ ev.hraci_ids|join:',' }}"
+               data-off="{{ ev.offset_min }}"
                title="{{ ev.title }} · {{ ev.fmt_label }} · {{ ev.sub }}"
-               style="--off: {{ ev.offset_min }}; --dur: {{ ev.dur_min }}; --lane: {{ ev.lane|default:0 }}; --lanes: {{ ev.lanes|default:1 }}; --ev-bg: {{ ev.color.bg }}; --ev-border: {{ ev.color.border }}; --ev-text: {{ ev.color.text }}; --ev-bg-dark: {{ ev.color.bg_dark }}; --ev-border-dark: {{ ev.color.border_dark }}; --ev-text-dark: {{ ev.color.text_dark }};">
+               style="--off: {{ ev.offset_min }}; --dur: {{ ev.dur_min }}; --lane: {{ ev.lane|default:0 }}; --lanes: {{ ev.lanes|default:1 }};">
+              <div class="ev-names">
+                {% for name in ev.names %}
+                <span class="ev-name">{{ name }}</span>
+                {% empty %}
+                <span class="ev-name">{{ ev.fmt_label|default:"—" }}</span>
+                {% endfor %}
+              </div>
+              {% if ev.sub %}<div class="ev-sub">{{ ev.sub }}</div>{% endif %}
+            </button>
+            {% elif ev.is_ghost %}
+            <button type="button"
+               class="ev ev--ghost-slot ev--staly-slot ev--{{ ev.fmt }} ev--{{ ev.fmt_code }} ev--nlanes-{{ ev.lanes|default:1 }} ev--players-{{ ev.names|length|default:1 }}"
+               data-ghost="1"
+               data-ghost-slot-id="{{ ev.ghost_slot_id }}"
+               data-predpokladany-id="{{ ev.predpokladany_id }}"
+               data-date="{{ ev.date }}"
+               data-dur="{{ ev.dur_min }}"
+               data-dow="{{ ev.dow }}"
+               data-time="{{ ev.time }}"
+               data-trener="{{ ev.trener_id }}"
+               data-format="{{ ev.format }}"
+               data-kurt="{{ ev.kurt }}"
+               data-poznamka="{{ ev.poznamka }}"
+               data-hraci="{{ ev.hraci_ids|join:',' }}"
+               data-off="{{ ev.offset_min }}"
+               title="{{ ev.title }} · {{ ev.fmt_label }} · {{ ev.sub }}{% if ev.predpokladany_id %} (ještě neuloženo){% else %} (ze stálého){% endif %}"
+               style="--off: {{ ev.offset_min }}; --dur: {{ ev.dur_min }}; --lane: {{ ev.lane|default:0 }}; --lanes: {{ ev.lanes|default:1 }};">
+              <div class="ev-names">
+                {% for name in ev.names %}
+                <span class="ev-name">{{ name }}</span>
+                {% empty %}
+                <span class="ev-name">{{ ev.fmt_label|default:"—" }}</span>
+                {% endfor %}
+              </div>
+              {% if ev.sub %}<div class="ev-sub">{{ ev.sub }}</div>{% endif %}
+            </button>
+            {% else %}
+            <a class="ev ev--{{ ev.fmt }} ev--{{ ev.fmt_code }} ev--nlanes-{{ ev.lanes|default:1 }} ev--players-{{ ev.names|length|default:1 }}"
+               href="{% url 'admin:core_trening_change' ev.id %}"
+               data-id="{{ ev.id }}"
+               data-date="{{ ev.date }}"
+               data-time="{{ ev.time }}"
+               data-trener="{{ ev.trener_id }}"
+               data-format="{{ ev.format }}"
+               data-kurt="{{ ev.kurt }}"
+               data-poznamka="{{ ev.poznamka }}"
+               data-hraci="{{ ev.hraci_ids|join:',' }}"
+               data-dur="{{ ev.dur_min }}"
+               data-off="{{ ev.offset_min }}"
+               title="{{ ev.title }} · {{ ev.fmt_label }} · {{ ev.sub }}"
+               style="--off: {{ ev.offset_min }}; --dur: {{ ev.dur_min }}; --lane: {{ ev.lane|default:0 }}; --lanes: {{ ev.lanes|default:1 }};">
               <div class="ev-names">
                 {% for name in ev.names %}
                 <span class="ev-name">{{ name }}</span>
@@ -62,25 +224,98 @@
               </div>
               {% if ev.sub %}<div class="ev-sub">{{ ev.sub }}</div>{% endif %}
             </a>
+            {% endif %}
           {% endfor %}
         </div>
       </div>
     {% endfor %}
+    </div>
   </div>
 </div>
   </div>
 </div>
 
-<!-- legenda barev typů z ceníku -->
-{% if format_legend %}
-<div class="legend">
-  {% for item in format_legend %}
-  <span class="item">
-    <span class="chip"
-          style="--ev-bg: {{ item.bg }}; --ev-border: {{ item.border }}; --ev-bg-dark: {{ item.bg_dark }}; --ev-border-dark: {{ item.border_dark }};"></span>
-    {{ item.label }}
-  </span>
-  {% endfor %}
+<div class="legend" role="list" aria-label="{% trans 'Legenda formátů' %}">
+  <span class="item" role="listitem"><span class="chip chip--solo" aria-hidden="true"></span>{% trans "Solo" %}</span>
+  <span class="item" role="listitem"><span class="chip chip--dvojice" aria-hidden="true"></span>{% trans "Dvojice" %}</span>
+  <span class="item" role="listitem"><span class="chip chip--trojice" aria-hidden="true"></span>{% trans "Trojice" %}</span>
+  <span class="item" role="listitem"><span class="chip chip--ctverice" aria-hidden="true"></span>{% trans "Čtveřice" %}</span>
+  <span class="item" role="listitem"><span class="chip chip--skupina" aria-hidden="true"></span>{% trans "Skupina" %}</span>
+  <span class="item" role="listitem"><span class="chip chip--rezervace" aria-hidden="true"></span>{% trans "Rezervace kurtu" %}</span>
+  {% if is_staly or is_predpokladany %}
+  <span class="item" role="listitem"><span class="chip chip--staly" aria-hidden="true"></span>{% if is_predpokladany %}{% trans "Přerušovaný = ještě neuloženo (ze stálého / budoucí zápis)" %}{% else %}{% trans "Přerušovaný okraj = stálý (jen info)" %}{% endif %}</span>
+  {% endif %}
 </div>
-{% endif %}
+
+{# Rychlé přidání – stejný sheet pro tréninky i stálý rozvrh #}
+<div class="qa-overlay" id="qa-overlay" hidden>
+  <div class="qa-sheet" role="dialog" aria-modal="true" aria-labelledby="qa-title">
+    <header class="qa-sheet-head">
+      <div class="qa-sheet-titles">
+        <h2 id="qa-title">{% trans "Nový trénink" %}</h2>
+        <p class="qa-when" id="qa-when"></p>
+        <p class="qa-staly-note" id="qa-staly-note" hidden>{% trans "Nepropisuje se do tréninků ani vyúčtování." %}</p>
+      </div>
+      <div class="qa-sheet-actions">
+        <button type="button" class="qa-btn qa-btn-ghost" data-qa-cancel>{% trans "Zrušit" %}</button>
+        <button type="button" class="qa-btn qa-btn-danger" data-qa-delete hidden>{% trans "Smazat" %}</button>
+        <button type="button" class="qa-btn qa-btn-ghost" data-qa-save-next hidden>{% trans "Přidat a další" %}</button>
+        <button type="button" class="qa-btn qa-btn-primary" data-qa-save>{% trans "Přidat" %}</button>
+      </div>
+    </header>
+    <form class="qa-form" id="qa-form" autocomplete="off">
+      {% csrf_token %}
+      <input type="hidden" id="qa-slot-id" value="">
+      <input type="hidden" id="qa-dow" value="">
+      <input type="hidden" id="qa-ghost-slot-id" value="">
+      <input type="hidden" id="qa-predpokladany-id" value="">
+      <div class="qa-meta">
+        <div class="qa-row">
+          <label class="qa-field">
+            <span class="qa-label">{% trans "Trenér" %}</span>
+            <select name="trener" id="qa-trener" required></select>
+          </label>
+          <label class="qa-field">
+            <span class="qa-label">{% trans "Typ" %}</span>
+            <select name="format" id="qa-format" required></select>
+          </label>
+        </div>
+        <div class="qa-field" id="qa-delka-field">
+          <span class="qa-label">{% trans "Délka" %}</span>
+          <input type="hidden" name="delka_minut" id="qa-delka" value="60">
+          <div class="qa-chips" id="qa-delka-chips" role="group" aria-label="{% trans 'Délka' %}"></div>
+        </div>
+        <label class="qa-field qa-field--kurt">
+          <span class="qa-label">{% trans "Kurt" %}</span>
+          <select name="kurt" id="qa-kurt" required></select>
+        </label>
+      </div>
+      <div class="qa-field qa-field--hraci">
+        <span class="qa-label">{% trans "Hráči" %}</span>
+        <div class="qa-hraci" id="qa-hraci">
+          <div class="qa-hraci-rows" id="qa-hraci-rows"></div>
+          <button type="button" class="qa-btn qa-btn-ghost qa-hraci-add" id="qa-hraci-add">{% trans "+ Přidat hráče" %}</button>
+        </div>
+      </div>
+      <p class="qa-error" id="qa-error" hidden></p>
+    </form>
+  </div>
+</div>
+
+<script type="application/json" id="qa-options">{{ quick_add_options_json|safe }}</script>
+<script
+  src="{% static 'admin/js/kalendar.js' %}?v=slot-scroll-2"
+  defer
+  data-quick-add-url="{{ quick_add_url }}"
+  data-move-url="{% if not is_staly %}{{ move_url }}{% endif %}"
+  data-delete-url="{% if not is_staly %}{{ delete_url }}{% endif %}"
+  data-add-url="{{ add_training_url }}"
+  data-staly-save-url="{% if is_staly %}{{ staly_save_url }}{% endif %}"
+  data-staly-delete-url="{% if is_staly %}{{ staly_delete_url_template }}{% endif %}"
+  data-materialize-url="{% if is_predpokladany %}{{ materialize_url }}{% endif %}"
+  data-skip-url="{% if is_predpokladany %}{{ predpokladany_skip_url }}{% endif %}"
+  data-rozvrh="{{ rozvrh_mode }}"
+  data-trener="{% if selected_trainer %}{{ selected_trainer }}{% endif %}"
+  data-hold-ms="480"
+></script>
 {% endblock %}

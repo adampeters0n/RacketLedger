@@ -8,9 +8,34 @@
 
 {% block extrastyle %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'admin/css/base-site.css' %}">
-<link rel="stylesheet" href="{% static 'admin/custom.css' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'admin/css/base-site.css' %}?v=burger-plain-2">
+<link rel="stylesheet" href="{% static 'admin/custom.css' %}?v=trening-change-fix-5">
 <link rel="stylesheet" href="{% static 'admin/css/themes.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/ts-date-picker.css' %}?v=sched-mobile-toolbar-1">
+<link rel="stylesheet" href="{% static 'admin/css/ts-time-picker.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/form-detail.css' %}?v=dark-fields-1">
+<link rel="stylesheet" href="{% static 'admin/css/ts-page-head.css' %}">
+<style>
+.ts-billing-banner{
+  width:100%;
+  box-sizing:border-box;
+  padding:8px 16px;
+  background:#7f1d1d;
+  color:#fff;
+  font-size:13px;
+  font-weight:600;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px 14px;
+  align-items:center;
+  justify-content:center;
+}
+.ts-billing-banner a{color:#fecaca;text-decoration:underline;font-weight:700}
+.ts-billing-banner a:hover{color:#fff}
+</style>
 {% endblock %}
 
 {% block extrahead %}
@@ -19,6 +44,10 @@
 <script src="{% static 'admin/js/sidebar.js' %}" defer></script>
 <script src="{% static 'admin/js/breadcrumbs.js' %}" defer></script>
 <script src="{% static 'admin/js/changelist-search.js' %}" defer></script>
+<script src="{% static 'admin/js/changelist-load-more.js' %}" defer></script>
+<script src="{% static 'admin/js/ts-date-picker.js' %}" defer></script>
+<script src="{% static 'admin/js/ts-time-picker.js' %}" defer></script>
+<script src="{% static 'admin/js/ts-page-head.js' %}" defer></script>
 <meta name="robots" content="noindex, nofollow">
 {% if system_favicon_url %}
 <link rel="icon" href="{{ system_favicon_url }}" type="image/png">
@@ -29,14 +58,202 @@
 {# Téma musí být načteno jako poslední – přebije Django admin CSS i :root fallbacky #}
 {% block responsive %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'admin/css/dark-mode.css' %}">
-<link rel="stylesheet" href="{% static 'admin/css/ts-buttons.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/changelist-global.css' %}?v=amount-bold-1">
+{# Dark mode až po changelist CSS, ať přebije hardcoded #fff / #111827 #}
+<link rel="stylesheet" href="{% static 'admin/css/dark-mode.css' %}?v=safari-color-2">
+{# Globální tlačítka – načíst úplně poslední, ať přebijí page CSS #}
+<link rel="stylesheet" href="{% static 'admin/css/ts-buttons.css' %}?v=safari-color-2">
+{# Starý Safari / WebKit: pevné bordery bez color-mix #}
+<link rel="stylesheet" href="{% static 'admin/css/legacy-fallbacks.css' %}?v=safari-color-2">
 <style id="system-theme-vars">{{ system_theme_style }}</style>
 {{ system_theme_state|json_script:"system-theme-state" }}
 <script src="{% static 'admin/js/theme.js' %}"></script>
+{# Pojistka: Django .text a {padding:8px} zvětšovalo thead – výška = tbody všude #}
+<style id="ts-cl-equal-row-height">
+body.change-list #result_list thead th,
+body.change-list #result_list thead th.sorted,
+body.change-list #result_list thead th.sortable,
+body.change-list #result_list thead th.action-checkbox-column,
+body.change-list #changelist #result_list thead th,
+body.change-list #result_list tbody td,
+body.change-list #result_list tbody th {
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  padding: 10px !important;
+  box-sizing: border-box !important;
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  vertical-align: middle !important;
+}
+body.change-list #result_list thead th.action-checkbox-column,
+body.change-list #result_list tbody td.action-checkbox {
+  padding-left: 10px !important;
+  padding-right: 6px !important;
+}
+body.change-list #result_list thead th.action-checkbox-column input,
+body.change-list #result_list #action-toggle,
+body.change-list #changelist #action-toggle {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+body.change-list #result_list thead th .text {
+  display: contents !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+body.change-list #result_list thead th .text a,
+body.change-list #result_list thead th a {
+  display: inline !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  line-height: inherit !important;
+  background: transparent !important;
+}
+body.change-list #result_list thead th.sortable a {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+/* Sort ikony – výplň ano, ale ne strong (jemnější tvar + font-weight 400) */
+body.change-list {
+  --ts-sort-active: var(--brand, #e67817);
+}
+body.change-list #result_list thead th.sortable a::after {
+  content: "" !important;
+  display: inline-block !important;
+  width: 8px !important;
+  height: 12px !important;
+  flex: 0 0 auto !important;
+  background-color: transparent !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 12'%3E%3Cpath fill='%23111' d='M4 1.4L6.4 5H1.6L4 1.4Z'/%3E%3Cpath fill='%23111' d='M4 10.6L1.6 7H6.4L4 10.6Z'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: contain !important;
+  -webkit-mask: none !important;
+  mask: none !important;
+  pointer-events: none !important;
+  font-weight: 400 !important;
+}
+body.change-list #result_list thead th.sorted.ascending a::after,
+body.change-list #result_list thead th.ascending.sorted a::after {
+  width: 9px !important;
+  height: 12px !important;
+  background-color: var(--ts-sort-active) !important;
+  background-image: none !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 12'%3E%3Cpath fill='%23000' d='M5 1.5L8.2 5H6V10.5H4V5H1.8L5 1.5Z'/%3E%3C/svg%3E") center / contain no-repeat !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 12'%3E%3Cpath fill='%23000' d='M5 1.5L8.2 5H6V10.5H4V5H1.8L5 1.5Z'/%3E%3C/svg%3E") center / contain no-repeat !important;
+  transform: none !important;
+}
+body.change-list #result_list thead th.sorted.descending a::after,
+body.change-list #result_list thead th.descending.sorted a::after {
+  width: 9px !important;
+  height: 12px !important;
+  background-color: var(--ts-sort-active) !important;
+  background-image: none !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 12'%3E%3Cpath fill='%23000' d='M5 1.5L8.2 5H6V10.5H4V5H1.8L5 1.5Z'/%3E%3C/svg%3E") center / contain no-repeat !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 12'%3E%3Cpath fill='%23000' d='M5 1.5L8.2 5H6V10.5H4V5H1.8L5 1.5Z'/%3E%3C/svg%3E") center / contain no-repeat !important;
+  transform: rotate(180deg) !important;
+}
+body.change-list #result_list thead th .sortoptions,
+body.change-list #result_list thead th .clear,
+body.change-list #result_list thead th .ts-sort {
+  display: none !important;
+}
+/* Dark: hlavička tabulky – bez linky/podtržení; hover = brand */
+html[data-mode="dark"] body.change-list #result_list thead th,
+html[data-mode="dark"] body.change-list #result_list thead th.sorted,
+html[data-mode="dark"] body.change-list #result_list thead th.sortable,
+html[data-mode="dark"] body.change-list #result_list thead th.action-checkbox-column,
+html[data-mode="dark"] body.change-list #changelist #result_list thead th,
+html[data-mode="dark"] body.change-list #result_list thead tr:hover th,
+html[data-mode="dark"] table thead th {
+  background-color: var(--bg, #1a252f) !important;
+  background-image: linear-gradient(var(--text-strong, #f3f4f6), var(--text-strong, #f3f4f6)) !important;
+  background-size: 100% 1.5px !important;
+  background-position: left bottom !important;
+  background-repeat: no-repeat !important;
+  color: var(--text-strong, #f3f4f6) !important;
+  -webkit-text-fill-color: var(--text-strong, #f3f4f6) !important;
+  border: 0 !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+}
+html[data-mode="dark"] body.change-list #result_list thead th a,
+html[data-mode="dark"] body.change-list #result_list thead th .text,
+html[data-mode="dark"] body.change-list #result_list thead th .text a,
+html[data-mode="dark"] table thead th a {
+  background: transparent !important;
+  background-image: none !important;
+  color: var(--text-strong, #f3f4f6) !important;
+  -webkit-text-fill-color: var(--text-strong, #f3f4f6) !important;
+  border: 0 !important;
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+}
+html[data-mode="dark"] body.change-list #result_list thead th a:hover,
+html[data-mode="dark"] body.change-list #result_list thead th.sortable a:hover,
+html[data-mode="dark"] body.change-list #result_list thead th .text a:hover,
+html[data-mode="dark"] body.change-list #result_list thead th a:focus,
+html[data-mode="dark"] body.change-list #result_list thead th.sortable a:focus,
+html[data-mode="dark"] table thead th a:hover,
+html[data-mode="dark"] table thead th a:focus {
+  color: var(--brand) !important;
+  -webkit-text-fill-color: var(--brand) !important;
+  text-decoration: none !important;
+  border-bottom: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+html[data-mode="dark"] body.change-list #result_list thead th.sortable:not(.sorted) a::after,
+html[data-mode="dark"] body.change-list #changelist #result_list thead th.sortable:not(.sorted) a::after {
+  background-image: none !important;
+  background-color: var(--ts-head-color, var(--text-strong, #f3f4f6)) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 12'%3E%3Cpath fill='%23000' d='M4 1.4L6.4 5H1.6L4 1.4Z'/%3E%3Cpath fill='%23000' d='M4 10.6L1.6 7H6.4L4 10.6Z'/%3E%3C/svg%3E") center / contain no-repeat !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 12'%3E%3Cpath fill='%23000' d='M4 1.4L6.4 5H1.6L4 1.4Z'/%3E%3Cpath fill='%23000' d='M4 10.6L1.6 7H6.4L4 10.6Z'/%3E%3C/svg%3E") center / contain no-repeat !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+html[data-mode="dark"] body.change-list #result_list thead th.sortable:not(.sorted) a:hover::after,
+html[data-mode="dark"] body.change-list #changelist #result_list thead th.sortable:not(.sorted) a:hover::after {
+  background-color: var(--brand) !important;
+}
+html[data-mode="dark"] body.change-list #result_list thead th.sorted.ascending a::after,
+html[data-mode="dark"] body.change-list #result_list thead th.ascending.sorted a::after,
+html[data-mode="dark"] body.change-list #changelist #result_list thead th.sorted.ascending a::after {
+  width: 9px !important;
+  height: 12px !important;
+  background-image: none !important;
+  background-color: var(--ts-sort-active, var(--brand)) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 12'%3E%3Cpath fill='%23000' d='M5 1.5L8.2 5H6V10.5H4V5H1.8L5 1.5Z'/%3E%3C/svg%3E") center / contain no-repeat !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 12'%3E%3Cpath fill='%23000' d='M5 1.5L8.2 5H6V10.5H4V5H1.8L5 1.5Z'/%3E%3C/svg%3E") center / contain no-repeat !important;
+  transform: none !important;
+  opacity: 1 !important;
+}
+html[data-mode="dark"] body.change-list #result_list thead th.sorted.descending a::after,
+html[data-mode="dark"] body.change-list #result_list thead th.descending.sorted a::after,
+html[data-mode="dark"] body.change-list #changelist #result_list thead th.sorted.descending a::after {
+  width: 9px !important;
+  height: 12px !important;
+  background-image: none !important;
+  background-color: var(--ts-sort-active, var(--brand)) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 12'%3E%3Cpath fill='%23000' d='M5 1.5L8.2 5H6V10.5H4V5H1.8L5 1.5Z'/%3E%3C/svg%3E") center / contain no-repeat !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 12'%3E%3Cpath fill='%23000' d='M5 1.5L8.2 5H6V10.5H4V5H1.8L5 1.5Z'/%3E%3C/svg%3E") center / contain no-repeat !important;
+  transform: rotate(180deg) !important;
+  opacity: 1 !important;
+}
+</style>
 {% endblock %}
-
-{% block bodyclass %}{{ block.super }} ts-app{% endblock %}
 
 {% block branding %}
   <div id="site-name" class="brand-wrap">
@@ -49,17 +266,17 @@
       </svg>
     </button>
 
-    <a class="brand" href="{% url 'home' %}">
-      <img
-        src="{% if system_logo_url %}{{ system_logo_url }}{% endif %}"
-        alt="{{ system_nazev_klubu|default:'TenisSystém' }}"
-        class="brand-logo"
-        {% if not system_logo_url %}hidden{% endif %}
-      />
+    <a class="brand" href="{% url 'admin:index' %}" title="{% trans 'Domů' %}">
+      {% if system_logo_url %}
+      <img src="{{ system_logo_url }}" alt="{{ system_nazev_klubu|default:'TenisSystém' }}" class="brand-logo"/>
+      {% endif %}
       <span class="brand-title">{{ system_nazev_klubu|default:"TenisSystém" }}</span>
     </a>
   </div>
 {% endblock %}
+
+{# Globálně bez drobečkové lišty pod headerem #}
+{% block breadcrumbs %}{% endblock %}
 
 {% block userlinks %}
   <a href="{% url 'admin:password_change' %}">{% trans "Změnit heslo" %}</a> /
@@ -67,15 +284,28 @@
 {% endblock %}
 
 {% block nav-global %}
+  {% if not billing_active %}
+  <div class="ts-billing-banner" role="status">
+    {% trans "Předplatné TenisSystému není aktivní — úpravy jsou vypnuté." %}
+    {% if stripe_billing_configured %}
+      <a href="{% url 'admin:nastaveni_billing_portal' %}">{% trans "Obnovit platbu" %}</a>
+    {% elif stripe_checkout_configured %}
+      <a href="{% url 'admin:nastaveni_billing_checkout' %}">{% trans "Aktivovat předplatné" %}</a>
+    {% else %}
+      <a href="{% url 'admin:nastaveni' %}#predplatne">{% trans "Předplatné" %}</a>
+    {% endif %}
+  </div>
+  {% endif %}
   <nav class="ts-topnav" role="navigation" aria-label="{% trans 'Hlavní navigace' %}">
-    <a id="nav-cenik"      href="{% url 'admin:core_cenik_changelist' %}">{% trans "Ceník" %}</a>
-    <a id="nav-hraci"      href="{% url 'admin:core_hrac_changelist' %}">{% trans "Hráči" %}</a>
-    <a id="nav-platby"     href="{% url 'admin:core_transakce_changelist' %}">{% trans "Platby" %}</a>
-    <a id="nav-treningy"   href="{% url 'admin:core_trening_changelist' %}">{% trans "Tréninky" %}</a>
-    <a id="nav-treneri"    href="{% url 'admin:core_treneri_summary' %}">{% trans "Trenéři" %}</a>
-    <a id="nav-vyuctovani" href="{% url 'admin:core_vyuctovani_changelist' %}">{% trans "Vyúčtování" %}</a>
+    {% if nav_cenik %}<a id="nav-cenik"      href="{% url 'admin:core_cenik_changelist' %}">{% trans "Ceník" %}</a>{% endif %}
+    {% if nav_hraci %}<a id="nav-hraci"      href="{% url 'admin:core_hrac_changelist' %}">{% trans "Hráči" %}</a>{% endif %}
+    {% if nav_platby %}<a id="nav-platby"     href="{% url 'admin:core_transakce_changelist' %}">{% trans "Platby" %}</a>{% endif %}
+    {% if nav_treningy %}<a id="nav-treningy"   href="{% url 'admin:core_trening_changelist' %}">{% trans "Tréninky" %}</a>{% endif %}
+    {% if nav_treneri %}<a id="nav-treneri"    href="{% url 'admin:core_treneri_summary' %}">{% trans "Trenéři" %}</a>{% endif %}
+    {% if nav_vyuctovani %}<a id="nav-vyuctovani" href="{% url 'admin:core_vyuctovani_changelist' %}">{% trans "Vyúčtování" %}</a>{% endif %}
     <span class="divider" aria-hidden="true"></span>
-    <a id="nav-nastaveni"  href="{% url 'admin:nastaveni' %}">{% trans "Nastavení" %}</a>
+    {% if nav_nastaveni %}<a id="nav-nastaveni"  href="{% url 'admin:nastaveni' %}">{% trans "Nastavení" %}</a>{% endif %}
+    {% if nav_rozvrh %}
     <a id="nav-rozvrh" class="schedule-icon" href="{% url 'admin:core_trening_schedule' %}" title="{% trans 'Rozvrh' %}" aria-label="{% trans 'Rozvrh' %}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -84,32 +314,30 @@
         <rect x="7" y="14" width="4" height="4" rx="1"></rect>
       </svg>
     </a>
+    {% endif %}
   </nav>
 
   <div class="ts-drawer" id="ts-drawer" aria-hidden="true">
     <div class="ts-drawer-panel" role="dialog" aria-modal="true" aria-label="{% trans 'Hlavní menu' %}">
       <div class="ts-drawer-header">
-        <div class="ts-drawer-title">
-          <img
-            src="{% if system_logo_url %}{{ system_logo_url }}{% endif %}"
-            alt=""
-            class="brand-logo"
-            {% if not system_logo_url %}hidden{% endif %}
-          >
+        <a class="ts-drawer-title" href="{% url 'admin:index' %}" title="{% trans 'Domů' %}">
+          {% if system_logo_url %}
+          <img src="{{ system_logo_url }}" alt="">
+          {% endif %}
           <span>{{ system_nazev_klubu|default:"TenisSystém" }}</span>
-        </div>
+        </a>
         <button id="ts-drawer-close" class="ts-drawer-close" aria-label="{% trans 'Zavřít' %}">✕</button>
       </div>
 
       <nav class="ts-drawer-nav" role="navigation">
-        <a href="{% url 'admin:core_trening_schedule' %}">{% trans "Rozvrh" %}</a>
-        <a href="{% url 'admin:core_cenik_changelist' %}">{% trans "Ceník" %}</a>
-        <a href="{% url 'admin:core_hrac_changelist' %}">{% trans "Hráči" %}</a>
-        <a href="{% url 'admin:core_transakce_changelist' %}">{% trans "Platby" %}</a>
-        <a href="{% url 'admin:core_trening_changelist' %}">{% trans "Tréninky" %}</a>
-        <a href="{% url 'admin:core_treneri_summary' %}">{% trans "Trenéři" %}</a>
-        <a href="{% url 'admin:core_vyuctovani_changelist' %}">{% trans "Vyúčtování" %}</a>
-        <a href="{% url 'admin:nastaveni' %}">{% trans "Nastavení" %}</a>
+        {% if nav_rozvrh %}<a href="{% url 'admin:core_trening_schedule' %}">{% trans "Rozvrh" %}</a>{% endif %}
+        {% if nav_cenik %}<a href="{% url 'admin:core_cenik_changelist' %}">{% trans "Ceník" %}</a>{% endif %}
+        {% if nav_hraci %}<a href="{% url 'admin:core_hrac_changelist' %}">{% trans "Hráči" %}</a>{% endif %}
+        {% if nav_platby %}<a href="{% url 'admin:core_transakce_changelist' %}">{% trans "Platby" %}</a>{% endif %}
+        {% if nav_treningy %}<a href="{% url 'admin:core_trening_changelist' %}">{% trans "Tréninky" %}</a>{% endif %}
+        {% if nav_treneri %}<a href="{% url 'admin:core_treneri_summary' %}">{% trans "Trenéři" %}</a>{% endif %}
+        {% if nav_vyuctovani %}<a href="{% url 'admin:core_vyuctovani_changelist' %}">{% trans "Vyúčtování" %}</a>{% endif %}
+        {% if nav_nastaveni %}<a href="{% url 'admin:nastaveni' %}">{% trans "Nastavení" %}</a>{% endif %}
       </nav>
 
       <div class="ts-drawer-footer">

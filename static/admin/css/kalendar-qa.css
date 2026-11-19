@@ -1,0 +1,513 @@
+  .sched-day-body.is-longpressing{
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+  }
+  .sched-day-body.is-dragging,
+  html.qa-dragging .sched-day-body{
+    cursor: grabbing;
+  }
+  html.qa-dragging{
+    cursor: grabbing;
+    user-select: none;
+    -webkit-user-select: none;
+    overscroll-behavior: none;
+  }
+  /* Při dragu NESmí overflow:hidden – sekne scroll a vyskočí postranní scrollbar.
+     Necháme overflow-y:auto kvůli JS auto-scrollu; touch-action zabrání nativnímu pan. */
+  html.qa-dragging .sched-scroll{
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: none;
+    touch-action: none;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  html.qa-dragging .sched-scroll::-webkit-scrollbar{
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  html.qa-dragging .sched-days-pager{
+    /* Nesahat na overflow-x (mění šířku a „ujedou“ sloty). Jen zablokuj gesto. */
+    scroll-snap-type: none !important;
+    overscroll-behavior: none;
+    touch-action: none !important;
+    scrollbar-width: none;
+  }
+  html.qa-dragging .sched-days-pager::-webkit-scrollbar{
+    display: none !important;
+  }
+
+  @media (max-width: 820px), (max-height: 500px) and (max-width: 1024px){
+    .sched-day-body.is-longpressing,
+    .sched-day-body.is-dragging{
+      touch-action: none;
+    }
+  }
+
+  .sched-drag-ghost{
+    position:absolute;
+    /* Pod sticky .sched-head (50) – při scrollu zajede pod dny, velikost beze změny */
+    z-index:14;
+    box-sizing:border-box;
+    pointer-events:none;
+    border-radius:10px;
+    border:2px solid var(--brand, #E67817);
+    background:#fff4e8;
+    background:color-mix(in srgb, var(--brand-100, #ffedd5) 88%, #fff);
+    box-shadow:none;
+    color:var(--brand-600, #9a3412);
+    font-size:12px;
+    font-weight:700;
+    padding:6px 8px;
+    display:none;
+    align-items:flex-start;
+    justify-content:flex-start;
+  }
+  .sched-drag-ghost.is-visible{
+    display:flex;
+    animation: sched-ghost-bounce .26s cubic-bezier(.22,1.35,.36,1) both;
+  }
+  .sched-drag-ghost[hidden]{
+    display:none !important;
+  }
+
+  .sched-press-hint{
+    position:absolute; left:6px; right:6px; z-index:5;
+    /* transform jinak na iOS vytéká z overflow scrollu */
+    border-radius:10px;
+    border:2px solid var(--brand, #E67817);
+    background: #fff4e8;
+    background: color-mix(in srgb, var(--brand-100, #ffedd5) 92%, #fff);
+    pointer-events:none;
+    box-sizing:border-box;
+    transform: scale(0.9);
+    transform-origin: center center;
+    box-shadow: none;
+  }
+  .sched-press-hint.is-holding::after{
+    content: attr(data-time);
+    position:absolute; top:6px; left:8px; transform:none;
+    font-size:12px; font-weight:700; color:var(--brand-600, #9a3412);
+    background:rgba(255,255,255,.96); padding:2px 8px; border-radius:8px;
+    border:1px solid #f0d0b0;
+    border:1px solid color-mix(in srgb, var(--brand, #E67817) 18%, transparent);
+    box-shadow:none;
+  }
+  /* Jen „vyjede“ k tobě + malý bounce – bez glow / změny barvy / borderu */
+  .sched-press-hint.is-charging{
+    animation: sched-press-bounce var(--hold-ms, 450ms) cubic-bezier(.22,1.4,.36,1) forwards;
+  }
+  @keyframes sched-press-bounce{
+    0%{ transform: scale(0.9); }
+    70%{ transform: scale(1.03); }
+    100%{ transform: scale(1.012); }
+  }
+  .sched-press-hint.is-ready{
+    animation: none;
+    transform: scale(1.012);
+    z-index: 14; /* pod .sched-head (50) – při scrollu se nepřekrývá / nezmenšuje */
+  }
+  a.ev,
+  .ev,
+  .sched-press-hint{
+    /* výška jen z --dur / JS, nikdy scale podle scrollu */
+    flex-shrink: 0;
+  }
+  @keyframes sched-ghost-bounce{
+    0%{ transform: scale(0.94); }
+    65%{ transform: scale(1.03); }
+    100%{ transform: scale(1.012); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .sched-press-hint.is-charging,
+    .sched-drag-ghost.is-visible{
+      animation: none;
+    }
+    .sched-press-hint,
+    .sched-press-hint.is-ready,
+    .sched-drag-ghost.is-visible{
+      transform: none;
+    }
+  }
+  /* manipulation: svislý scroll i horizontální swipe dnů i přes slot;
+     none až při long-press / drag */
+  .ev{
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .ev.is-lit,
+  .ev.is-dragging-ev,
+  .sched-day-body.is-longpressing .ev{
+    touch-action: none;
+  }
+  .ev.is-lit,
+  .ev.is-dragging-ev{
+    z-index: 8;
+    box-shadow: none;
+    transform: none;
+    filter: none;
+    background-image: none;
+    border-width: 2px;
+    border-color: var(--brand, #E67817);
+    transition: border-color .12s ease, background-color .12s ease;
+  }
+  .ev.is-dragging-ev{
+    z-index: 14;
+    pointer-events: none;
+    cursor: grabbing;
+    filter: none;
+    transform: none;
+    box-shadow: none;
+    border-color: var(--brand, #E67817);
+    background-image: none;
+    background-color: #fff4e8;
+    background-color: color-mix(in srgb, var(--brand-100, #ffedd5) 90%, #fff);
+  }
+  html.qa-dragging .ev{
+    cursor: grabbing;
+  }
+  /* Rychlé přidání – sheet v designu systému */
+  html.qa-open{ overflow:hidden; }
+  .qa-overlay{
+    position:fixed; inset:0; z-index:10050;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(17,24,39,.42);
+    padding:12px;
+    animation: qa-fade .16s ease;
+  }
+  .qa-overlay[hidden]{ display:none !important; }
+  .qa-sheet{
+    width:min(560px, 100%);
+    max-height:min(90vh, 780px);
+    height:auto;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    background:var(--surface, #fff);
+    border:1px solid var(--line, #E5E7EB);
+    border-radius:12px;
+    box-shadow:0 18px 48px rgba(0,0,0,.2);
+    animation: qa-pop .2s cubic-bezier(.22,1,.36,1);
+  }
+  @media (min-width: 640px){
+    .qa-overlay{ padding:24px; }
+  }
+  @keyframes qa-fade{ from{ opacity:0; } to{ opacity:1; } }
+  @keyframes qa-pop{ from{ transform:scale(.97); opacity:.65; } to{ transform:none; opacity:1; } }
+
+  .qa-sheet-head{
+    display:flex; flex-direction:column; align-items:stretch; gap:10px;
+    flex-shrink:0;
+    padding:12px 14px 10px;
+    background:var(--surface, #fff);
+    border-bottom:1px solid var(--line, #E5E7EB);
+  }
+  @media (min-width: 520px){
+    .qa-sheet-head{
+      flex-direction:row;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+  }
+  .qa-sheet-titles{ min-width:0; flex:1 1 auto; }
+  .qa-sheet-head h2{
+    margin:0;
+    font-size:17px; font-weight:800; line-height:1.2;
+    color:var(--text-strong, #111);
+  }
+  .qa-when{
+    margin:3px 0 0;
+    font-size:13px; font-weight:600;
+    color:var(--muted, #64748B);
+  }
+  .qa-sheet-actions{
+    display:flex; align-items:center; justify-content:flex-end; gap:8px;
+    flex-wrap:wrap; flex-shrink:0;
+  }
+  .qa-sheet-actions .qa-btn[hidden]{ display:none !important; }
+  .qa-btn{
+    appearance:none; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center;
+    min-height:34px; padding:7px 12px;
+    border-radius:var(--btn-radius, 100px);
+    font-size:var(--btn-font-size, 12px);
+    font-weight:var(--btn-font-weight, 800);
+    line-height:1; white-space:nowrap;
+  }
+  .qa-btn-ghost{
+    border:1px solid var(--line, #E5E7EB);
+    background:var(--surface, #fff);
+    color:var(--text, #1F2937);
+  }
+  .qa-btn-ghost:hover{
+    background:var(--table-row-hover, #F8FAFC);
+    border-color:#f0d0b0;
+    border-color:color-mix(in srgb, var(--brand, #E67817) 35%, var(--line, #E5E7EB));
+  }
+  .qa-btn-primary{
+    border:1px solid var(--brand, #E67817);
+    background:var(--brand, #E67817);
+    color:#fff;
+  }
+  .qa-btn-primary:hover{
+    background:var(--brand-600, #D1640C);
+    border-color:var(--brand-600, #D1640C);
+  }
+  .qa-btn:disabled{ opacity:.45; cursor:default; }
+
+  .qa-form{
+    padding:12px 14px 16px;
+    display:flex; flex-direction:column; gap:10px;
+    flex:1 1 auto;
+    min-height:0;
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+  }
+  /* Pronájem: skrýt trenéra / typ / hráče, ukázat rezervujícího a cenu */
+  .qa-sheet--pronajem .qa-row--trening-only,
+  .qa-sheet--pronajem .qa-field--hraci {
+    display: none !important;
+  }
+  .qa-sheet:not(.qa-sheet--pronajem) .qa-field--pronajem-only {
+    display: none !important;
+  }
+
+  .qa-meta{
+    flex:0 0 auto;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .qa-row{
+    display:grid; grid-template-columns:1fr 1fr; gap:8px;
+  }
+  .qa-field{
+    display:flex; flex-direction:column; gap:5px;
+    min-width:0;
+  }
+  /* Služba (výplet): Délka pryč – display:flex jinak přebije [hidden] */
+  .qa-field#qa-delka-field[hidden],
+  .qa-field#qa-delka-field.is-sluzba-hidden {
+    display: none !important;
+  }
+  .qa-field--kurt{
+    max-width:220px;
+  }
+  @media (max-width: 520px){
+    .qa-field--kurt{ max-width:none; }
+  }
+  .qa-label{
+    font-size:12px; font-weight:700;
+    color:var(--muted, #64748B);
+    letter-spacing:.01em;
+  }
+  .qa-field select,
+  .qa-field input[type="text"],
+  .qa-field input[type="search"]{
+    box-sizing:border-box;
+    width:100%;
+    min-width:0;
+    min-height:38px;
+    margin:0;
+    border:1px solid var(--line, #E5E7EB);
+    border-radius:var(--field-radius, 8px);
+    background:var(--surface, #fff);
+    color:var(--text-strong, #111);
+    padding:7px 10px;
+    font-size:14px;
+    font-weight:600;
+    line-height:1.3;
+  }
+  .qa-field select{
+    appearance:auto;
+    padding-right:28px;
+    text-overflow:ellipsis;
+  }
+  .qa-row .qa-field select{
+    font-size:13px;
+    font-weight:600;
+  }
+  .qa-field select:focus,
+  .qa-field input:focus{
+    outline:none;
+    outline-offset:0;
+    border-color:var(--line, #E5E7EB);
+    box-shadow:none;
+  }
+
+  .qa-chips{
+    display:flex; flex-wrap:wrap; gap:6px;
+  }
+  .qa-chip{
+    appearance:none; cursor:pointer;
+    min-height:32px; min-width:3.5rem;
+    padding:5px 10px;
+    border-radius:var(--btn-radius, 100px);
+    border:1px solid var(--line, #E5E7EB);
+    background:var(--surface, #fff);
+    color:var(--text, #1F2937);
+    font-size:12px; font-weight:700;
+    line-height:1;
+  }
+  .qa-chip:hover{
+    border-color:#f0d0b0;
+    border-color:color-mix(in srgb, var(--brand, #E67817) 45%, var(--line, #E5E7EB));
+    background:var(--brand-100, #FFF1DE);
+  }
+  .qa-chip.is-active{
+    border-color:var(--brand, #E67817);
+    background:var(--brand, #E67817);
+    color:#fff;
+  }
+
+  /* Hráči – dominantní blok, seznam v layoutu (ne pod okrajem modalu) */
+  .qa-field--hraci{
+    flex:0 0 auto;
+    min-height:0;
+    margin-top:2px;
+    padding:10px;
+    border:1px solid var(--line, #E5E7EB);
+    border-radius:10px;
+    background:#f3f4f6;
+    background:color-mix(in srgb, var(--line, #E5E7EB) 22%, var(--surface, #fff));
+  }
+  .qa-field--hraci > .qa-label{
+    font-size:13px;
+    color:var(--text-strong, #111);
+  }
+  .qa-hraci{
+    display:flex; flex-direction:column; gap:8px;
+    flex:1 1 auto;
+    min-height:0;
+  }
+  .qa-hraci-rows{
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .qa-hraci-row{
+    position:relative;
+    display:flex; align-items:flex-start; gap:8px;
+  }
+  .qa-hraci-search-wrap{
+    position:relative;
+    flex:1; min-width:0;
+  }
+  .qa-hraci-search{
+    box-sizing:border-box;
+    width:100%;
+    min-height:40px;
+    margin:0;
+    border:1px solid var(--line, #E5E7EB);
+    border-radius:var(--field-radius, 8px);
+    background:var(--surface, #fff);
+    color:var(--text-strong, #111);
+    padding:8px 12px;
+    font-size:14px;
+    font-weight:600;
+    line-height:1.3;
+  }
+  .qa-hraci-search:focus{
+    outline:none;
+    outline-offset:0;
+    border-color:var(--line, #E5E7EB);
+    box-shadow:none;
+  }
+  .qa-hraci-dropdown{
+    display:none;
+    position:relative;
+    left:auto; right:auto; top:auto;
+    z-index:2;
+    margin:6px 0 0;
+    padding:4px 0;
+    list-style:none;
+    /* ~3 řádky jmen + scroll na zbytek */
+    max-height:7.5em;
+    overflow:auto;
+    -webkit-overflow-scrolling:touch;
+    background:var(--surface, #fff);
+    border:1px solid var(--line, #E5E7EB);
+    border-radius:var(--field-radius, 8px);
+  }
+  .qa-hraci-dropdown.is-open{ display:block; }
+  .qa-hraci-dropdown li{
+    padding:11px 12px;
+    cursor:pointer;
+    font-size:14px; font-weight:600;
+    color:var(--text-strong, #111);
+    border-bottom:1px solid var(--table-row-alt, #F9FAFB);
+  }
+  .qa-hraci-dropdown li:last-child{ border-bottom:none; }
+  .qa-hraci-dropdown li:hover,
+  .qa-hraci-dropdown li.is-active{
+    background:transparent;
+    color:var(--brand, #E67817);
+  }
+  .qa-hraci-dropdown .qa-hraci-empty{
+    cursor:default;
+    color:var(--muted, #64748B);
+    font-weight:600;
+  }
+  .qa-hraci-dropdown .qa-hraci-empty:hover{
+    background:transparent;
+    color:var(--muted, #64748B);
+  }
+  .qa-hraci-remove{
+    appearance:none; cursor:pointer;
+    flex-shrink:0;
+    width:34px; height:34px;
+    margin-top:3px;
+    border-radius:var(--btn-radius, 100px);
+    border:1px solid var(--line, #E5E7EB);
+    background:var(--surface, #fff);
+    color:var(--muted, #64748B);
+    font-size:18px; font-weight:700; line-height:1;
+  }
+  .qa-hraci-remove:hover{
+    color:#b91c1c;
+    background:#fef2f2;
+    border-color:#fecaca;
+  }
+  .qa-hraci-add{
+    align-self:flex-start;
+    min-height:32px;
+    padding:6px 12px;
+  }
+
+  .qa-error{
+    margin:0; padding:10px 12px;
+    border-radius:var(--field-radius, 8px);
+    background:var(--danger-100, #FFE5E1);
+    color:var(--danger, #D92D20);
+    border:1px solid #f5c2c0;
+    border:1px solid color-mix(in srgb, var(--danger, #D92D20) 25%, transparent);
+    font-size:13px; font-weight:700;
+  }
+
+  /*
+    Mobilní prohlížeče (iOS / Android / Xiaomi…): font < 16px → auto-zoom při focusu.
+    ≥16px na úzkém viewportu i na touch zařízeních.
+  */
+  @media (max-width: 1024px), (hover: none) and (pointer: coarse) {
+    .qa-field select,
+    .qa-field input[type="text"],
+    .qa-field input[type="search"],
+    .qa-field input[type="time"],
+    .qa-field input[type="date"],
+    .qa-field input[type="number"],
+    .qa-field textarea,
+    .qa-hraci-search {
+      font-size: 16px !important;
+    }
+    /* Trenér / Typ / Kurt: menší písmo než anti-zoom 16px */
+    .qa-row .qa-field select,
+    .qa-field--kurt select,
+    .qa-meta .qa-field select {
+      font-size: 13px !important;
+      font-weight: 600 !important;
+      font-family: inherit !important;
+    }
+  }

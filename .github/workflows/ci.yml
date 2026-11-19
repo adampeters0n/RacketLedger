@@ -8,6 +8,29 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: tenissystem
+          POSTGRES_USER: tennis
+          POSTGRES_PASSWORD: tennis
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tennis -d tenissystem"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DJANGO_SECRET_KEY: ci-test-secret-key-not-for-production-32chars
+      DEBUG: "True"
+      DATABASE_URL: postgres://tennis:tennis@localhost:5432/tenissystem
+      ALLOWED_HOSTS: localhost,127.0.0.1,testserver
+      CSRF_TRUSTED_ORIGINS: http://localhost,http://127.0.0.1,http://testserver
+
     steps:
       - uses: actions/checkout@v4
 
@@ -20,30 +43,17 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run tests
-        env:
-          DJANGO_SECRET_KEY: ci-test-secret-key-not-for-production
-          DEBUG: "True"
-          ALLOWED_HOSTS: localhost,127.0.0.1,testserver
-          CSRF_TRUSTED_ORIGINS: http://localhost,http://127.0.0.1,http://testserver
+      - name: Run tests (Postgres)
         run: python manage.py test core -v1
 
       - name: Django system check
-        env:
-          DJANGO_SECRET_KEY: ci-test-secret-key-not-for-production
-          DEBUG: "True"
-          ALLOWED_HOSTS: localhost,127.0.0.1,testserver
-          CSRF_TRUSTED_ORIGINS: http://localhost,http://127.0.0.1,http://testserver
         run: python manage.py check
 
-      - name: Instance smoke (bootstrap branding)
+      - name: Migrate + bootstrap smoke
         env:
-          DJANGO_SECRET_KEY: ci-test-secret-key-not-for-production
-          DEBUG: "True"
-          ALLOWED_HOSTS: localhost,127.0.0.1,testserver
-          CSRF_TRUSTED_ORIGINS: http://localhost,http://127.0.0.1,http://testserver
           BOOTSTRAP_ADMIN_PASSWORD: ci-admin-pass
         run: |
           python manage.py migrate --noinput
           python manage.py bootstrap_instance --nazev "Tenis XY" --email "info@xy.cz" --create-admin admin admin@xy.cz
           python manage.py check_instance
+          python manage.py shell -c "from django.test import Client; c=Client(); r=c.get('/health/'); assert r.status_code==200 and r.json()['status']=='ok'"

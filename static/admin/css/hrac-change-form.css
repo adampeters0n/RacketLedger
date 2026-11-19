@@ -4,51 +4,241 @@
     --brand: #E67817; --brand-600: #D1640C;
   }
 
-  /* --- Tlačítka Zadat platbu + Historie – stejná typografie --- */
-  body.app-core.model-hrac.change-form .object-tools a.custom-pay-link,
-  body.app-core.model-hrac.change-form .object-tools a.historylink {
-      background: var(--brand, #E67817) !important;
-      border: 1px solid var(--brand) !important;
-      color: #fff !important;
-      border-radius: var(--btn-radius, 100px) !important;
-      padding: 10px 18px !important;
-      font-family: inherit !important;
-      font-size: 13px !important;
-      font-weight: 800 !important;
-      line-height: 1 !important;
-      letter-spacing: 0.02em !important;
-      text-transform: none !important;
-      text-decoration: none !important;
-      display: inline-flex !important;
-      align-items: center !important;
-      justify-content: center !important;
+  /* Aktivní hráč: nadpis + switch vedle sebe
+     Gap mezi textem a switchem nastavíš tady ↓ */
+  body.model-hrac.change-form .form-row.field-aktivni,
+  body.model-hrac.add-form .form-row.field-aktivni {
+    --aktivni-switch-gap: 10px;
+    max-width: var(--ts-field-max, 360px);
   }
 
-  body.app-core.model-hrac.change-form .object-tools a.custom-pay-link:hover,
-  body.app-core.model-hrac.change-form .object-tools a.historylink:hover {
-      filter: brightness(1.05);
+  /* silnější selektor než form-detail.css (gap: 8px), jinak se --aktivni-switch-gap neprojeví
+     padding-left 12px = stejné zarovnání jako ostatní .form-row > div (custom.css) */
+  body.model-hrac.change-form .module.aligned .form-row.field-aktivni:not(tr) > div,
+  body.model-hrac.add-form .module.aligned .form-row.field-aktivni:not(tr) > div {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 6px var(--aktivni-switch-gap) !important;
+    width: 100% !important;
+    max-width: var(--ts-field-max, 360px) !important;
+    margin: 0 !important;
+    padding: 6px 0 6px 12px !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 
-  /* --- Panel vyúčtování --- */
-  .vyuct-panel {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    margin: 16px 0;
-    padding: 16px 20px;
-    background: #fff;
-    border: 1px solid var(--line, #e2e5ea);
-    border-radius: 0;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  body.model-hrac.change-form .module.aligned .form-row.field-aktivni:not(tr) .flex-container.checkbox-row,
+  body.model-hrac.add-form .module.aligned .form-row.field-aktivni:not(tr) .flex-container.checkbox-row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 6px var(--aktivni-switch-gap) !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 
-  .vyuct-panel__title {
-    margin: 0 0 14px;
+  body.model-hrac.change-form .form-row.field-aktivni label.vCheckboxLabel,
+  body.model-hrac.add-form .form-row.field-aktivni label.vCheckboxLabel,
+  body.model-hrac.change-form .module.aligned .form-row.field-aktivni .flex-container.checkbox-row > label.vCheckboxLabel,
+  body.model-hrac.add-form .module.aligned .form-row.field-aktivni .flex-container.checkbox-row > label.vCheckboxLabel {
+    display: block !important;
+    order: 1 !important;
+    position: static !important;
+    /* pevná šířka = delší „Neaktivní hráč“ neposune switch */
+    flex: 0 0 7.25rem !important;
+    width: 7.25rem !important;
+    min-width: 7.25rem !important;
+    max-width: 7.25rem !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    text-align: left !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    color: var(--text-strong, #111827) !important;
+    cursor: pointer !important;
+    box-sizing: border-box !important;
+  }
+
+  body.model-hrac.change-form .form-row.field-aktivni label.vCheckboxLabel.is-off,
+  body.model-hrac.add-form .form-row.field-aktivni label.vCheckboxLabel.is-off {
+    color: var(--muted, #6b7280) !important;
+  }
+
+  body.model-hrac.change-form .form-row.field-aktivni input[type="checkbox"],
+  body.model-hrac.add-form .form-row.field-aktivni input[type="checkbox"] {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    order: 2 !important;
+    position: relative !important;
+    width: 44px !important;
+    height: 26px !important;
+    min-height: 26px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    flex: 0 0 44px !important;
+    border: none !important;
+    border-radius: 999px !important;
+    background: #d1d5db !important;
+    box-shadow: inset 0 0 0 1px rgba(17, 24, 39, 0.06) !important;
+    cursor: pointer !important;
+    transition: background 0.18s ease !important;
+    outline: none !important;
+  }
+
+  body.model-hrac.change-form .form-row.field-aktivni input[type="checkbox"]::after,
+  body.model-hrac.add-form .form-row.field-aktivni input[type="checkbox"]::after {
+    content: "" !important;
+    position: absolute !important;
+    top: 3px !important;
+    left: 3px !important;
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 50% !important;
+    background: #fff !important;
+    box-shadow: 0 1px 3px rgba(17, 24, 39, 0.22) !important;
+    transition: transform 0.18s ease !important;
+  }
+
+  body.model-hrac.change-form .form-row.field-aktivni input[type="checkbox"]:checked,
+  body.model-hrac.add-form .form-row.field-aktivni input[type="checkbox"]:checked {
+    background: var(--brand, #e67817) !important;
+  }
+
+  body.model-hrac.change-form .form-row.field-aktivni input[type="checkbox"]:checked::after,
+  body.model-hrac.add-form .form-row.field-aktivni input[type="checkbox"]:checked::after {
+    transform: translateX(18px) !important;
+  }
+
+  body.model-hrac.change-form .form-row.field-aktivni input[type="checkbox"]:focus-visible,
+  body.model-hrac.add-form .form-row.field-aktivni input[type="checkbox"]:focus-visible {
+    box-shadow:
+      inset 0 0 0 1px rgba(17, 24, 39, 0.06),
+      0 0 0 3px color-mix(in srgb, var(--brand, #e67817) 28%, transparent) !important;
+  }
+
+  body.model-hrac.change-form .form-row.field-aktivni .help,
+  body.model-hrac.add-form .form-row.field-aktivni .help,
+  body.model-hrac.change-form .form-row.field-aktivni .helptext,
+  body.model-hrac.add-form .form-row.field-aktivni .helptext,
+  body.model-hrac.change-form .form-row.field-aktivni p.help,
+  body.model-hrac.add-form .form-row.field-aktivni p.help {
+    order: 3 !important;
+    flex: 1 0 100% !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    font-size: 12px !important;
+    font-style: normal !important;
+    line-height: 1.4 !important;
+    color: var(--muted, #6b7280) !important;
+  }
+
+  /* object-tools (Zadat platbu / Vyúčtování / Historie) = .ts-btn → ts-buttons.css */
+
+  /* Panel / ledger / KPI: vzhled = globální .ts-card / .ts-kpi-bar (form-detail.css).
+     Tady jen layout specifický pro hráče. */
+
+  .ts-card__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .ts-card__head .ts-card__title {
+    margin: 0 !important;
+    padding: 0 !important;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .ts-card-help {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    margin: 0;
     padding: 0;
-    font-size: 16px;
-    font-weight: 700;
-    color: #111827;
-    border: none;
+    border: 1px solid var(--line, #e5e7eb);
+    border-radius: 999px;
+    background: var(--surface, #fff);
+    color: var(--muted, #6b7280);
+    cursor: pointer;
+    box-shadow: none;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .ts-card-help:hover,
+  .ts-card-help[aria-expanded="true"] {
+    background: var(--brand-100, #fff4e8);
+    border-color: color-mix(in srgb, var(--brand, #e67817) 28%, var(--line, #e5e7eb));
+    color: var(--brand, #e67817);
+  }
+
+  .ts-card-help:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand, #e67817) 24%, transparent);
+  }
+
+  .ts-card-help svg {
+    display: block;
+  }
+
+  .ts-card__hint[hidden] {
+    display: none !important;
+  }
+
+  /* Gap nadpis → obsah: flex gap (nesesype se, nepřekryje padding/margin) */
+  body.app-core.model-hrac.change-form .ts-card.vyuct-panel,
+  body.app-core.model-hrac.change-form .ts-card.ledger-card,
+  body.app-core.model-hrac.add-form .ts-card.vyuct-panel,
+  body.app-core.model-hrac.add-form .ts-card.ledger-card {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 22px !important;
+  }
+
+  body.app-core.model-hrac.change-form .ts-card.vyuct-panel > .vyuct-panel__title,
+  body.app-core.model-hrac.change-form .ts-card.ledger-card > .ledger-title,
+  body.app-core.model-hrac.add-form .ts-card.vyuct-panel > .vyuct-panel__title,
+  body.app-core.model-hrac.add-form .ts-card.ledger-card > .ledger-title {
+    margin: 0 !important;
+    padding: 0 !important;
+    border-bottom: none !important;
+  }
+
+  body.app-core.model-hrac.change-form .ts-card.vyuct-panel > .vyuct-panel__hint,
+  body.app-core.model-hrac.add-form .ts-card.vyuct-panel > .vyuct-panel__hint {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body.app-core.model-hrac.change-form .ts-card.vyuct-panel .vyuct-panel__grid,
+  body.app-core.model-hrac.add-form .ts-card.vyuct-panel .vyuct-panel__grid {
+    margin-bottom: 0 !important;
+  }
+
+  body.app-core.model-hrac.change-form .ts-card.ledger-card .ledger-filter,
+  body.app-core.model-hrac.add-form .ts-card.ledger-card .ledger-filter {
+    margin-top: 0 !important;
   }
 
   .vyuct-panel__grid {
@@ -58,43 +248,57 @@
     margin-bottom: 14px;
   }
 
-  .vyuct-field label {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #374151;
-  }
-
-  .vyuct-field input[type="date"],
-  .vyuct-field input[type="number"],
-  .vyuct-field select {
-    width: 100%;
-    box-sizing: border-box;
-    min-height: 36px;
-    padding: 7px 10px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    font-size: 14px;
-    color: #111827;
-    background: #fff;
-  }
-
   .vyuct-period {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
+    gap: 6px 8px;
   }
 
-  .vyuct-period input[type="date"] {
-    flex: 1 1 0;
-    min-width: 0;
+  /* stejná kompaktní velikost jako ledger Období */
+  .vyuct-period .ts-date-picker,
+  .vyuct-panel .vyuct-period .ts-date-picker,
+  body.model-hrac.change-form .vyuct-period .ts-date-picker {
+    display: inline-block !important;
+    flex: 0 0 auto !important;
+    width: 132px !important;
+    max-width: 132px !important;
+    min-width: 0 !important;
+  }
+
+  .vyuct-period .ts-date-trigger,
+  .vyuct-panel .vyuct-period .ts-date-trigger,
+  body.model-hrac.change-form .vyuct-period .ts-date-trigger {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 132px !important;
+    min-height: var(--ts-btn-h, 34px) !important;
+    height: var(--ts-btn-h, 34px) !important;
+    padding: 0 8px !important;
+    gap: 6px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+  }
+
+  .vyuct-period .ts-date-label {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+  }
+
+  .vyuct-period .ts-date-icon,
+  .vyuct-period .ts-date-chevron {
+    width: 14px;
+    height: 14px;
   }
 
   .vyuct-period__sep {
     flex: 0 0 auto;
-    color: #6b7280;
+    color: var(--muted, #64748b);
+    font-size: 12px;
     font-weight: 600;
+    line-height: 1;
   }
 
   .vyuct-panel__actions {
@@ -103,7 +307,7 @@
     align-items: center;
     gap: 10px;
     padding-top: 14px;
-    border-top: 1px solid #f3f4f6;
+    border-top: none;
   }
 
   @media (max-width: 820px) {
@@ -117,10 +321,6 @@
   }
 
   @media (max-width: 520px) {
-    .vyuct-panel {
-      padding: 14px 16px;
-    }
-
     .vyuct-panel__grid {
       grid-template-columns: 1fr;
     }
@@ -130,48 +330,140 @@
     }
   }
 
-  .ledger-card {
-    width: 100%;
+  /* Období v historii = stejný stacked layout jako ve vyúčtování */
+  .ledger-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px 12px;
+    margin: 0 0 14px;
+    min-width: 0;
     max-width: 100%;
     box-sizing: border-box;
-    background: #fff;
-    border: 1px solid var(--line, #e2e5ea);
-    border-radius: 0;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-    padding: 14px 16px;
-    margin-top: 16px;
-  }
-
-  .ledger-title {
-    margin: 0 0 10px;
-    color: #111827;
-    font-size: 16px;
-    font-weight: 700;
-    border: none;
-  }
-
-  .ledger-filter {
     border: none;
     outline: none;
     box-shadow: none;
     background: transparent;
-    color: #374151;
+  }
+
+  .ledger-filter__period {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  .ledger-filter__period > label,
+  body.model-hrac.change-form .ledger-card .ledger-filter__period > label {
+    display: block !important;
+    margin: 0 0 8px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+    color: #111827 !important;
+  }
+
+  .ledger-filter .vyuct-period {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+  }
+
+  table.ledger.is-filtering {
+    opacity: 0.55;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+
+  .ledger-filter__reset {
+    flex: 0 0 auto;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--line, #e5e7eb);
+    border-radius: 999px;
+    background: #fff;
+    color: #6b7280;
+    cursor: pointer;
+    box-shadow: none;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+
+  .ledger-filter__reset.is-visible:not([hidden]) {
+    display: inline-flex;
+  }
+
+  .ledger-filter__reset:hover {
+    background: var(--brand-100, #fff4e8);
+    border-color: color-mix(in srgb, var(--brand, #e67817) 28%, #e5e7eb);
+    color: var(--brand, #e67817);
+  }
+
+  .ledger-filter__reset:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand, #e67817) 24%, transparent);
+  }
+
+  .ledger-filter__reset svg {
+    display: block;
+  }
+
+  /* kompaktní datumy – přebít .ts-card / form-detail (360×36) */
+  .ledger-filter .ts-date-picker,
+  .ledger-card.ts-card .ledger-filter .ts-date-picker,
+  body.model-hrac.change-form .ledger-filter .ts-date-picker {
+    display: inline-block !important;
+    flex: 0 0 auto !important;
+    width: 132px !important;
+    max-width: 132px !important;
+    min-width: 0 !important;
+  }
+
+  .ledger-filter .ts-date-trigger,
+  .ledger-card.ts-card .ledger-filter .ts-date-trigger,
+  body.model-hrac.change-form .ledger-filter .ts-date-trigger {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 132px !important;
+    min-height: var(--ts-btn-h, 34px) !important;
+    height: var(--ts-btn-h, 34px) !important;
+    padding: 0 8px !important;
+    gap: 6px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+  }
+
+  .ledger-filter .ts-date-label {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+  }
+
+  .ledger-filter .ts-date-icon,
+  .ledger-filter .ts-date-chevron {
+    width: 14px;
+    height: 14px;
+  }
+
+  .ledger-filter .vyuct-period__sep {
+    flex: 0 0 auto;
+    font-size: 12px;
+    line-height: 1;
   }
 
   .ledger-card .ledger-wrap {
     border: none !important;
     box-shadow: none !important;
   }
-
-  .ledger-filter input[type="date"] {
-    border: 1px solid var(--line-200, #929aa4);
-    border-radius: var(--field-radius, 8px);
-  }
-
   .ledger-wrap {
     overflow-y: auto;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    /* popover kalendáře je fixed – overflow tu nevadí */
     max-height: 480px;
     border: none;
     outline: none;
@@ -220,8 +512,7 @@
     color: #1f2937;
   }
   table.ledger tbody tr{ background:var(--surface, #fff); }
-  table.ledger tbody tr:hover{ background:var(--table-row-hover) !important; }
-  table.ledger tbody tr:hover a:not(.deletelink){ color:var(--brand) !important; }
+  table.ledger tbody tr:hover{ background:var(--brand-100, #fff1de); }
 
   tr.typ-nauctovano { background:rgba(239,68,68,0.12); }
   tr.typ-platba, tr.typ-vratka { background:rgba(34,197,94,0.12); }
@@ -241,13 +532,38 @@
   table.ledger a.deletelink{ color:#f87171; text-decoration:none; font-weight:600; font-size:13px; }
   table.ledger a.deletelink:hover{ text-decoration:none; color:var(--brand) !important; }
 
+  /* Součty – jako tfoot u Trenérů: bez žluté, bez tlusté čáry */
   table.ledger tfoot tr.totals td,
-  table.ledger tfoot tr.totals th{
-    background:#fffced;
-    border-top:4px solid #111827;
-    padding:8px;
-    color:#111827;
+  table.ledger tfoot tr.totals th {
+    padding: 10px 8px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    line-height: 1.4 !important;
+    color: #111827 !important;
+    vertical-align: middle !important;
+    background: transparent !important;
+    background-image: linear-gradient(var(--line, #e2e5ea), var(--line, #e2e5ea)) !important;
+    background-size: 100% 1px !important;
+    background-position: left top !important;
+    background-repeat: no-repeat !important;
+    border: 0 !important;
+    box-shadow: none !important;
   }
-  table.ledger tfoot td.totals-label{ text-align:left !important; font-size:15px; font-weight:800; letter-spacing:.2px; }
-  table.ledger tfoot td.totals-value{ font-size:15px; font-weight:800; text-align:center !important; }
-  table.ledger tfoot td.tot-hodiny{ text-align:center !important; }
+
+  table.ledger tfoot td.totals-label {
+    text-align: left !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    letter-spacing: normal !important;
+  }
+
+  table.ledger tfoot td.totals-value {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    font-variant-numeric: tabular-nums !important;
+    text-align: center !important;
+  }
+
+  table.ledger tfoot td.tot-hodiny {
+    text-align: center !important;
+  }

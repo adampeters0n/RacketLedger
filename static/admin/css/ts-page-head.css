@@ -1,0 +1,247 @@
+/* Globální page header – elegantní typografie, bez výplní, bez čáry skrz obsah */
+
+/* Na custom stránkách (rozvrh, trenéři, nastavení…) stejně jako na changelistu */
+#content > .ts-page-head {
+  width: 100%;
+}
+
+.ts-page-head {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px 24px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 4px 0 20px 0 !important;
+  padding: 16px 0 0 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  position: relative !important;
+  z-index: 2 !important;
+}
+
+.ts-page-head::before,
+.ts-page-head::after {
+  content: none !important;
+  display: none !important;
+}
+
+.ts-page-head__text {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+  flex: 1 1 200px !important;
+  max-width: 100% !important;
+}
+
+.ts-page-head__eyebrow {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  font-size: 10.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.16em !important;
+  text-transform: uppercase !important;
+  color: var(--muted, #64748b) !important;
+  line-height: 1.2 !important;
+}
+
+.ts-page-head__eyebrow::before,
+.ts-page-head__eyebrow::after {
+  content: none !important;
+  display: none !important;
+}
+
+.ts-page-head__title,
+.ts-page-head h1 {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  font-size: clamp(1.5rem, 1.15rem + 1vw, 1.9rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+  line-height: 1.15 !important;
+  color: var(--text-strong, #111) !important;
+  text-wrap: balance;
+}
+
+/* Krátká accent linka jen pod nadpisem – ne přes tlačítka */
+.ts-page-head__rule {
+  display: block !important;
+  width: 2rem !important;
+  max-width: 2rem !important;
+  height: 2px !important;
+  margin: 4px 0 0 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 2px !important;
+  background: var(--brand, #E67817) !important;
+  flex-shrink: 0 !important;
+}
+
+.ts-page-head .object-tools {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  max-width: 100% !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.ts-page-head .object-tools li {
+  float: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* object-tools vzhled → ts-buttons.css (stejný pill jako + Přidat Hráč) */
+.ts-page-head .object-tools a::before,
+.ts-page-head .object-tools a::after,
+.ts-page-head .object-tools li a::before,
+.ts-page-head .object-tools li a::after,
+.ts-page-head .object-tools a.addlink::before,
+.ts-page-head .object-tools a.addlink::after {
+  content: none !important;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+}
+
+/* Globálně: plus v kolečku u Přidat – geometricky přesný střed */
+.ts-btn-plus {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 1.15em !important;
+  height: 1.15em !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid currentColor !important;
+  border-radius: 50% !important;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
+  font-size: 0.95em !important;
+  line-height: 0 !important;
+  color: inherit !important;
+  overflow: hidden !important;
+  transform: none !important;
+}
+
+.ts-btn-plus::before,
+.ts-btn-plus::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  background: currentColor !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  transform: translate(-50%, -50%) !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.ts-btn-plus::before {
+  width: 52% !important;
+  height: 1.5px !important;
+}
+
+.ts-btn-plus::after {
+  width: 1.5px !important;
+  height: 52% !important;
+}
+
+/* Fallback layout */
+body.change-list #content:not(:has(.ts-page-head)),
+body.change-form #content:not(:has(.ts-page-head)) {
+  grid-template-areas:
+    "title tools"
+    "main main" !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  column-gap: 16px !important;
+  row-gap: 0 !important;
+  align-items: center !important;
+}
+
+body.change-list #content:has(.ts-page-head),
+body.change-form #content:has(.ts-page-head) {
+  grid-template-areas:
+    "head"
+    "main" !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  row-gap: 0 !important;
+}
+
+body.change-list #content > .ts-page-head,
+body.change-form #content > .ts-page-head {
+  grid-area: head !important;
+  grid-column: 1 / -1 !important;
+}
+
+body.change-list #content:not(:has(.ts-page-head)) > h1,
+body.change-form #content:not(:has(.ts-page-head)) > h1 {
+  font-size: clamp(1.5rem, 1.15rem + 1vw, 1.9rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.03em !important;
+  margin: 0 0 20px 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+body.change-list #content:not(:has(.ts-page-head)) > h1::before,
+body.change-form #content:not(:has(.ts-page-head)) > h1::before {
+  content: none !important;
+}
+
+body.change-list #content:not(:has(.ts-page-head)) #content-main > .object-tools,
+body.change-form #content:not(:has(.ts-page-head)) #content-main > .object-tools {
+  margin: 0 0 20px 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+
+@media (max-width: 720px) {
+  .ts-page-head {
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  body:not(.change-list) .ts-page-head .object-tools {
+    width: 100% !important;
+    justify-content: flex-start !important;
+  }
+  body.change-list #content:not(:has(.ts-page-head)),
+  body.change-form #content:not(:has(.ts-page-head)) {
+    grid-template-areas:
+      "title"
+      "tools"
+      "main" !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}

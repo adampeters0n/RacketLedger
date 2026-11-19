@@ -5,16 +5,27 @@
 
 html[data-mode="dark"] {
   color-scheme: dark;
-  /* Apple Dark Mode – charcoal layers (Settings), ne čistá černá */
-  --bg: #1C1C1E;
-  --surface: #2C2C2E;
-  --table-head: #3A3A3C;
-  --table-row-alt: #2C2C2E;
-  --table-row-hover: #48484A;
-  --text: #EBEBF5;
-  --text-strong: #FFFFFF;
-  --line: #38383A;
-  --muted: #8E8E93;
+  /*
+    Dark border paleta – změň jen --ts-border (nebo --line v system_theme).
+    Všechny bordery / buňky polí z toho dědí.
+  */
+  --ts-border: var(--line, #4a5c6e);
+  --ts-field-bg: var(--bg, #1a252f);
+  --ts-field-border: var(--ts-border);
+  --line-200: var(--ts-border);
+  --ts-card-border: var(--ts-border);
+  --ts-ctl-border: var(--ts-border);
+  --ts-divider: var(--ts-border);
+  --cenik-ctl-border: var(--ts-border);
+  --ts-btn-border: var(--ts-border);
+  --ts-dp-surface: var(--ts-field-bg);
+  --ts-dp-border: var(--ts-border);
+  --ts-dp-text: var(--muted, #9ca3af);
+  --ts-dp-muted: var(--muted, #9ca3af);
+  --ts-tp-surface: var(--ts-field-bg);
+  --ts-tp-border: var(--ts-border);
+  --ts-tp-text: var(--muted, #9ca3af);
+  --ts-tp-muted: var(--muted, #9ca3af);
 }
 
 /* ── Základ: pozadí, text, vynucení dark color-scheme ── */
@@ -55,9 +66,22 @@ html[data-mode="dark"] .cenik-menu-header h1,
 html[data-mode="dark"] .vyuct-set-header h1,
 html[data-mode="dark"] .nast-set-header h1,
 html[data-mode="dark"] .card h3,
-html[data-mode="dark"] .dash-wrap h1 {
+html[data-mode="dark"] .dash-wrap h1,
+html[data-mode="dark"] .ts-page-head__title {
   color: var(--text-strong) !important;
 }
+
+html[data-mode="dark"] .ts-page-head {
+  background: transparent !important;
+  border-bottom-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .ts-page-head__eyebrow {
+  color: var(--muted, #94a3b8) !important;
+  text-transform: uppercase !important;
+}
+
+/* object-tools dark → ts-buttons.css (tokeny --ts-btn-*) */
 
 html[data-mode="dark"] .help,
 html[data-mode="dark"] p.help,
@@ -78,7 +102,19 @@ html[data-mode="dark"] table a {
   color: var(--text-strong) !important;
 }
 
-/* ── Moduly, karty, panely ── */
+/* Jen Rodina / Hráč (vedlejší odkazy) – textová paleta, bez Django --link-fg */
+html[data-mode="dark"] body.change-list #result_list tbody td.field-rodina_link a,
+html[data-mode="dark"] body.change-list #result_list tbody td.field-rodina_link a:link,
+html[data-mode="dark"] body.change-list #result_list tbody td.field-rodina_link a:visited,
+html[data-mode="dark"] body.change-list #result_list tbody td.field-hrac_link a,
+html[data-mode="dark"] body.change-list #result_list tbody td.field-hrac_link a:link,
+html[data-mode="dark"] body.change-list #result_list tbody td.field-hrac_link a:visited {
+  color: var(--cenik-row-color, var(--text-strong)) !important;
+  -webkit-text-fill-color: var(--cenik-row-color, var(--text-strong)) !important;
+  text-decoration: none !important;
+}
+
+/* ── Moduly, karty, panely (+ add/change formuláře) ── */
 html[data-mode="dark"] .module,
 html[data-mode="dark"] .panel,
 html[data-mode="dark"] .card,
@@ -93,6 +129,19 @@ html[data-mode="dark"] .trener-filter-box,
 html[data-mode="dark"] .add-day-page .module,
 html[data-mode="dark"] body.change-form .module.aligned,
 html[data-mode="dark"] body.add-form .module.aligned,
+html[data-mode="dark"] body.change-form #content-main > form > .module.aligned,
+html[data-mode="dark"] body.change-form #content-main fieldset.module.aligned,
+html[data-mode="dark"] body.change-form #content-main .inline-group,
+html[data-mode="dark"] body.change-form #content-main .module,
+html[data-mode="dark"] body.add-form #content-main .module.aligned,
+html[data-mode="dark"] body.add-form #content-main .module,
+html[data-mode="dark"] body.add-form #content-main .add-day-card,
+html[data-mode="dark"] body.add-form .add-day-page .add-day-card,
+html[data-mode="dark"] body.change-form .vyuct-panel,
+html[data-mode="dark"] body.change-form .ledger-card,
+html[data-mode="dark"] body.change-form .ts-card,
+html[data-mode="dark"] body.add-form .ts-card,
+html[data-mode="dark"] .ts-kpi-bar,
 html[data-mode="dark"] body.app-core.model-trening.change-form .module.aligned,
 html[data-mode="dark"] body.app-core.model-trening.add-form .module.aligned,
 html[data-mode="dark"] #dochazka_set-group,
@@ -101,6 +150,7 @@ html[data-mode="dark"] .x-dochazka-inline {
   background: var(--surface) !important;
   color: var(--text) !important;
   border-color: var(--line) !important;
+  box-shadow: none !important;
 }
 
 html[data-mode="dark"] .module caption,
@@ -115,20 +165,6 @@ html[data-mode="dark"] .cenik-menu-card > h3 {
   border-bottom-color: var(--line) !important;
 }
 
-/* Hlavička tabulek v dark: jednotná barva pozadí, žádné brandové buňky */
-html[data-mode="dark"] table thead th,
-html[data-mode="dark"] table thead th a,
-html[data-mode="dark"] #result_list thead th,
-html[data-mode="dark"] #result_list thead th.sorted,
-html[data-mode="dark"] #result_list thead th.sortable,
-html[data-mode="dark"] .results thead th,
-html[data-mode="dark"] .module table thead th {
-  background: var(--table-head) !important;
-  background-image: none !important;
-  color: var(--text-strong) !important;
-  box-shadow: none !important;
-}
-
 /* ── Formulářové řádky a labely ── */
 html[data-mode="dark"] body.change-form .aligned th,
 html[data-mode="dark"] body.change-form label,
@@ -137,8 +173,46 @@ html[data-mode="dark"] body.add-form label,
 html[data-mode="dark"] body.change-form .aligned td,
 html[data-mode="dark"] .form-row label,
 html[data-mode="dark"] .vyuct-field label,
-html[data-mode="dark"] .aligned label {
-  color: var(--text) !important;
+html[data-mode="dark"] .aligned label,
+html[data-mode="dark"] body.change-form .module.aligned .form-row:not(tr) > label,
+html[data-mode="dark"] body.change-form .module.aligned .form-row:not(tr) .flex-container > label,
+html[data-mode="dark"] body.add-form .module.aligned .form-row:not(tr) > label,
+html[data-mode="dark"] body.add-form .module.aligned .form-row:not(tr) .flex-container > label,
+html[data-mode="dark"] body.add-form .add-day-page .add-day-row > label,
+html[data-mode="dark"] body.change-form #content-main fieldset.module.aligned > h2,
+html[data-mode="dark"] body.change-form #content-main .module.aligned > h2,
+html[data-mode="dark"] body.change-form .ts-card__title,
+html[data-mode="dark"] body.add-form .ts-card__title,
+html[data-mode="dark"] .ts-kpi__value {
+  color: var(--text-strong) !important;
+  -webkit-text-fill-color: var(--text-strong) !important;
+}
+
+/* Nápověda na kartách hráče – tmavá výplň místo bílé */
+html[data-mode="dark"] .ts-card-help {
+  background: color-mix(in srgb, var(--line) 42%, var(--surface)) !important;
+  border-color: var(--line) !important;
+  color: var(--muted) !important;
+}
+
+html[data-mode="dark"] .ts-card-help:hover,
+html[data-mode="dark"] .ts-card-help[aria-expanded="true"] {
+  background: color-mix(in srgb, var(--brand) 22%, var(--surface)) !important;
+  border-color: color-mix(in srgb, var(--brand) 45%, var(--line)) !important;
+  color: var(--brand) !important;
+}
+
+html[data-mode="dark"] .ts-card__hint,
+html[data-mode="dark"] .vyuct-panel__hint,
+html[data-mode="dark"] .ledger-hint,
+html[data-mode="dark"] .ts-card__hint.is-open,
+html[data-mode="dark"] .vyuct-panel__hint.is-open,
+html[data-mode="dark"] .ledger-hint.is-open {
+  color: var(--muted) !important;
+  background: color-mix(in srgb, var(--line) 22%, var(--surface)) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 8px !important;
+  padding: 10px 12px !important;
 }
 
 html[data-mode="dark"] body.change-form .aligned tr,
@@ -156,19 +230,45 @@ html[data-mode="dark"] .form-row.readonly {
   color: var(--text) !important;
 }
 
-/* ── Vstupy, selecty, textarea ── */
-html[data-mode="dark"] input:not([type="submit"]):not([type="button"]):not([type="image"]),
+/* ── Vstupy, selecty, textarea, date/time – stejná buňka jako hrac/add ── */
+html[data-mode="dark"] input:not([type="submit"]):not([type="button"]):not([type="image"]):not([type="checkbox"]):not([type="radio"]),
 html[data-mode="dark"] select,
 html[data-mode="dark"] textarea,
 html[data-mode="dark"] .vTextField,
-html[data-mode="dark"] .vyuct-field input,
+html[data-mode="dark"] .vyuct-field input:not([type="checkbox"]):not([type="radio"]),
 html[data-mode="dark"] .vyuct-field select,
 html[data-mode="dark"] #changelist-search input[type="text"],
-html[data-mode="dark"] .change-list .actions select {
-  background: var(--table-head) !important;
+html[data-mode="dark"] #changelist #searchbar,
+html[data-mode="dark"] .change-list .actions select,
+html[data-mode="dark"] body.change-form .module.aligned .form-row input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]):not([type="file"]),
+html[data-mode="dark"] body.change-form .module.aligned .form-row select:not([multiple]),
+html[data-mode="dark"] body.change-form .module.aligned .form-row textarea,
+html[data-mode="dark"] body.add-form .module.aligned .form-row input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]):not([type="file"]),
+html[data-mode="dark"] body.add-form .module.aligned .form-row select:not([multiple]),
+html[data-mode="dark"] body.add-form .module.aligned .form-row textarea,
+html[data-mode="dark"] body.change-form .ts-date-trigger,
+html[data-mode="dark"] body.add-form .ts-date-trigger,
+html[data-mode="dark"] body.ts-page-trener-detail .ts-date-trigger,
+html[data-mode="dark"] body:not(.change-list) .ts-date-trigger,
+html[data-mode="dark"] body:not(.change-list) button.ts-date-trigger,
+html[data-mode="dark"] body:not(.change-list) .ts-time-trigger,
+html[data-mode="dark"] body:not(.change-list) button.ts-time-trigger,
+html[data-mode="dark"] .ts-hrac-combo__input,
+html[data-mode="dark"] .ts-card input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]):not([type="file"]),
+html[data-mode="dark"] .ts-card select:not([multiple]),
+html[data-mode="dark"] .ts-card textarea,
+html[data-mode="dark"] .add-day-page input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="hidden"]),
+html[data-mode="dark"] .add-day-page select:not([multiple]),
+html[data-mode="dark"] .add-day-page textarea,
+html[data-mode="dark"] .select2-container--admin-autocomplete .select2-selection--single,
+html[data-mode="dark"] .select2-container--default .select2-selection--single {
+  background: var(--ts-field-bg, var(--bg)) !important;
+  background-color: var(--ts-field-bg, var(--bg)) !important;
   color: var(--text) !important;
-  border-color: var(--line) !important;
+  border: 1px solid var(--ts-field-border, var(--ts-border, #4a5c6e)) !important;
+  border-color: var(--ts-field-border, var(--ts-border, #4a5c6e)) !important;
   -webkit-text-fill-color: var(--text) !important;
+  box-shadow: none !important;
 }
 
 html[data-mode="dark"] input::placeholder,
@@ -178,17 +278,18 @@ html[data-mode="dark"] textarea::placeholder {
 }
 
 html[data-mode="dark"] input[type="checkbox"],
-html[data-mode="dark"] input[type="radio"] {
+html[data-mode="dark"] input[type="radio"],
+html[data-mode="dark"] #action-toggle,
+html[data-mode="dark"] .action-select,
+html[data-mode="dark"] #result_list input[type="checkbox"],
+html[data-mode="dark"] table input[type="checkbox"] {
   accent-color: var(--brand) !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
-/* ── Select2 ── */
-html[data-mode="dark"] .select2-container--admin-autocomplete .select2-selection--single,
-html[data-mode="dark"] .select2-container--default .select2-selection--single {
-  background: var(--table-head) !important;
-  color: var(--text) !important;
-  border-color: var(--line) !important;
-}
+/* ── Select2 text ── */
 
 html[data-mode="dark"] .select2-container--admin-autocomplete .select2-selection__rendered,
 html[data-mode="dark"] .select2-selection__rendered {
@@ -203,7 +304,7 @@ html[data-mode="dark"] .select2-dropdown {
 }
 
 html[data-mode="dark"] .select2-search--dropdown .select2-search__field {
-  background: var(--table-head) !important;
+  background: var(--bg) !important;
   color: var(--text) !important;
   border-color: var(--line) !important;
   -webkit-text-fill-color: var(--text) !important;
@@ -225,98 +326,36 @@ html[data-mode="dark"] .select2-results__option--highlighted[aria-selected] {
   color: #fff !important;
 }
 
-/* ── Datum / čas – bez glow; barva z nastavení ── */
-html[data-mode="dark"] .datetimeshortcuts a {
-  background: transparent !important;
-  box-shadow: none !important;
-  color: var(--text) !important;
-}
-
-html[data-mode="dark"] .datetimeshortcuts a:hover,
-html[data-mode="dark"] .datetimeshortcuts a:focus {
-  background: transparent !important;
-  color: var(--brand) !important;
-}
-
-html[data-mode="dark"] .datetimeshortcuts .date-icon,
-html[data-mode="dark"] .datetimeshortcuts .clock-icon {
-  background-color: var(--brand) !important;
-  top: 0 !important;
-  width: 16px !important;
-  height: 16px !important;
-}
-
+/* ── Datum / čas – ikony a zkratky ── */
+html[data-mode="dark"] .datetimeshortcuts a,
 html[data-mode="dark"] .clockbox h2,
 html[data-mode="dark"] .calendarbox h2 {
   background: var(--brand-100) !important;
-  color: var(--text) !important;
+  color: var(--brand) !important;
   border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .datetimeshortcuts a:hover {
+  background: var(--table-row-hover) !important;
 }
 
 html[data-mode="dark"] .calendarbox,
 html[data-mode="dark"] .clockbox,
 html[data-mode="dark"] .calendarbox table,
 html[data-mode="dark"] .calendarbox .calendar td,
-html[data-mode="dark"] .calendarbox .calendar th,
-html[data-mode="dark"] .clockbox ul.timelist {
+html[data-mode="dark"] .calendarbox .calendar th {
   background: var(--surface) !important;
   color: var(--text) !important;
-  border-color: var(--line) !important;
 }
 
 html[data-mode="dark"] .calendarbox table caption,
 html[data-mode="dark"] .calendarbox table thead th {
-  background: var(--brand-100) !important;
+  background: var(--table-head) !important;
   color: var(--text-strong) !important;
 }
 
-html[data-mode="dark"] .calendarbox table tbody tr:hover > td,
-html[data-mode="dark"] .calendarbox table tbody tr:hover > th,
-html[data-mode="dark"] .calendarbox .calendar tbody tr:hover > td {
-  background: var(--surface) !important;
-}
-html[data-mode="dark"] .calendarbox .calendar tbody td,
-html[data-mode="dark"] .calendarbox .calendar tbody td.nonday,
-html[data-mode="dark"] .calendarbox .calendar tbody td.noday {
-  background: var(--surface) !important;
-}
-html[data-mode="dark"] .calendarbox table tbody tr:hover > td:not(.selected) > a:not(:hover):not(:focus) {
-  color: var(--text) !important;
-  background: transparent !important;
-}
-html[data-mode="dark"] .calendarbox .calendar tbody td > a:hover,
-html[data-mode="dark"] .calendarbox .calendar tbody td > a:focus {
-  background: color-mix(in srgb, var(--brand) 22%, var(--surface)) !important;
-  color: var(--brand) !important;
-}
-html[data-mode="dark"] .calendarbox .calendar tbody td.selected > a,
-html[data-mode="dark"] .calendarbox .calendar tbody td.selected > a:hover,
-html[data-mode="dark"] .calendarbox .calendar tbody td.selected > a:focus,
-html[data-mode="dark"] .calendarbox .calendar tbody tr:hover > td.selected > a {
-  background: var(--brand) !important;
-  color: #fff !important;
-  -webkit-text-fill-color: #fff !important;
-}
-
-html[data-mode="dark"] .clockbox .timelist a:hover,
-html[data-mode="dark"] .clockbox .timelist a:focus {
-  background: color-mix(in srgb, var(--brand) 22%, var(--surface)) !important;
-  color: var(--brand) !important;
-}
-html[data-mode="dark"] .clockbox .timelist a:active {
-  background: var(--brand) !important;
-  color: #fff !important;
-}
-
-html[data-mode="dark"] .calendarbox .calendar-cancel,
-html[data-mode="dark"] .clockbox .calendar-cancel {
-  background: var(--brand-100) !important;
-  border-top-color: var(--line) !important;
-}
-
-html[data-mode="dark"] .calendarbox .calendar-shortcuts {
-  background: var(--surface) !important;
-  border-top-color: var(--line) !important;
+html[data-mode="dark"] .calendarbox .calendar tbody td:hover {
+  background: var(--table-row-hover) !important;
 }
 
 /* ── Vyúčtování / hráč panely ── */
@@ -335,16 +374,21 @@ html[data-mode="dark"] .vyuct-card dd {
   color: var(--text-strong) !important;
 }
 
-/* ── Trenéři souhrn – patička tabulky ── */
+/* ── Trenéři souhrn – součty (tbody i tfoot) ── */
 html[data-mode="dark"] .tbl-treneri tfoot tr.totals td,
+html[data-mode="dark"] .tbl-treneri tbody tr.totals > td,
+html[data-mode="dark"] .tbl-treneri tbody tr.totals > th,
 html[data-mode="dark"] table tfoot tr td {
   background: var(--surface) !important;
   color: var(--text-strong) !important;
-  border-top-color: var(--brand) !important;
+  border-top-color: var(--line) !important;
+  -webkit-text-fill-color: var(--text-strong) !important;
 }
 
-html[data-mode="dark"] .tbl-treneri tfoot tr.totals td.label {
-  color: var(--text) !important;
+html[data-mode="dark"] .tbl-treneri tfoot tr.totals td.label,
+html[data-mode="dark"] .tbl-treneri tbody tr.totals > th.field-trener {
+  color: var(--text-strong) !important;
+  -webkit-text-fill-color: var(--text-strong) !important;
 }
 
 html[data-mode="dark"] .trener-monthly-table,
@@ -391,11 +435,65 @@ html[data-mode="dark"] #changelist-filter a,
 html[data-mode="dark"] #changelist-filter a:visited,
 html[data-mode="dark"] #changelist-filter li,
 html[data-mode="dark"] .filters a,
-html[data-mode="dark"] .filters a:visited,
-html[data-mode="dark"] .paginator,
-html[data-mode="dark"] .paginator a {
+html[data-mode="dark"] .filters a:visited {
   color: var(--text) !important;
   text-decoration: none !important;
+}
+
+/* ── Stránkování changelistu ── */
+html[data-mode="dark"] .change-list .paginator {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .change-list .paginator a,
+html[data-mode="dark"] .change-list .paginator .this-page {
+  background: var(--bg) !important;
+  border-color: var(--line) !important;
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .change-list .paginator a:hover {
+  background: var(--brand-100) !important;
+  border-color: var(--brand) !important;
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .change-list .paginator .this-page {
+  background: var(--brand) !important;
+  border-color: var(--brand) !important;
+  color: #fff !important;
+}
+
+html[data-mode="dark"] .change-list .paginator button.paginator-load-more,
+html[data-mode="dark"] .change-list .paginator button.paginator-load-more:hover,
+html[data-mode="dark"] .change-list .paginator button.paginator-load-more:hover:not(:disabled),
+html[data-mode="dark"] .change-list .paginator button.paginator-load-more:focus {
+  background: var(--surface, #1a252f) !important;
+  border-color: var(--line, #2a2f3a) !important;
+  color: var(--text-strong, #f3f4f6) !important;
+  -webkit-text-fill-color: var(--text-strong, #f3f4f6) !important;
+  box-shadow: none !important;
+  filter: none !important;
+  transform: none !important;
+  overflow: visible !important;
+}
+
+html[data-mode="dark"] .change-list .paginator .showall,
+html[data-mode="dark"] .change-list .paginator .paginator-info {
+  color: var(--muted) !important;
+}
+
+html[data-mode="dark"] .change-list .paginator .showall a {
+  background: var(--table-row-hover) !important;
+  border-color: var(--line) !important;
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .change-list .paginator .showall a:hover {
+  background: var(--brand-100) !important;
+  border-color: var(--brand) !important;
 }
 
 html[data-mode="dark"] .paginator a:hover {
@@ -404,23 +502,18 @@ html[data-mode="dark"] .paginator a:hover {
 
 /* ── Submit row, secondary tlačítka ── */
 html[data-mode="dark"] .submit-row,
+html[data-mode="dark"] .add-day-submit-row {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
 html[data-mode="dark"] .vyuct-set-actions,
 html[data-mode="dark"] .nast-form-footer {
   background: var(--surface) !important;
   border-color: var(--line) !important;
 }
 
-html[data-mode="dark"] a.button.secondary,
-html[data-mode="dark"] .btn-secondary,
-html[data-mode="dark"] .button.secondary {
-  background: var(--bg) !important;
-  color: var(--text) !important;
-  border-color: var(--line) !important;
-}
-
-html[data-mode="dark"] a.button.secondary:hover {
-  background: var(--table-row-hover) !important;
-}
+/* .button.secondary dark → ts-buttons.css (--ts-btn-*) */
 
 /* ── Modály (hráč – platba, atd.) ── */
 html[data-mode="dark"] .modal-overlay,
@@ -442,15 +535,14 @@ html[data-mode="dark"] .hrac-modal-box label {
   color: var(--text-strong) !important;
 }
 
-/* ── Add day / kopírovat tréninky ── */
+/* ── Add day ── */
 html[data-mode="dark"] .add-day-page,
 html[data-mode="dark"] #content-main.add-day-page,
 html[data-mode="dark"] body #content-main.add-day-page,
-html[data-mode="dark"] .add-day-copy-box,
 html[data-mode="dark"] .add-day-section,
 html[data-mode="dark"] body #content-main.add-day-page .add-day-card,
 html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-card,
-html[data-mode="dark"] body #content-main.add-day-page .add-day-hraci-table,
+html[data-mode="dark"] body #content-main.add-day-page .add-day-hraci-wrap,
 html[data-mode="dark"] body #content-main.add-day-page .add-day-hraci-dropdown,
 html[data-mode="dark"] body #content-main.add-day-page .add-day-training-card {
   background: var(--surface) !important;
@@ -466,11 +558,12 @@ html[data-mode="dark"] body #content-main.add-day-page .add-day-row label {
   color: var(--text-strong) !important;
 }
 
-html[data-mode="dark"] body #content-main.add-day-page .add-day-hraci-title {
+html[data-mode="dark"] body #content-main.add-day-page .add-day-hraci-label {
   color: var(--text-strong) !important;
-  background: var(--brand-100) !important;
-  border-bottom-color: var(--line) !important;
+  background: transparent !important;
 }
+
+/* .add-day-btn-pridat-hrace / .ts-btn dark → ts-buttons.css (--ts-btn-*) */
 
 html[data-mode="dark"] body #content-main.add-day-page .add-day-hraci-search,
 html[data-mode="dark"] body #content-main.add-day-page .add-day-row input,
@@ -478,8 +571,6 @@ html[data-mode="dark"] body #content-main.add-day-page .add-day-row select,
 html[data-mode="dark"] body #content-main.add-day-page .add-day-card input:not([type="submit"]):not([type="button"]),
 html[data-mode="dark"] body #content-main.add-day-page .add-day-card select,
 html[data-mode="dark"] body #content-main.add-day-page .add-day-card textarea,
-html[data-mode="dark"] body #content-main.add-day-page .add-day-copy-fields input,
-html[data-mode="dark"] body #content-main.add-day-page .add-day-copy-fields select,
 html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="date"],
 html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input.add-day-datum-input,
 html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-card .add-day-datum-input-wrap input[type="text"].vDateField,
@@ -493,13 +584,7 @@ html[data-mode="dark"] body #content-main.add-day-page input[type="time"] {
   color-scheme: dark;
 }
 
-html[data-mode="dark"] body #content-main.add-day-page .add-day-copy-card {
-  background: var(--brand-100) !important;
-  border-color: var(--brand) !important;
-}
-
-html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-card .add-day-datum-row label.add-day-label-inline,
-html[data-mode="dark"] body #content-main.add-day-page .add-day-copy-help {
+html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-card .add-day-datum-row label.add-day-label-inline {
   color: var(--text-strong) !important;
 }
 
@@ -516,20 +601,8 @@ html[data-mode="dark"] body #content-main.add-day-page .add-day-hraci-dropdown l
 }
 
 html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-shortcuts a {
-  background: transparent !important;
-  box-shadow: none !important;
-  color: var(--text) !important;
-}
-html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-shortcuts a:hover,
-html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-shortcuts a:focus {
+  background: var(--brand-100) !important;
   color: var(--brand) !important;
-}
-html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-shortcuts a#add-day-calendar {
-  background-color: var(--brand) !important;
-}
-html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-shortcuts a#add-day-calendar:hover,
-html[data-mode="dark"] body #content-main.add-day-page .add-day-datum-shortcuts a#add-day-calendar:focus {
-  background-color: var(--brand-600, var(--brand)) !important;
 }
 
 html[data-mode="dark"] .add-day-page h1,
@@ -539,24 +612,74 @@ html[data-mode="dark"] .add-day-page h3 {
 }
 
 /* ── Dashboard ── */
-html[data-mode="dark"] .dash-wrap .card,
-html[data-mode="dark"] .dash-wrap .card .inner,
-html[data-mode="dark"] .dash-wrap table.list td,
-html[data-mode="dark"] .dash-wrap table.list th {
+html[data-mode="dark"] body.dashboard-page #content {
+  background: var(--bg) !important;
+}
+
+html[data-mode="dark"] .dash-wrap {
+  --dash-ink: var(--text-strong);
+  --dash-mute: var(--muted);
+  --dash-hair: var(--line);
+}
+
+html[data-mode="dark"] .dash-wrap .dash-board,
+html[data-mode="dark"] .dash-wrap .dash-tool:not(.dash-tool--primary):not(.dash-tool--text) {
   background: var(--surface) !important;
   color: var(--text) !important;
   border-color: var(--line) !important;
+  box-shadow: none !important;
 }
 
-html[data-mode="dark"] .dash-wrap .card h3,
-html[data-mode="dark"] .dash-wrap table.list thead th,
-html[data-mode="dark"] .dash-wrap table.list th {
-  background: var(--table-head) !important;
+html[data-mode="dark"] .dash-wrap .dash-masthead,
+html[data-mode="dark"] .dash-wrap .dash-board__head,
+html[data-mode="dark"] .dash-wrap .dash-slot,
+html[data-mode="dark"] .dash-wrap .dash-ledger__row,
+html[data-mode="dark"] .dash-wrap .dash-row,
+html[data-mode="dark"] .dash-wrap .dash-toolbar__sep {
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .dash-wrap .dash-masthead__day,
+html[data-mode="dark"] .dash-wrap .dash-board__title,
+html[data-mode="dark"] .dash-wrap .dash-slot__time,
+html[data-mode="dark"] .dash-wrap .dash-slot__name,
+html[data-mode="dark"] .dash-wrap .dash-vacant__title,
+html[data-mode="dark"] .dash-wrap .dash-ledger__row dd,
+html[data-mode="dark"] .dash-wrap .dash-row__label,
+html[data-mode="dark"] .dash-wrap .dash-row__when,
+html[data-mode="dark"] .dash-wrap .dash-row__value {
   color: var(--text-strong) !important;
 }
 
-html[data-mode="dark"] .dash-wrap table.list tbody tr:nth-child(even) td {
-  background: var(--surface) !important;
+html[data-mode="dark"] .dash-wrap .dash-masthead__day span,
+html[data-mode="dark"] .dash-wrap .dash-masthead__club,
+html[data-mode="dark"] .dash-wrap .dash-board__meta,
+html[data-mode="dark"] .dash-wrap .dash-slot__coach,
+html[data-mode="dark"] .dash-wrap .dash-vacant__text,
+html[data-mode="dark"] .dash-wrap .dash-ledger__row dt,
+html[data-mode="dark"] .dash-wrap .dash-ledger__row dd span,
+html[data-mode="dark"] .dash-wrap .dash-ledger__row dd small,
+html[data-mode="dark"] .dash-wrap .dash-row__when span,
+html[data-mode="dark"] .dash-wrap .dash-row__sub,
+html[data-mode="dark"] .dash-wrap .dash-rows__empty,
+html[data-mode="dark"] .dash-wrap .dash-tool--text {
+  color: var(--muted) !important;
+}
+
+html[data-mode="dark"] .dash-wrap .dash-masthead__weekday,
+html[data-mode="dark"] .dash-wrap .dash-board__link,
+html[data-mode="dark"] .dash-wrap .dash-row__value--debt,
+html[data-mode="dark"] .dash-wrap .dash-ledger__row--alert dd {
+  color: var(--brand) !important;
+}
+
+html[data-mode="dark"] .dash-wrap .dash-slot:hover,
+html[data-mode="dark"] .dash-wrap .dash-row:hover {
+  background: var(--table-head) !important;
+}
+
+html[data-mode="dark"] .dash-wrap h1 {
+  color: var(--text-strong) !important;
 }
 
 /* Jednotná barva řádků tabulek – bez zebra striping */
@@ -633,7 +756,14 @@ html[data-mode="dark"] .ts-topnav a:not(.is-active) {
 
 html[data-mode="dark"] .ts-topnav a.schedule-icon:not(.is-active),
 html[data-mode="dark"] .ts-topnav #nav-rozvrh:not(.is-active) {
-  color: var(--text) !important;
+  color: var(--text-strong, #F9FAFB) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+html[data-mode="dark"] .ts-topnav a.schedule-icon:not(.is-active):hover,
+html[data-mode="dark"] .ts-topnav #nav-rozvrh:not(.is-active):hover {
+  background: var(--brand-100) !important;
+  border-color: var(--brand-100) !important;
 }
 
 /* ── Trénink change form (bílé moduly – vyšší specificita než trening-change-form.css) ── */
@@ -700,10 +830,7 @@ html[data-mode="dark"] body.app-core.model-trening.change-form .select2-containe
 }
 
 html[data-mode="dark"] body.app-core.model-trening.change-form .form-row.field-datum .datetimeshortcuts a {
-  background: transparent !important;
-  color: var(--text) !important;
-}
-html[data-mode="dark"] body.app-core.model-trening.change-form .form-row.field-datum .datetimeshortcuts a:hover {
+  background: var(--brand-100) !important;
   color: var(--brand) !important;
 }
 
@@ -751,13 +878,12 @@ html[data-mode="dark"] .analytika-app {
   --ana-muted: var(--muted);
   --ana-brand: var(--brand);
   --ana-brand-soft: var(--brand-100);
-  --ana-brand-strong: var(--brand-600, var(--brand));
   --ana-link: var(--brand);
   --ana-danger: #f87171;
   --ana-shadow: none;
   --ana-bg-subtle: var(--bg);
-  --ana-bg-soft: var(--table-head);
-  --ana-sidebar-footer: var(--bg);
+  --ana-bg-soft: transparent;
+  --ana-sidebar-footer: transparent;
   --ana-divider: var(--line);
   --ana-nav-icon-bg: color-mix(in srgb, var(--text) 7%, var(--surface));
   --ana-nav-icon-border: var(--line);
@@ -766,9 +892,9 @@ html[data-mode="dark"] .analytika-app {
   --ana-nav-icon-active-border: color-mix(in srgb, var(--brand) 42%, var(--line));
   --ana-nav-hover-bg: var(--table-row-hover);
   --ana-nav-hover-border: var(--line);
-  --ana-nav-active-bg: color-mix(in srgb, var(--brand) 18%, var(--surface));
-  --ana-nav-active-border: color-mix(in srgb, var(--brand) 45%, var(--line));
-  --ana-nav-active-text: color-mix(in srgb, var(--brand) 70%, #ffffff);
+  --ana-nav-active-bg: color-mix(in srgb, var(--brand) 16%, var(--surface));
+  --ana-nav-active-border: color-mix(in srgb, var(--brand) 38%, var(--line));
+  --ana-nav-active-text: var(--text-strong);
   background: var(--bg) !important;
   color: var(--text) !important;
 }
@@ -796,6 +922,16 @@ html[data-mode="dark"] .naklady-date-popover,
 html[data-mode="dark"] .naklady-cal-nav,
 html[data-mode="dark"] .naklady-date-manual-btn,
 html[data-mode="dark"] .naklady-cal-year-btn,
+html[data-mode="dark"] .ts-date-popover,
+html[data-mode="dark"] .ts-date-cal-nav,
+html[data-mode="dark"] .ts-date-manual-btn,
+html[data-mode="dark"] .ts-date-cal-year-btn,
+html[data-mode="dark"] .ts-date-manual,
+html[data-mode="dark"] .ts-time-trigger,
+html[data-mode="dark"] .ts-time-label,
+html[data-mode="dark"] .ts-time-popover,
+html[data-mode="dark"] .ts-time-list,
+html[data-mode="dark"] .ts-time-opt,
 html[data-mode="dark"] .analytika-modal-dialog,
 html[data-mode="dark"] .analytika-modal-header,
 html[data-mode="dark"] .analytika-modal-body,
@@ -808,40 +944,89 @@ html[data-mode="dark"] .analytika-modal-extra {
   box-shadow: none !important;
 }
 
+/* Datum v polích formuláře – šedá z palety */
+html[data-mode="dark"] body.change-form .ts-date-label,
+html[data-mode="dark"] body.add-form .ts-date-label,
+html[data-mode="dark"] body.change-form .ts-date-trigger,
+html[data-mode="dark"] body.add-form .ts-date-trigger,
+html[data-mode="dark"] body.ts-page-trener-detail .ts-date-label,
+html[data-mode="dark"] body.ts-page-trener-detail .ts-date-trigger,
+html[data-mode="dark"] body:not(.change-list) .ts-date-label,
+html[data-mode="dark"] body:not(.change-list) .ts-date-trigger,
+html[data-mode="dark"] body:not(.change-list) .ts-time-label,
+html[data-mode="dark"] body:not(.change-list) .ts-time-trigger {
+  color: var(--muted, #9ca3af) !important;
+  -webkit-text-fill-color: var(--muted, #9ca3af) !important;
+}
+
+/* Filtr Od/Do (Trenéři aj.) – jen výplň chipu, bez druhé buněčné výplně */
+html[data-mode="dark"] body.change-list .ts-cl-chip--date,
+html[data-mode="dark"] body.change-list.model-treneri .ts-cl-chip--date {
+  background: var(--ts-chip-idle-bg) !important;
+  color: var(--ts-chip-idle-fg) !important;
+  border: 0 !important;
+}
+
+html[data-mode="dark"] body.change-list .ts-cl-chip--date .ts-date-trigger,
+html[data-mode="dark"] body.change-list .ts-cl-chip--date button.ts-date-trigger,
+html[data-mode="dark"] body.change-list.model-treneri .ts-cl-chip--date .ts-date-trigger,
+html[data-mode="dark"] body.change-list.model-treneri .ts-cl-chip--date button.ts-date-trigger {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+}
+
+html[data-mode="dark"] body.change-list .ts-cl-chip--date .ts-date-label,
+html[data-mode="dark"] body.change-list .ts-cl-chip--date .ts-cl-chip__label,
+html[data-mode="dark"] body.change-list.model-treneri .ts-cl-chip--date .ts-date-label {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+  background: transparent !important;
+}
+
 html[data-mode="dark"] .analytika-sidebar {
   background: var(--surface) !important;
-  border: 1px solid color-mix(in srgb, var(--brand) 28%, var(--line)) !important;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35), 0 8px 28px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid var(--ts-border, var(--line)) !important;
+  box-shadow: none !important;
+}
+
+html[data-mode="dark"] .analytika-sidebar::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--muted) 40%, transparent) !important;
 }
 
 html[data-mode="dark"] .sidebar-brand {
-  background: color-mix(in srgb, var(--brand) 10%, var(--surface)) !important;
-  border-bottom-color: var(--line) !important;
+  background: transparent !important;
+  border-bottom: 1px solid var(--ts-border, var(--line)) !important;
 }
 
-html[data-mode="dark"] .sidebar-brand strong {
-  color: var(--text-strong) !important;
+html[data-mode="dark"] .sidebar-brand-dot {
+  display: none !important;
 }
 
+html[data-mode="dark"] .sidebar-brand strong,
 html[data-mode="dark"] .sidebar-nav-item.active .nav-text strong {
-  color: var(--ana-nav-active-text) !important;
+  color: var(--brand) !important;
 }
 
 html[data-mode="dark"] .sidebar-nav-item {
   color: var(--text) !important;
-  border-color: transparent !important;
-}
-
-html[data-mode="dark"] .sidebar-nav-item:hover {
-  background: var(--ana-nav-hover-bg) !important;
-  border-color: var(--ana-nav-hover-border) !important;
+  border: none !important;
+  background: transparent !important;
   box-shadow: none !important;
 }
 
+html[data-mode="dark"] .sidebar-nav-item:hover,
 html[data-mode="dark"] .sidebar-nav-item.active {
-  background: var(--ana-nav-active-bg) !important;
-  border-color: var(--ana-nav-active-border) !important;
+  background: transparent !important;
+  border: none !important;
   box-shadow: none !important;
+}
+
+html[data-mode="dark"] .sidebar-nav-item:hover .nav-text strong {
+  color: var(--brand) !important;
 }
 
 html[data-mode="dark"] .analytika-app .nav-icon {
@@ -849,14 +1034,10 @@ html[data-mode="dark"] .analytika-app .nav-icon {
   border-color: var(--ana-nav-icon-border) !important;
 }
 
-html[data-mode="dark"] .analytika-app .sidebar-nav-item:hover .nav-icon {
-  background-color: var(--ana-nav-icon-hover-bg) !important;
-  border-color: var(--ana-nav-hover-border) !important;
-}
-
+html[data-mode="dark"] .analytika-app .sidebar-nav-item:hover .nav-icon,
 html[data-mode="dark"] .analytika-app .sidebar-nav-item.active .nav-icon {
-  background-color: var(--ana-nav-icon-active-bg) !important;
-  border-color: var(--ana-nav-icon-active-border) !important;
+  background-color: var(--ana-nav-icon-bg) !important;
+  border-color: var(--ana-nav-icon-border) !important;
 }
 
 /* Ikony – světlejší stroke pro tmavé pozadí */
@@ -877,8 +1058,8 @@ html[data-mode="dark"] .sidebar-nav-item.active .nav-icon--coaches { background-
 html[data-mode="dark"] .sidebar-nav-item.active .nav-icon--costs { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f8fafc' stroke-width='2.2'%3E%3Cpath d='M9 14l2 2 4-4M7 7h10a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2V9a2 2 0 012-2z'/%3E%3C/svg%3E"); }
 
 html[data-mode="dark"] .sidebar-footer {
-  background: var(--bg) !important;
-  border-color: var(--line) !important;
+  background: transparent !important;
+  border-top: 1px solid var(--ts-border, var(--line)) !important;
 }
 
 html[data-mode="dark"] .sidebar-close,
@@ -963,7 +1144,8 @@ html[data-mode="dark"] .analytika-app textarea,
 html[data-mode="dark"] .analytika-export-select,
 html[data-mode="dark"] .naklady-castka,
 html[data-mode="dark"] .naklady-poznamka,
-html[data-mode="dark"] .naklady-date-manual {
+html[data-mode="dark"] .naklady-date-manual,
+html[data-mode="dark"] .ts-date-manual {
   background: var(--bg) !important;
   color: var(--text) !important;
   border-color: var(--line) !important;
@@ -1042,9 +1224,9 @@ html[data-mode="dark"] .acc-trend.neutral {
 }
 
 html[data-mode="dark"] .acc-sum-badge.negative {
-  background: rgba(127, 29, 29, 0.35) !important;
-  border-color: #991b1b !important;
-  color: #fca5a5 !important;
+  background: color-mix(in srgb, var(--brand) 22%, transparent) !important;
+  border-color: color-mix(in srgb, var(--brand) 45%, transparent) !important;
+  color: var(--brand, #fca5a5) !important;
 }
 
 html[data-mode="dark"] .analytika-modal .drill-panel,
@@ -1093,8 +1275,35 @@ html[data-mode="dark"] .analytika-modal-close:hover {
   color: var(--text-strong) !important;
 }
 
-html[data-mode="dark"] .naklady-cal-day.is-other {
+html[data-mode="dark"] .naklady-cal-day.is-other,
+html[data-mode="dark"] .ts-date-cal-day.is-other {
   color: var(--muted) !important;
+}
+
+html[data-mode="dark"] .ts-time-col-title,
+html[data-mode="dark"] .ts-time-label.is-placeholder,
+html[data-mode="dark"] .ts-time-chevron {
+  color: var(--muted) !important;
+}
+
+html[data-mode="dark"] .ts-time-icon {
+  color: var(--brand) !important;
+}
+
+html[data-mode="dark"] .ts-time-opt {
+  background: transparent !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .ts-time-opt:hover {
+  background: var(--brand-100) !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .ts-time-opt.is-selected,
+html[data-mode="dark"] .ts-time-opt.is-selected:hover {
+  background: var(--brand) !important;
+  color: #fff !important;
 }
 
 html[data-mode="dark"] .analytika-app table.list th,
@@ -1139,18 +1348,30 @@ html[data-mode="dark"] .analytika-modal-chart canvas {
 html[data-mode="dark"] .naklady-cal-title:hover,
 html[data-mode="dark"] .naklady-cal-nav:hover,
 html[data-mode="dark"] .naklady-cal-year-btn:hover,
-html[data-mode="dark"] .naklady-date-manual-btn:hover {
+html[data-mode="dark"] .naklady-date-manual-btn:hover,
+html[data-mode="dark"] .ts-date-cal-title:hover,
+html[data-mode="dark"] .ts-date-cal-nav:hover,
+html[data-mode="dark"] .ts-date-cal-year-btn:hover,
+html[data-mode="dark"] .ts-date-manual-btn:hover {
   background: var(--table-row-hover) !important;
 }
 
 /* ── Nastavení stránka ── */
 html[data-mode="dark"] .nast-excel-row:hover,
+html[data-mode="dark"] .nast-excel-row.is-active,
 html[data-mode="dark"] .nast-excel-row:has(.nast-excel-input:checked) {
-  background: var(--table-row-hover) !important;
+  background: transparent !important;
+}
+
+html[data-mode="dark"] .nast-excel-row:has(.nast-excel-input:checked) .nast-excel-name,
+html[data-mode="dark"] .nast-excel-row.is-active .nast-excel-name,
+html[data-mode="dark"] .nast-excel-row:has(.nast-excel-input:checked) .nast-excel-check,
+html[data-mode="dark"] .nast-excel-row.is-active .nast-excel-check {
+  color: var(--theme-accent, var(--brand)) !important;
 }
 
 html[data-mode="dark"] .nast-row-link:hover {
-  background: var(--table-row-hover) !important;
+  background: transparent !important;
 }
 
 html[data-mode="dark"] .nast-row-input,
@@ -1183,44 +1404,25 @@ html[data-mode="dark"] table tbody tr.selected > th,
 html[data-mode="dark"] table tbody tr.selected > td,
 html[data-mode="dark"] table tbody tr.row-selected > th,
 html[data-mode="dark"] table tbody tr.row-selected > td {
-  background: var(--surface) !important;
+  background: var(--table-row-hover) !important;
   color: var(--text) !important;
   border-top-color: var(--line) !important;
   border-bottom-color: var(--line) !important;
   border-left-color: var(--line) !important;
   border-right-color: var(--line) !important;
   box-shadow: none !important;
-  outline: none !important;
 }
 
-html[data-mode="dark"] #result_list tbody tr:hover > td,
-html[data-mode="dark"] #result_list tbody tr:hover > th,
-html[data-mode="dark"] table tbody tr:hover > td,
-html[data-mode="dark"] table tbody tr:hover > th,
-html[data-mode="dark"] .results tbody tr:hover > td,
-html[data-mode="dark"] .module table tbody tr:hover > td,
-html[data-mode="dark"] table.list tbody tr:hover > td,
-html[data-mode="dark"] table.payments tbody tr:hover > td,
-html[data-mode="dark"] table.ledger tbody tr:hover > td,
-html[data-mode="dark"] table.ledger tbody tr:hover {
-  background: var(--table-row-hover) !important;
-}
-html[data-mode="dark"] #result_list tbody tr:hover a:not(.deletelink),
-html[data-mode="dark"] table tbody tr:hover a:not(.deletelink) {
-  color: var(--brand) !important;
-}
+html[data-mode="dark"] #result_list tbody tr.selected:hover > th,
+html[data-mode="dark"] #result_list tbody tr.selected:hover > td,
+html[data-mode="dark"] #result_list tbody tr.row-selected:hover > th,
+html[data-mode="dark"] #result_list tbody tr.row-selected:hover > td,
 html[data-mode="dark"] table tbody tr.selected:hover > th,
 html[data-mode="dark"] table tbody tr.selected:hover > td,
 html[data-mode="dark"] table tbody tr.row-selected:hover > th,
 html[data-mode="dark"] table tbody tr.row-selected:hover > td {
   background: var(--table-row-hover) !important;
-}
-html[data-mode="dark"] #result_list tbody tr.selected a,
-html[data-mode="dark"] #result_list tbody tr.row-selected a,
-html[data-mode="dark"] .results tbody tr.selected a,
-html[data-mode="dark"] table tbody tr.selected a,
-html[data-mode="dark"] table tbody tr.row-selected a {
-  color: var(--text-strong) !important;
+  color: var(--text) !important;
 }
 
 html[data-mode="dark"] #result_list tbody tr.selected a,
@@ -1306,29 +1508,122 @@ html[data-mode="dark"] .sched-toolbar select {
   border-color: var(--line) !important;
 }
 
-html[data-mode="dark"] .sched-toolbar .seg {
-  border-color: var(--line) !important;
+/* Nový trénink – blok hráčů (bez bílého #fafafa) */
+html[data-mode="dark"] .qa-overlay {
+  background: rgba(0, 0, 0, 0.55) !important;
 }
 
-html[data-mode="dark"] .sched-toolbar .seg a {
+html[data-mode="dark"] .qa-sheet,
+html[data-mode="dark"] .qa-sheet-head {
   background: var(--surface) !important;
+  border-color: var(--line) !important;
   color: var(--text) !important;
 }
 
-html[data-mode="dark"] .sched-toolbar .seg a.is-active {
-  background: color-mix(in srgb, var(--brand) 24%, var(--surface)) !important;
+html[data-mode="dark"] .qa-field--hraci {
+  background: color-mix(in srgb, var(--line) 28%, var(--surface)) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .qa-field--hraci > .qa-label,
+html[data-mode="dark"] .qa-when,
+html[data-mode="dark"] .qa-label {
+  color: var(--muted) !important;
+}
+
+html[data-mode="dark"] .qa-sheet-head h2 {
   color: var(--text-strong) !important;
 }
 
-html[data-mode="dark"] .sched-toolbar .add-day-copy-from-cal {
-  background: color-mix(in srgb, var(--brand) 14%, var(--surface)) !important;
-  border-color: var(--brand) !important;
+html[data-mode="dark"] .qa-hraci-search,
+html[data-mode="dark"] .qa-hraci-dropdown,
+html[data-mode="dark"] .qa-hraci-remove,
+html[data-mode="dark"] .qa-field select,
+html[data-mode="dark"] .qa-field input[type="text"],
+html[data-mode="dark"] .qa-field input[type="search"],
+html[data-mode="dark"] .qa-btn-ghost {
+  background: var(--bg) !important;
   color: var(--text) !important;
+  border-color: var(--line) !important;
 }
 
-html[data-mode="dark"] .sched-wrap {
+html[data-mode="dark"] .qa-hraci-dropdown li {
+  color: var(--text-strong) !important;
+  border-bottom-color: var(--line) !important;
+}
+
+html[data-mode="dark"] .qa-hraci-dropdown li:hover,
+html[data-mode="dark"] .qa-hraci-dropdown li.is-active {
+  background: color-mix(in srgb, var(--brand) 22%, var(--surface)) !important;
+  color: var(--brand) !important;
+}
+
+html[data-mode="dark"] .qa-hraci-remove:hover {
+  color: #fda4af !important;
+  background: rgba(159, 18, 57, 0.28) !important;
+  border-color: #e11d48 !important;
+}
+
+html[data-mode="dark"] .qa-btn-danger {
+  background: rgba(159, 18, 57, 0.22) !important;
+  border-color: #e11d48 !important;
+  color: #fda4af !important;
+}
+
+html[data-mode="dark"] .qa-btn-danger:hover {
+  background: rgba(159, 18, 57, 0.35) !important;
+}
+
+html[data-mode="dark"] .sched-toolbar .seg,
+html[data-mode="dark"] .sched-toolbar .seg--rozvrh {
+  background: color-mix(in srgb, var(--line) 45%, var(--surface)) !important;
+  border-color: var(--line) !important;
+  box-shadow: none !important;
+}
+
+html[data-mode="dark"] .sched-toolbar .seg a,
+html[data-mode="dark"] .sched-toolbar .seg--rozvrh a {
+  background: transparent !important;
+  color: var(--muted) !important;
+  -webkit-text-fill-color: var(--muted);
+}
+
+html[data-mode="dark"] .sched-toolbar .seg a:hover,
+html[data-mode="dark"] .sched-toolbar .seg--rozvrh a:hover {
+  color: var(--text) !important;
+  -webkit-text-fill-color: var(--text);
+}
+
+html[data-mode="dark"] .sched-toolbar .seg a.is-active,
+html[data-mode="dark"] .sched-toolbar .seg--rozvrh a.is-active {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--brand) !important;
+  -webkit-text-fill-color: var(--brand);
+}
+
+html[data-mode="dark"] .sched-toolbar .seg--rozvrh .seg__thumb {
   background: var(--surface) !important;
   border-color: var(--line) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35) !important;
+}
+
+html[data-mode="dark"] .sched-toolbar .seg--kind a.is-active {
+  background: var(--brand) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* .sched-action-btn dark → ts-buttons.css (--ts-btn-*) */
+
+html[data-mode="dark"] .sched-scroll {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+}
+html[data-mode="dark"] .sched-wrap {
+  background: var(--surface) !important;
+  border: none !important;
 }
 
 html[data-mode="dark"] .sched-head {
@@ -1383,11 +1678,33 @@ html[data-mode="dark"] .sched-day-body::before {
 }
 
 html[data-mode="dark"] .ev {
+  background: color-mix(in srgb, var(--brand) 24%, var(--surface)) !important;
+  border-color: var(--brand) !important;
+  color: color-mix(in srgb, var(--brand) 42%, #ffffff) !important;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35) !important;
 }
 
 html[data-mode="dark"] .ev:hover {
   filter: brightness(1.1) !important;
+}
+
+html[data-mode="dark"] .ev.is-dragging-ev,
+html[data-mode="dark"] .sched-drag-ghost {
+  background: color-mix(in srgb, var(--brand) 28%, var(--surface)) !important;
+  border-color: var(--brand) !important;
+  color: color-mix(in srgb, var(--brand) 42%, #ffffff) !important;
+}
+
+html[data-mode="dark"] .ev.ev--staly,
+html[data-mode="dark"] .sched-wrap.is-staly .ev--staly {
+  background: color-mix(in srgb, var(--line) 35%, var(--surface)) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .ev.ev--staly:hover {
+  background: color-mix(in srgb, var(--line) 48%, var(--surface)) !important;
+  border-color: var(--muted) !important;
 }
 
 html[data-mode="dark"] .ev-names {
@@ -1398,21 +1715,343 @@ html[data-mode="dark"] .ev-names::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2) !important;
 }
 
-html[data-mode="dark"] .ev {
-  background: var(--ev-bg-dark, rgba(75, 85, 99, 0.4)) !important;
-  border-color: var(--ev-border-dark, #9ca3af) !important;
-  color: var(--ev-text-dark, #e5e7eb) !important;
+html[data-mode="dark"] .ev[class*="ev--solo"] {
+  background: rgba(180, 83, 9, 0.32) !important;
+  border-color: #d97706 !important;
+  color: #fcd34d !important;
+}
+
+html[data-mode="dark"] .ev[class*="ev--dvojice"] {
+  background: rgba(30, 64, 175, 0.35) !important;
+  border-color: #3b82f6 !important;
+  color: #93c5fd !important;
+}
+
+html[data-mode="dark"] .ev[class*="ev--trojice"],
+html[data-mode="dark"] .ev[class*="ev--trio"] {
+  background: rgba(76, 29, 149, 0.35) !important;
+  border-color: #8b5cf6 !important;
+  color: #c4b5fd !important;
+}
+
+html[data-mode="dark"] .ev[class*="ev--ctverice"],
+html[data-mode="dark"] .ev[class*="ev--ctver"],
+html[data-mode="dark"] .ev[class*="ev--ctyr"] {
+  background: rgba(20, 83, 45, 0.35) !important;
+  border-color: #22c55e !important;
+  color: #86efac !important;
+}
+
+html[data-mode="dark"] .ev[class*="ev--skupina"],
+html[data-mode="dark"] .ev[class*="ev--skup"],
+html[data-mode="dark"] .ev[class*="ev--petice"],
+html[data-mode="dark"] .ev[class*="ev--sobota"] {
+  background: rgba(17, 94, 89, 0.35) !important;
+  border-color: #14b8a6 !important;
+  color: #5eead4 !important;
+}
+
+html[data-mode="dark"] .ev.ev--kurt-tre,
+html[data-mode="dark"] .ev[class*="ev--kurt-rezervace"] {
+  background: rgba(159, 18, 57, 0.35) !important;
+  border-color: #e11d48 !important;
+  color: #fda4af !important;
 }
 
 html[data-mode="dark"] .legend {
   color: var(--muted) !important;
 }
 
-html[data-mode="dark"] .chip {
-  background: var(--ev-bg-dark, rgba(75, 85, 99, 0.55)) !important;
-  border-color: var(--ev-border-dark, #9ca3af) !important;
+html[data-mode="dark"] .chip--solo {
+  background: rgba(180, 83, 9, 0.55) !important;
+  border-color: #d97706 !important;
 }
 
-html[data-mode="dark"] .kredit-zaporny {
+html[data-mode="dark"] .chip--dvojice {
+  background: rgba(30, 64, 175, 0.55) !important;
+  border-color: #3b82f6 !important;
+}
+
+html[data-mode="dark"] .chip--trojice {
+  background: rgba(76, 29, 149, 0.55) !important;
+  border-color: #8b5cf6 !important;
+}
+
+html[data-mode="dark"] .chip--ctverice {
+  background: rgba(20, 83, 45, 0.55) !important;
+  border-color: #22c55e !important;
+}
+
+html[data-mode="dark"] .chip--skupina {
+  background: rgba(17, 94, 89, 0.55) !important;
+  border-color: #14b8a6 !important;
+}
+
+html[data-mode="dark"] .chip--rezervace {
+  background: rgba(159, 18, 57, 0.55) !important;
+  border-color: #e11d48 !important;
+}
+
+html[data-mode="dark"] .kredit-zaporny,
+html[data-mode="dark"] table tbody td .kredit-zaporny,
+html[data-mode="dark"] #result_list td .kredit-zaporny,
+html[data-mode="dark"] .text-red,
+html[data-mode="dark"] table tbody td.text-red {
+  color: var(--brand, #f87171) !important;
+}
+
+html[data-mode="dark"] .vyuct-kredit-dluh,
+html[data-mode="dark"] table tbody td .vyuct-kredit-dluh,
+html[data-mode="dark"] #result_list tbody tr:hover .vyuct-kredit-dluh,
+html[data-mode="dark"] table tbody tr:hover .vyuct-kredit-dluh {
   color: #f87171 !important;
+}
+
+html[data-mode="dark"] .vyuct-kredit-plus,
+html[data-mode="dark"] table tbody td .vyuct-kredit-plus,
+html[data-mode="dark"] #result_list tbody tr:hover .vyuct-kredit-plus,
+html[data-mode="dark"] table tbody tr:hover .vyuct-kredit-plus {
+  color: #4ade80 !important;
+}
+
+html[data-mode="dark"] #result_list tbody tr:hover .kredit-zaporny,
+html[data-mode="dark"] table tbody tr:hover .kredit-zaporny {
+  color: var(--brand, #f87171) !important;
+}
+
+/* ── Sjednocené pozadí + tabulky jako ve světlém režimu ── */
+html[data-mode="dark"] #header,
+html[data-mode="dark"] main#content-start.content,
+html[data-mode="dark"] #container,
+html[data-mode="dark"] #content,
+html[data-mode="dark"] #content-main {
+  background: var(--bg) !important;
+}
+
+html[data-mode="dark"] #changelist,
+html[data-mode="dark"] #changelist.module,
+html[data-mode="dark"] #changelist-form,
+html[data-mode="dark"] #changelist-form .results,
+html[data-mode="dark"] .change-list .results {
+  background: var(--bg) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] body:not(.change-list) #result_list thead th,
+html[data-mode="dark"] body:not(.change-list) .results thead th,
+html[data-mode="dark"] body:not(.change-list) .module table thead th,
+html[data-mode="dark"] body:not(.change-list) table thead th {
+  background: var(--table-head) !important;
+  color: var(--text-strong) !important;
+  border-color: var(--line) !important;
+}
+
+/* Changelist: search + hlavička v dark mode (přebije hardcoded #fff / #111827) */
+html[data-mode="dark"] body.change-list #changelist #searchbar,
+html[data-mode="dark"] body.change-list #changelist #changelist-search input[type="text"],
+html[data-mode="dark"] body.change-list #changelist .cenik-field--search #changelist-search #searchbar,
+html[data-mode="dark"] body.change-list #changelist .cenik-field--search #changelist-search input[type="text"],
+html[data-mode="dark"] body.change-list #changelist .ts-cl-toolbar #changelist-search #searchbar,
+html[data-mode="dark"] body.change-list #changelist .ts-cl-toolbar #changelist-search input[type="text"] {
+  background: var(--ts-ctl-bg, var(--surface, #1a252f)) !important;
+  color: var(--text-strong) !important;
+  -webkit-text-fill-color: var(--text-strong) !important;
+  border-color: var(--ts-border, var(--line, #4a5c6e)) !important;
+}
+
+html[data-mode="dark"] body.change-list #changelist #searchbar::placeholder,
+html[data-mode="dark"] body.change-list #changelist #changelist-search input[type="text"]::placeholder {
+  color: var(--muted) !important;
+  -webkit-text-fill-color: var(--muted) !important;
+}
+
+html[data-mode="dark"] body.change-list #result_list thead th,
+html[data-mode="dark"] body.change-list #result_list thead th.sorted,
+html[data-mode="dark"] body.change-list #result_list thead th.sortable,
+html[data-mode="dark"] body.change-list #result_list thead th.action-checkbox-column,
+html[data-mode="dark"] body.change-list #changelist #result_list thead th,
+html[data-mode="dark"] body.change-list #result_list thead tr:hover th,
+html[data-mode="dark"] body.change-list .results thead th,
+html[data-mode="dark"] table thead th {
+  background-color: var(--bg, #1a252f) !important;
+  background-image: linear-gradient(var(--text-strong, #f3f4f6), var(--text-strong, #f3f4f6)) !important;
+  background-size: 100% 1.5px !important;
+  background-position: left bottom !important;
+  background-repeat: no-repeat !important;
+  border: 0 !important;
+  border-bottom: 0 !important;
+  color: var(--ts-head-color, var(--text-strong, #f3f4f6)) !important;
+  -webkit-text-fill-color: var(--ts-head-color, var(--text-strong, #f3f4f6)) !important;
+  font-size: var(--ts-head-size, 14px) !important;
+  line-height: 1.4 !important;
+  box-shadow: none !important;
+}
+
+html[data-mode="dark"] body.change-list #result_list thead th a,
+html[data-mode="dark"] body.change-list #result_list thead th .text,
+html[data-mode="dark"] body.change-list #result_list thead th .text a,
+html[data-mode="dark"] table thead th a {
+  background: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  border-bottom: 0 !important;
+  color: var(--ts-head-color, var(--text-strong, #f3f4f6)) !important;
+  -webkit-text-fill-color: var(--ts-head-color, var(--text-strong, #f3f4f6)) !important;
+  text-decoration: none !important;
+  box-shadow: none !important;
+}
+
+html[data-mode="dark"] body.change-list #result_list thead th a:hover,
+html[data-mode="dark"] body.change-list #result_list thead th.sortable a:hover,
+html[data-mode="dark"] body.change-list #result_list thead th .text a:hover,
+html[data-mode="dark"] body.change-list #result_list thead th a:focus,
+html[data-mode="dark"] body.change-list #result_list thead th.sortable a:focus,
+html[data-mode="dark"] table thead th a:hover,
+html[data-mode="dark"] table thead th a:focus {
+  color: var(--brand) !important;
+  -webkit-text-fill-color: var(--brand) !important;
+  text-decoration: none !important;
+  border-bottom: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+html[data-mode="dark"] #result_list tbody td,
+html[data-mode="dark"] #result_list tbody th,
+html[data-mode="dark"] table tbody td,
+html[data-mode="dark"] table tbody th {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+html[data-mode="dark"] #result_list tbody tr:hover > td,
+html[data-mode="dark"] #result_list tbody tr:hover > th,
+html[data-mode="dark"] table tbody tr:hover > td {
+  background: var(--table-row-hover) !important;
+}
+
+html[data-mode="dark"] .module caption,
+html[data-mode="dark"] .module h2,
+html[data-mode="dark"] .grp-module h2 {
+  background: var(--table-head) !important;
+  color: var(--text-strong) !important;
+  border-bottom-color: var(--line) !important;
+}
+
+/* Select2 / dropdowny */
+html[data-mode="dark"] .select2-container--admin-autocomplete .select2-dropdown,
+html[data-mode="dark"] .select2-dropdown {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .select2-container--admin-autocomplete .select2-search__field,
+html[data-mode="dark"] .select2-search__field {
+  background: var(--bg) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .select2-results__option,
+html[data-mode="dark"] .select2-container--admin-autocomplete .select2-results__option {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+}
+
+html[data-mode="dark"] .select2-results__option--highlighted:not([aria-selected]),
+html[data-mode="dark"] .select2-container--admin-autocomplete .select2-results__option--highlighted:not([aria-selected]) {
+  background: var(--brand-100) !important;
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .select2-results__option--highlighted[aria-selected],
+html[data-mode="dark"] .select2-container--admin-autocomplete .select2-results__option--highlighted[aria-selected] {
+  background: var(--brand) !important;
+  color: #fff !important;
+}
+
+html[data-mode="dark"] .select2-container--admin-autocomplete .select2-results__option[aria-selected="true"] {
+  background: var(--table-row-hover) !important;
+  color: var(--text-strong) !important;
+}
+
+html[data-mode="dark"] .select2-container--admin-autocomplete .select2-selection--single,
+html[data-mode="dark"] .select2-container--default .select2-selection--single {
+  background: var(--bg) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+
+/* ── Tabulky – hover odkazů v barvě palety (jako ve světlém režimu) ── */
+html[data-mode="dark"] #result_list a:hover,
+html[data-mode="dark"] .results a:hover,
+html[data-mode="dark"] .module table a:hover,
+html[data-mode="dark"] #content-main table a:hover,
+html[data-mode="dark"] #content table a:hover,
+html[data-mode="dark"] table.list a:hover,
+html[data-mode="dark"] table.ledger a:hover,
+html[data-mode="dark"] table.payments a:hover,
+html[data-mode="dark"] .analytika-table a:hover,
+html[data-mode="dark"] .mini-table a:hover,
+html[data-mode="dark"] .dashboard-table a:hover,
+html[data-mode="dark"] .trener-monthly-table a:hover,
+html[data-mode="dark"] #changelist-filter a:hover,
+html[data-mode="dark"] .filters a:hover,
+html[data-mode="dark"] #result_list tbody tr:hover a,
+html[data-mode="dark"] .results tbody tr:hover a,
+html[data-mode="dark"] .module table tbody tr:hover a,
+html[data-mode="dark"] #content-main table tbody tr:hover a,
+html[data-mode="dark"] table tbody tr:hover a,
+html[data-mode="dark"] #result_list tbody tr.selected a:hover,
+html[data-mode="dark"] #result_list tbody tr.row-selected a:hover,
+html[data-mode="dark"] table tbody tr.selected a:hover,
+html[data-mode="dark"] table tbody tr.row-selected a:hover {
+  color: var(--brand) !important;
+  text-decoration: none !important;
+}
+
+/* ── Nastavení sidebar – bez focus ringu, aktivní zůstane brand i při hoveru ── */
+html[data-mode="dark"] #content-main.nast-app .nast-sidebar-nav,
+html[data-mode="dark"] #content-main.nast-app .nast-sidebar-nav:focus-within,
+html[data-mode="dark"] #content-main.nast-app .nast-sidebar,
+html[data-mode="dark"] #content-main.nast-app .nast-sidebar:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+html[data-mode="dark"] #content-main.nast-app .nast-sidebar-nav button.nast-sidebar-item,
+html[data-mode="dark"] #content-main.nast-app .nast-sidebar-nav button.nast-sidebar-item:focus,
+html[data-mode="dark"] #content-main.nast-app .nast-sidebar-nav button.nast-sidebar-item:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+  background: transparent !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html[data-mode="dark"] #content-main.nast-app .nast-sidebar-nav button.nast-sidebar-item {
+  color: var(--text) !important;
+  -webkit-text-fill-color: var(--text) !important;
+}
+
+html[data-mode="dark"] #content-main.nast-app .nast-sidebar-nav button.nast-sidebar-item:hover {
+  color: var(--brand) !important;
+  -webkit-text-fill-color: var(--brand) !important;
+  background: transparent !important;
+}
+
+html[data-mode="dark"] #content-main.nast-app .nast-sidebar-nav button.nast-sidebar-item.is-active,
+html[data-mode="dark"] #content-main.nast-app .nast-sidebar-nav button.nast-sidebar-item.is-active:hover,
+html[data-mode="dark"] #content-main.nast-app .nast-sidebar-nav button.nast-sidebar-item.is-active:focus,
+html[data-mode="dark"] #content-main.nast-app .nast-sidebar-nav button.nast-sidebar-item.is-active:focus-visible {
+  color: var(--brand) !important;
+  -webkit-text-fill-color: var(--brand) !important;
+  background: transparent !important;
+  font-weight: 800;
 }

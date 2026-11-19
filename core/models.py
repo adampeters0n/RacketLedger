@@ -21,6 +21,7 @@ import logging
 from .i18n_config import DEFAULT_LANGUAGE, SYSTEM_LANGUAGES
 from .system_theme import DEFAULT_THEME, THEME_CHOICES
 from .money import DEFAULT_MENA, MENA_CHOICES, format_castka
+from .singleton_cache import get_cached_singleton, invalidate_singleton, set_cached_singleton
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,19 @@ def _zacatek_obdobi_pro_auto_vyuctovani(mesicu: int = AUTO_VYUCTOVANI_OBDOBI_MES
     if settings.USE_TZ:
         start = dj_tz.make_aware(start, dj_tz.get_current_timezone())
     return start
+
+
+def _normalize_dt_for_period(x, *, is_end: bool = False):
+    if not x:
+        return None
+    if isinstance(x, datetime):
+        dt = x
+    else:
+        dt = datetime.combine(x, time.max if is_end else time.min)
+    if dj_tz.is_naive(dt) and settings.USE_TZ:
+        dt = dj_tz.make_aware(dt, dj_tz.get_current_timezone())
+    return dt
+
 
 def _schedule_auto_vyuctovani(hrac_id: int) -> None:
     """Spustí auto vyúčtování až po commitu – max. jednou na hráče v rámci transakce."""
@@ -93,9 +107,44 @@ class Hrac(models.Model):
         N_TRENINGU = "N_TRENINGU", _("Po N trénincích")
         CASTKA = "CASTKA", _("Limit kreditu")
 
+    class Uroven(models.TextChoices):
+        ZACATECNIK = "ZACATECNIK", _("Začátečník")
+        MIRNE = "MIRNE", _("Mírně pokročilý")
+        POKROCILY = "POKROCILY", _("Pokročilý")
+
+    class Pohlavi(models.TextChoices):
+        MUZ = "M", _("Muž")
+        ZENA = "Z", _("Žena")
+
     jmeno = models.CharField(_("Jméno"), max_length=120)
     prijmeni = models.CharField(_("Příjmení"), max_length=120, db_index=True, blank=True, default="")
     email = models.EmailField(blank=True, null=True)
+    telefon = models.CharField(_("Telefon"), max_length=32, blank=True, default="")
+    rok_narozeni = models.PositiveSmallIntegerField(
+        _("Rok narození"),
+        blank=True,
+        null=True,
+    )
+    uroven = models.CharField(
+        _("Úroveň"),
+        max_length=16,
+        choices=Uroven.choices,
+        blank=True,
+        default="",
+    )
+    pohlavi = models.CharField(
+        _("Pohlaví"),
+        max_length=1,
+        choices=Pohlavi.choices,
+        blank=True,
+        default="",
+    )
+    aktivni = models.BooleanField(
+        _("Aktivní hráč"),
+        default=True,
+        db_index=True,
+        help_text=_("Vypnutím se hráč skryje ze seznamu. Tréninky a platby zůstanou."),
+    )
 
     # vazba na rodinu (nové)
     rodina = models.ForeignKey(
@@ -112,6 +161,9 @@ class Hrac(models.Model):
     )
     posledni_vyuctovani_at = models.DateTimeField(blank=True, null=True)
     pocet_treninku_od_vyuctovani = models.PositiveIntegerField(default=0)
+    # Po auto vyúčtování limitem: dokud kredit znovu nestoupne nad limit
+    # (platba NEBO smazání tréninků/plateb), další auto e-mail se nepošle.
+    auto_castka_ceka_na_obnovu = models.BooleanField(default=False, editable=False)
 
     class Meta:
         verbose_name = _("Hráč")
@@ -124,6 +176,14 @@ class Hrac(models.Model):
     @property
     def cele_jmeno(self) -> str:
         return " ".join(p for p in (self.jmeno.strip(), self.prijmeni.strip()) if p)
+
+    @property
+    def vek(self) -> int | None:
+        """Věk v celých letech podle roku narození (None pokud není vyplněno)."""
+        if not self.rok_narozeni:
+            return None
+        years = dj_tz.localdate().year - int(self.rok_narozeni)
+        return years if years >= 0 else None
 
     # ---- salda/kredit ----
     @property
@@ -143,6 +203,15 @@ class Hrac(models.Model):
     @property
     def kredit(self) -> Decimal:
         return (-self.zustatek).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+    def castka_k_uhrade_dluh_plus_surplus(self, surplus: Decimal | int | str) -> Decimal:
+        """Požadovaná částka = max(0, −kredit) + surplus (při kladném kreditu jen surplus)."""
+        surplus = Decimal(str(surplus)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        if surplus < 0:
+            surplus = Decimal("0.00")
+        dluh = max(Decimal("0.00"), -self.kredit)
+        return (dluh + surplus).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
     @property
     def email_vyuctovani(self) -> str | None:
@@ -181,9 +250,13 @@ class Hrac(models.Model):
         override_amount_due: Decimal | None = None,
         override_period_from=None,   # date/datetime/None
         override_period_to=None,     # date/datetime/None
+        overview_only: bool = False,
     ):
         """
         Uzávěrka za období.
+
+        overview_only=True: jen e-mail s přehledem tréninků
+        (bez částky k zaplacení, bez vytvoření Vyuctovani a bez uzavření období).
         """
         def _normalize_dt(x, is_end=False):
             if not x: return None
@@ -212,35 +285,46 @@ class Hrac(models.Model):
         charges = tx_qs.filter(typ=Transakce.Typ.NAUCTOVANO).aggregate(Sum("castka"))["castka__sum"] or Decimal("0")
         pays = tx_qs.filter(typ__in=[Transakce.Typ.PLATBA, Transakce.Typ.VRATKA]).aggregate(Sum("castka"))["castka__sum"] or Decimal("0")
         computed_amount = (Decimal(charges) - Decimal(pays)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        
-        # --- Logika pro částku (0 Kč vs zadaná částka) ---
-        if override_amount_due is not None:
-            amount_due = Decimal(override_amount_due).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        elif duvod == "manual":
-            amount_due = Decimal("0.00") # Manuálně bez částky = 0 Kč
-        else:
-            amount_due = computed_amount
 
-        # Statistiky
-        sessions = self.dochazky.filter(prisel=True, trening__datum__lte=period_to, **({"trening__datum__gt": period_from} if period_from else {})).count()
         credit_end = self.kredit
         delta_credit = (Decimal(pays) - Decimal(charges)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         credit_start = (credit_end - delta_credit).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
-        snapshot_pk = self.transakce.aggregate(m=Max("pk"))["m"] or 0
+        vyuct = None
+        amount_due = Decimal("0.00")
+        if not overview_only:
+            # --- Logika pro částku (0 Kč vs zadaná částka) — zachováno RL chování ---
+            if override_amount_due is not None:
+                amount_due = Decimal(override_amount_due).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            elif duvod == "manual":
+                amount_due = Decimal("0.00")  # Manuálně bez částky = 0 Kč
+            else:
+                amount_due = computed_amount
 
-        vyuct = Vyuctovani.objects.create(
-            hrac=self, period_from=period_from, period_to=period_to, sessions_count=sessions,
-            charges_total=Decimal(charges).quantize(Decimal("0.01")), payments_total=Decimal(pays).quantize(Decimal("0.01")),
-            amount_due=amount_due, credit_start=credit_start, credit_end=credit_end, reason=duvod,
-            snapshot_transakce_pk=snapshot_pk,
-        )
+            # Statistiky
+            sessions = self.dochazky.filter(
+                prisel=True,
+                trening__datum__lte=period_to,
+                **({"trening__datum__gt": period_from} if period_from else {}),
+            ).count()
+            snapshot_pk = self.transakce.aggregate(m=Max("pk"))["m"] or 0
 
-        update_uzaverka = duvod != "manual"
-        if update_uzaverka:
-            self.posledni_vyuctovani_at = now
-            self.pocet_treninku_od_vyuctovani = 0
-            self.save(update_fields=["posledni_vyuctovani_at", "pocet_treninku_od_vyuctovani"])
+            vyuct = Vyuctovani.objects.create(
+                hrac=self, period_from=period_from, period_to=period_to, sessions_count=sessions,
+                charges_total=Decimal(charges).quantize(Decimal("0.01")), payments_total=Decimal(pays).quantize(Decimal("0.01")),
+                amount_due=amount_due, credit_start=credit_start, credit_end=credit_end, reason=duvod,
+                snapshot_transakce_pk=snapshot_pk,
+            )
+
+            update_uzaverka = duvod != "manual"
+            if update_uzaverka:
+                self.posledni_vyuctovani_at = now
+                self.pocet_treninku_od_vyuctovani = 0
+                update_fields = ["posledni_vyuctovani_at", "pocet_treninku_od_vyuctovani"]
+                if duvod == self.RezimVyuctovani.CASTKA:
+                    self.auto_castka_ceka_na_obnovu = True
+                    update_fields.append("auto_castka_ceka_na_obnovu")
+                self.save(update_fields=update_fields)
 
         # ===== E-mail =====
         billing_email = self.email_vyuctovani
@@ -298,7 +382,11 @@ class Hrac(models.Model):
                 cena = zaplaceno = ""
 
                 if typ == "CHARGE":
-                    if tx.trening: skupina = tx.trening.get_format_display() 
+                    if tx.trening:
+                        skupina = tx.trening.get_format_display()
+                        # Služby (výplet…): bez času v e-mailové tabulce
+                        if tx.trening.je_sluzba():
+                            cas_str = ""
                     amt = Decimal(tx.castka or 0)
                     sum_cena += amt
                     running_credit -= amt
@@ -349,13 +437,38 @@ class Hrac(models.Model):
             # --- Číslo účtu ---
             vyuct_nast = VyuctovaniNastaveni.load()
             sys_nast = SystemNastaveni.load()
-            if email_variant == "2":
-                cislo_uctu_text = vyuct_nast.ucet_varianta_2
-                cislo_uctu_html = f"<strong>{escape(vyuct_nast.ucet_varianta_2)}</strong>"
-            else:
-                cislo_uctu_text = vyuct_nast.ucet_varianta_1
-                cislo_uctu_html = f"<strong>{escape(vyuct_nast.ucet_varianta_1)}</strong>"
+            cislo_uctu_text = vyuct_nast.cislo_uctu_pro_variantu(email_variant)
+            cislo_uctu_html = f"<strong>{escape(cislo_uctu_text)}</strong>"
             vs_popis = (vyuct_nast.variabilni_symbol_popis or "").strip() or "Jméno hráče"
+
+            # Online platba (Stripe Checkout) — pokud je Connect ready
+            from core.player_payments import maybe_attach_checkout
+
+            pay_url = (
+                maybe_attach_checkout(vyuct)
+                if (not overview_only and vyuct is not None and amount_due > 0)
+                else ""
+            )
+
+            online_pay_text = ""
+            online_pay_html = ""
+            bank_heading = "Platební údaje:"
+            if pay_url:
+                online_pay_text = (
+                    f"Zaplatit online: {pay_url}\n\n"
+                    "Nebo převodem na účet:\n"
+                )
+                online_pay_html = f"""
+                <div style="margin: 16px 0 20px;">
+                  <a href="{escape(pay_url)}"
+                     style="display:inline-block;background:#111827;color:#fff;text-decoration:none;
+                            font-weight:600;padding:12px 20px;border-radius:8px;">
+                    Zaplatit online
+                  </a>
+                </div>
+                <div style="margin-bottom: 8px; color:#6b7280;">Nebo převodem na účet:</div>
+                """
+                bank_heading = ""
 
             subject = sys_nast.format_email_subject(
                 f"Přehled tréninků a vyúčtování – {self.cele_jmeno}"
@@ -363,62 +476,10 @@ class Hrac(models.Model):
             podpis = sys_nast.effective_podpis()
             podpis_html = sys_nast.podpis_html()
 
-            text_body = (
-                f"Zasílám přehled tréninků a vyúčtování za období od {period_from.strftime('%d.%m.%Y') if period_from else 'začátku'} do {display_period_to.strftime('%d.%m.%Y')}.\n\n"
-                "Níže je přiložen podrobný rozpis všech položek.\n\n"
-                "---\n"
-                "**Přehled kreditu:**\n\n"
-                f"Aktuální kredit (před platbou): {format_castka(credit_end)}\n"
-                f"Celková cena tréninků v tomto období: {format_castka(sum_cena)}\n\n"
-                "Pro vyrovnání kreditu a jeho navýšení na další období je třeba uhradit:\n\n"
-                f"Částka k zaplacení: **{amount_display_str}**\n\n"
-                "Platební údaje:\n"
-                f"Číslo účtu: **{cislo_uctu_text}**\n"
-                f"Variabilní symbol: **{vs_popis}**\n\n"
-                f"Po připsání platby bude stav kreditu: {format_castka(kredit_po_uhrade)}\n"
-                "---\n\n"
-                "Detailní rozpis tréninků:\n\n"
-                f"{table_txt}\n\n"
-                "Děkuji.\n\n"
-                f"{podpis}"
-            )
 
-            html_body = f"""
-            <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;">
-              <p>Zasílám přehled tréninků a vyúčtování za období od 
-                 <strong>{period_from.strftime('%d.%m.%Y') if period_from else 'začátku'}</strong>
-                 do <strong>{display_period_to.strftime('%d.%m.%Y')}</strong>.
-              </p>
-              <p>Níže je přiložen podrobný rozpis všech položek.</p>
-              
-              <hr style="border:none; border-top:1px solid #e5e7eb; margin: 20px 0;">
-              
-              <h3 style="margin-top: 20px; margin-bottom: 10px;">Přehled kreditu:</h3>
-              <div style="font-size: 1.05em; line-height: 1.7;">
-                Aktuální kredit (před platbou): <strong>{format_castka(credit_end)}</strong><br>
-                Celková cena tréninků v tomto období: <strong>{format_castka(sum_cena)}</strong>
-              </div>
-
-              <div style="margin: 20px 0;">
-                Pro vyrovnání kreditu a jeho navýšení na další období je třeba uhradit:
-              </div>
-              
-              <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
-                <div style="font-size: 1.1em; margin-bottom: 12px;">
-                  Částka k zaplacení: <strong style="font-size: 1.3em; color: #111827;">{amount_display_str}</strong>
-                </div>
-                <div style="line-height: 1.7;">
-                  Platební údaje:<br>
-                  Číslo účtu: {cislo_uctu_html}<br> Variabilní symbol: <strong>{escape(vs_popis)}</strong> 
-                </div>
-              </div>
-              
-              <div style="margin-bottom: 20px;">
-                Po připsání platby bude stav kreditu: <strong>{format_castka(kredit_po_uhrade)}</strong>
-              </div>
-
-              <hr style="border:none; border-top:1px solid #e5e7eb; margin: 20px 0;">
-
+            od_str = period_from.strftime("%d.%m.%Y") if period_from else "začátku"
+            do_str = display_period_to.strftime("%d.%m.%Y")
+            table_html = f"""
               <h3 style="margin:16px 0 6px;">Detailní rozpis tréninků:</h3>
               <table cellpadding="6" cellspacing="0" style="border-collapse:collapse;border:1px solid #e5e7eb;width:100%;font-size:0.9em;">
                 <thead style="background:#f9fafb;">
@@ -433,11 +494,129 @@ class Hrac(models.Model):
                 </thead>
                 <tbody>{rows_html}</tbody>
               </table>
+            """
+
+            if overview_only:
+                subject = sys_nast.format_email_subject(
+                    f"Přehled tréninků – {self.cele_jmeno}"
+                )
+                text_body = (
+                    f"Zasílám přehled tréninků za období od {od_str} do {do_str}.\n\n"
+                    "Tento e-mail je pouze informační přehled tréninků, nejedná se o výzvu k platbě.\n\n"
+                    "---\n"
+                    "**Přehled kreditu:**\n\n"
+                    f"Aktuální kredit: {format_castka(credit_end)}\n"
+                    f"Celková cena tréninků v tomto období: {format_castka(sum_cena)}\n"
+                    "---\n\n"
+                    "Detailní rozpis tréninků:\n\n"
+                    f"{table_txt}\n\n"
+                    "Děkuji.\n\n"
+                    f"{podpis}"
+                )
+                html_body = f"""
+            <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;">
+              <p>Zasílám přehled tréninků za období od
+                 <strong>{od_str}</strong>
+                 do <strong>{do_str}</strong>.
+              </p>
+              <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px; padding:14px 16px; margin:16px 0 20px;">
+                Tento e-mail je <strong>pouze informační přehled tréninků</strong>, nejedná se o výzvu k platbě.
+              </div>
+
+              <hr style="border:none; border-top:1px solid #e5e7eb; margin: 20px 0;">
+
+              <h3 style="margin-top: 20px; margin-bottom: 10px;">Přehled kreditu:</h3>
+              <div style="font-size: 1.05em; line-height: 1.7;">
+                Aktuální kredit: <strong>{format_castka(credit_end)}</strong><br>
+                Celková cena tréninků v tomto období: <strong>{format_castka(sum_cena)}</strong>
+              </div>
+
+              <hr style="border:none; border-top:1px solid #e5e7eb; margin: 20px 0;">
+
+              {table_html}
 
               <p style="margin-top:20px;">Děkuji.</p>
               <p style="margin-top:16px;">{podpis_html}</p>
             </div>
             """
+            else:
+                text_body = (
+                    f"Zasílám přehled tréninků a vyúčtování za období od {period_from.strftime('%d.%m.%Y') if period_from else 'začátku'} do {display_period_to.strftime('%d.%m.%Y')}.\n\n"
+                    "Níže je přiložen podrobný rozpis všech položek.\n\n"
+                    "---\n"
+                    "**Přehled kreditu:**\n\n"
+                    f"Aktuální kredit (před platbou): {format_castka(credit_end)}\n"
+                    f"Celková cena tréninků v tomto období: {format_castka(sum_cena)}\n\n"
+                    "Pro vyrovnání kreditu a jeho navýšení na další období je třeba uhradit:\n\n"
+                    f"Částka k zaplacení: **{amount_display_str}**\n\n"
+                    f"{online_pay_text}"
+                    f"{bank_heading + chr(10) if bank_heading else ''}"
+                    f"Číslo účtu: **{cislo_uctu_text}**\n"
+                    f"Variabilní symbol: **{vs_popis}**\n\n"
+                    f"Po připsání platby bude stav kreditu: {format_castka(kredit_po_uhrade)}\n"
+                    "---\n\n"
+                    "Detailní rozpis tréninků:\n\n"
+                    f"{table_txt}\n\n"
+                    "Děkuji.\n\n"
+                    f"{podpis}"
+                )
+
+                html_body = f"""
+                <div style="font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-height:1.6;">
+                  <p>Zasílám přehled tréninků a vyúčtování za období od 
+                     <strong>{period_from.strftime('%d.%m.%Y') if period_from else 'začátku'}</strong>
+                     do <strong>{display_period_to.strftime('%d.%m.%Y')}</strong>.
+                  </p>
+                  <p>Níže je přiložen podrobný rozpis všech položek.</p>
+              
+                  <hr style="border:none; border-top:1px solid #e5e7eb; margin: 20px 0;">
+              
+                  <h3 style="margin-top: 20px; margin-bottom: 10px;">Přehled kreditu:</h3>
+                  <div style="font-size: 1.05em; line-height: 1.7;">
+                    Aktuální kredit (před platbou): <strong>{format_castka(credit_end)}</strong><br>
+                    Celková cena tréninků v tomto období: <strong>{format_castka(sum_cena)}</strong>
+                  </div>
+
+                  <div style="margin: 20px 0;">
+                    Pro vyrovnání kreditu a jeho navýšení na další období je třeba uhradit:
+                  </div>
+              
+                  <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                    <div style="font-size: 1.1em; margin-bottom: 12px;">
+                      Částka k zaplacení: <strong style="font-size: 1.3em; color: #111827;">{amount_display_str}</strong>
+                    </div>
+                    {online_pay_html}
+                    <div style="line-height: 1.7;">
+                      {f'{escape(bank_heading)}<br>' if bank_heading else ''}
+                      Číslo účtu: {cislo_uctu_html}<br> Variabilní symbol: <strong>{escape(vs_popis)}</strong> 
+                    </div>
+                  </div>
+              
+                  <div style="margin-bottom: 20px;">
+                    Po připsání platby bude stav kreditu: <strong>{format_castka(kredit_po_uhrade)}</strong>
+                  </div>
+
+                  <hr style="border:none; border-top:1px solid #e5e7eb; margin: 20px 0;">
+
+                  <h3 style="margin:16px 0 6px;">Detailní rozpis tréninků:</h3>
+                  <table cellpadding="6" cellspacing="0" style="border-collapse:collapse;border:1px solid #e5e7eb;width:100%;font-size:0.9em;">
+                    <thead style="background:#f9fafb;">
+                      <tr>
+                        <th align="left" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Datum</th>
+                        <th align="left" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Čas</th>
+                        <th align="left" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Skupina</th>
+                        <th align="center" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Cena</th>
+                        <th align="center" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Zaplaceno</th>
+                        <th align="center" style="padding: 8px; border-bottom: 1px solid #e5e7eb;">Kredit</th>
+                      </tr>
+                    </thead>
+                    <tbody>{rows_html}</tbody>
+                  </table>
+
+                  <p style="margin-top:20px;">Děkuji.</p>
+                  <p style="margin-top:16px;">{podpis_html}</p>
+                </div>
+                """
 
             ok_send, ok_archive = send_and_append_to_sent(
                 subject=subject,
@@ -447,9 +626,15 @@ class Hrac(models.Model):
             )
 
             logger.info(
-                ">>> VYUCTOVANI: email_send=%s, saved_to_sent=%s, hrac=%s, email=%s, subject=%s",
-                ok_send, ok_archive, self.cele_jmeno, billing_email, subject
+                ">>> VYUCTOVANI: overview_only=%s email_send=%s, saved_to_sent=%s, hrac=%s, email=%s, subject=%s, pay_url=%s",
+                overview_only, ok_send, ok_archive, self.cele_jmeno, billing_email, subject, bool(pay_url),
             )
+
+        elif (not overview_only) and vyuct is not None and amount_due > 0:
+            # Bez e-mailu stejně připrav Checkout (odkaz na Vyuctovani).
+            from core.player_payments import maybe_attach_checkout
+
+            maybe_attach_checkout(vyuct)
 
         return vyuct
 
@@ -486,6 +671,23 @@ class Hrac(models.Model):
             return True
         return self._max_kredit_od_vyuctovani(last) > threshold
 
+
+    def sync_auto_castka_obnova(self, *, limit: Decimal | None = None) -> None:
+        """Po platbě nebo smazání tréninků/plateb: pokud je kredit zase nad limitem, odblokuj další auto e-mail."""
+        if limit is None:
+            try:
+                nast = VyuctovaniNastaveni.load()
+            except Exception:
+                return
+            if nast.auto_rezim != VyuctovaniNastaveni.AutoRezim.CASTKA:
+                return
+            limit = nast.auto_limit
+        if limit <= 0:
+            return
+        if self.kredit > -limit and self.auto_castka_ceka_na_obnovu:
+            self.auto_castka_ceka_na_obnovu = False
+            self.save(update_fields=["auto_castka_ceka_na_obnovu"])
+
     def mozna_uzavrit_podle_rezimu(self) -> bool:
         """Zda hráč splnil podmínky pro automatickou uzávěrku podle globálního nastavení."""
         nast = VyuctovaniNastaveni.load()
@@ -501,9 +703,15 @@ class Hrac(models.Model):
             limit = nast.auto_limit
             if limit <= 0:
                 return False
+            # Kredit nad limitem = obnova (platba i smazání dluhu)
             if self.kredit > -limit:
+                self.sync_auto_castka_obnova(limit=limit)
                 return False
-            return self._kredit_se_obnovil_nad_limit_po_castka_vyuctovani(limit)
+            # Pod limitem: blokovat jen dokud neproběhla obnova po předchozím auto e-mailu
+            if self.auto_castka_ceka_na_obnovu:
+                # Pojistka pro starší data / peak po platbě bez flagu
+                return self._kredit_se_obnovil_nad_limit_po_castka_vyuctovani(limit)
+            return True
 
         if rezim == self.RezimVyuctovani.MESICNE:
             return self._mesicni_uzavirka_pripravena(nast)
@@ -554,6 +762,42 @@ class Hrac(models.Model):
     def duvod_auto_vyuctovani(self) -> str:
         """Důvod záznamu při automatickém vyúčtování."""
         return VyuctovaniNastaveni.load().auto_rezim
+
+
+    def zacatek_obdobi_od_posledni_platby(self):
+        """Začátek rozpisu pro auto e-mail: od poslední platby, jinak od prvního tréninku.
+
+        Vrací datetime těsně před kotvou, aby filtr vytvoreno__gt kotvu zahrnul
+        (poslední platba / první trénink budou v detailním rozpisu).
+        """
+        last_pay = (
+            self.transakce.filter(typ=Transakce.Typ.PLATBA)
+            .order_by("-vytvoreno")
+            .values_list("vytvoreno", flat=True)
+            .first()
+        )
+        if last_pay:
+            return _normalize_dt_for_period(last_pay) - timedelta(microseconds=1)
+
+        first_charge = (
+            self.transakce.filter(typ=Transakce.Typ.NAUCTOVANO)
+            .order_by("vytvoreno")
+            .values_list("vytvoreno", flat=True)
+            .first()
+        )
+        if first_charge:
+            return _normalize_dt_for_period(first_charge) - timedelta(microseconds=1)
+
+        first_trening = (
+            self.dochazky.filter(prisel=True, trening__isnull=False)
+            .order_by("trening__datum")
+            .values_list("trening__datum", flat=True)
+            .first()
+        )
+        if first_trening:
+            return _normalize_dt_for_period(first_trening) - timedelta(microseconds=1)
+
+        return None
 
     def spustit_auto_vyuctovani(self):
         """Vytvoří vyúčtování a pošle e-mail, pokud jsou splněny podmínky."""
@@ -680,7 +924,13 @@ class CenikFormat(models.Model):
         )
 
     def je_pouzity(self) -> bool:
-        return Cenik.objects.filter(format=self.kod).exists() or Trening.objects.filter(format=self.kod).exists()
+        return (
+            Cenik.objects.filter(format=self.kod).exists()
+            or Trening.objects.filter(format=self.kod).exists()
+            or StalyRozvrhSlot.objects.filter(format=self.kod).exists()
+            or PredpokladanySlot.objects.filter(format=self.kod).exists()
+            or Pronajem.objects.filter(format=self.kod).exists()
+        )
 
 
 class Cenik(models.Model):
@@ -737,6 +987,27 @@ class Cenik(models.Model):
 
     def get_sezona_display(self) -> str:
         return self.sezona or ""
+
+    _SLUZBA_FORMAT_KODY = frozenset({"V_STAND", "V_EXCEL", "V_VLAST"})
+
+    @staticmethod
+    def je_sluzba(format_kod: str | None = "", kurt: str | None = "") -> bool:
+        """True u výpletu / služby — nepočítá se do hodin trenéra, odměna je paušál."""
+        kurt_n = (kurt or "").strip()
+        if kurt_n.casefold() in {
+            Cenik.Kurt.SLUZBA.casefold(),
+            Cenik.Kurt.SLUZBA_CODE.casefold(),
+        }:
+            return True
+        fmt = (format_kod or "").strip()
+        if not fmt:
+            return False
+        if fmt in Cenik._SLUZBA_FORMAT_KODY:
+            return True
+        # Free-text / zobrazený název (Výplet - Standard, …)
+        nazev = CenikFormat.nazev_pro(fmt) if hasattr(CenikFormat, "nazev_pro") else fmt
+        blob = f"{fmt} {nazev}".casefold()
+        return "výplet" in blob or "vyplet" in blob
 
     # --- ZDE BYL PŘIDÁN KÓD ---
     def clean(self):
@@ -857,21 +1128,450 @@ class Trening(models.Model):
         # Fallback: prázdná sezóna v ceníku (celoroční / legacy)
         return base.filter(sezona="").order_by("-platnost_od").first() or base.order_by("-platnost_od").first()
 
+    def _historicka_castka_nauc(self) -> Decimal | None:
+        """Naúčtovaná částka z docházky (historická cena po změně platnosti ceníku)."""
+        if "dochazky" in getattr(self, "_prefetched_objects_cache", {}):
+            for d in self.dochazky.all():
+                if d.castka_nauc is not None:
+                    return Decimal(d.castka_nauc)
+            return None
+        val = (
+            self.dochazky.filter(castka_nauc__isnull=False)
+            .values_list("castka_nauc", flat=True)
+            .first()
+        )
+        return Decimal(val) if val is not None else None
+
     def cena_na_hrace(self) -> Decimal:
         pravidlo = self.aktualni_cenik()
-        if not pravidlo:
-            return Decimal("0.00")
-        amount = pravidlo.cena_za_hodinu * self.hodiny
-        return amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        if pravidlo:
+            amount = pravidlo.cena_za_hodinu * self.hodiny
+            return amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        # Ceník už nepokrývá datum tréninku → zobraz historickou naúčtovanou cenu
+        charged = self._historicka_castka_nauc()
+        if charged is not None:
+            return charged
+        return Decimal("0.00")
+
+    def cena_pro_nove_nauceni(self) -> Decimal:
+        """Cena k novému naúčtování – podle kurtu na tréninku (sezóna zadaná u tréninku)."""
+        pravidlo = self.aktualni_cenik()
+        if pravidlo:
+            amount = pravidlo.cena_za_hodinu * self.hodiny
+            return amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        return Decimal("0.00")
 
     # ==== sazba trenéra dle data ====
+    def je_sluzba(self) -> bool:
+        return Cenik.je_sluzba(self.format, self.kurt)
+
+    # NOVÁ LOGIKA SEZÓNY
+
+    def sazba_vyplet_trenera(self) -> Decimal:
+        try:
+            return Decimal(self.trener.trener_profil.sazba_za_vyplet)
+        except Exception:
+            return Decimal("300.00")
+
     @property
     def sazba_trenera(self) -> Decimal:
         return sazba_trenera_k_datu(self.trener, self.datum)
 
     @property
     def odmena_trenera(self) -> Decimal:
+        if self.je_sluzba():
+            return self.sazba_vyplet_trenera().quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         return (self.hodiny * self.sazba_trenera).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
+# =========================
+#  Pronájem kurtu / haly (přímý příjem, bez účtu hráče)
+# =========================
+class Pronajem(models.Model):
+    """Rezervace kurtu/haly – účetně přímý příjem, bez trenéra a hráčů."""
+
+    FORMAT_DEFAULT = "KURT_TRE"
+
+    class KurtMisto(models.TextChoices):
+        HALA_1 = "HALA_1", _("Hala 1")
+        HALA_2 = "HALA_2", _("Hala 2")
+        HALA_3 = "HALA_3", _("Hala 3")
+        HALA_4 = "HALA_4", _("Hala 4")
+        KURT_1 = "KURT_1", _("Kurt 1")
+        KURT_2 = "KURT_2", _("Kurt 2")
+        ANTUKA_1 = "ANTUKA_1", _("Antuka 1")
+        ANTUKA_2 = "ANTUKA_2", _("Antuka 2")
+        KURT_V = "KURT_V", _("Kurt V")
+        ANTUKA_N = "ANTUKA_N", _("Antuka N")
+
+    KURT_MISTO_BY_SEZONA = {
+        Cenik.Kurt.HALA: (
+            KurtMisto.HALA_1,
+            KurtMisto.HALA_2,
+            KurtMisto.HALA_3,
+            KurtMisto.HALA_4,
+        ),
+        Cenik.Kurt.VENEK: (
+            KurtMisto.KURT_1,
+            KurtMisto.KURT_2,
+            KurtMisto.ANTUKA_1,
+            KurtMisto.ANTUKA_2,
+            KurtMisto.KURT_V,
+            KurtMisto.ANTUKA_N,
+        ),
+    }
+
+    datum = models.DateTimeField(_("Začátek"))
+    delka_minut = models.PositiveIntegerField(_("Délka (min)"), default=60)
+    kurt = models.CharField(
+        _("Sezóna"),
+        max_length=8,
+        choices=[(Cenik.Kurt.VENEK, _("Venku")), (Cenik.Kurt.HALA, _("Hala"))],
+    )
+    kurt_misto = models.CharField(
+        _("Kurt"),
+        max_length=16,
+        choices=KurtMisto.choices,
+        blank=True,
+        default="",
+    )
+    format = models.CharField(_("Formát ceníku"), max_length=15, default=FORMAT_DEFAULT)
+    rezervujici = models.CharField(_("Rezervující"), max_length=120)
+    cena = models.DecimalField(_("Cena"), max_digits=10, decimal_places=2)
+    poznamka = models.CharField(_("Poznámka"), max_length=240, blank=True)
+
+    @classmethod
+    def kurt_misto_choices_for(cls, sezona: str) -> list[tuple[str, str]]:
+        codes = cls.KURT_MISTO_BY_SEZONA.get(sezona) or ()
+        labels = dict(cls.KurtMisto.choices)
+        return [(code, str(labels.get(code, code))) for code in codes]
+
+    @classmethod
+    def default_kurt_misto(cls, sezona: str) -> str:
+        codes = cls.KURT_MISTO_BY_SEZONA.get(sezona) or ()
+        return codes[0] if codes else ""
+
+    def kurt_misto_label(self) -> str:
+        if not self.kurt_misto:
+            return self.get_kurt_display()
+        return self.get_kurt_misto_display()
+
+    class Meta:
+        verbose_name = _("Pronájem")
+        verbose_name_plural = _("Pronájmy")
+        ordering = ["-datum"]
+        indexes = [models.Index(fields=["datum"])]
+
+    def __str__(self) -> str:
+        local = dj_tz.localtime(self.datum) if dj_tz.is_aware(self.datum) else self.datum
+        return f"{local:%Y-%m-%d %H:%M} • {self.rezervujici} • {self.cena} Kč"
+
+    def get_format_display(self) -> str:
+        return CenikFormat.nazev_pro(self.format)
+
+    @property
+    def hodiny(self) -> Decimal:
+        return (Decimal(self.delka_minut) / Decimal(60)).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
+
+    def _datum_pro_cenik(self) -> date:
+        dt = self.datum
+        if dj_tz.is_aware(dt):
+            dt = dj_tz.localtime(dt)
+        return dt.date()
+
+    @classmethod
+    def cena_z_ceniku(
+        cls,
+        *,
+        datum,
+        kurt: str,
+        delka_minut: int = 60,
+        format: str | None = None,
+    ) -> Decimal:
+        """Spočítá cenu z ceníku (formát × kurt × hodiny)."""
+        fmt = (format or cls.FORMAT_DEFAULT).strip() or cls.FORMAT_DEFAULT
+        if hasattr(datum, "date"):
+            dt = datum
+            if dj_tz.is_aware(dt):
+                dt = dj_tz.localtime(dt)
+            d = dt.date()
+        else:
+            d = datum
+        pravidlo = (
+            Cenik.objects.filter(format=fmt, kurt=kurt)
+            .filter(Q(platnost_od__lte=d), Q(platnost_do__gte=d) | Q(platnost_do__isnull=True))
+            .order_by("-platnost_od")
+            .first()
+        )
+        if not pravidlo:
+            return Decimal("0.00")
+        hours = (Decimal(delka_minut) / Decimal(60)).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
+        return (pravidlo.cena_za_hodinu * hours).quantize(
+            Decimal("0.01"), rounding=ROUND_HALF_UP
+        )
+
+    def dopln_cenu_z_ceniku_pokud_prazdna(self) -> None:
+        if self.cena is None:
+            self.cena = self.cena_z_ceniku(
+                datum=self.datum,
+                kurt=self.kurt,
+                delka_minut=self.delka_minut,
+                format=self.format,
+            )
+
+    def clean(self):
+        super().clean()
+        if self.kurt not in (Cenik.Kurt.VENEK, Cenik.Kurt.HALA):
+            raise ValidationError({"kurt": _("Pronájem je jen pro venek nebo halu.")})
+        if not (self.rezervujici or "").strip():
+            raise ValidationError({"rezervujici": _("Zadejte jméno rezervujícího.")})
+        if self.kurt_misto:
+            allowed = {c[0] for c in self.kurt_misto_choices_for(self.kurt)}
+            if self.kurt_misto not in allowed:
+                raise ValidationError({"kurt_misto": _("Kurt neodpovídá zvolené sezóně.")})
+
+    def save(self, *args, **kwargs):
+        if not self.format:
+            self.format = self.FORMAT_DEFAULT
+        self.rezervujici = (self.rezervujici or "").strip()
+        if not self.kurt_misto:
+            self.kurt_misto = self.default_kurt_misto(self.kurt)
+        if self.cena is None:
+            self.dopln_cenu_z_ceniku_pokud_prazdna()
+        super().save(*args, **kwargs)
+
+
+# =========================
+#  Stálý / předpokládaný rozvrh pronájmů
+# =========================
+class StalyPronajemSlot(models.Model):
+    """Týdenní šablona pronájmu – bez zápisu do účetnictví."""
+
+    class Den(models.IntegerChoices):
+        PO = 0, _("Pondělí")
+        UT = 1, _("Úterý")
+        ST = 2, _("Středa")
+        CT = 3, _("Čtvrtek")
+        PA = 4, _("Pátek")
+        SO = 5, _("Sobota")
+        NE = 6, _("Neděle")
+
+    den = models.PositiveSmallIntegerField(_("Den v týdnu"), choices=Den.choices)
+    cas_od = models.TimeField(_("Začátek"))
+    delka_minut = models.PositiveIntegerField(_("Délka (min)"), default=60)
+    kurt = models.CharField(
+        _("Sezóna"),
+        max_length=8,
+        choices=[(Cenik.Kurt.VENEK, _("Venku")), (Cenik.Kurt.HALA, _("Hala"))],
+    )
+    kurt_misto = models.CharField(
+        _("Kurt"),
+        max_length=16,
+        choices=Pronajem.KurtMisto.choices,
+        blank=True,
+        default="",
+    )
+    format = models.CharField(_("Formát ceníku"), max_length=15, default=Pronajem.FORMAT_DEFAULT)
+    rezervujici = models.CharField(_("Rezervující"), max_length=120)
+    cena = models.DecimalField(_("Cena"), max_digits=10, decimal_places=2)
+    poznamka = models.CharField(_("Poznámka"), max_length=240, blank=True)
+
+    class Meta:
+        verbose_name = _("Stálý pronájem – slot")
+        verbose_name_plural = _("Stálý pronájem – sloty")
+        ordering = ("den", "cas_od", "id")
+
+    def __str__(self) -> str:
+        return f"{self.get_den_display()} {self.cas_od:%H:%M} · {self.rezervujici} · {self.cena} Kč"
+
+
+class PredpokladanyPronajemSkip(models.Model):
+    """Přeskočený stálý pronájem v předpokládaném rozvrhu."""
+
+    datum = models.DateField(_("Datum"))
+    staly_slot = models.ForeignKey(
+        StalyPronajemSlot,
+        on_delete=models.CASCADE,
+        related_name="predpokladane_skip",
+        verbose_name=_("Stálý slot"),
+    )
+
+    class Meta:
+        verbose_name = _("Předpokládaný pronájem – přeskočení")
+        verbose_name_plural = _("Předpokládaný pronájem – přeskočení")
+        unique_together = ("datum", "staly_slot")
+        ordering = ("datum", "staly_slot_id")
+
+    def __str__(self) -> str:
+        return f"{self.datum:%Y-%m-%d} · skip pronájem #{self.staly_slot_id}"
+
+
+class PredpokladanyPronajemSlot(models.Model):
+    """Jednorázový předpokládaný pronájem – ještě není účetní záznam."""
+
+    datum = models.DateField(_("Datum"))
+    cas_od = models.TimeField(_("Začátek"))
+    delka_minut = models.PositiveIntegerField(_("Délka (min)"), default=60)
+    kurt = models.CharField(
+        _("Sezóna"),
+        max_length=8,
+        choices=[(Cenik.Kurt.VENEK, _("Venku")), (Cenik.Kurt.HALA, _("Hala"))],
+    )
+    kurt_misto = models.CharField(
+        _("Kurt"),
+        max_length=16,
+        choices=Pronajem.KurtMisto.choices,
+        blank=True,
+        default="",
+    )
+    format = models.CharField(_("Formát ceníku"), max_length=15, default=Pronajem.FORMAT_DEFAULT)
+    rezervujici = models.CharField(_("Rezervující"), max_length=120)
+    cena = models.DecimalField(_("Cena"), max_digits=10, decimal_places=2)
+    poznamka = models.CharField(_("Poznámka"), max_length=240, blank=True)
+    zdroj_staly = models.ForeignKey(
+        StalyPronajemSlot,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="predpokladane_override",
+        verbose_name=_("Zdrojový stálý slot"),
+    )
+
+    class Meta:
+        verbose_name = _("Předpokládaný pronájem – slot")
+        verbose_name_plural = _("Předpokládaný pronájem – sloty")
+        ordering = ("datum", "cas_od", "id")
+
+    def __str__(self) -> str:
+        return f"{self.datum:%Y-%m-%d} {self.cas_od:%H:%M} · {self.rezervujici}"
+
+
+class StalyRozvrhSlot(models.Model):
+    """Týdenní slot stálého rozvrhu – stejná data jako trénink, ale bez zápisu/vyúčtování."""
+
+    class Den(models.IntegerChoices):
+        PO = 0, _("Pondělí")
+        UT = 1, _("Úterý")
+        ST = 2, _("Středa")
+        CT = 3, _("Čtvrtek")
+        PA = 4, _("Pátek")
+        SO = 5, _("Sobota")
+        NE = 6, _("Neděle")
+
+    den = models.PositiveSmallIntegerField(_("Den v týdnu"), choices=Den.choices)
+    cas_od = models.TimeField(_("Začátek"))
+    delka_minut = models.PositiveIntegerField(_("Délka (min)"), default=60)
+    trener = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name="staly_rozvrh_sloty",
+        verbose_name=_("Trenér"),
+    )
+    format = models.CharField(_("Formát"), max_length=120)
+    kurt = models.CharField(_("Kurt"), max_length=64)
+    hraci = models.ManyToManyField(
+        "Hrac",
+        blank=True,
+        related_name="staly_rozvrh_sloty",
+        verbose_name=_("Hráči"),
+    )
+    poznamka = models.CharField(_("Poznámka"), max_length=240, blank=True)
+
+    class Meta:
+        verbose_name = _("Stálý rozvrh – slot")
+        verbose_name_plural = _("Stálý rozvrh – sloty")
+        ordering = ("den", "cas_od", "id")
+
+    def get_format_display(self) -> str:
+        return CenikFormat.nazev_pro(self.format)
+
+    def __str__(self) -> str:
+        konec = (
+            datetime.combine(date.today(), self.cas_od) + timedelta(minutes=int(self.delka_minut or 60))
+        ).time()
+        trener_name = ""
+        if self.trener_id:
+            trener_name = self.trener.get_full_name() or self.trener.username
+        return (
+            f"{self.get_den_display()} {self.cas_od:%H:%M}–{konec:%H:%M} · "
+            f"{self.get_format_display()} · {trener_name or '—'}"
+        )
+
+
+class PredpokladanySkip(models.Model):
+    """Přeskočený stálý slot v předpokládaném rozvrhu – noční job ho ten den nevytvoří."""
+
+    datum = models.DateField(_("Datum"))
+    staly_slot = models.ForeignKey(
+        StalyRozvrhSlot,
+        on_delete=models.CASCADE,
+        related_name="predpokladane_skip",
+        verbose_name=_("Stálý slot"),
+    )
+
+    class Meta:
+        verbose_name = _("Předpokládaný rozvrh – přeskočení")
+        verbose_name_plural = _("Předpokládaný rozvrh – přeskočení")
+        unique_together = ("datum", "staly_slot")
+        ordering = ("datum", "staly_slot_id")
+
+    def __str__(self) -> str:
+        return f"{self.datum:%Y-%m-%d} · skip #{self.staly_slot_id}"
+
+
+class PredpokladanySlot(models.Model):
+    """Jednorázový předpokládaný slot na konkrétní den – ještě není trénink/vyúčtování."""
+
+    datum = models.DateField(_("Datum"))
+    cas_od = models.TimeField(_("Začátek"))
+    delka_minut = models.PositiveIntegerField(_("Délka (min)"), default=60)
+    trener = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name="predpokladane_sloty",
+        verbose_name=_("Trenér"),
+    )
+    format = models.CharField(_("Formát"), max_length=120)
+    kurt = models.CharField(_("Kurt"), max_length=64)
+    hraci = models.ManyToManyField(
+        "Hrac",
+        blank=True,
+        related_name="predpokladane_sloty",
+        verbose_name=_("Hráči"),
+    )
+    poznamka = models.CharField(_("Poznámka"), max_length=240, blank=True)
+    zdroj_staly = models.ForeignKey(
+        StalyRozvrhSlot,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="predpokladane_override",
+        verbose_name=_("Zdrojový stálý slot"),
+    )
+
+    class Meta:
+        verbose_name = _("Předpokládaný rozvrh – slot")
+        verbose_name_plural = _("Předpokládaný rozvrh – sloty")
+        ordering = ("datum", "cas_od", "id")
+
+    def get_format_display(self) -> str:
+        return CenikFormat.nazev_pro(self.format)
+
+    def __str__(self) -> str:
+        konec = (
+            datetime.combine(date.today(), self.cas_od) + timedelta(minutes=int(self.delka_minut or 60))
+        ).time()
+        trener_name = ""
+        if self.trener_id:
+            trener_name = self.trener.get_full_name() or self.trener.username
+        return (
+            f"{self.datum:%Y-%m-%d} {self.cas_od:%H:%M}–{konec:%H:%M} · "
+            f"{self.get_format_display()} · {trener_name or '—'}"
+        )
 
 
 # =========================
@@ -915,6 +1615,22 @@ class Transakce(models.Model):
     popis = models.CharField(max_length=240, blank=True, verbose_name=_("Poznámka"))
     trening = models.ForeignKey(Trening, null=True, blank=True, on_delete=models.CASCADE)
     vytvoreno = models.DateTimeField(_("Datum platby"), default=timezone.now)
+    vyuctovani = models.ForeignKey(
+        "Vyuctovani",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="platby",
+        verbose_name=_("Vyúčtování"),
+    )
+    stripe_payment_intent_id = models.CharField(
+        max_length=64,
+        blank=True,
+        null=True,
+        unique=True,
+        verbose_name=_("Stripe PaymentIntent"),
+        help_text=_("Idempotence online platby (webhook)."),
+    )
 
     class Meta:
         ordering = ["-vytvoreno"]
@@ -957,6 +1673,37 @@ class Vyuctovani(models.Model):
         help_text=_("Interní ukotvení pro detekci opakovaného vyúčtování."),
     )
     created_at = models.DateTimeField(_("Vytvořeno"), auto_now_add=True)
+
+    class PaymentStatus(models.TextChoices):
+        UNPAID = "unpaid", _("Nezaplaceno")
+        PENDING = "pending", _("Čeká na platbu")
+        PAID = "paid", _("Zaplaceno")
+        EXPIRED = "expired", _("Vypršelo")
+
+    payment_status = models.CharField(
+        _("Stav online platby"),
+        max_length=16,
+        choices=PaymentStatus.choices,
+        default=PaymentStatus.UNPAID,
+        blank=True,
+    )
+    stripe_checkout_session_id = models.CharField(
+        max_length=128,
+        blank=True,
+        default="",
+        verbose_name=_("Stripe Checkout Session"),
+    )
+    stripe_payment_intent_id = models.CharField(
+        max_length=64,
+        blank=True,
+        default="",
+        verbose_name=_("Stripe PaymentIntent"),
+    )
+    stripe_checkout_url = models.TextField(
+        blank=True,
+        default="",
+        verbose_name=_("Odkaz na online platbu"),
+    )
 
     class Meta:
         ordering = ["-created_at"]
@@ -1022,6 +1769,7 @@ class VyuctovaniNastaveni(models.Model):
     class EmailVarianta(models.TextChoices):
         UCET_1 = "1", _("Účet 1")
         UCET_2 = "2", _("Účet 2")
+        UCET_3 = "3", _("Účet 3")
 
     auto_rezim = models.CharField(
         _("Způsob vyúčtování"),
@@ -1042,6 +1790,16 @@ class VyuctovaniNastaveni(models.Model):
         decimal_places=2,
         default=Decimal("5000.00"),
         help_text=_("Částka zobrazená v e-mailu jako požadavek k úhradě. Ponechte 0 pro automatický výpočet z období."),
+    )
+    hromadne_surplus = models.DecimalField(
+        _("Surplus u hromadného vyúčtování"),
+        max_digits=10,
+        decimal_places=2,
+        default=Decimal("5000.00"),
+        help_text=_(
+            "Při hromadném odeslání: požadovaná částka = aktuální dluh hráče + tento surplus. "
+            "Při kladném kreditu se pošle jen surplus. Výchozí hodnota pro výběr v okně hromadného odeslání."
+        ),
     )
     auto_pocet_treninku = models.PositiveIntegerField(
         _("Počet tréninků"),
@@ -1074,6 +1832,11 @@ class VyuctovaniNastaveni(models.Model):
         max_length=64,
         default="Účet 2",
     )
+    ucet_nazev_3 = models.CharField(
+        _("Název účtu – varianta 3"),
+        max_length=64,
+        default="Účet 3",
+    )
     ucet_varianta_1 = models.CharField(
         _("Číslo účtu – varianta 1"),
         max_length=32,
@@ -1082,6 +1845,12 @@ class VyuctovaniNastaveni(models.Model):
     )
     ucet_varianta_2 = models.CharField(
         _("Číslo účtu – varianta 2"),
+        max_length=32,
+        blank=True,
+        default="",
+    )
+    ucet_varianta_3 = models.CharField(
+        _("Číslo účtu – varianta 3"),
         max_length=32,
         blank=True,
         default="",
@@ -1108,24 +1877,41 @@ class VyuctovaniNastaveni(models.Model):
     @classmethod
     def load(cls) -> "VyuctovaniNastaveni":
         """Vrátí nastavení klubu. Po tenantech: load(tenant=…)."""
+        cached = get_cached_singleton(cls)
+        if cached is not None:
+            return cached
         defaults = {
             "auto_rezim": cls.AutoRezim.CASTKA,
             "auto_limit": Decimal(str(getattr(settings, "VYUCTOVANI_AUTO_LIMIT", "5000"))),
             "auto_castka_k_uhrade": Decimal(str(getattr(settings, "VYUCTOVANI_AUTO_LIMIT", "5000"))),
+            "hromadne_surplus": Decimal("5000.00"),
             "email_variant": str(getattr(settings, "VYUCTOVANI_EMAIL_VARIANT", "1")),
         }
         obj, _ = cls.objects.get_or_create(pk=1, defaults=defaults)
+        set_cached_singleton(cls, obj)
         return obj
 
     def email_variant_label(self, variant: str) -> str:
-        if str(variant) == "2":
+        v = str(variant)
+        if v == "3":
+            return (self.ucet_nazev_3 or "").strip() or str(_("Účet 3"))
+        if v == "2":
             return (self.ucet_nazev_2 or "").strip() or str(_("Účet 2"))
         return (self.ucet_nazev_1 or "").strip() or str(_("Účet 1"))
+
+    def cislo_uctu_pro_variantu(self, variant: str) -> str:
+        v = str(variant)
+        if v == "3":
+            return (self.ucet_varianta_3 or "").strip()
+        if v == "2":
+            return (self.ucet_varianta_2 or "").strip()
+        return (self.ucet_varianta_1 or "").strip()
 
     def email_variant_choices(self) -> list[tuple[str, str]]:
         return [
             ("1", self.email_variant_label("1")),
             ("2", self.email_variant_label("2")),
+            ("3", self.email_variant_label("3")),
         ]
 
     def get_email_variant_display(self) -> str:
@@ -1175,6 +1961,25 @@ class SystemNastaveni(models.Model):
         (150, "2,5 h"),
         (180, "3 h"),
     )
+    PRONAJEM_DELKA_MINUT_CHOICES = (
+        (30, "30 min"),
+        (45, "45 min"),
+        (60, "1 h"),
+        (90, "1,5 h"),
+        (120, "2 h"),
+        (150, "2,5 h"),
+        (180, "3 h"),
+        (210, "3,5 h"),
+        (240, "4 h"),
+        (270, "4,5 h"),
+        (300, "5 h"),
+        (330, "5,5 h"),
+        (360, "6 h"),
+        (390, "6,5 h"),
+        (420, "7 h"),
+    )
+
+
 
     class RozvrhZobrazeni(models.TextChoices):
         TYDEN = "week", _("Týden")
@@ -1247,9 +2052,17 @@ class SystemNastaveni(models.Model):
         _("Venkovní sezóna od (měsíc)"),
         default=4,
     )
+    sezona_venek_od_den = models.PositiveSmallIntegerField(
+        _("Venkovní sezóna od (den)"),
+        default=1,
+    )
     sezona_venek_do = models.PositiveSmallIntegerField(
         _("Venkovní sezóna do (měsíc)"),
         default=10,
+    )
+    sezona_venek_do_den = models.PositiveSmallIntegerField(
+        _("Venkovní sezóna do (den)"),
+        default=31,
     )
     sezona_automaticky_kurt = models.BooleanField(
         _("Automaticky volit kurt dle sezóny"),
@@ -1298,6 +2111,31 @@ class SystemNastaveni(models.Model):
         max_length=64,
         default="",
         blank=True,
+    )
+    pronajem_ceny = models.CharField(
+        _("Ceny pronájmu – hala (Kč/h)"),
+        max_length=120,
+        default="420,440,530,580",
+        help_text=_("Hodinové sazby oddělené čárkou – celková cena = hodiny × sazba."),
+    )
+    pronajem_ceny_venek = models.CharField(
+        _("Ceny pronájmu – venku (Kč/h)"),
+        max_length=120,
+        default="220,250",
+        help_text=_("Hodinové sazby oddělené čárkou – celková cena = hodiny × sazba."),
+    )
+    staly_pronajem_od = models.DateField(
+        _("Stálý rozvrh pronájmů od"),
+        default=date(2026, 10, 10),
+        help_text=_(
+            "Od tohoto data (včetně) se stálý slot zapisuje do aktuálního rozvrhu "
+            "a nabízí se v předpokládaném (budoucnost přerušovaně)."
+        ),
+    )
+    staly_pronajem_do = models.DateField(
+        _("Stálý rozvrh pronájmů do"),
+        default=date(2027, 4, 9),
+        help_text=_("Do tohoto data (včetně) platí stálý rozvrh pronájmů."),
     )
     rozvrh_od_hodina = models.PositiveSmallIntegerField(
         _("Rozvrh od (hodina)"),
@@ -1366,6 +2204,9 @@ class SystemNastaveni(models.Model):
     @classmethod
     def load(cls) -> "SystemNastaveni":
         """Vrátí nastavení klubu. Po tenantech: load(tenant=…)."""
+        cached = get_cached_singleton(cls)
+        if cached is not None:
+            return cached
         obj, _ = cls.objects.get_or_create(
             pk=1,
             defaults={
@@ -1374,6 +2215,7 @@ class SystemNastaveni(models.Model):
                 "tmavy_rezim": False,
             },
         )
+        set_cached_singleton(cls, obj)
         return obj
 
     def effective_colors(self) -> dict[str, str]:
@@ -1391,21 +2233,156 @@ class SystemNastaveni(models.Model):
     def schedule_hour_count(self) -> int:
         return len(self.schedule_hours())
 
+    @staticmethod
+    def _parse_pronajem_ceny(raw: str, fallback: list[Decimal]) -> list[Decimal]:
+        text = (raw or "").strip()
+        out: list[Decimal] = []
+        seen: set[str] = set()
+        for part in text.replace(";", ",").split(","):
+            part = part.strip().replace(" ", "").replace("Kč", "").replace("kc", "")
+            if not part:
+                continue
+            try:
+                val = Decimal(part.replace(",", ".")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+            except Exception:
+                continue
+            if val <= 0:
+                continue
+            key = f"{val:.2f}"
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(val)
+        return out or list(fallback)
+
+    def pronajem_ceny_list(self) -> list[Decimal]:
+        """Ceny pronájmu pro halu (např. „420,440,530,580“)."""
+        return self._parse_pronajem_ceny(
+            self.pronajem_ceny,
+            [Decimal("420.00"), Decimal("440.00"), Decimal("530.00"), Decimal("580.00")],
+        )
+
+    def pronajem_ceny_venek_list(self) -> list[Decimal]:
+        """Ceny pronájmu pro venek (např. „220,250“)."""
+        return self._parse_pronajem_ceny(
+            self.pronajem_ceny_venek,
+            [Decimal("220.00"), Decimal("250.00")],
+        )
+
+    def pronajem_ceny_for_sezona(self, sezona: str) -> list[Decimal]:
+        if sezona == Cenik.Kurt.VENEK:
+            return self.pronajem_ceny_venek_list()
+        return self.pronajem_ceny_list()
+
     @classmethod
-    def training_defaults(cls, for_date=None) -> dict:
-        """Výchozí délka a sezóna pro nové tréninky."""
+    def pronajem_ceny_choices(cls, sezona: str | None = None) -> list[Decimal]:
         try:
             nast = cls.load()
-            return {
+            if sezona == Cenik.Kurt.VENEK:
+                return nast.pronajem_ceny_venek_list()
+            if sezona == Cenik.Kurt.HALA:
+                return nast.pronajem_ceny_list()
+            return nast.pronajem_ceny_list()
+        except Exception:
+            if sezona == Cenik.Kurt.VENEK:
+                return [Decimal("220.00"), Decimal("250.00")]
+            return [
+                Decimal("420.00"),
+                Decimal("440.00"),
+                Decimal("530.00"),
+                Decimal("580.00"),
+            ]
+
+    def staly_pronajem_obdobi(self) -> tuple[date | None, date | None]:
+        return (self.staly_pronajem_od, self.staly_pronajem_do)
+
+    def staly_pronajem_platny(self, day: date | None = None) -> bool:
+        """True, pokud den spadá do platnosti stálého rozvrhu pronájmů."""
+        if day is None:
+            day = dj_tz.localdate()
+        od, do = self.staly_pronajem_obdobi()
+        if od and day < od:
+            return False
+        if do and day > do:
+            return False
+        return True
+
+    @classmethod
+    def staly_pronajem_platny_pro(cls, day: date | None = None) -> bool:
+        try:
+            return cls.load().staly_pronajem_platny(day)
+        except Exception:
+            if day is None:
+                day = dj_tz.localdate()
+            return date(2026, 10, 10) <= day <= date(2027, 4, 9)
+
+
+    def _je_venkovni_sezona(self, datum) -> bool:
+        """True, pokud datum spadá do venkovní sezóny (včetně dnů od/do)."""
+        if datum is None:
+            datum = dj_tz.localdate()
+        od_m = int(self.sezona_venek_od or 4)
+        od_d = int(getattr(self, "sezona_venek_od_den", None) or 1)
+        do_m = int(self.sezona_venek_do or 10)
+        do_d = int(getattr(self, "sezona_venek_do_den", None) or 31)
+        # Omezit den na délku měsíce (ne přestupný rok → únor 28)
+        od_d = min(max(od_d, 1), calendar.monthrange(2001, od_m)[1])
+        do_d = min(max(do_d, 1), calendar.monthrange(2001, do_m)[1])
+        key = (datum.month, datum.day)
+        start = (od_m, od_d)
+        end = (do_m, do_d)
+        if start <= end:
+            return start <= key <= end
+        # Sezóna přes přelom roku (např. XI–III)
+        return key >= start or key <= end
+
+    @classmethod
+    def training_defaults(cls, for_date=None, user=None) -> dict:
+        """Výchozí délka a kurt pro nové tréninky (volitelně přepíše osobní preference)."""
+        try:
+            nast = cls.load()
+            if for_date is None:
+                for_date = dj_tz.localdate()
+            elif hasattr(for_date, "date"):
+                for_date = dj_tz.localtime(for_date).date() if dj_tz.is_aware(for_date) else for_date.date()
+            defaults = {
                 "delka_minut": int(nast.vychozi_delka_minut or 60),
-                "sezona": (nast.vychozi_sezona or "").strip(),
-                "kurt": (nast.vychozi_kurt or "").strip(),
+                "kurt": nast.kurt_pro_datum(for_date),
             }
         except Exception:
-            return {"delka_minut": 60, "sezona": "", "kurt": ""}
+            defaults = {"delka_minut": 60, "kurt": Cenik.Kurt.HALA}
+
+        if user is not None and getattr(user, "is_authenticated", False):
+            try:
+                prefs = user.vzhled
+            except Exception:
+                prefs = None
+            if prefs is not None:
+                if prefs.vychozi_delka_minut:
+                    defaults["delka_minut"] = int(prefs.vychozi_delka_minut)
+                if prefs.vychozi_kurt:
+                    defaults["kurt"] = prefs.vychozi_kurt
+        return defaults
+
+    @classmethod
+    def kurt_kalendar_pro_datum(cls, datum) -> str:
+        """Venku/hala podle kalendářní sezóny (nezávisle na přepínači automatického kurtu)."""
+        try:
+            nast = cls.load()
+            outdoor = nast._je_venkovni_sezona(datum)
+        except Exception:
+            # Fallback: duben–říjen venku
+            if datum is None:
+                outdoor = False
+            else:
+                key = (datum.month, datum.day)
+                outdoor = (4, 1) <= key <= (10, 31)
+        return Cenik.Kurt.VENEK if outdoor else Cenik.Kurt.HALA
 
     def kurt_pro_datum(self, datum) -> str:
-        """Zpětná kompatibilita – dříve kurt, nyní sezóna z nastavení."""
+        """Sezóna (venku/hala) podle data a nastavení venkovní sezóny."""
+        if self.sezona_automaticky_kurt:
+            return Cenik.Kurt.VENEK if self._je_venkovni_sezona(datum) else Cenik.Kurt.HALA
         return (self.vychozi_sezona or self.vychozi_kurt or "").strip()
 
     def from_email_parts(self) -> tuple[str, str]:
@@ -1498,6 +2475,98 @@ class SystemNastaveni(models.Model):
             setattr(self, field, colors[key])
         if commit:
             self.save()
+
+
+class SoftwareBilling(models.Model):
+    """Stav předplatného za TenisSystém (1 řádek = 1 white-label instance).
+
+    Oddělené od SystemNastaveni (branding) i od vyúčtování hráčů.
+    Customer ID může přijít z Checkout/webhooku nebo ze seed env STRIPE_CUSTOMER_ID.
+    """
+
+    ACTIVE_STATUSES = frozenset({"active", "trialing"})
+    INACTIVE_STATUSES = frozenset(
+        {
+            "past_due",
+            "canceled",
+            "unpaid",
+            "incomplete",
+            "incomplete_expired",
+            "paused",
+        }
+    )
+
+    stripe_customer_id = models.CharField(max_length=64, blank=True, default="")
+    stripe_subscription_id = models.CharField(max_length=64, blank=True, default="")
+    stripe_subscription_status = models.CharField(max_length=32, blank=True, default="")
+    stripe_price_id = models.CharField(max_length=64, blank=True, default="")
+    current_period_end = models.DateTimeField(blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("Předplatné software")
+        verbose_name_plural = _("Předplatné software")
+
+    def __str__(self) -> str:
+        status = self.stripe_subscription_status or "—"
+        return f"SoftwareBilling ({status})"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls) -> "SoftwareBilling":
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    @property
+    def is_subscription_active(self) -> bool:
+        return (self.stripe_subscription_status or "").strip().lower() in self.ACTIVE_STATUSES
+
+
+class ClubStripeConnect(models.Model):
+    """Stripe Connect účet klubu pro online platby od hráčů (1 řádek = 1 instance).
+
+    Oddělené od SoftwareBilling (předplatné za TenisSystém).
+    """
+
+    stripe_account_id = models.CharField(max_length=64, blank=True, default="")
+    charges_enabled = models.BooleanField(default=False)
+    details_submitted = models.BooleanField(default=False)
+    payouts_enabled = models.BooleanField(default=False)
+    player_payments_enabled = models.BooleanField(
+        default=True,
+        help_text=_("Když je vypnuto, vyúčtovací e-maily neobsahují online platební odkaz."),
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _("Stripe Connect (platby hráčů)")
+        verbose_name_plural = _("Stripe Connect (platby hráčů)")
+
+    def __str__(self) -> str:
+        aid = self.stripe_account_id or "—"
+        return f"ClubStripeConnect ({aid})"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls) -> "ClubStripeConnect":
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    @property
+    def is_ready(self) -> bool:
+        """Účet zvládne přijímat platby od hráčů."""
+        return bool(
+            self.player_payments_enabled
+            and (self.stripe_account_id or "").strip()
+            and self.charges_enabled
+            and self.details_submitted
+        )
 
 
 # =========================================================
@@ -1641,6 +2710,14 @@ class TrenerProfil(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="trener_profil")
     sazba_za_hodinu = models.DecimalField(max_digits=9, decimal_places=2, default=Decimal("500.00"))
 
+    sazba_za_vyplet = models.DecimalField(
+        _("Sazba za výplet"),
+        max_digits=9,
+        decimal_places=2,
+        default=Decimal("300.00"),
+        help_text=_("Paušální odměna trenérovi za jednu službu výpletu."),
+    )
+
     class Meta:
         verbose_name = _("Trenér – sazba")
         verbose_name_plural = _("Trenéři – sazby")
@@ -1650,6 +2727,21 @@ class TrenerProfil(models.Model):
         return f"{jmeno} – {format_castka(self.sazba_za_hodinu, per_hour=True)}"
 
 
+
+
+@receiver(post_save, sender=Transakce)
+@receiver(post_delete, sender=Transakce)
+def sync_castka_obnova_po_zmene_transakce(sender, instance: "Transakce", **kwargs):
+    """Platba nebo smazání tréninku/platby: odblokuj další auto e-mail limitem, pokud kredit stoupl nad limit."""
+    if kwargs.get("raw"):
+        return
+    hrac_id = getattr(instance, "hrac_id", None)
+    if not hrac_id:
+        return
+    hrac = Hrac.objects.filter(pk=hrac_id).first()
+    if hrac:
+        hrac.sync_auto_castka_obnova()
+
 @receiver(post_save, sender=User)
 def _ensure_trener_profil(sender, instance, created, **kwargs):
     if kwargs.get("raw") or not created:
@@ -1658,7 +2750,110 @@ def _ensure_trener_profil(sender, instance, created, **kwargs):
     UserPreference.objects.get_or_create(user=instance)
 
 
-# ===== Preference vzhledu uživatele =====
+# ===== Uživatelský vzhled (per-user appearance) =====
+class UzivatelskyVzhled(models.Model):
+    """Osobní preference účtu – vzhled, jazyk a výchozí hodnoty tréninku."""
+
+    RADKU_CHOICES = ((10, "10"), (25, "25"), (50, "50"), (100, "100"), (200, "200"))
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="vzhled",
+    )
+    barevna_varianta = models.CharField(
+        _("Barevná varianta"),
+        max_length=16,
+        choices=THEME_CHOICES,
+        default=DEFAULT_THEME,
+        help_text=_("Paleta barev pro váš účet."),
+    )
+    tmavy_rezim = models.BooleanField(
+        _("Tmavý režim"),
+        default=False,
+        help_text=_("Tmavé pozadí a světlý text jen pro vás."),
+    )
+    jazyk = models.CharField(
+        _("Jazyk rozhraní"),
+        max_length=10,
+        choices=SYSTEM_LANGUAGES,
+        blank=True,
+        default="",
+        help_text=_("Jen pro váš účet. Prázdné = výchozí jazyk klubu."),
+    )
+    radku_na_stranku = models.PositiveSmallIntegerField(
+        _("Řádků na stránku v tabulkách"),
+        null=True,
+        blank=True,
+        choices=RADKU_CHOICES,
+        help_text=_("Jen pro váš účet. Prázdné = nastavení klubu."),
+    )
+    vychozi_delka_minut = models.PositiveSmallIntegerField(
+        _("Výchozí délka tréninku"),
+        null=True,
+        blank=True,
+        choices=SystemNastaveni.DELKA_MINUT_CHOICES,
+        help_text=_("Předvyplní se při přidání tréninku."),
+    )
+    vychozi_kurt = models.CharField(
+        _("Výchozí kurt"),
+        max_length=8,
+        choices=Cenik.Kurt.choices,
+        blank=True,
+        default="",
+        help_text=_("Předvyplní se při přidání tréninku."),
+    )
+
+    class Meta:
+        verbose_name = _("Uživatelský vzhled")
+        verbose_name_plural = _("Uživatelské vzhledy")
+
+    def __str__(self) -> str:
+        jmeno = self.user.get_full_name() or self.user.username
+        return f"{jmeno} – {self.barevna_varianta}"
+
+    @classmethod
+    def for_user(cls, user, *, nastaveni: SystemNastaveni | None = None) -> "UzivatelskyVzhled":
+        """Vrátí (případně vytvoří) vzhled uživatele; výchozí hodnoty z nastavení klubu."""
+        try:
+            return user.vzhled
+        except cls.DoesNotExist:
+            pass
+
+        variant = DEFAULT_THEME
+        tmavy = False
+        if nastaveni is None:
+            try:
+                nastaveni = SystemNastaveni.load()
+            except Exception:
+                nastaveni = None
+        if nastaveni is not None:
+            variant = nastaveni.barevna_varianta or DEFAULT_THEME
+            tmavy = bool(nastaveni.tmavy_rezim)
+
+        obj, _ = cls.objects.get_or_create(
+            user=user,
+            defaults={
+                "barevna_varianta": variant,
+                "tmavy_rezim": tmavy,
+            },
+        )
+        return obj
+
+    def effective_jazyk(self, nastaveni: SystemNastaveni | None = None) -> str:
+        if self.jazyk:
+            return self.jazyk
+        if nastaveni is None:
+            try:
+                nastaveni = SystemNastaveni.load()
+            except Exception:
+                nastaveni = None
+        if nastaveni and nastaveni.vychozi_jazyk:
+            return nastaveni.vychozi_jazyk
+        return DEFAULT_LANGUAGE
+
+
+# ===== Trenér – profil (výchozí sazba) =====
 class UserPreference(models.Model):
     """Osobní vzhled adminu – má přednost před systémovým výchozím."""
 
@@ -1879,3 +3074,15 @@ def synchronizuj_hrace_po_smazani_vyuctovani(sender, instance: Vyuctovani, **kwa
     hrac = Hrac.objects.filter(pk=hrac_id).first()
     if hrac:
         hrac.prepocitat_stav_uzaverky()
+
+
+@receiver(post_save, sender=SystemNastaveni)
+@receiver(post_delete, sender=SystemNastaveni)
+def _invalidate_system_nastaveni_cache(sender, **kwargs):
+    invalidate_singleton(SystemNastaveni)
+
+
+@receiver(post_save, sender=VyuctovaniNastaveni)
+@receiver(post_delete, sender=VyuctovaniNastaveni)
+def _invalidate_vyuctovani_nastaveni_cache(sender, **kwargs):
+    invalidate_singleton(VyuctovaniNastaveni)

@@ -1,0 +1,38 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {{ media }}
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} delete-confirmation{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+&rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+&rsaquo; <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}">{{ object|truncatewords:"18" }}</a>
+&rsaquo; {% trans "Skrýt" %}
+</div>
+{% endblock %}
+
+{% block content %}
+  <h1>{% trans "Skrýt hráče ze seznamu" %}</h1>
+  <p>
+    {% blocktranslate with name=object %}Opravdu skrýt hráče „{{ name }}“ ze seznamu?{% endblocktranslate %}
+  </p>
+  <p class="help" style="margin: 12px 0 20px; color: var(--muted, #6b7280); max-width: 42em; line-height: 1.45;">
+    {% trans "Hráč se v seznamu přestane zobrazovat, ale tréninky, platby, docházka i vyúčtování zůstanou beze změny. Později ho můžete obnovit filtrem Stav → Skrytí / Obnovit." %}
+  </p>
+  <form method="post">{% csrf_token %}
+    <div class="delete-confirm-actions">
+      <input type="hidden" name="post" value="yes">
+      {% if is_popup %}<input type="hidden" name="{{ is_popup_var }}" value="1">{% endif %}
+      {% if to_field %}<input type="hidden" name="{{ to_field_var }}" value="{{ to_field }}">{% endif %}
+      <input type="submit" value="{% trans 'Ano, skrýt hráče' %}" class="delete-confirm-submit">
+      <a href="{% url opts|admin_urlname:'change' object.pk|admin_urlquote %}" class="button cancel-link">{% trans "Zrušit" %}</a>
+    </div>
+  </form>
+{% endblock content %}

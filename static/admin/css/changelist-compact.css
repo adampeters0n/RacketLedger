@@ -1,0 +1,515 @@
+/*
+  Kompaktní sloupce na úzkém viewportu (≤860px).
+  Stejný princip jako Ceník: checkbox (+ link sloupec) zůstane, zbytek skrytý.
+*/
+
+/* Uživatelé – e-mail nikdy nepřetéká do dalšího sloupce (table-layout:fixed) */
+body.change-list.model-user #changelist #result_list thead th.column-email,
+body.change-list.model-user #changelist #result_list tbody td.field-email,
+body.change-list.model-user #result_list thead th.column-email,
+body.change-list.model-user #result_list tbody td.field-email,
+body.change-list.model-user #changelist #result_list thead th.column-username,
+body.change-list.model-user #changelist #result_list tbody th.field-username,
+body.change-list.model-user #result_list tbody th.field-username,
+body.change-list.model-user #changelist #result_list thead th.column-first_name,
+body.change-list.model-user #changelist #result_list tbody td.field-first_name,
+body.change-list.model-user #changelist #result_list thead th.column-last_name,
+body.change-list.model-user #changelist #result_list tbody td.field-last_name,
+body.change-list.model-user #changelist #result_list thead th.column-role_display,
+body.change-list.model-user #changelist #result_list tbody td.field-role_display {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  max-width: 0 !important; /* fixed table: donutí ellipsis v % šířce */
+}
+
+body.change-list.model-user #changelist #result_list tbody th.field-username a,
+body.change-list.model-user #result_list tbody th.field-username a {
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  max-width: 100% !important;
+}
+
+/* Uživatelé: užší okno – schovat e-mail / jméno / příjmení dřív než 860px */
+@media (max-width: 1200px) {
+  body.change-list.model-user #changelist #result_list thead th.column-email,
+  body.change-list.model-user #changelist #result_list tbody td.field-email,
+  body.change-list.model-user #result_list thead th.column-email,
+  body.change-list.model-user #result_list tbody td.field-email,
+  body.change-list.model-user #changelist #result_list thead th.column-first_name,
+  body.change-list.model-user #changelist #result_list tbody td.field-first_name,
+  body.change-list.model-user #result_list thead th.column-first_name,
+  body.change-list.model-user #result_list tbody td.field-first_name,
+  body.change-list.model-user #changelist #result_list thead th.column-last_name,
+  body.change-list.model-user #changelist #result_list tbody td.field-last_name,
+  body.change-list.model-user #result_list thead th.column-last_name,
+  body.change-list.model-user #result_list tbody td.field-last_name {
+    display: none !important;
+    width: 0 !important;
+    max-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body.change-list.model-user #changelist #result_list thead th.column-username,
+  body.change-list.model-user #changelist #result_list tbody th.field-username,
+  body.change-list.model-user #result_list thead th.column-username,
+  body.change-list.model-user #result_list tbody th.field-username {
+    width: 48% !important;
+  }
+
+  body.change-list.model-user #changelist #result_list thead th.column-role_display,
+  body.change-list.model-user #changelist #result_list tbody td.field-role_display,
+  body.change-list.model-user #result_list thead th.column-role_display,
+  body.change-list.model-user #result_list tbody td.field-role_display {
+    width: 40% !important;
+  }
+}
+
+@media (max-width: 860px) {
+  /* Žádný horizontální scroll stránky */
+  body.change-list {
+    --cenik-check-w: 22px;
+    --cenik-cell-pad-x: 8px;
+    --ts-cell-pad-x: 8px;
+    overflow-x: hidden !important;
+  }
+
+  body.change-list #content,
+  body.change-list #changelist,
+  body.change-list #changelist-form,
+  body.change-list #changelist .changelist-form-container {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  body.change-list #changelist .results {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* fixed = tabulka drží šířku kontejneru (auto + nowrap rozbíjelo stránku) */
+  body.change-list #result_list,
+  body.change-list #changelist #result_list,
+  body.change-list #changelist .results #result_list,
+  html body.change-list #changelist .results #result_list {
+    display: table !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+  }
+
+  /* Označení řádku – úzký sloupec u levého okraje */
+  html body.change-list #changelist #result_list thead th.action-checkbox-column,
+  html body.change-list #changelist #result_list tbody td.action-checkbox,
+  html body.change-list #result_list thead th.action-checkbox-column,
+  html body.change-list #result_list tbody td.action-checkbox,
+  html body.change-list #changelist #result_list tbody tr:first-child > td.action-checkbox {
+    display: table-cell !important;
+    visibility: visible !important;
+    width: 22px !important;
+    min-width: 22px !important;
+    max-width: 22px !important;
+    padding: 0 !important;
+    text-align: left !important;
+    vertical-align: middle !important;
+  }
+
+  html body.change-list #changelist #result_list tbody td.action-checkbox input,
+  html body.change-list #changelist #result_list tbody td.action-checkbox input[type="checkbox"],
+  html body.change-list #result_list tbody td.action-checkbox input {
+    display: block !important;
+    width: 14px !important;
+    height: 14px !important;
+    min-width: 14px !important;
+    min-height: 14px !important;
+    margin: 0 !important;
+  }
+
+  /* První datový sloupec – malý odstup od checkboxu */
+  html body.change-list #changelist #result_list thead th.action-checkbox-column + th,
+  html body.change-list #changelist #result_list tbody td.action-checkbox + td,
+  html body.change-list #changelist #result_list tbody td.action-checkbox + th,
+  html body.change-list #result_list thead th.action-checkbox-column + th,
+  html body.change-list #result_list tbody td.action-checkbox + td,
+  html body.change-list #result_list tbody td.action-checkbox + th {
+    padding-left: 10px !important;
+    padding-inline-start: 10px !important;
+  }
+
+  /* ── Ceník: Položka · Kategorie · Cena ── */
+  body.change-list.model-cenik #result_list thead th.column-platnost_od,
+  body.change-list.model-cenik #result_list thead th.column-platnost_do,
+  body.change-list.model-cenik #result_list tbody td.field-platnost_od,
+  body.change-list.model-cenik #result_list tbody td.field-platnost_do {
+    display: none !important;
+    width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  body.change-list.model-cenik #result_list thead th.column-format_nazev,
+  body.change-list.model-cenik #result_list tbody th,
+  body.change-list.model-cenik #result_list tbody td.field-format_nazev {
+    display: table-cell !important;
+    width: 42% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  body.change-list.model-cenik #result_list thead th.column-kurt_display,
+  body.change-list.model-cenik #result_list tbody td.field-kurt_display,
+  body.change-list.model-cenik #result_list thead th.column-kurt,
+  body.change-list.model-cenik #result_list tbody td.field-kurt {
+    display: table-cell !important;
+    width: 24% !important;
+    white-space: nowrap !important;
+  }
+
+  body.change-list.model-cenik #result_list thead th.column-cena_display,
+  body.change-list.model-cenik #result_list tbody td.field-cena_display {
+    display: table-cell !important;
+    width: 28% !important;
+    white-space: nowrap !important;
+  }
+
+  body.change-list.model-cenik #changelist #result_list thead th.column-cena_display,
+  body.change-list.model-cenik #changelist #result_list thead th.column-cena_display *,
+  body.change-list.model-cenik #changelist #result_list tbody td.field-cena_display,
+  body.change-list.model-cenik #changelist #result_list tbody td.field-cena_display * {
+    text-align: center !important;
+  }
+
+  body.change-list.model-cenik #changelist #result_list thead th.column-cena_display a {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+    margin: 0 auto !important;
+  }
+
+  /* ── Hráči: Jméno · Kredit ── */
+  body.change-list.model-hrac #result_list thead th.column-email,
+  body.change-list.model-hrac #result_list tbody td.field-email,
+  body.change-list.model-hrac #result_list thead th.column-rodina_link,
+  body.change-list.model-hrac #result_list tbody td.field-rodina_link {
+    display: none !important;
+    width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  body.change-list.model-hrac #result_list thead th.column-jmeno_display,
+  body.change-list.model-hrac #result_list tbody th,
+  body.change-list.model-hrac #result_list tbody td.field-jmeno_display {
+    display: table-cell !important;
+    width: 58% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    text-align: left !important;
+  }
+
+  body.change-list.model-hrac #result_list thead th.column-jmeno_display a,
+  body.change-list.model-hrac #result_list tbody th a,
+  body.change-list.model-hrac #result_list tbody td.field-jmeno_display a {
+    text-align: left !important;
+    justify-content: flex-start !important;
+  }
+
+  body.change-list.model-hrac.hrac-no-kredit #result_list thead th.column-jmeno_display,
+  body.change-list.model-hrac.hrac-no-kredit #result_list tbody th,
+  body.change-list.model-hrac.hrac-no-kredit #result_list tbody td.field-jmeno_display {
+    width: auto !important;
+  }
+
+  body.change-list.model-hrac #result_list thead th.column-kredit_display,
+  body.change-list.model-hrac #result_list tbody td.field-kredit_display {
+    display: table-cell !important;
+    width: 36% !important;
+    white-space: nowrap !important;
+  }
+
+  /* ── Platby: Datum · Hráč · Částka ── */
+  body.change-list.model-transakce #result_list thead th.column-typ_display,
+  body.change-list.model-transakce #result_list tbody td.field-typ_display,
+  body.change-list.model-transakce #result_list thead th.column-poznamka,
+  body.change-list.model-transakce #result_list tbody td.field-poznamka {
+    display: none !important;
+    width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  body.change-list.model-transakce #result_list thead th.column-datum_display,
+  body.change-list.model-transakce #result_list tbody td.field-datum_display,
+  body.change-list.model-transakce #result_list tbody th {
+    display: table-cell !important;
+    width: 34% !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  body.change-list.model-transakce #result_list thead th.column-hrac_link,
+  body.change-list.model-transakce #result_list tbody td.field-hrac_link {
+    display: table-cell !important;
+    width: 36% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  body.change-list.model-transakce #result_list thead th.column-castka_display,
+  body.change-list.model-transakce #result_list tbody td.field-castka_display {
+    display: table-cell !important;
+    width: 24% !important;
+    white-space: nowrap !important;
+  }
+
+  /* ── Tréninky: Datum · Hráči · Typ – na úzkém zalamovat, ne ořezávat ── */
+  body.change-list.model-trening #result_list thead th.column-trener_jmeno,
+  body.change-list.model-trening #result_list tbody td.field-trener_jmeno,
+  body.change-list.model-trening #result_list thead th.column-castka_na_hrace_kc,
+  body.change-list.model-trening #result_list tbody td.field-castka_na_hrace_kc {
+    display: none !important;
+    width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  body.change-list.model-trening #changelist #result_list tbody td,
+  body.change-list.model-trening #changelist #result_list tbody th,
+  body.change-list.model-trening #result_list tbody td,
+  body.change-list.model-trening #result_list tbody th {
+    height: auto !important;
+    min-height: var(--cenik-row-h, 44px) !important;
+    max-height: none !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    vertical-align: top !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+
+  body.change-list.model-trening #changelist #result_list tbody td:not(.action-checkbox),
+  body.change-list.model-trening #changelist #result_list tbody th,
+  body.change-list.model-trening #changelist #result_list tbody td:not(.action-checkbox) *,
+  body.change-list.model-trening #changelist #result_list tbody th *,
+  body.change-list.model-trening #result_list tbody td:not(.action-checkbox),
+  body.change-list.model-trening #result_list tbody th,
+  body.change-list.model-trening #result_list tbody td:not(.action-checkbox) *,
+  body.change-list.model-trening #result_list tbody th * {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    word-break: break-word !important;
+  }
+
+  body.change-list.model-trening #result_list tbody td.action-checkbox {
+    vertical-align: middle !important;
+    white-space: nowrap !important;
+  }
+
+  body.change-list.model-trening #result_list thead th.column-datum_display,
+  body.change-list.model-trening #result_list tbody td.field-datum_display,
+  body.change-list.model-trening #result_list tbody th {
+    display: table-cell !important;
+    width: 30% !important;
+  }
+
+  body.change-list.model-trening #result_list thead th.column-hraci_jmena,
+  body.change-list.model-trening #result_list tbody td.field-hraci_jmena {
+    display: table-cell !important;
+    width: 38% !important;
+  }
+
+  body.change-list.model-trening #result_list thead th.column-format_display,
+  body.change-list.model-trening #result_list tbody td.field-format_display {
+    display: table-cell !important;
+    width: 26% !important;
+  }
+
+  /* ── Trenéři (souhrn): checkbox · Trenér · Hodiny · Částka ── */
+  /* Stejný check + první sloupec jako globál (22px / pad 10px) */
+  html body.change-list.model-treneri #changelist #result_list.tbl-treneri col.col-check,
+  html body.change-list.model-treneri #changelist #result_list.tbl-treneri thead th.action-checkbox-column,
+  html body.change-list.model-treneri #changelist #result_list.tbl-treneri tbody td.action-checkbox,
+  html body.change-list.model-treneri #changelist #result_list.tbl-treneri tfoot td.action-checkbox,
+  html body.change-list.model-treneri #result_list.tbl-treneri col.col-check,
+  html body.change-list.model-treneri #result_list.tbl-treneri thead th.action-checkbox-column,
+  html body.change-list.model-treneri #result_list.tbl-treneri tbody td.action-checkbox,
+  html body.change-list.model-treneri #result_list.tbl-treneri tfoot td.action-checkbox {
+    display: table-cell !important;
+    visibility: visible !important;
+    width: 22px !important;
+    min-width: 22px !important;
+    max-width: 22px !important;
+    padding: 0 !important;
+    text-align: left !important;
+    vertical-align: middle !important;
+  }
+
+  html body.change-list.model-treneri #changelist #result_list.tbl-treneri tbody td.action-checkbox input,
+  html body.change-list.model-treneri #changelist #result_list.tbl-treneri tbody td.action-checkbox input[type="checkbox"],
+  html body.change-list.model-treneri #result_list.tbl-treneri tbody td.action-checkbox input {
+    display: block !important;
+    width: 14px !important;
+    height: 14px !important;
+    min-width: 14px !important;
+    min-height: 14px !important;
+    margin: 0 !important;
+  }
+
+  html body.change-list.model-treneri #changelist #result_list.tbl-treneri thead th.action-checkbox-column + th,
+  html body.change-list.model-treneri #changelist #result_list.tbl-treneri tbody td.action-checkbox + th,
+  html body.change-list.model-treneri #changelist #result_list.tbl-treneri tbody td.action-checkbox + td,
+  html body.change-list.model-treneri #changelist #result_list.tbl-treneri tfoot td.action-checkbox + td,
+  html body.change-list.model-treneri #result_list.tbl-treneri thead th.column-trener,
+  html body.change-list.model-treneri #result_list.tbl-treneri tbody th.field-trener,
+  html body.change-list.model-treneri #result_list.tbl-treneri tfoot td.label {
+    padding-left: 10px !important;
+    padding-inline-start: 10px !important;
+    text-align: left !important;
+  }
+
+  body.change-list.model-treneri #result_list.tbl-treneri thead th.column-pocet,
+  body.change-list.model-treneri #result_list.tbl-treneri tbody td.field-pocet,
+  body.change-list.model-treneri #result_list.tbl-treneri tfoot td.field-pocet,
+  body.change-list.model-treneri #result_list.tbl-treneri col.col-pocet {
+    display: none !important;
+    width: 0 !important;
+    max-width: 0 !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body.change-list.model-treneri #result_list.tbl-treneri thead th.column-trener,
+  body.change-list.model-treneri #result_list.tbl-treneri tbody th.field-trener,
+  body.change-list.model-treneri #result_list.tbl-treneri tbody th,
+  body.change-list.model-treneri #result_list.tbl-treneri tfoot td.label,
+  body.change-list.model-treneri #result_list.tbl-treneri col.col-trener {
+    display: table-cell !important;
+    width: 46% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  body.change-list.model-treneri #result_list.tbl-treneri thead th.column-hodiny,
+  body.change-list.model-treneri #result_list.tbl-treneri tbody td.field-hodiny,
+  body.change-list.model-treneri #result_list.tbl-treneri tfoot td.field-hodiny,
+  body.change-list.model-treneri #result_list.tbl-treneri col.col-hodiny {
+    display: table-cell !important;
+    width: 24% !important;
+    text-align: left !important;
+    padding-right: 8px !important;
+    white-space: nowrap !important;
+  }
+
+  body.change-list.model-treneri #result_list.tbl-treneri thead th.column-castka,
+  body.change-list.model-treneri #result_list.tbl-treneri tbody td.field-castka,
+  body.change-list.model-treneri #result_list.tbl-treneri tfoot td.field-castka,
+  body.change-list.model-treneri #result_list.tbl-treneri col.col-castka {
+    display: table-cell !important;
+    width: 30% !important;
+    text-align: left !important;
+    padding-right: 8px !important;
+    white-space: nowrap !important;
+  }
+
+  /* ── Uživatelé: Jméno · Role · Aktivní ── */
+  body.change-list.model-user #result_list thead th.column-email,
+  body.change-list.model-user #result_list tbody td.field-email,
+  body.change-list.model-user #result_list thead th.column-first_name,
+  body.change-list.model-user #result_list tbody td.field-first_name,
+  body.change-list.model-user #result_list thead th.column-last_name,
+  body.change-list.model-user #result_list tbody td.field-last_name {
+    display: none !important;
+    width: 0 !important;
+    max-width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+  }
+
+  body.change-list.model-user #result_list thead th.column-username,
+  body.change-list.model-user #result_list tbody th,
+  body.change-list.model-user #result_list tbody th.field-username,
+  body.change-list.model-user #result_list tbody td.field-username {
+    display: table-cell !important;
+    width: 46% !important;
+    max-width: 46% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  body.change-list.model-user #result_list tbody th a,
+  body.change-list.model-user #result_list tbody th.field-username a,
+  body.change-list.model-user #result_list tbody td.field-username a {
+    display: block !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 100% !important;
+  }
+
+  body.change-list.model-user #result_list thead th.column-role_display,
+  body.change-list.model-user #result_list tbody td.field-role_display {
+    display: table-cell !important;
+    width: 40% !important;
+    max-width: 40% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  /* ── Vyúčtování: Datum · Hráč · Naúčtováno ── */
+  body.change-list.model-vyuctovani #result_list thead th.column-col_kredit,
+  body.change-list.model-vyuctovani #result_list tbody td.field-col_kredit,
+  body.change-list.model-vyuctovani #result_list thead th.column-col_kredit_po_uhrade,
+  body.change-list.model-vyuctovani #result_list tbody td.field-col_kredit_po_uhrade {
+    display: none !important;
+    width: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+  }
+
+  body.change-list.model-vyuctovani #result_list thead th.column-col_datum,
+  body.change-list.model-vyuctovani #result_list tbody th,
+  body.change-list.model-vyuctovani #result_list tbody td.field-col_datum {
+    display: table-cell !important;
+    width: 30% !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  body.change-list.model-vyuctovani #result_list thead th.column-col_hrac,
+  body.change-list.model-vyuctovani #result_list tbody td.field-col_hrac {
+    display: table-cell !important;
+    width: 38% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  body.change-list.model-vyuctovani #result_list thead th.column-col_nauctovano,
+  body.change-list.model-vyuctovani #result_list tbody td.field-col_nauctovano {
+    display: table-cell !important;
+    width: 26% !important;
+    white-space: nowrap !important;
+  }
+}

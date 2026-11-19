@@ -9,6 +9,10 @@ from .admin_views import (
     admin_analytika_export_view,
     admin_analytika_index_view,
     admin_analytika_view,
+    admin_billing_checkout_view,
+    admin_billing_portal_view,
+    admin_connect_onboarding_view,
+    admin_connect_refresh_view,
     admin_dashboard_view,
     admin_nastaveni_view,
     admin_nastaveni_autosave_view,
@@ -88,6 +92,26 @@ def setup_admin_site():
             path("", admin.site.admin_view(admin_dashboard_view), name="index"),
             path("nastaveni/", admin.site.admin_view(admin_nastaveni_view), name="nastaveni"),
             path(
+                "nastaveni/billing-portal/",
+                admin.site.admin_view(admin_billing_portal_view),
+                name="nastaveni_billing_portal",
+            ),
+            path(
+                "nastaveni/billing-checkout/",
+                admin.site.admin_view(admin_billing_checkout_view),
+                name="nastaveni_billing_checkout",
+            ),
+            path(
+                "nastaveni/connect-onboarding/",
+                admin.site.admin_view(admin_connect_onboarding_view),
+                name="nastaveni_connect_onboarding",
+            ),
+            path(
+                "nastaveni/connect-refresh/",
+                admin.site.admin_view(admin_connect_refresh_view),
+                name="nastaveni_connect_refresh",
+            ),
+            path(
                 "nastaveni/vzhled/",
                 admin.site.admin_view(admin_nastaveni_vzhled_view),
                 name="nastaveni_vzhled",
@@ -150,6 +174,12 @@ def setup_admin_site():
             ctx["site_title"] = name
         except Exception:
             pass
+        try:
+            from .roles import nav_permissions
+
+            ctx.update(nav_permissions(getattr(request, "user", None)))
+        except Exception:
+            ctx["is_platform_admin"] = False
         return ctx
 
     admin.site.each_context = _each_context

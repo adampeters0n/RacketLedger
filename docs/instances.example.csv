@@ -1,0 +1,7 @@
+# Šablona inventáře instancí (Fáze 1.4)
+#
+# NECOMMITUJ reálná hesla / connection stringy s hesly.
+# Zkopíruj do Notion / Google Sheet / 1Password a udržuj mimo git.
+#
+# klub,url,db_host_or_label,owner_email,owner_name,stripe_customer_id,sentry_project,notes,version,last_upgrade
+Demo klub,https://demo.example.com,demo-pg,admin@example.com,Admin,,tenissystem-demo,staging only,,

@@ -5,6 +5,13 @@ from __future__ import annotations
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
+from core.checks import (
+    _INSECURE_SECRET_MARKERS,
+    check_production_email,
+    check_production_hosts,
+    check_production_secret,
+    check_production_storage,
+)
 from core.models import SystemNastaveni, VyuctovaniNastaveni
 
 _LEGACY_MARKERS = (
@@ -24,10 +31,16 @@ def _contains_legacy(value: str) -> bool:
     return any(marker in low for marker in _LEGACY_MARKERS)
 
 
+def _secret_looks_insecure(key: str) -> bool:
+    key = (key or "").strip()
+    low = key.casefold()
+    return (not key) or len(key) < 32 or any(m in low for m in _INSECURE_SECRET_MARKERS)
+
+
 class Command(BaseCommand):
     help = (
         "Ověří branding instance (bez legacy Čimice/Káťa textů) a "
-        "produkční ALLOWED_HOSTS / CSRF_TRUSTED_ORIGINS."
+        "produkční ALLOWED_HOSTS / CSRF / SECRET_KEY / SMTP."
     )
 
     def add_arguments(self, parser):
@@ -96,12 +109,40 @@ class Command(BaseCommand):
         else:
             notes.append("Host check přeskočen (DEBUG=True; použij --strict-hosts).")
 
+        # Zrcadlení Django system checks (SECRET_KEY / SMTP) pro ops výstup.
+        if not settings.DEBUG:
+            for msg in check_production_secret(None):
+                problems.append(str(msg.msg))
+            for msg in check_production_email(None):
+                problems.append(f"WARN: {msg.msg}")
+            for msg in check_production_storage(None):
+                problems.append(f"WARN: {msg.msg}")
+            for msg in check_production_hosts(None):
+                if msg.id not in {"core.E001", "core.E002", "core.E003", "core.W001"}:
+                    problems.append(str(msg.msg))
+        else:
+            if _secret_looks_insecure(settings.SECRET_KEY):
+                notes.append("SECRET_KEY vypadá jako vývojový default (OK při DEBUG=True).")
+            email_host = (getattr(settings, "EMAIL_HOST", "") or "").strip()
+            email_user = (getattr(settings, "EMAIL_HOST_USER", "") or "").strip()
+            if not (email_host and email_user):
+                notes.append("SMTP není nastavené (při DEBUG console backend).")
+            if getattr(settings, "USE_S3", False):
+                notes.append(f"USE_S3=on, bucket={getattr(settings, 'AWS_STORAGE_BUCKET_NAME', '') or '(prázdný)'}")
+            else:
+                notes.append("USE_S3=off (lokální MEDIA_ROOT).")
+
         for line in notes:
             self.stdout.write(line)
 
         if problems:
             for p in problems:
-                self.stderr.write(self.style.ERROR(f"FAIL: {p}"))
-            raise CommandError(f"check_instance: {len(problems)} problém(ů).")
+                style = self.style.WARNING if p.startswith("WARN:") else self.style.ERROR
+                label = "WARN" if p.startswith("WARN:") else "FAIL"
+                text = p.removeprefix("WARN: ").strip()
+                self.stderr.write(style(f"{label}: {text}"))
+            hard = [p for p in problems if not p.startswith("WARN:")]
+            if hard:
+                raise CommandError(f"check_instance: {len(hard)} problém(ů).")
 
         self.stdout.write(self.style.SUCCESS("check_instance: OK"))

@@ -1,0 +1,62 @@
+{% extends "home/auth_base.html" %}
+{% load i18n static %}
+
+{% block page_title %}{% if form.errors %}{% translate "Error:" %} {% endif %}{% trans "Přihlášení" %} · {{ system_nazev_klubu }}{% endblock %}
+
+{% block extrahead %}{{ form.media }}{% endblock %}
+
+{% block auth_eyebrow %}{% if slogan %}{{ slogan }}{% elif system_slogan %}{{ system_slogan }}{% else %}{% trans "Pro trenéry a tenisové akademie" %}{% endif %}{% endblock %}
+
+{% block auth_title %}{% trans "Přihlášení" %}{% endblock %}
+
+{% block auth_lead %}
+<p class="auth__lead">{% trans "Přihlaste se do správy tenisové školy." %}</p>
+{% endblock %}
+
+{% block auth_content %}
+{% if form.errors and not form.non_field_errors %}
+<p class="auth__error">
+{% blocktranslate count counter=form.errors.items|length %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktranslate %}
+</p>
+{% endif %}
+
+{% if form.non_field_errors %}
+{% for error in form.non_field_errors %}
+<p class="auth__error">{{ error }}</p>
+{% endfor %}
+{% endif %}
+
+{% if user.is_authenticated %}
+<p class="auth__error">
+{% blocktranslate trimmed %}
+    You are authenticated as {{ username }}, but are not authorized to
+    access this page. Would you like to login to a different account?
+{% endblocktranslate %}
+</p>
+{% endif %}
+
+<form action="{{ app_path }}" method="post" id="login-form" class="auth__form">{% csrf_token %}
+  <div class="form-row">
+    {{ form.username.errors }}
+    {{ form.username.label_tag }}
+    {{ form.username }}
+  </div>
+  <div class="form-row">
+    {{ form.password.errors }}
+    {{ form.password.label_tag }}
+    {{ form.password }}
+    <input type="hidden" name="next" value="{{ next }}">
+  </div>
+  {% url 'admin_password_reset' as password_reset_url %}
+  {% if password_reset_url %}
+  <div class="auth__reset">
+    <a href="{{ password_reset_url }}">{% trans "Zapomněli jste heslo?" %}</a>
+  </div>
+  {% endif %}
+  <button type="submit" class="auth__submit">{% trans "Přihlásit se" %}</button>
+</form>
+
+<p class="auth__footer">
+  <a href="{% url 'home' %}">{% trans "Zpět na úvod" %}</a>
+</p>
+{% endblock %}

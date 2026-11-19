@@ -1,23 +1,37 @@
 {% extends "admin/base_site.html" %}
+{% load i18n static %}
 
-{% load i18n %}
-{% block bodyclass %}{{ block.super }} logout-confirmation{% endblock %}
-
-{% block breadcrumbs %}
-<div class="breadcrumbs">
-  <a href="{% url 'admin:index' %}">{% trans "Domů" %}</a>
-  &rsaquo; {% trans "Odhlášení" %}
-</div>
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'admin/css/logout-confirm.css' %}">
 {% endblock %}
 
+{% block bodyclass %}{{ block.super }} logout-confirmation{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+{% block content_title %}{% endblock %}
+
 {% block content %}
-<h1>{% trans "Odhlášení" %}</h1>
-<p>{% blocktrans with name=system_nazev_klubu|default:"TenisSystém" %}Opravdu se chcete odhlásit ze systému {{ name }}?{% endblocktrans %}</p>
-<form method="post">
-  {% csrf_token %}
-  <div class="delete-confirm-actions logout-confirm-actions">
-    <input type="submit" value="{% trans 'Ano, odhlásit se' %}" class="delete-confirm-submit">
-    <a href="{{ cancel_url }}" class="button secondary">{% trans "Zrušit" %}</a>
+<header class="ts-page-head" data-ts-page-head>
+  <div class="ts-page-head__text">
+    <p class="ts-page-head__eyebrow">{% trans "Účet" %}</p>
+    <h1 class="ts-page-head__title">{% trans "Odhlášení" %}</h1>
+    <span class="ts-page-head__rule" aria-hidden="true"></span>
   </div>
-</form>
+</header>
+
+<div id="content-main">
+  <div class="logout-confirm-card">
+    <p class="logout-confirm-text">
+      {% blocktrans with name=system_nazev_klubu|default:"TenisSystém" %}Opravdu se chcete odhlásit ze systému {{ name }}?{% endblocktrans %}
+    </p>
+    <form method="post" class="logout-confirm-form">
+      {% csrf_token %}
+      <div class="logout-confirm-actions">
+        <button type="submit" class="ts-btn logout-confirm-submit">{% trans "Ano, odhlásit se" %}</button>
+        <a href="{{ cancel_url }}" class="ts-btn logout-confirm-cancel">{% trans "Zrušit" %}</a>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock %}

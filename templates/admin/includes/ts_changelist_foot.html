@@ -1,0 +1,39 @@
+{% load static i18n %}
+<footer class="ts-cl-foot" role="contentinfo" data-ts-cl-foot>
+  <div class="ts-cl-foot__inner">
+    <div class="ts-cl-foot__brand">
+      <a class="ts-cl-foot__brand-link" href="{% url 'admin:index' %}" title="{% trans 'Domů' %}">
+        {% if system_logo_url %}
+        <img class="ts-cl-foot__logo" src="{{ system_logo_url }}" alt="" />
+        {% endif %}
+        <span class="ts-cl-foot__club">{{ system_nazev_klubu|default:"TenisSystém" }}</span>
+      </a>
+      <div class="ts-cl-foot__meta">
+        <span class="ts-cl-foot__section">{{ cl.opts.verbose_name_plural|capfirst }}</span>
+        <span class="ts-cl-foot__dot" aria-hidden="true">·</span>
+        <span class="ts-cl-foot__count" data-ts-cl-foot-count>
+          {% if cl.result_count == 1 %}1 položka
+          {% elif cl.result_count >= 2 and cl.result_count <= 4 %}{{ cl.result_count }} položky
+          {% else %}{{ cl.result_count }} položek
+          {% endif %}
+        </span>
+      </div>
+    </div>
+
+    <div class="ts-cl-foot__user">
+      {% if user.is_authenticated %}
+      <p class="ts-cl-foot__hello">
+        {% trans "Přihlášen jako" %}
+        <strong>{{ user.get_short_name|default:user.get_username }}</strong>
+      </p>
+      {% endif %}
+      <nav class="ts-cl-foot__links" aria-label="{% trans 'Zápatí' %}">
+        <a class="ts-cl-foot__link" href="{% url 'admin:nastaveni' %}">{% trans "Nastavení" %}</a>
+        <span class="ts-cl-foot__sep" aria-hidden="true">/</span>
+        <a class="ts-cl-foot__link" href="{% url 'admin:index' %}">{% trans "Domů" %}</a>
+        <span class="ts-cl-foot__sep" aria-hidden="true">/</span>
+        <a class="ts-cl-foot__link ts-cl-foot__link--logout" href="{% url 'logout_to_home' %}">{% trans "Odhlásit se" %}</a>
+      </nav>
+    </div>
+  </div>
+</footer>

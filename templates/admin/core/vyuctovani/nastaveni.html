@@ -1,192 +1,340 @@
 {% extends "admin/base_site.html" %}
 {% load static i18n %}
+{% block bodyclass %}{{ block.super }} ts-page-vyuct-nastaveni ts-page-nastaveni{% endblock %}
 {% block extrastyle %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'admin/css/dashboard.css' %}">
-<link rel="stylesheet" href="{% static 'admin/css/vyuctovani-nastaveni.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/nastaveni.css' %}?v=vyuct-set-1">
+<link rel="stylesheet" href="{% static 'admin/css/vyuctovani-nastaveni.css' %}?v=vyuct-set-3">
 {% endblock %}
 
 {% block extrahead %}
 {{ block.super }}
-<script src="{% static 'admin/js/vyuctovani-nastaveni.js' %}" defer></script>
+<script src="{% static 'admin/js/vyuctovani-nastaveni.js' %}?v=vyuct-set-1" defer></script>
 {% endblock %}
 
+{% block breadcrumbs %}{% endblock %}
+{% block content_title %}{% endblock %}
+
 {% block content %}
-<div id="content-main" class="vyuct-set dash-wrap">
-  <div class="vyuct-set-header">
-    <div>
-      <h1>{% trans "Nastavení vyúčtování" %}</h1>
-      <p class="vyuct-set-lead">
-        {% blocktrans trimmed %}
-        Zvolte, kdy má systém automaticky vytvořit vyúčtování a poslat e-mail,
-        nebo vypněte automatiku a vyúčtovávejte jen ručně z profilu hráče.
-        {% endblocktrans %}
-        {% blocktrans with rezim=aktualni_rezim popis=aktualni_popis %}Aktuálně: {{ rezim }} — {{ popis }}.{% endblocktrans %}
-      </p>
-    </div>
-    <div class="vyuct-set-header-actions">
-      <a href="{% url 'admin:nastaveni' %}" class="button secondary">{% trans "← Nastavení systému" %}</a>
-      <a href="{{ changelist_url }}" class="button">{% trans "← Vyúčtování" %}</a>
-    </div>
+<header class="ts-page-head" data-ts-page-head>
+  <div class="ts-page-head__text">
+    <p class="ts-page-head__eyebrow">{% trans "Systém" %}</p>
+    <h1 class="ts-page-head__title">{% trans "Nastavení vyúčtování" %}</h1>
+    <span class="ts-page-head__rule" aria-hidden="true"></span>
   </div>
+  <ul class="object-tools">
+    <li><a href="{% url 'admin:nastaveni' %}" class="ts-btn">{% trans "← Nastavení" %}</a></li>
+    <li><a href="{{ changelist_url }}" class="ts-btn">{% trans "← Vyúčtování" %}</a></li>
+  </ul>
+</header>
 
-  <form method="post" novalidate class="vyuct-set-form">
-    {% csrf_token %}
+<div id="content-main" class="nast-app vyuct-set-app">
+  <div class="nast-main">
+    <form method="post" novalidate class="nastaveni-form vyuct-set-form">
+      {% csrf_token %}
 
-    {% if form.errors %}
-    <div class="errornote vyuct-set-errors">
-      <p><strong>{% trans "Nastavení nelze uložit." %}</strong>{% trans "Opravte prosím zvýrazněná pole níže." %}</p>
-      {% if form.non_field_errors %}
-      <ul>{% for err in form.non_field_errors %}<li>{{ err }}</li>{% endfor %}</ul>
+      {% if form.errors %}
+      <div class="errornote nast-error">
+        <p><strong>{% trans "Nastavení nelze uložit." %}</strong> {% trans "Opravte zvýrazněná pole." %}</p>
+      </div>
       {% endif %}
-    </div>
-    {% endif %}
 
-    <section class="card vyuct-set-card">
-      <h3>{% trans "Způsob vyúčtování" %}</h3>
-      <div class="inner">
-        <fieldset class="vyuct-rezim-fieldset">
-          <legend class="visually-hidden">{{ form.auto_rezim.label }}</legend>
+      <section class="nast-panel is-active">
+        <header class="nast-panel-head">
+          <h2>{% trans "Způsob vyúčtování" %}</h2>
+          <p>
+            {% blocktrans trimmed %}
+            Zvolte, kdy má systém automaticky vytvořit vyúčtování a poslat e-mail.
+            Manuální odeslání z profilu hráče nebo rodiny funguje vždy, i když máte zapnutý limit kreditu, měsíční režim nebo počet tréninků.
+            {% endblocktrans %}
+            {% blocktrans with rezim=aktualni_rezim popis=aktualni_popis %}Aktuálně: {{ rezim }} ({{ popis }}).{% endblocktrans %}
+          </p>
+        </header>
+
+        <div class="nast-group">
+          <p class="nast-group-label">{{ form.auto_rezim.label }}</p>
+          <p class="nast-group-hint">{% trans "Vyberte jeden režim. Parametry níže se zobrazí podle volby." %}</p>
           {{ form.auto_rezim.errors }}
-          <div class="vyuct-rezim-list" role="radiogroup" aria-label="{{ form.auto_rezim.label }}">
+          <div class="nast-excel-list vyuct-rezim-list" role="radiogroup" aria-label="{{ form.auto_rezim.label }}">
             {% for radio in form.auto_rezim %}
-            <div class="vyuct-rezim-option">
-              <label class="vyuct-rezim-label" for="{{ radio.id_for_label }}">
-                {{ radio.tag }}
-                <span class="vyuct-rezim-body">
-                  <span class="vyuct-rezim-text">{{ radio.choice_label }}</span>
+            <label class="nast-excel-row{% if radio.data.selected %} is-active{% endif %}">
+              {{ radio.tag }}
+              <span class="nast-excel-meta">
+                <span class="nast-excel-name">{{ radio.choice_label }}</span>
+                <span class="nast-excel-desc">
                   {% if radio.data.value == "MANUAL" %}
-                  <span class="vyuct-rezim-hint">{% trans "Systém neposílá automatická vyúčtování. Vyúčtování vytvoříte ručně v profilu hráče nebo u rodiny." %}</span>
+                    {% trans "Bez automatiky. Vyúčtování posíláte jen ručně z profilu hráče nebo rodiny." %}
                   {% elif radio.data.value == "CASTKA" %}
-                  <span class="vyuct-rezim-hint">{% blocktrans with mena=system_mena %}Po tréninku zkontroluje celkový kredit. Když klesne na zadanou částku (např. −5000 {{ mena }}), odešle e-mail s vyúčtováním.{% endblocktrans %}</span>
+                    {% trans "Po tréninku zkontroluje celkový kredit. Když klesne na zadanou částku (např. -5000 Kč), odešle e-mail. Ručně můžete poslat kdykoli z profilu hráče." %}
                   {% elif radio.data.value == "MESICNE" %}
-                  <span class="vyuct-rezim-hint">{% trans "Od zadaného dne v měsíci uzavře při dalším tréninku období a pošle vyúčtování za uplynulý měsíc." %}</span>
+                    {% trans "Od zadaného dne v měsíci uzavře při dalším tréninku období a pošle vyúčtování. Ručně můžete poslat kdykoli z profilu hráče." %}
                   {% elif radio.data.value == "N_TRENINGU" %}
-                  <span class="vyuct-rezim-hint">{% trans "Po zadaném počtu odehraných tréninků od poslední uzávěrky automaticky vytvoří vyúčtování." %}</span>
+                    {% trans "Po zadaném počtu odehraných tréninků od poslední uzávěrky automaticky vytvoří vyúčtování. Ručně můžete poslat kdykoli z profilu hráče." %}
                   {% endif %}
                 </span>
-              </label>
+              </span>
+              <span class="nast-excel-check" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              </span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="nast-group vyuct-rezim-params">
+          <p class="nast-group-label">{% trans "Parametry režimu" %}</p>
+          <div class="nast-row" data-rezim-field="CASTKA">
+            <div class="nast-row-text">
+              <span class="nast-row-label">{{ form.auto_limit.label }}</span>
+              <span class="nast-row-detail">{% if form.auto_limit.help_text %}{{ form.auto_limit.help_text }}{% endif %}</span>
             </div>
-            {% endfor %}
+            <div class="nast-row-control">{{ form.auto_limit }}</div>
           </div>
-        </fieldset>
-
-        <div class="vyuct-set-fields vyuct-rezim-params">
-          <div class="vyuct-field" data-rezim-field="CASTKA">
-            <label for="{{ form.auto_limit.id_for_label }}">{{ form.auto_limit.label }}</label>
-            {{ form.auto_limit }}
-            {% if form.auto_limit.help_text %}<p class="help">{{ form.auto_limit.help_text }}</p>{% endif %}
-            {{ form.auto_limit.errors }}
+          {{ form.auto_limit.errors }}
+          <div class="nast-row" data-rezim-field="CASTKA">
+            <div class="nast-row-text">
+              <span class="nast-row-label">{{ form.auto_castka_k_uhrade.label }}</span>
+              <span class="nast-row-detail">{% if form.auto_castka_k_uhrade.help_text %}{{ form.auto_castka_k_uhrade.help_text }}{% endif %}</span>
+            </div>
+            <div class="nast-row-control">{{ form.auto_castka_k_uhrade }}</div>
           </div>
-          <div class="vyuct-field" data-rezim-field="CASTKA">
-            <label for="{{ form.auto_castka_k_uhrade.id_for_label }}">{{ form.auto_castka_k_uhrade.label }}</label>
-            {{ form.auto_castka_k_uhrade }}
-            {% if form.auto_castka_k_uhrade.help_text %}<p class="help">{{ form.auto_castka_k_uhrade.help_text }}</p>{% endif %}
-            {{ form.auto_castka_k_uhrade.errors }}
+          {{ form.auto_castka_k_uhrade.errors }}
+          <div class="nast-row" data-rezim-field="N_TRENINGU">
+            <div class="nast-row-text">
+              <span class="nast-row-label">{{ form.auto_pocet_treninku.label }}</span>
+              <span class="nast-row-detail">{% if form.auto_pocet_treninku.help_text %}{{ form.auto_pocet_treninku.help_text }}{% endif %}</span>
+            </div>
+            <div class="nast-row-control">{{ form.auto_pocet_treninku }}</div>
           </div>
-          <div class="vyuct-field" data-rezim-field="N_TRENINGU">
-            <label for="{{ form.auto_pocet_treninku.id_for_label }}">{{ form.auto_pocet_treninku.label }}</label>
-            {{ form.auto_pocet_treninku }}
-            {% if form.auto_pocet_treninku.help_text %}<p class="help">{{ form.auto_pocet_treninku.help_text }}</p>{% endif %}
-            {{ form.auto_pocet_treninku.errors }}
+          {{ form.auto_pocet_treninku.errors }}
+          <div class="nast-row" data-rezim-field="MESICNE">
+            <div class="nast-row-text">
+              <span class="nast-row-label">{{ form.mesicni_den.label }}</span>
+              <span class="nast-row-detail">{% trans "Po zadaném dni v měsíci se při dalším tréninku uzavře období od poslední uzávěrky." %}</span>
+            </div>
+            <div class="nast-row-control">{{ form.mesicni_den }}</div>
           </div>
-          <div class="vyuct-field" data-rezim-field="MESICNE">
-            <label for="{{ form.mesicni_den.id_for_label }}">{{ form.mesicni_den.label }}</label>
-            {{ form.mesicni_den }}
-            {% if form.mesicni_den.help_text %}<p class="help">{{ form.mesicni_den.help_text }}</p>{% endif %}
-            {{ form.mesicni_den.errors }}
-            <p class="help">{% trans "Po zadaném dni v měsíci se při dalším tréninku uzavře období od poslední uzávěrky." %}</p>
-          </div>
+          {{ form.mesicni_den.errors }}
         </div>
 
-        <div class="vyuct-field vyuct-field-check" data-rezim-auto-only>
-          <label for="{{ form.auto_posilat_email.id_for_label }}">
-            {{ form.auto_posilat_email }} {{ form.auto_posilat_email.label }}
-          </label>
+        <div class="nast-group" data-rezim-auto-only>
+          <div class="nast-row nast-row-toggle">
+            <div class="nast-row-text">
+              <span class="nast-row-label">{{ form.auto_posilat_email.label }}</span>
+              <span class="nast-row-detail">{% trans "Platí jen u automatických režimů" %}</span>
+            </div>
+            <label class="nast-switch" aria-label="{{ form.auto_posilat_email.label }}">
+              {{ form.auto_posilat_email }}
+              <span class="nast-switch-track"></span>
+            </label>
+          </div>
+          {{ form.auto_posilat_email.errors }}
         </div>
+      </section>
 
-        <div class="vyuct-field vyuct-field-check" data-rezim-auto-only>
-          <label for="{{ form.aplikovat_na_vsechny.id_for_label }}">
-            {{ form.aplikovat_na_vsechny }} {{ form.aplikovat_na_vsechny.label }}
-          </label>
-          {% if form.aplikovat_na_vsechny.help_text %}<p class="help">{{ form.aplikovat_na_vsechny.help_text }}</p>{% endif %}
+      <section class="nast-panel is-active">
+        <header class="nast-panel-head">
+          <h2>{% trans "Hromadné vyúčtování" %}</h2>
+          <p>{% trans "Při hromadném odeslání z seznamu hráčů: požadovaná částka = aktuální dluh + surplus. Při kladném kreditu jen surplus." %}</p>
+        </header>
+        <div class="nast-group">
+          <div class="nast-row">
+            <div class="nast-row-text">
+              <span class="nast-row-label">{{ form.hromadne_surplus.label }}</span>
+              <span class="nast-row-detail">{% if form.hromadne_surplus.help_text %}{{ form.hromadne_surplus.help_text }}{% endif %}</span>
+            </div>
+            <div class="nast-row-control">{{ form.hromadne_surplus }}</div>
+          </div>
+          {{ form.hromadne_surplus.errors }}
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="card vyuct-set-card">
-      <h3>{% trans "E-mail a platební údaje" %}</h3>
-      <div class="inner">
-        <p class="vyuct-set-intro">{% trans "Výchozí varianta účtu v automatických e-mailech. Ruční vyúčtování z profilu hráče může zvolit jinou variantu." %}</p>
-        <div class="vyuct-set-fields vyuct-set-fields-2col">
-          <div class="vyuct-field">
-            <label for="{{ form.email_variant.id_for_label }}">{{ form.email_variant.label }}</label>
-            {{ form.email_variant }}
+
+      <section class="nast-panel is-active">
+        <header class="nast-panel-head">
+          <h2>{% trans "Online platby (Stripe)" %}</h2>
+          <p>{% trans "Hlavní způsob úhrady ve vyúčtovacím e-mailu — tlačítko Zaplatit online." %}</p>
+        </header>
+        <div class="nast-group">
+          <div class="nast-summary-card">
+            <p class="nast-summary-title">{% trans "Stav propojení" %}</p>
+            <dl class="nast-summary-grid">
+              <div>
+                <dt>{% trans "Stav" %}</dt>
+                <dd>
+                  {% if player_payments_ready %}
+                    {% trans "Připraveno" %}
+                  {% elif connect_has_account %}
+                    {% trans "Čeká na ověření" %}
+                  {% elif stripe_api_configured %}
+                    {% trans "Nepropojeno" %}
+                  {% else %}
+                    {% trans "Stripe není nastavený" %}
+                  {% endif %}
+                </dd>
+              </div>
+              <div>
+                <dt>{% trans "Connect účet" %}</dt>
+                <dd>{% if connect_account_id_masked %}{{ connect_account_id_masked }}{% else %}—{% endif %}</dd>
+              </div>
+              <div>
+                <dt>{% trans "Příjem plateb" %}</dt>
+                <dd>
+                  {% if connect_charges_enabled and connect_details_submitted %}
+                    {% trans "Ano" %}
+                  {% else %}
+                    {% trans "Ne" %}
+                  {% endif %}
+                </dd>
+              </div>
+            </dl>
           </div>
-          <div class="vyuct-field">
-            <label for="{{ form.variabilni_symbol_popis.id_for_label }}">{{ form.variabilni_symbol_popis.label }}</label>
-            {{ form.variabilni_symbol_popis }}
-            {% if form.variabilni_symbol_popis.help_text %}<p class="help">{{ form.variabilni_symbol_popis.help_text }}</p>{% endif %}
+          {% if stripe_api_configured %}
+            {% if not player_payments_ready %}
+            <a href="{{ connect_onboarding_url }}" class="nast-row nast-row-link">
+              <span class="nast-row-text">
+                <span class="nast-row-label">
+                  {% if connect_has_account %}{% trans "Dokončit propojení Stripe" %}{% else %}{% trans "Propojit Stripe" %}{% endif %}
+                </span>
+                <span class="nast-row-detail">{% trans "Ověření klubu ve Stripe Connect Express" %}</span>
+              </span>
+              <span class="nast-row-chevron" aria-hidden="true">›</span>
+            </a>
+            {% endif %}
+            {% if connect_has_account %}
+            <a href="{{ connect_refresh_url }}" class="nast-row nast-row-link">
+              <span class="nast-row-text">
+                <span class="nast-row-label">{% trans "Obnovit stav" %}</span>
+                <span class="nast-row-detail">{% trans "Znovu načíst účet ze Stripe" %}</span>
+              </span>
+              <span class="nast-row-chevron" aria-hidden="true">›</span>
+            </a>
+            {% endif %}
+          {% endif %}
+          <a href="{{ system_nastaveni_url }}#platby-hracu" class="nast-row nast-row-link">
+            <span class="nast-row-text">
+              <span class="nast-row-label">{% trans "Otevřít Nastavení → Platby hráčů" %}</span>
+              <span class="nast-row-detail">{% trans "Kompletní správa Stripe Connect" %}</span>
+            </span>
+            <span class="nast-row-chevron" aria-hidden="true">›</span>
+          </a>
+          <p class="help">{% trans "Payout na bankovní účet klubu nastavíte ve Stripe Dashboardu u Connect účtu — ne zde. V e-mailu je online platba primární; převod níže slouží jen jako záloha." %}</p>
+        </div>
+      </section>
+
+      <section class="nast-panel is-active">
+        <header class="nast-panel-head">
+          <h2>{% trans "E-mail a platební údaje" %}</h2>
+          <p>{% trans "Volitelné údaje v e-mailu, když hráč neplatí online (nebo Stripe ještě není zapnutý)." %}</p>
+        </header>
+        <div class="nast-group">
+          <div class="nast-row">
+            <div class="nast-row-text">
+              <span class="nast-row-label">{{ form.email_variant.label }}</span>
+              <span class="nast-row-detail">{% trans "Výchozí účet v automatických e-mailech" %}</span>
+            </div>
+            <div class="nast-row-control">{{ form.email_variant }}</div>
           </div>
-          <div class="vyuct-field">
-            <label for="{{ form.ucet_nazev_1.id_for_label }}">{{ form.ucet_nazev_1.label }}</label>
-            {{ form.ucet_nazev_1 }}
+          <div class="nast-row">
+            <div class="nast-row-text">
+              <span class="nast-row-label">{{ form.variabilni_symbol_popis.label }}</span>
+              <span class="nast-row-detail">{% if form.variabilni_symbol_popis.help_text %}{{ form.variabilni_symbol_popis.help_text }}{% endif %}</span>
+            </div>
+            <div class="nast-row-control">{{ form.variabilni_symbol_popis }}</div>
           </div>
-          <div class="vyuct-field">
-            <label for="{{ form.ucet_varianta_1.id_for_label }}">{{ form.ucet_varianta_1.label }}</label>
-            {{ form.ucet_varianta_1 }}
+          <div class="nast-row">
+            <div class="nast-row-text">
+              <span class="nast-row-label">{{ form.ucet_nazev_1.label }}</span>
+              <span class="nast-row-detail">{% trans "Název ve výběru varianty" %}</span>
+            </div>
+            <div class="nast-row-control">{{ form.ucet_nazev_1 }}</div>
           </div>
-          <div class="vyuct-field">
-            <label for="{{ form.ucet_nazev_2.id_for_label }}">{{ form.ucet_nazev_2.label }}</label>
-            {{ form.ucet_nazev_2 }}
+          <div class="nast-row">
+            <div class="nast-row-text">
+              <span class="nast-row-label">{{ form.ucet_varianta_1.label }}</span>
+              <span class="nast-row-detail">{% trans "Číslo účtu" %}</span>
+            </div>
+            <div class="nast-row-control">{{ form.ucet_varianta_1 }}</div>
           </div>
-          <div class="vyuct-field">
-            <label for="{{ form.ucet_varianta_2.id_for_label }}">{{ form.ucet_varianta_2.label }}</label>
-            {{ form.ucet_varianta_2 }}
+          <div class="nast-row">
+            <div class="nast-row-text">
+              <span class="nast-row-label">{{ form.ucet_nazev_2.label }}</span>
+              <span class="nast-row-detail">{% trans "Název ve výběru varianty" %}</span>
+            </div>
+            <div class="nast-row-control">{{ form.ucet_nazev_2 }}</div>
+          </div>
+          <div class="nast-row">
+            <div class="nast-row-text">
+              <span class="nast-row-label">{{ form.ucet_varianta_2.label }}</span>
+              <span class="nast-row-detail">{% trans "Číslo účtu" %}</span>
+            </div>
+            <div class="nast-row-control">{{ form.ucet_varianta_2 }}</div>
+          </div>
+          <div class="nast-row">
+            <div class="nast-row-text">
+              <span class="nast-row-label">{{ form.ucet_nazev_3.label }}</span>
+              <span class="nast-row-detail">{% trans "Název ve výběru varianty" %}</span>
+            </div>
+            <div class="nast-row-control">{{ form.ucet_nazev_3 }}</div>
+          </div>
+          <div class="nast-row">
+            <div class="nast-row-text">
+              <span class="nast-row-label">{{ form.ucet_varianta_3.label }}</span>
+              <span class="nast-row-detail">{% trans "Číslo účtu" %}</span>
+            </div>
+            <div class="nast-row-control">{{ form.ucet_varianta_3 }}</div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="card vyuct-set-card">
-      <h3>{% trans "Přehled hráčů" %}</h3>
-      <div class="inner">
-        <p class="vyuct-set-intro">{% trans "Všichni hráči používají stejný globální režim výše. Tabulka ukazuje stav od poslední uzávěrky." %}<a href="{{ hraci_url }}">{% trans "Otevřít všechny hráče →" %}</a>
-        </p>
-        {% if hraci_prehled %}
-        <table class="list vyuct-set-table">
-          <thead>
-            <tr>
-              <th>{% trans "Hráč" %}</th>
-              <th>{% trans "Poslední uzávěrka" %}</th>
-              <th>{% trans "Tréninků od uzávěrky" %}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for row in hraci_prehled %}
-            <tr>
-              <td><a href="{{ row.url }}">{{ row.jmeno }}</a></td>
-              <td>{{ row.posledni }}</td>
-              <td>{{ row.pocet_treninku }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        {% if hraci_celkem > 20 %}
-        <p class="help muted">{% blocktrans with total=hraci_celkem %}Zobrazeno 20 z {{ total }} hráčů.{% endblocktrans %}</p>
-        {% endif %}
-        {% else %}
-        <p class="help muted">{% trans "Zatím žádní hráči." %}</p>
-        {% endif %}
+      <div class="vyuct-set-save">
+        <button type="submit" class="ts-btn default">{% trans "Uložit nastavení" %}</button>
       </div>
-    </section>
 
-    <div class="vyuct-set-actions card">
-      <div class="inner">
-        <button type="submit" class="button default">{% trans "Uložit nastavení" %}</button>
-        <a href="{{ changelist_url }}" class="button secondary">{% trans "Zrušit" %}</a>
-      </div>
-    </div>
-  </form>
+      <section class="nast-panel is-active">
+        <header class="nast-panel-head">
+          <h2>{% trans "Přehled hráčů" %}</h2>
+          <p>
+            {% trans "Všichni hráči používají stejný globální režim výše. Tabulka ukazuje stav od poslední uzávěrky." %}
+            <a href="{{ hraci_url }}">{% trans "Otevřít všechny hráče" %}</a>
+          </p>
+        </header>
+        <div class="nast-group vyuct-set-table-card">
+          {% if hraci_prehled %}
+          <div class="vyuct-set-table-wrap">
+            <table class="vyuct-set-table">
+              <thead>
+                <tr>
+                  <th>{% trans "Hráč" %}</th>
+                  <th>{% trans "Poslední uzávěrka" %}</th>
+                  <th>{% trans "Tréninků od uzávěrky" %}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in hraci_prehled %}
+                <tr>
+                  <td><a href="{{ row.url }}">{{ row.jmeno }}</a></td>
+                  <td>{{ row.posledni }}</td>
+                  <td>{{ row.pocet_treninku }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% if hraci_celkem > 20 %}
+          <p class="nast-group-hint">{% blocktrans with total=hraci_celkem %}Zobrazeno 20 z {{ total }} hráčů.{% endblocktrans %}</p>
+          {% endif %}
+          {% else %}
+          <div class="nast-row">
+            <div class="nast-row-text">
+              <span class="nast-row-label">{% trans "Zatím žádní hráči" %}</span>
+              <span class="nast-row-detail">{% trans "Až přidáte hráče, uvidíte tu stav uzávěrek." %}</span>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </section>
+    </form>
+  </div>
 </div>
 {% endblock %}

@@ -5,21 +5,8 @@
 <link rel="stylesheet" href="{% static 'admin/css/cenik-change-form.css' %}">
 {% endblock %}
 
-{% block admin_change_form_document_ready %}
+{% block extrahead %}
 {{ block.super }}
-<script>
-(function () {
-  var input = document.getElementById("id_cena_za_hodinu");
-  if (!input || input.closest(".cena-mena-wrap")) return;
-  var suffix = input.getAttribute("data-mena-suffix") || "{{ system_mena|escapejs }}/h";
-  var wrap = document.createElement("span");
-  wrap.className = "cena-mena-wrap";
-  input.parentNode.insertBefore(wrap, input);
-  wrap.appendChild(input);
-  var span = document.createElement("span");
-  span.className = "cena-mena-suffix";
-  span.textContent = suffix;
-  wrap.appendChild(span);
-})();
-</script>
+<div id="cenik-typ-config" hidden data-format-add-url="{{ formaty_pridat_url }}"></div>
+<script src="{% static 'admin/js/cenik-change-form.js' %}" defer></script>
 {% endblock %}

@@ -5,10 +5,14 @@ from django.contrib import admin
 
 from ..forms import TrenerPlatbaForm
 from ..models import TrenerPlatba, TrenerProfil, TrenerSazba
+from ..roles import can_view_all_treneri
+from .role_gate import RoleGateMixin
 
 
 @admin.register(TrenerProfil)
-class TrenerProfilAdmin(admin.ModelAdmin):
+class TrenerProfilAdmin(RoleGateMixin, admin.ModelAdmin):
+    # Sazby / výplaty upravuje jen admin a provozovatel
+    role_check = staticmethod(can_view_all_treneri)
     list_display = ("uzivatel", "sazba_za_hodinu")
     search_fields = ("user__username", "user__first_name", "user__last_name")
 
@@ -18,7 +22,8 @@ class TrenerProfilAdmin(admin.ModelAdmin):
 
 
 @admin.register(TrenerSazba)
-class TrenerSazbaAdmin(admin.ModelAdmin):
+class TrenerSazbaAdmin(RoleGateMixin, admin.ModelAdmin):
+    role_check = staticmethod(can_view_all_treneri)
     list_display = ("uzivatel", "platnost_od", "platnost_do", "sazba_za_hodinu")
     list_filter = ("user",)
     date_hierarchy = "platnost_od"
@@ -30,7 +35,8 @@ class TrenerSazbaAdmin(admin.ModelAdmin):
 
 
 @admin.register(TrenerPlatba)
-class TrenerPlatbaAdmin(admin.ModelAdmin):
+class TrenerPlatbaAdmin(RoleGateMixin, admin.ModelAdmin):
+    role_check = staticmethod(can_view_all_treneri)
     form = TrenerPlatbaForm
     list_display = ("vytvoreno", "uzivatel", "castka", "poznamka")
     list_filter = ("user", "vytvoreno")

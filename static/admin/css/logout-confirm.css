@@ -1,0 +1,114 @@
+/* Stránka potvrzení odhlášení – ts-page-head + karta + ts-btn */
+
+body.logout-confirmation #content > h1 {
+  display: none !important;
+}
+
+body.logout-confirmation #content-main,
+body.logout-confirmation main#content-start.content {
+  max-width: 100%;
+}
+
+body.logout-confirmation #content > .ts-page-head {
+  margin-bottom: 8px;
+}
+
+body.logout-confirmation .logout-confirm-card {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 0 24px;
+  padding: 20px 20px 18px;
+  background: var(--surface, #fff);
+  border: 1px solid var(--ts-card-border, var(--line, #e5e7eb));
+  border-radius: var(--ts-card-radius, 10px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  color: var(--text, #1f2937);
+}
+
+body.logout-confirmation .logout-confirm-text {
+  margin: 0 0 18px;
+  padding: 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--text, #1f2937);
+}
+
+body.logout-confirmation .logout-confirm-form {
+  margin: 0;
+}
+
+body.logout-confirmation .logout-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin: 0;
+}
+
+/* Globální .ts-btn; potvrzení = brand výplň */
+body.logout-confirmation .logout-confirm-actions .ts-btn,
+body.logout-confirmation .logout-confirm-actions button.logout-confirm-submit,
+body.logout-confirmation .logout-confirm-actions a.logout-confirm-cancel {
+  text-decoration: none !important;
+}
+
+body.logout-confirmation .logout-confirm-actions .logout-confirm-submit {
+  background: var(--brand, #E67817) !important;
+  background-color: var(--brand, #E67817) !important;
+  border-color: var(--brand, #E67817) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+body.logout-confirmation .logout-confirm-actions .logout-confirm-submit:hover,
+body.logout-confirmation .logout-confirm-actions .logout-confirm-submit:focus,
+body.logout-confirmation .logout-confirm-actions .logout-confirm-submit:focus-visible {
+  filter: brightness(1.05);
+  background: var(--brand, #E67817) !important;
+  border-color: var(--brand-600, #D1640C) !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}
+
+body.logout-confirmation .logout-confirm-actions .logout-confirm-cancel {
+  background: var(--ts-btn-bg, #fff) !important;
+  color: var(--ts-btn-fg, var(--text-strong, #111827)) !important;
+  -webkit-text-fill-color: var(--ts-btn-fg, var(--text-strong, #111827)) !important;
+  border: 1px solid var(--ts-btn-border, var(--line, #e5e7eb)) !important;
+}
+
+body.logout-confirmation .logout-confirm-actions .logout-confirm-cancel:hover,
+body.logout-confirmation .logout-confirm-actions .logout-confirm-cancel:focus {
+  background: var(--ts-btn-bg-hover, var(--brand-100, #fff4e8)) !important;
+  border-color: var(--ts-btn-border-hover, var(--brand, #E67817)) !important;
+  color: var(--ts-btn-fg, var(--text-strong, #111827)) !important;
+  -webkit-text-fill-color: var(--ts-btn-fg, var(--text-strong, #111827)) !important;
+  text-decoration: none !important;
+}
+
+@media (max-width: 520px) {
+  body.logout-confirmation .logout-confirm-card {
+    max-width: 100%;
+    padding: 16px;
+  }
+  body.logout-confirmation .logout-confirm-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  body.logout-confirmation .logout-confirm-actions .ts-btn {
+    width: 100%;
+  }
+}
+
+html[data-mode="dark"] body.logout-confirmation .logout-confirm-card {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+
+html[data-mode="dark"] body.logout-confirmation .logout-confirm-text {
+  color: var(--text) !important;
+}

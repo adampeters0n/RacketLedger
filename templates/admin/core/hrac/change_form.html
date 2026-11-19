@@ -1,50 +1,110 @@
 {% extends "admin/change_form.html" %}
-{% load static i18n %}
-{% load money_tags %}
-{# --- TOTO JE NOVÁ ČÁST: Tlačítko v horní liště vedle Historie --- #}
+{% load static i18n admin_urls %}
+{# Horní akce = globální .ts-btn (tokeny --ts-btn-* v ts-buttons.css) #}
 {% block object-tools-items %}
+  {% if original and original.pk %}
+  {% if show_hrac_finance %}
   <li>
-    <a href="{% url 'admin:core_transakce_add' %}?hrac={{ original.pk }}" class="custom-pay-link">
+    <a href="{% url 'admin:core_transakce_add' %}?hrac={{ original.pk }}" class="ts-btn">
       {% trans "Zadat platbu" %}
     </a>
   </li>
-  {{ block.super }}
+  <li>
+    <a href="{% url 'admin:core_vyuctovani_changelist' %}?hrac__id__exact={{ original.pk }}" class="ts-btn">
+      {% trans "Otevřít vyúčtování hráče" %}
+    </a>
+  </li>
+  {% endif %}
+  {% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
+  <li>
+    <a href="{% add_preserved_filters history_url %}" class="ts-btn historylink">
+      {% trans "Historie" %}
+    </a>
+  </li>
+  {% endif %}
 {% endblock %}
 
 {% block extrastyle %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'admin/css/hrac-change-form.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/hrac-change-form.css' %}?v=ledger-upravit-1">
+<script src="{% static 'admin/js/hrac-aktivni-switch.js' %}?v=3" defer></script>
+<script src="{% static 'admin/js/hrac-card-help.js' %}?v=1" defer></script>
+<style id="hrac-card-title-gap">
+  /* Hard override: gap mezi nadpisem a obsahem v kartách hráče */
+  body.model-hrac.change-form .ts-card.vyuct-panel,
+  body.model-hrac.change-form .ts-card.ledger-card,
+  body.model-hrac.change-form .vyuct-panel,
+  body.model-hrac.change-form .ledger-card {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 22px !important;
+  }
+  body.model-hrac.change-form .vyuct-panel > .ts-card__head,
+  body.model-hrac.change-form .ledger-card > .ts-card__head,
+  body.model-hrac.change-form .vyuct-panel > h2,
+  body.model-hrac.change-form .ledger-card > h2 {
+    margin: 0 !important;
+    padding: 0 !important;
+    border-bottom: none !important;
+  }
+  body.model-hrac.change-form .vyuct-panel > .vyuct-panel__hint,
+  body.model-hrac.change-form .ledger-card > .ledger-hint,
+  body.model-hrac.change-form .vyuct-panel > p {
+    margin: 0 !important;
+  }
+  body.model-hrac.change-form .vyuct-panel .vyuct-panel__grid {
+    margin-bottom: 0 !important;
+  }
+</style>
 {% endblock %}
 
 {% block after_field_sets %}
   {{ block.super }}
 
-  {# Panel s vyúčtováním – využívá hlavní <form>, jen přesměruje odeslání na vlastní view #}
-  {% if original and original.pk %}
-  <div class="vyuct-panel">
-    <h2 class="vyuct-panel__title">{% trans "Vygenerovat vyúčtování" %}</h2>
+  {# Panel s vyúčtováním – globální ts-card + form-detail pole #}
+  {% if original and original.pk and show_hrac_finance %}
+  <div class="ts-card vyuct-panel">
+    <div class="ts-card__head">
+      <h2 class="ts-card__title vyuct-panel__title">{% trans "Vygenerovat vyúčtování" %}</h2>
+      <button type="button"
+              class="ts-card-help"
+              data-ts-card-help
+              aria-expanded="false"
+              aria-controls="hrac-vyuct-hint"
+              title="{% trans 'Nápověda' %}"
+              aria-label="{% trans 'Zobrazit nápovědu' %}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4"/>
+          <circle cx="12" cy="17" r="0.7" fill="currentColor" stroke="none"/>
+        </svg>
+      </button>
+    </div>
+    <p class="ts-card__hint vyuct-panel__hint" id="hrac-vyuct-hint" hidden>{% trans "Tato funkce vytvoří vyúčtování a odešle e-mail danému hráči. Funguje vždy, i když je v nastavení zapnuté automatické vyúčtování (limit kreditu, měsíčně…). Bez data a částky: pošle aktuální dluh a výpis od poslední platby (nebo od prvního tréninku)." %}</p>
 
     <div class="vyuct-panel__grid">
-      <div class="vyuct-field vyuct-field--period">
-        <label for="id_vyuct_from">{% trans "Období" %}</label>
+      <div class="vyuct-field vyuct-field--period ts-field">
+        <label>{% trans "Období" %}</label>
         <div class="vyuct-period">
-          <input type="date" name="_vyuct_from" id="id_vyuct_from">
+          {% now "Y-m-d" as today_iso %}
+          {% include "admin/includes/ts_date_picker.html" with name="_vyuct_from" value="" allow_future=True allow_empty=True year_min=2020 year_max=2035 picker_id="hracVyuctFrom" label_format="numeric" %}
           <span class="vyuct-period__sep" aria-hidden="true">–</span>
-          <input type="date" name="_vyuct_to" id="id_vyuct_to">
+          {% include "admin/includes/ts_date_picker.html" with name="_vyuct_to" value=today_iso allow_future=True allow_empty=True year_min=2020 year_max=2035 picker_id="hracVyuctTo" label_format="numeric" %}
         </div>
       </div>
 
-      <div class="vyuct-field">
+      <div class="vyuct-field ts-field">
         <label for="id_castka_k_uhrazeni">{% trans "Částka k úhradě" %}</label>
         <input type="number" name="_castka_k_uhrazeni" id="id_castka_k_uhrazeni"
-               step="1" min="0" placeholder="{% trans 'např. 5000' %}">
+               step="1" min="0" placeholder="{% trans 'prázdné = aktuální dluh' %}">
       </div>
 
-      <div class="vyuct-field">
+      <div class="vyuct-field ts-field">
         <label for="id_email_variant">{% trans "Varianta e-mailu" %}</label>
         <select name="_email_variant" id="id_email_variant">
           <option value="1" selected>{{ email_variant_label_1 }}</option>
           <option value="2">{{ email_variant_label_2 }}</option>
+          <option value="3">{{ email_variant_label_3 }}</option>
         </select>
       </div>
     </div>
@@ -56,30 +116,71 @@
               formmethod="post"
               formnovalidate>{% trans "Vygenerovat vyúčtování" %}</button>
 
-      {% if vyuctovani_list_url %}
-        <a href="{{ vyuctovani_list_url }}" class="button">{% trans "Otevřít vyúčtování hráče" %}</a>
-      {% endif %}
+      <button type="submit"
+              class="button"
+              formaction="{% url 'admin:core_hrac_prehled_treninku' original.pk %}"
+              formmethod="post"
+              formnovalidate
+              title="{% trans 'Pošle přehled kreditu a rozpis tréninků bez výzvy k platbě' %}">{% trans "Poslat přehled tréninků" %}</button>
     </div>
   </div>
   {% endif %}
 {% endblock %}
 
 {% block after_related_objects %}
-  <div class="ledger-card">
-    <h2 class="ledger-title">{% trans "Historie tréninků a plateb" %}</h2>
+  {% if original and original.pk and show_hrac_finance %}
+  <div class="ts-card ledger-card">
+    <div class="ts-card__head">
+      <h2 class="ts-card__title ledger-title">{% trans "Historie tréninků a plateb" %}</h2>
+      <button type="button"
+              class="ts-card-help"
+              data-ts-card-help
+              aria-expanded="false"
+              aria-controls="hrac-ledger-hint"
+              title="{% trans 'Nápověda' %}"
+              aria-label="{% trans 'Zobrazit nápovědu' %}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4"/>
+          <circle cx="12" cy="17" r="0.7" fill="currentColor" stroke="none"/>
+        </svg>
+      </button>
+    </div>
+    <p class="ts-card__hint ledger-hint" id="hrac-ledger-hint" hidden>{% trans "Přehled tréninků a plateb daného hráče včetně běžícího kreditu. Obdobím můžete výpis omezit, po výběru data se filtruje hned, bez obnovení stránky. Bez data od: zobrazí celou historii do aktuálního dne." %}</p>
 
     <div class="ledger-wrap">
-      <div class="ledger-filter" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:6px 0 10px; min-width:0; max-width:100%; box-sizing:border-box;">
-        <label>{% trans "Období:" %}</label>
-        <input type="date" id="id_filter_from" name="from" value="{{ filter_from|date:'Y-m-d' }}">
-        <span>–</span>
-        <input type="date" id="id_filter_to"   name="to"   value="{{ filter_to|date:'Y-m-d' }}">
-        <a href="#" id="filter-button" class="button">{% trans "Filtrovat" %}</a>
-        {% if filter_from or filter_to %}
-          <a class="button" href="{{ request.path }}">{% trans "Zrušit" %}</a>
-        {% endif %}
+      <div class="ledger-filter" id="hrac-ledger-filter">
+        <div class="vyuct-field vyuct-field--period ts-field ledger-filter__period">
+          <label>{% trans "Období" %}</label>
+          <div class="vyuct-period">
+            {% now "Y-m-d" as today_iso %}
+            {% if filter_from %}
+              {% include "admin/includes/ts_date_picker.html" with name="from" value=filter_from|date:"Y-m-d" allow_future=True allow_empty=True year_min=2020 year_max=2035 picker_id="hracFilterFrom" label_format="numeric" %}
+            {% else %}
+              {% include "admin/includes/ts_date_picker.html" with name="from" value="" allow_future=True allow_empty=True year_min=2020 year_max=2035 picker_id="hracFilterFrom" label_format="numeric" %}
+            {% endif %}
+            <span class="vyuct-period__sep" aria-hidden="true">–</span>
+            {% if filter_to %}
+              {% include "admin/includes/ts_date_picker.html" with name="to" value=filter_to|date:"Y-m-d" allow_future=True allow_empty=True year_min=2020 year_max=2035 picker_id="hracFilterTo" label_format="numeric" %}
+            {% else %}
+              {% include "admin/includes/ts_date_picker.html" with name="to" value=today_iso allow_future=True allow_empty=True year_min=2020 year_max=2035 picker_id="hracFilterTo" label_format="numeric" %}
+            {% endif %}
+            <button type="button"
+                    class="ledger-filter__reset{% if filter_from %} is-visible{% endif %}"
+                    id="hrac-ledger-reset"
+                    data-today="{{ today_iso }}"
+                    title="{% trans 'Resetovat období' %}"
+                    aria-label="{% trans 'Resetovat období' %}"
+                    {% if not filter_from %}hidden{% endif %}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 12a9 9 0 1 1-2.6-6.2"/>
+                <polyline points="21 3 21 9 15 9"/>
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
-      <table class="ledger">
+      <table class="ledger" id="hrac-ledger-table">
         <thead>
           <tr>
             <th>{% trans "Datum" %}</th>
@@ -89,7 +190,7 @@
             <th>{% trans "Sezóna" %}</th>
             <th>{% trans "Cena" %}</th>
             <th>{% trans "Zaplaceno" %}</th>
-            <th>{% trans "Kredit" %}</th>
+            {% if show_hrac_kredit %}<th>{% trans "Kredit" %}</th>{% endif %}
             <th>{% trans "Akce" %}</th>
           </tr>
         </thead>
@@ -101,13 +202,13 @@
               <td>{{ r.hodiny }}</td>
               <td>{{ r.skupina }}</td>
               <td>{{ r.sezona }}</td>
-              <td>{% if r.cena %}{{ r.cena }} {{ system_mena }}{% endif %}</td>
-              <td>{% if r.zaplaceno %}{{ r.zaplaceno }} {{ system_mena }}{% endif %}</td>
-              <td>{{ r.kredit }} {{ system_mena }}</td>
+              <td>{% if r.cena %}{{ r.cena }} {% trans "Kč" %}{% endif %}</td>
+              <td>{% if r.zaplaceno %}{{ r.zaplaceno }} {% trans "Kč" %}{% endif %}</td>
+              {% if show_hrac_kredit %}<td>{{ r.kredit }} {% trans "Kč" %}</td>{% endif %}
               <td>{{ r.akce|safe }}</td>
             </tr>
           {% empty %}
-            <tr><td colspan="9" style="text-align:center;">{% trans "Žádná data." %}</td></tr>
+            <tr><td colspan="{% if show_hrac_kredit %}9{% else %}8{% endif %}" style="text-align:center;">{% trans "Žádná data." %}</td></tr>
           {% endfor %}
         </tbody>
 
@@ -119,9 +220,9 @@
             <td class="totals-value tot-hodiny">{{ ledger_totals.hodiny|floatformat }}</td>
             <td></td>
             <td></td>
-            <td class="totals-value">{{ ledger_totals.cena }} {{ system_mena }}</td>
-            <td class="totals-value">{{ ledger_totals.zaplaceno }} {{ system_mena }}</td>
-            <td class="totals-value">{{ ledger_totals.credit }} {{ system_mena }}</td>
+            <td class="totals-value">{{ ledger_totals.cena }} {% trans "Kč" %}</td>
+            <td class="totals-value">{{ ledger_totals.zaplaceno }} {% trans "Kč" %}</td>
+            {% if show_hrac_kredit %}<td class="totals-value">{{ ledger_totals.credit }} {% trans "Kč" %}</td>{% endif %}
             <td></td>
           </tr>
         </tfoot>
@@ -131,26 +232,29 @@
   </div>
 
   {% if player_summary %}
-  <div class="player-summary" aria-label="{% trans 'Souhrn hráče' %}">
-    <div class="ps-item">
-      <span class="ps-label">{% trans "Odehrané tréninky" %}</span>
-      <span class="ps-value">{{ player_summary.trainings_count }}</span>
+  <div class="ts-kpi-bar player-summary" id="hrac-player-summary" aria-label="{% trans 'Souhrn hráče' %}">
+    <div class="ts-kpi ps-item">
+      <span class="ts-kpi__label ps-label">{% trans "Odehrané tréninky" %}</span>
+      <span class="ts-kpi__value ps-value">{{ player_summary.trainings_count }}</span>
     </div>
-    <div class="ps-item">
-      <span class="ps-label">{% trans 'Součet cen (tréninky)' %}</span>
-      <span class="ps-value">{{ player_summary.trainings_sum }}</span>
+    <div class="ts-kpi ps-item">
+      <span class="ts-kpi__label ps-label">{% trans 'Součet cen (tréninky)' %}</span>
+      <span class="ts-kpi__value ps-value">{{ player_summary.trainings_sum }}</span>
     </div>
-    <div class="ps-item">
-      <span class="ps-label">{% trans 'Součet zaplaceno' %}</span>
-      <span class="ps-value">{{ player_summary.payments_sum }}</span>
+    <div class="ts-kpi ps-item">
+      <span class="ts-kpi__label ps-label">{% trans 'Součet zaplaceno' %}</span>
+      <span class="ts-kpi__value ps-value">{{ player_summary.payments_sum }}</span>
     </div>
-    <div class="ps-item ps-credit {% if player_summary.credit_raw >= 0 %}is-positive{% else %}is-negative{% endif %}">
-      <span class="ps-label">{% trans "Aktuální kredit" %}</span>
-      <span class="ps-value">{{ player_summary.credit }}</span>
+    {% if show_hrac_kredit %}
+    <div class="ts-kpi ps-item ps-credit {% if player_summary.credit_raw >= 0 %}ts-kpi--positive is-positive{% else %}ts-kpi--negative is-negative{% endif %}">
+      <span class="ts-kpi__label ps-label">{% trans "Aktuální kredit" %}</span>
+      <span class="ts-kpi__value ps-value">{{ player_summary.credit }}</span>
     </div>
+    {% endif %}
   </div>
   {% endif %}
 
-  <script src="{% static 'admin/js/hrac-ledger-filter.js' %}" defer></script>
+  <script src="{% static 'admin/js/hrac-ledger-filter.js' %}?v=ledger-reset-vis-1" defer></script>
+  {% endif %}
 
 {% endblock %}

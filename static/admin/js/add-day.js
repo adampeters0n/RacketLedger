@@ -1,62 +1,6 @@
 (function() {
   document.documentElement.classList.add('add-day-ready');
 
-  function readI18n() {
-    try {
-      var el = document.getElementById('ts-global-i18n');
-      return el ? JSON.parse(el.textContent) : {};
-    } catch (e) {
-      return {};
-    }
-  }
-  var I18N = readI18n();
-
-  var today = new Date();
-  var todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-  var dnesLink = document.getElementById('add-day-dnes');
-  var datumInput = document.getElementById('id_day-datum');
-  if (dnesLink && datumInput) {
-    dnesLink.addEventListener('click', function(e) {
-      e.preventDefault();
-      datumInput.value = todayStr;
-    });
-  }
-  var minulyTydenLink = document.getElementById('add-day-minuly-tyden');
-  if (minulyTydenLink && datumInput) {
-    minulyTydenLink.addEventListener('click', function(e) {
-      e.preventDefault();
-      var parts = (datumInput.value || todayStr).split('-');
-      var d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
-      d.setDate(d.getDate() - 7);
-      datumInput.value = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-    });
-  }
-  function openDatePicker() {
-    if (!datumInput) return;
-    datumInput.focus();
-    if (typeof datumInput.showPicker === 'function') datumInput.showPicker();
-  }
-  var calendarBtn = document.getElementById('add-day-calendar');
-  if (calendarBtn) calendarBtn.addEventListener('click', function(e) { e.preventDefault(); openDatePicker(); });
-
-  function bindCopyDatePicker(input) {
-    if (!input || input.type !== 'date') return;
-    function openPicker() {
-      input.focus();
-      if (typeof input.showPicker === 'function') {
-        try { input.showPicker(); } catch (err) { /* prohlížeč může odmítnout mimo uživatelský gesture */ }
-      }
-    }
-    input.addEventListener('click', openPicker);
-    input.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        openPicker();
-      }
-    });
-  }
-  document.querySelectorAll('.add-day-copy-card input[type="date"]').forEach(bindCopyDatePicker);
-
   function getPlayersForSlot(slotIndex) {
     var script = document.querySelector('.add-day-players-json[data-slot="' + slotIndex + '"]');
     if (!script || !script.textContent) return [];
@@ -330,9 +274,8 @@
         if (seen[ids[i]]) {
           ev.preventDefault();
           var titleEl = card.querySelector('.add-day-slot-title-text');
-          var slotName = titleEl ? titleEl.textContent : (I18N.training || 'Trénink');
-          var tpl = I18N.duplicatePlayerInSlot || 'V %(slot)s je stejný hráč vybrán více než jednou. Každého hráče vyberte pouze jednou.';
-          alert(tpl.replace('%(slot)s', slotName));
+          var slotName = titleEl ? titleEl.textContent : 'Trénink';
+          alert('V ' + slotName + ' je stejný hráč vybrán více než jednou. Každého hráče vyberte pouze jednou.');
           return;
         }
         seen[ids[i]] = true;
@@ -341,7 +284,98 @@
     document.querySelectorAll('.add-day-hraci-rows').forEach(syncHraciRowsToMultiselect);
   });
 
+  function formatIsSluzba(format) {
+    return String(format || '').indexOf('V_') === 0;
+  }
+
+  function kurtHasOption(sel, value) {
+    if (!sel) return false;
+    return Array.prototype.some.call(sel.options || [], function(o) {
+      return o.value === value;
+    });
+  }
+
+  function restoreSportKurt(kurtSel) {
+    if (!kurtSel) return;
+    var prev = kurtSel.getAttribute('data-prev-kurt') || '';
+    var next = prev && prev !== 'SLUZBA' ? prev : 'HALA';
+    if (next === 'SLUZBA') next = 'HALA';
+    if (!kurtHasOption(kurtSel, next)) {
+      if (kurtHasOption(kurtSel, 'HALA')) next = 'HALA';
+      else if (kurtHasOption(kurtSel, 'VENEK')) next = 'VENEK';
+      else return;
+    }
+    kurtSel.value = next;
+  }
+
+  function setDelkaSelect(delkaSel, minutes) {
+    if (!delkaSel) return;
+    var value = String(minutes || 60);
+    delkaSel.value = value;
+    if (!delkaSel.value) {
+      for (var i = 0; i < delkaSel.options.length; i++) {
+        if (delkaSel.options[i].value === value) {
+          delkaSel.selectedIndex = i;
+          break;
+        }
+      }
+    }
+  }
+
+  function syncSlotSluzbaUi(card) {
+    if (!card) return;
+    // add form: slots-0-format; change form: format / delka_minut / kurt
+    var formatSel = card.querySelector('select[name$="-format"], select[name="format"]');
+    var kurtSel = card.querySelector('select[name$="-kurt"], select[name="kurt"]');
+    var delkaRow = card.querySelector('.add-day-row--delka');
+    var delkaSel = card.querySelector('select[name$="delka_minut"]');
+    var format = formatSel ? formatSel.value : '';
+    var kurt = kurtSel ? kurtSel.value : '';
+    var fmtService = formatIsSluzba(format);
+
+    if (fmtService) {
+      if (kurtSel && kurt && kurt !== 'SLUZBA') {
+        kurtSel.setAttribute('data-prev-kurt', kurt);
+      }
+      if (kurtSel && kurtHasOption(kurtSel, 'SLUZBA') && kurtSel.value !== 'SLUZBA') {
+        kurtSel.value = 'SLUZBA';
+      }
+      if (delkaRow) {
+        delkaRow.hidden = true;
+        delkaRow.classList.add('is-sluzba-hidden');
+      }
+      setDelkaSelect(delkaSel, 60);
+      return;
+    }
+
+    // Návrat ze služby na běžný typ → kurt zpět + délka viditelná
+    if (kurtSel && kurtSel.value === 'SLUZBA') {
+      restoreSportKurt(kurtSel);
+      kurt = kurtSel.value;
+    }
+
+    var service = kurt === 'SLUZBA';
+    if (delkaRow) {
+      delkaRow.hidden = service;
+      delkaRow.classList.toggle('is-sluzba-hidden', service);
+    }
+    if (service) setDelkaSelect(delkaSel, 60);
+  }
+
+  function wireSluzbaUi(card) {
+    if (!card || card.getAttribute('data-sluzba-wired') === '1') return;
+    card.setAttribute('data-sluzba-wired', '1');
+    var formatSel = card.querySelector('select[name$="-format"], select[name="format"]');
+    var kurtSel = card.querySelector('select[name$="-kurt"], select[name="kurt"]');
+    function onChange() { syncSlotSluzbaUi(card); }
+    if (formatSel) formatSel.addEventListener('change', onChange);
+    if (kurtSel) kurtSel.addEventListener('change', onChange);
+    syncSlotSluzbaUi(card);
+  }
+
   var slotCards = document.querySelectorAll('.slot-card');
+  slotCards.forEach(wireSluzbaUi);
+
   var btnAdd = document.getElementById('btn-add-slot');
   if (btnAdd) {
     btnAdd.addEventListener('click', function() {
@@ -349,10 +383,11 @@
         if (slotCards[i].style.display === 'none') {
           slotCards[i].style.display = 'block';
           var titleText = slotCards[i].querySelector('.add-day-slot-title-text');
-          if (titleText) titleText.textContent = (I18N.training || 'Trénink') + ' ' + (i + 1);
+          if (titleText) titleText.textContent = 'Trénink ' + (i + 1);
           slotCards[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
           // po odhalení nového slotu zadrátujeme i časové pole uvnitř
           wireTimeInputs();
+          wireSluzbaUi(slotCards[i]);
           return;
         }
       }

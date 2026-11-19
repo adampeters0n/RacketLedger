@@ -12,17 +12,18 @@ body:has(.analytika-app) #content-main {
 .analytika-app {
   --ana-sidebar-w: 260px;
   --ana-top-offset: 72px;
-  --ana-bg: #f4f5f0;
+  --ana-bg: #ffffff;
   --ana-surface: #ffffff;
   --ana-border: #e4e6df;
   --ana-text: #1a1d16;
   --ana-muted: #6b7264;
   --ana-brand: var(--brand, #E67817);
   --ana-brand-soft: var(--brand-100, #fff4e8);
-  --ana-brand-strong: var(--brand-600, var(--ana-brand));
-  --ana-danger: #c92a2a;
+  --ana-danger: var(--brand-600, var(--brand, #c92a2a));
   --ana-link: #2563eb;
-  --ana-radius: 14px;
+  --ana-radius: 16px;
+  --ana-radius-sm: 12px;
+  --ana-radius-xs: 10px;
   --ana-shadow: 0 1px 3px rgba(26, 29, 22, 0.06), 0 4px 16px rgba(26, 29, 22, 0.04);
   --ana-bg-subtle: #f8f9f6;
   --ana-bg-soft: #fafaf8;
@@ -31,19 +32,129 @@ body:has(.analytika-app) #content-main {
   --ana-nav-icon-bg: #f0f2eb;
   --ana-nav-icon-border: #e8ebe3;
   --ana-nav-icon-hover-bg: #f4f6f1;
-  --ana-nav-icon-active-bg: color-mix(in srgb, var(--ana-brand) 18%, #ffffff);
-  --ana-nav-icon-active-border: color-mix(in srgb, var(--ana-brand) 42%, #ffffff);
+  --ana-nav-icon-active-bg: #fde8cc;
+  --ana-nav-icon-active-border: #f5c99a;
   --ana-nav-hover-bg: #f4f6f1;
   --ana-nav-hover-border: #e8ebe3;
-  --ana-nav-active-bg: color-mix(in srgb, var(--ana-brand) 12%, #ffffff);
-  --ana-nav-active-border: color-mix(in srgb, var(--ana-brand) 38%, #ffffff);
-  --ana-nav-active-text: var(--ana-brand-strong);
+  --ana-nav-active-bg: linear-gradient(90deg, var(--ana-brand-soft) 0%, rgba(255, 250, 245, 0.85) 100%);
+  --ana-nav-active-border: #f5dcc0;
+  --ana-nav-active-text: #9a4e00;
 
   background: var(--ana-bg);
   min-height: calc(100vh - 80px);
   margin: -8px -18px 0;
-  padding: 16px 18px 24px;
   position: relative;
+}
+
+/* Globální zaoblení + border ring nad obsahem (sticky thead / tabulky nepřekryjí roh) */
+.analytika-app .panel,
+.analytika-app .hero-kpi,
+.analytika-app .stat-tile,
+.analytika-app .analytika-export-panel,
+.analytika-app .analytika-table-wrap {
+  position: relative;
+  border-radius: var(--ana-radius) !important;
+  overflow: hidden;
+  border: none !important;
+  background-clip: padding-box;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.analytika-app .panel::after,
+.analytika-app .hero-kpi::after,
+.analytika-app .stat-tile::after,
+.analytika-app .analytika-export-panel::after,
+.analytika-app .analytika-table-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid var(--ana-border);
+  pointer-events: none;
+  z-index: 40;
+  box-sizing: border-box;
+}
+.analytika-sidebar {
+  border-radius: var(--ana-radius) !important;
+}
+.analytika-app .quick-stat,
+.analytika-app .hraci-cohort,
+.analytika-app .credit-summary-item,
+.analytika-app .nav-icon,
+.analytika-app .sidebar-close,
+.analytika-app .panel-expand-btn,
+.analytika-app .chart-container,
+.analytika-app .chart-container-medium,
+.analytika-app .chart-container-small,
+.analytika-app .chart-container-xs,
+.analytika-app .acc-chart-wrap,
+.analytika-modal-chart,
+.analytika-app .naklady-date-trigger,
+.analytika-app .analytika-export-select {
+  border-radius: var(--ana-radius-sm) !important;
+}
+.analytika-app .quick-stat,
+.analytika-app .hraci-cohort,
+.analytika-app .credit-summary-item {
+  position: relative;
+  overflow: hidden;
+  border: none !important;
+  background-clip: padding-box;
+}
+.analytika-app .quick-stat::after,
+.analytika-app .hraci-cohort::after,
+.analytika-app .credit-summary-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid var(--ana-border);
+  pointer-events: none;
+  z-index: 5;
+  box-sizing: border-box;
+}
+.analytika-modal-dialog,
+.analytika-app .naklady-date-popover {
+  border-radius: var(--ana-radius, 16px) !important;
+  overflow: hidden;
+}
+.analytika-app .sidebar-nav-item {
+  border-radius: var(--ana-radius-sm) !important;
+}
+.analytika-app .panel-badge,
+.analytika-app .analytika-zdroj-btn {
+  border-radius: 999px !important;
+}
+
+/* Grid: panely se nevejdou mimo sloupec → border se neořízne */
+.analytika-app .panel-grid {
+  width: 100%;
+  max-width: 100%;
+}
+.analytika-app .panel-grid > * {
+  min-width: 0;
+  max-width: 100%;
+}
+.analytika-app .panel-grid--2 {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+.analytika-app .panel-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.analytika-app .panel-grid--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.analytika-app .panel-grid--2-1 {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+.analytika-app .hero-kpi-row {
+  width: 100%;
+  max-width: 100%;
+}
+.analytika-app .hero-kpi-row > * {
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* ── Mobilní toggle ── */
@@ -82,8 +193,8 @@ body.analytika-sidebar-open { overflow: hidden; }
   width: var(--ana-sidebar-w);
   flex-shrink: 0;
   background: var(--ana-surface);
-  border: 1px solid color-mix(in srgb, var(--ana-brand) 14%, var(--ana-border));
-  border-radius: 16px;
+  border: none;
+  border-radius: var(--ana-radius);
   box-shadow: 0 2px 12px rgba(26, 29, 22, 0.06), 0 8px 28px rgba(26, 29, 22, 0.05);
   display: flex;
   flex-direction: column;
@@ -179,34 +290,35 @@ body.analytika-sidebar-open { overflow: hidden; }
   gap: 12px;
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid transparent;
+  border: none !important;
   border-radius: 12px;
-  background: transparent;
+  background: transparent !important;
   cursor: pointer;
   text-align: left;
-  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, color 0.15s;
+  transition: color 0.15s ease;
   font-family: inherit;
   text-decoration: none !important;
   color: inherit;
   box-sizing: border-box;
-  box-shadow: none;
+  box-shadow: none !important;
 }
 a.sidebar-nav-item:visited { color: inherit; text-decoration: none !important; }
 .sidebar-nav-item:hover {
-  background: var(--ana-nav-hover-bg);
-  border-color: var(--ana-nav-hover-border);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
   text-decoration: none !important;
 }
 .sidebar-nav-item:hover .nav-text strong {
-  color: var(--ana-brand);
+  color: var(--brand, var(--ana-brand));
 }
 .sidebar-nav-item.active {
-  background: var(--ana-nav-active-bg);
-  border-color: var(--ana-nav-active-border);
-  box-shadow: none;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 .sidebar-nav-item.active .nav-text strong {
-  color: var(--ana-nav-active-text);
+  color: var(--brand, var(--ana-brand));
   font-weight: 800;
 }
 
@@ -229,13 +341,10 @@ a.sidebar-nav-item:visited { color: inherit; text-decoration: none !important; }
 .nav-icon--players { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7264' stroke-width='2'%3E%3Cpath d='M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zm12 10v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75'/%3E%3C/svg%3E"); }
 .nav-icon--coaches { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7264' stroke-width='2'%3E%3Cpath d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'/%3E%3C/svg%3E"); }
 .nav-icon--costs { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7264' stroke-width='2'%3E%3Cpath d='M9 14l2 2 4-4M7 7h10a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2V9a2 2 0 012-2z'/%3E%3C/svg%3E"); }
-.sidebar-nav-item.active .nav-icon {
-  background-color: var(--ana-nav-icon-active-bg);
-  border-color: var(--ana-nav-icon-active-border);
-}
+.sidebar-nav-item.active .nav-icon,
 .sidebar-nav-item:hover .nav-icon {
-  border-color: var(--ana-nav-hover-border);
-  background-color: var(--ana-nav-icon-hover-bg);
+  background-color: var(--ana-nav-icon-bg);
+  border-color: var(--ana-nav-icon-border);
 }
 
 .nav-text strong {
@@ -283,7 +392,50 @@ a.sidebar-nav-item:visited { color: inherit; text-decoration: none !important; }
   padding: 28px 32px 48px;
 }
 
-.analytika-header { margin-bottom: 28px; }
+.analytika-header {
+  margin-bottom: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.analytika-zdroj-filter {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  background: var(--ana-surface);
+  border: 1px solid var(--ana-border);
+  border-radius: 999px;
+}
+.analytika-zdroj-btn,
+.analytika-zdroj-btn:link,
+.analytika-zdroj-btn:visited,
+.analytika-zdroj-btn:hover,
+.analytika-zdroj-btn:focus,
+.analytika-zdroj-btn:active,
+.analytika-zdroj-btn.is-active {
+  text-decoration: none !important;
+}
+.analytika-zdroj-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ana-muted);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.analytika-zdroj-btn:hover {
+  color: var(--ana-text);
+  background: var(--ana-bg-subtle);
+}
+.analytika-zdroj-btn.is-active {
+  background: var(--ana-brand);
+  color: #fff;
+}
 .analytika-breadcrumb {
   font-size: 12px;
   color: var(--ana-muted);
@@ -325,6 +477,7 @@ a.sidebar-nav-item:visited { color: inherit; text-decoration: none !important; }
   display: flex;
   flex-direction: column;
   gap: 4px;
+  overflow: hidden;
 }
 .hero-kpi-label {
   font-size: 11px;
@@ -357,10 +510,13 @@ a.sidebar-nav-item:visited { color: inherit; text-decoration: none !important; }
   padding: 20px 22px;
   box-shadow: var(--ana-shadow);
   margin-bottom: 18px;
+  overflow: hidden;
 }
 .panel--accent { background: var(--ana-bg-soft); }
 .panel--table { padding: 0; overflow: hidden; }
 .panel--table .panel-header {
+  position: relative;
+  z-index: 1;
   padding: 16px 20px;
   margin: 0;
   border-bottom: 1px solid var(--ana-border);
@@ -413,7 +569,7 @@ a.sidebar-nav-item:visited { color: inherit; text-decoration: none !important; }
   gap: 5px;
   padding: 5px 11px;
   border: 1px solid var(--ana-border);
-  border-radius: 8px;
+  border-radius: var(--ana-radius-sm);
   background: var(--ana-bg-soft);
   color: var(--ana-muted);
   font-size: 11px;
@@ -466,7 +622,7 @@ a.link-btn:hover { text-decoration: underline; }
 .quick-stat {
   background: var(--ana-bg-subtle);
   border: 1px solid var(--ana-border);
-  border-radius: 10px;
+  border-radius: var(--ana-radius-sm);
   padding: 12px 14px;
 }
 .quick-stat-label {
@@ -494,10 +650,11 @@ a.link-btn:hover { text-decoration: underline; }
 .stat-tile {
   background: var(--ana-surface);
   border: 1px solid var(--ana-border);
-  border-radius: 12px;
+  border-radius: var(--ana-radius);
   padding: 16px 18px;
   text-align: center;
   box-shadow: var(--ana-shadow);
+  overflow: hidden;
 }
 .stat-tile-label {
   display: block;
@@ -521,7 +678,7 @@ a.link-btn:hover { text-decoration: underline; }
   align-items: center;
   padding: 12px 14px;
   background: var(--ana-bg-subtle);
-  border-radius: 10px;
+  border-radius: var(--ana-radius-sm);
   border: 1px solid var(--ana-border);
   font-size: 13px;
   color: var(--ana-muted);
@@ -632,9 +789,9 @@ a.link-btn:hover { text-decoration: underline; }
 .mini-table a:hover { text-decoration: none !important; color: var(--brand) !important; }
 .muted-inline { color: var(--ana-muted); font-size: 12px; padding: 6px 0; }
 
-.chart-container { position: relative; height: 360px; width: 100%; background: var(--ana-bg); border-radius: 10px; }
-.chart-container-medium { position: relative; height: 280px; width: 100%; background: var(--ana-bg); border-radius: 10px; }
-.chart-container-small { position: relative; height: 240px; width: 100%; background: var(--ana-bg); border-radius: 10px; }
+.chart-container { position: relative; height: 360px; width: 100%; background: var(--ana-bg); border-radius: var(--ana-radius-sm); }
+.chart-container-medium { position: relative; height: 280px; width: 100%; background: var(--ana-bg); border-radius: var(--ana-radius-sm); }
+.chart-container-small { position: relative; height: 240px; width: 100%; background: var(--ana-bg); border-radius: var(--ana-radius-sm); }
 .chart-container canvas,
 .chart-container-medium canvas,
 .chart-container-small canvas,
@@ -663,41 +820,53 @@ a.link-btn:hover { text-decoration: underline; }
   opacity: 0.85;
 }
 
-/* ── Drill-down modal obsah (explicitní barvy – modal je mimo .analytika-app) ── */
-.analytika-modal .drill-panel { background: var(--ana-surface); }
+/* ── Drill-down modal obsah (neprůhledné barvy systému) ── */
+.analytika-modal .drill-panel {
+  background: #ffffff;
+  background: var(--ana-surface);
+  color: var(--ana-text);
+}
+.analytika-modal .drill-panel--year,
+.analytika-modal .drill-panel--month,
+.analytika-modal .drill-panel--day,
+.analytika-modal .drill-panel--accounting,
+.analytika-modal .drill-panel--comparison,
+.analytika-modal .drill-panel--kpi,
+.analytika-modal .drill-panel--trener,
+.analytika-modal .drill-panel--hrac,
+.analytika-modal .drill-panel--balance {
+  background: #ffffff;
+  background: var(--ana-surface);
+}
 
 .analytika-modal .drill-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 18px;
-  padding-bottom: 14px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
   border-bottom: 1px solid #e4e6df;
+  border-bottom-color: var(--ana-border);
+}
+.analytika-modal .drill-header--period {
+  justify-content: flex-start;
+}
+.analytika-modal .drill-period-label {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a1d16;
+  color: var(--ana-text);
+  letter-spacing: -0.01em;
 }
 .analytika-modal .drill-header h3 {
   margin: 0;
   font-size: 17px;
   font-weight: 700;
   color: #1a1d16;
+  color: var(--ana-text);
 }
-.analytika-modal .drill-header-badge {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px;
-  background: #f0f1ec;
-  color: #6b7264;
-  border: 1px solid #e4e6df;
-  white-space: nowrap;
-}
-.analytika-modal .drill-header-badge--trener { background: #fff4e8; color: #9a4e00; border-color: #f5c99a; }
-.analytika-modal .drill-header-badge--hrac { background: #fdecec; color: #a61b1b; border-color: #f5c2c2; }
-.analytika-modal .drill-header-badge--month { background: #eef2ff; color: #3730a3; border-color: #c7d2fe; }
-.analytika-modal .drill-header-badge--day { background: #fff4e8; color: #9a4e00; border-color: #f5c99a; }
-.analytika-modal .drill-header-badge--accounting { background: #f0f4f8; color: #334155; border-color: #cbd5e1; }
-.analytika-modal .drill-header-badge--comparison { background: #f0f1ec; color: #475569; border-color: #e2e8f0; }
-.analytika-modal .drill-header-badge--balance { background: #fdecec; color: #a61b1b; border-color: #f5c2c2; }
 
 /* Hero karta – hlavní metrika (trenér, hráč) */
 .analytika-modal .drill-hero {
@@ -705,15 +874,14 @@ a.link-btn:hover { text-decoration: underline; }
   flex-direction: column;
   gap: 4px;
   padding: 18px 20px;
-  border-radius: 12px;
+  border-radius: var(--ana-radius-sm, 12px);
   margin-bottom: 18px;
   background: var(--ana-bg-subtle);
   border: 1px solid #e4e6df;
-  border-left-width: 4px;
 }
-.analytika-modal .drill-hero--trener { border-left-color: #E67817; background: #fffaf5; }
-.analytika-modal .drill-hero--hrac { border-left-color: #c92a2a; background: #fff8f8; }
-.analytika-modal .drill-hero--danger { border-left-color: #c92a2a; background: #fff8f8; }
+.analytika-modal .drill-hero--trener { background: #fffaf5; }
+.analytika-modal .drill-hero--hrac { background: #fff8f8; }
+.analytika-modal .drill-hero--danger { background: #fff8f8; }
 .analytika-modal .drill-hero-label {
   font-size: 10px;
   font-weight: 700;
@@ -733,11 +901,16 @@ a.link-btn:hover { text-decoration: underline; }
 .analytika-modal .drill-subsection {
   margin-bottom: 18px;
   padding: 16px;
+  background: #fafaf8;
   background: var(--ana-bg-soft);
   border: 1px solid #e4e6df;
+  border-color: var(--ana-border);
   border-radius: 12px;
 }
-.analytika-modal .drill-subsection--bars { background: var(--ana-surface); }
+.analytika-modal .drill-subsection--bars {
+  background: #ffffff;
+  background: var(--ana-surface);
+}
 .analytika-modal .drill-subheading {
   margin: 0 0 12px;
   font-size: 10px;
@@ -758,20 +931,59 @@ a.link-btn:hover { text-decoration: underline; }
 }
 
 .analytika-modal .drill-stat {
+  background: #ffffff;
   background: var(--ana-surface);
   border: 1px solid #e4e6df;
+  border-color: var(--ana-border);
   border-radius: 10px;
   padding: 12px 14px;
+  box-shadow: none;
 }
-.analytika-modal .drill-stat--brand { border-color: #f5c99a; background: #fffaf5; }
-.analytika-modal .drill-stat--slate { border-color: #cbd5e1; background: #f8fafc; }
-.analytika-modal .drill-stat--dark { border-color: #d1d5db; background: #f9fafb; }
-.analytika-modal .drill-stat--danger { border-color: #f5c2c2; background: #fff8f8; }
-.analytika-modal .drill-stat--neutral { background: var(--ana-bg-subtle); }
-.analytika-modal .drill-stat--highlight { box-shadow: 0 0 0 1px #E67817; }
-.analytika-modal .drill-stat--negative .drill-stat-value { color: #c92a2a; }
+.analytika-modal .drill-stat--brand {
+  border-color: #f5c99a;
+  background: #fffaf5;
+}
 .analytika-modal .drill-stat--brand .drill-stat-value { color: #9a4e00; }
-.analytika-modal .drill-stat--highlight .drill-stat-value { color: #E67817; }
+.analytika-modal .drill-stat--slate {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+.analytika-modal .drill-stat--slate .drill-stat-value { color: #334155; }
+.analytika-modal .drill-stat--dark {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+.analytika-modal .drill-stat--dark .drill-stat-value { color: #1a1d16; }
+.analytika-modal .drill-stat--profit {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+.analytika-modal .drill-stat--profit .drill-stat-value { color: #15803d; }
+.analytika-modal .drill-stat--cost,
+.analytika-modal .drill-stat--danger {
+  border-color: #f5c2c2;
+  background: #fff8f8;
+}
+.analytika-modal .drill-stat--cost .drill-stat-value,
+.analytika-modal .drill-stat--danger .drill-stat-value { color: #c92a2a; }
+.analytika-modal .drill-stat--neutral {
+  border-color: #e4e6df;
+  background: #f8f9f6;
+  background: var(--ana-bg-subtle);
+}
+.analytika-modal .drill-stat--neutral .drill-stat-value { color: #1a1d16; color: var(--ana-text); }
+/* Aktivní metrika: jen silnější stejný border (bez druhého box-shadow) */
+.analytika-modal .drill-stat--highlight {
+  box-shadow: none;
+  border-width: 2px;
+}
+.analytika-modal .drill-stat--highlight.drill-stat--brand { border-color: #E67817; }
+.analytika-modal .drill-stat--highlight.drill-stat--slate { border-color: #64748b; }
+.analytika-modal .drill-stat--highlight.drill-stat--dark { border-color: #1a1d16; }
+.analytika-modal .drill-stat--highlight.drill-stat--profit { border-color: #16a34a; }
+.analytika-modal .drill-stat--highlight.drill-stat--cost,
+.analytika-modal .drill-stat--highlight.drill-stat--danger { border-color: #c92a2a; }
+.analytika-modal .drill-stat--negative .drill-stat-value { color: #c92a2a; }
 
 .analytika-modal .drill-stat-label {
   display: block;
@@ -878,8 +1090,10 @@ a.link-btn:hover { text-decoration: underline; }
   gap: 10px;
 }
 .analytika-modal .kpi-modal .drill-stat {
+  background: #f8f9f6;
   background: var(--ana-bg-subtle);
   border: 1px solid #e4e6df;
+  border-color: var(--ana-border);
   padding: 12px 14px;
 }
 .analytika-modal .kpi-modal .drill-stat--brand,
@@ -901,7 +1115,7 @@ a.link-btn:hover { text-decoration: underline; }
   color: #1a1d16;
 }
 .analytika-modal .kpi-modal .drill-stat--negative .drill-stat-value {
-  color: #c92a2a;
+  color: var(--ana-danger);
 }
 
 /* Klikatelné stat karty u grafů */
@@ -930,7 +1144,7 @@ a.link-btn:hover { text-decoration: underline; }
   transform: translateY(-2px);
 }
 
-.acc-chart-wrap { position: relative; height: 220px; width: 100%; background: var(--ana-bg); border-radius: 10px; }
+.acc-chart-wrap { position: relative; height: 220px; width: 100%; background: var(--ana-bg); border-radius: var(--ana-radius-sm); }
 
 /* ── Účetnictví – neutrální hodnoty ── */
 .acc-grid {
@@ -981,7 +1195,7 @@ a.link-btn:hover { text-decoration: underline; }
   background: rgba(46, 125, 50, 0.12);
   border-color: rgba(46, 125, 50, 0.35);
 }
-.acc-trend.down { color: var(--ana-danger); background: #fde8e8; border-color: #f5b4b4; }
+.acc-trend.down { color: var(--ana-danger); background: var(--ana-brand-soft); border-color: color-mix(in srgb, var(--ana-brand) 35%, transparent); }
 
 .acc-charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 18px; }
 .acc-charts-grid--2 { grid-template-columns: repeat(2, 1fr); }
@@ -1027,15 +1241,33 @@ a.link-btn:hover { text-decoration: underline; }
   color: var(--ana-muted);
   border: 1px solid var(--ana-border);
 }
-.acc-sum-badge.negative { color: var(--ana-danger); background: rgba(201,42,42,0.12); border-color: rgba(201,42,42,0.35); }
+.acc-sum-badge.negative { color: var(--ana-danger); background: color-mix(in srgb, var(--ana-brand) 12%, transparent); border-color: color-mix(in srgb, var(--ana-brand) 35%, transparent); }
 
 /* ── Tabulky ── */
-.table-wrapper { max-height: 420px; overflow: auto; }
-table.list { width: 100%; border-collapse: collapse; }
+.table-wrapper {
+  max-height: 420px;
+  overflow: auto;
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+.analytika-app .panel--table .table-wrapper {
+  border-bottom-left-radius: inherit;
+  border-bottom-right-radius: inherit;
+}
+table.list {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: auto;
+}
 table.list th, table.list td {
   padding: 11px 18px;
   border-bottom: 1px solid var(--ana-divider);
   text-align: left;
+}
+table.list tbody tr:last-child td {
+  border-bottom: none;
 }
 table.list th {
   color: var(--ana-muted);
@@ -1046,7 +1278,7 @@ table.list th {
   position: sticky;
   top: 0;
   font-weight: 700;
-  z-index: 5;
+  z-index: 5; /* pod border ring (::after z-index 40) */
 }
 table.list td.num {
   text-align: right;
@@ -1079,8 +1311,20 @@ table.list a:hover { text-decoration: none !important; color: var(--brand) !impo
 .view-all:hover { text-decoration: underline; }
 .muted { padding: 24px; text-align: center; color: var(--ana-muted); font-size: 13px; }
 
-/* ── Modal ── */
+/* ── Modal (mimo .analytika-app → vlastní neprůhledné barvy systému) ── */
 .analytika-modal {
+  --ana-bg: #f4f5f0;
+  --ana-surface: #ffffff;
+  --ana-border: #e4e6df;
+  --ana-text: #1a1d16;
+  --ana-muted: #6b7264;
+  --ana-brand: var(--brand, #E67817);
+  --ana-brand-soft: var(--brand-100, #fff4e8);
+  --ana-danger: var(--brand-600, var(--brand, #c92a2a));
+  --ana-bg-subtle: #f8f9f6;
+  --ana-bg-soft: #fafaf8;
+  --ana-divider: #eef0ea;
+
   position: fixed;
   inset: 0;
   z-index: 10050;
@@ -1089,25 +1333,41 @@ table.list a:hover { text-decoration: none !important; color: var(--brand) !impo
   justify-content: center;
   padding: 20px;
 }
+html[data-mode="dark"] .analytika-modal {
+  --ana-bg: #1a252f;
+  --ana-surface: #1f2937;
+  --ana-border: #374151;
+  --ana-text: #f3f4f6;
+  --ana-muted: #9ca3af;
+  --ana-bg-subtle: #1a2332;
+  --ana-bg-soft: #162032;
+  --ana-divider: #2d3748;
+}
 .analytika-modal[hidden] { display: none; }
 .analytika-modal-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(26, 29, 22, 0.45);
-  backdrop-filter: blur(3px);
+  background: rgba(26, 29, 22, 0.72);
+  backdrop-filter: none;
+}
+html[data-mode="dark"] .analytika-modal-backdrop {
+  background: rgba(0, 0, 0, 0.78);
 }
 .analytika-modal-dialog {
   position: relative;
   z-index: 1;
+  background: #ffffff;
   background: var(--ana-surface);
-  border-radius: 16px;
+  border: 1px solid var(--ana-border);
+  border-radius: var(--ana-radius);
   width: min(900px, 100%);
   max-height: 90vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  box-shadow: 0 24px 64px rgba(26, 29, 22, 0.35);
   animation: modalIn 0.25s ease;
+  isolation: isolate;
 }
 @keyframes modalIn {
   from { opacity: 0; transform: scale(0.96) translateY(10px); }
@@ -1119,19 +1379,22 @@ table.list a:hover { text-decoration: none !important; color: var(--brand) !impo
   justify-content: space-between;
   padding: 18px 22px;
   border-bottom: 1px solid var(--ana-border);
+  background: #fafaf8;
   background: var(--ana-bg-soft);
+  flex-shrink: 0;
 }
 .analytika-modal-header h2 {
   margin: 0;
   font-size: 18px;
   font-weight: 600;
-  color: #1a1d16;
+  color: var(--ana-text);
 }
 .analytika-modal-close {
   width: 32px;
   height: 32px;
-  border: 1px solid #e4e6df;
+  border: 1px solid var(--ana-border);
   border-radius: 8px;
+  background: #ffffff;
   background: var(--ana-surface);
   font-size: 20px;
   line-height: 1;
@@ -1141,19 +1404,28 @@ table.list a:hover { text-decoration: none !important; color: var(--brand) !impo
   align-items: center;
   justify-content: center;
 }
-.analytika-modal-close:hover { background: var(--ana-bg-subtle); color: #1a1d16; }
+.analytika-modal-close:hover {
+  background: var(--ana-bg-subtle);
+  color: var(--ana-text);
+}
 .analytika-modal-body {
   padding: 22px;
   overflow-y: auto;
+  background: #ffffff;
   background: var(--ana-surface);
   flex: 1;
 }
-.analytika-modal-body--chart { padding: 16px 22px 22px; background: var(--ana-surface); }
+.analytika-modal-body--chart {
+  padding: 16px 22px 22px;
+  background: #ffffff;
+  background: var(--ana-surface);
+}
 .analytika-modal-chart {
   position: relative;
   height: 420px;
   width: 100%;
-  background: var(--ana-surface);
+  background: #f4f5f0;
+  background: var(--ana-bg);
   border: 1px solid var(--ana-border);
   border-radius: 10px;
   padding: 10px;
@@ -1165,6 +1437,7 @@ table.list a:hover { text-decoration: none !important; color: var(--brand) !impo
 }
 .analytika-modal-extra {
   margin-top: 16px;
+  background: #ffffff;
   background: var(--ana-surface);
 }
 
@@ -1231,6 +1504,94 @@ table.list a:hover { text-decoration: none !important; color: var(--brand) !impo
 
 /* ── Ostatní náklady ── */
 .hero-kpi-row--3 { grid-template-columns: repeat(3, 1fr); }
+.hero-kpi-row--hraci-profil,
+.hero-kpi-row--hraci-aktivita,
+.panel-grid--4 { grid-template-columns: repeat(4, 1fr); }
+
+.ana-section-label {
+  margin: 8px 0 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ana-muted);
+}
+.chart-container-xs {
+  position: relative;
+  height: 190px;
+  width: 100%;
+  background: var(--ana-bg);
+  border-radius: var(--ana-radius-sm);
+}
+.hraci-profil-charts .panel,
+.hraci-aktivita-grid .panel { min-width: 0; }
+/* Hodiny užší, kohorta širší */
+.panel-grid.hraci-aktivita-grid {
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.35fr);
+}
+.analytika-app .panel-grid.hraci-aktivita-grid {
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.35fr);
+}
+.hraci-cohort-hint {
+  margin: -6px 0 14px;
+  font-size: 12px;
+  color: var(--ana-muted);
+  line-height: 1.4;
+}
+.hraci-cohort-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.hraci-cohort {
+  background: var(--ana-bg-soft);
+  border: 1px solid var(--ana-border);
+  border-radius: var(--ana-radius-sm);
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+.hraci-cohort-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ana-muted);
+}
+.hraci-cohort-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ana-text);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.hraci-cohort-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ana-divider);
+}
+.hraci-cohort-stats > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--ana-muted);
+}
+.hraci-cohort-stats strong {
+  color: var(--ana-text);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+.analytika-app .data-table--hraci-hours th.num,
+.analytika-app .data-table--hraci-hours td.num {
+  white-space: nowrap;
+}
 .acc-link { color: var(--ana-brand); font-size: 12px; font-weight: 600; text-decoration: none; }
 .acc-link:hover { text-decoration: underline; }
 .naklady-form { padding: 0 18px 18px; }
@@ -1263,8 +1624,8 @@ table.list a:hover { text-decoration: none !important; color: var(--brand) !impo
 }
 .naklady-date-trigger:hover { border-color: #d4d8cf; }
 .naklady-date-trigger[aria-expanded="true"] {
-  border-color: var(--ana-brand);
-  box-shadow: 0 0 0 3px var(--ana-brand-soft);
+  border-color: var(--ana-border);
+  box-shadow: none;
 }
 .naklady-date-icon { color: var(--ana-brand); flex-shrink: 0; }
 .naklady-date-chevron { color: var(--ana-muted); margin-left: auto; flex-shrink: 0; }
@@ -1392,8 +1753,8 @@ table.list a:hover { text-decoration: none !important; color: var(--brand) !impo
 }
 .naklady-date-manual:focus {
   outline: none;
-  border-color: var(--ana-brand);
-  box-shadow: 0 0 0 3px var(--ana-brand-soft);
+  border-color: var(--ana-border);
+  box-shadow: none;
 }
 .naklady-date-manual-btn {
   border: 1px solid var(--ana-border);
@@ -1486,9 +1847,19 @@ table.list a:hover { text-decoration: none !important; color: var(--brand) !impo
 .drill-note span { font-weight: 600; color: #1a1d16; }
 .drill-panel--naklady .drill-hero--danger { background: #fef2f2; border-color: #fecaca; }
 @media (max-width: 900px) {
-  .hero-kpi-row--3 { grid-template-columns: 1fr; }
+  .hero-kpi-row--3,
+  .hero-kpi-row--hraci-profil,
+  .hero-kpi-row--hraci-aktivita,
+  .panel-grid--4 { grid-template-columns: 1fr 1fr; }
+  .panel-grid.hraci-aktivita-grid { grid-template-columns: 1fr; }
+  .hraci-cohort-grid { grid-template-columns: 1fr; }
   .naklady-row { grid-template-columns: 1fr; }
   .naklady-row-inputs { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .hero-kpi-row--hraci-profil,
+  .hero-kpi-row--hraci-aktivita,
+  .panel-grid--4 { grid-template-columns: 1fr; }
 }
 
 /* ── Export přehledu (PDF / XML) ── */
@@ -1498,6 +1869,114 @@ table.list a:hover { text-decoration: none !important; color: var(--brand) !impo
   font-size: 13px;
   color: var(--ana-muted);
   line-height: 1.45;
+}
+/* ── Pronájmy / Vše: souhrnné karty ── */
+.analytika-pronajem-sezona {
+  margin-bottom: 18px;
+}
+.quick-stats--vse {
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 960px) {
+  .quick-stats--vse { grid-template-columns: 1fr 1fr; }
+}
+
+.analytika-modal .drill-year-months {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+.analytika-modal .drill-year-month {
+  padding: 10px 12px;
+  border: 1px solid #e4e6df;
+  border-color: var(--ana-border);
+  border-radius: 10px;
+  background: #f8f9f6;
+  background: var(--ana-bg-subtle);
+}
+.analytika-modal .drill-year-month__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--ana-text);
+  font-variant-numeric: tabular-nums;
+}
+.analytika-modal .drill-year-month__sub {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #6b7264;
+  color: var(--ana-muted);
+}
+.pronajem-sezona-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 148px;
+}
+.pronajem-sezona-card.is-empty {
+  opacity: 0.55;
+}
+.pronajem-sezona-card__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.pronajem-sezona-card__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ana-text);
+  letter-spacing: -0.01em;
+}
+.pronajem-sezona-card__count {
+  font-size: 12px;
+  color: var(--ana-muted);
+  font-weight: 500;
+}
+.pronajem-sezona-card__value {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--ana-text);
+  font-variant-numeric: tabular-nums;
+  margin-top: 4px;
+}
+.pronajem-sezona-card__hours {
+  font-size: 13px;
+  color: var(--ana-muted);
+  font-weight: 500;
+}
+.pronajem-sezona-card__foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--ana-divider);
+  font-size: 12px;
+  color: var(--ana-muted);
+  font-variant-numeric: tabular-nums;
+}
+.pronajem-kurt-name {
+  display: block;
+  font-weight: 600;
+  color: var(--ana-text);
+}
+.pronajem-kurt-meta {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--ana-muted);
+  font-weight: 500;
+}
+.analytika-app .data-table--pronajem th.num,
+.analytika-app .data-table--pronajem td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .analytika-export-controls {
   display: flex;

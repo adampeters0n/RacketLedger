@@ -1,0 +1,345 @@
+from core.money import format_castka
+"""Vyuctovani admin."""
+from decimal import Decimal
+
+from django.contrib import admin, messages
+from django.shortcuts import redirect
+from django.template.response import TemplateResponse
+from django.urls import path, reverse
+from django.utils import timezone as dj_tz
+from django.utils.html import format_html
+
+from django.utils.translation import gettext, gettext_lazy as _
+
+from ..admin_utils import filter_queryset_by_parsed_date, parse_czech_date_parts
+from ..admin_mixins import ConfigurableListPerPageMixin
+from ..forms import VyuctovaniNastaveniForm
+from ..models import Hrac, Vyuctovani, VyuctovaniNastaveni
+from ..roles import can_access_vyuctovani, is_platform_admin
+from .role_gate import RoleGateMixin
+
+REASON_LABELS = {
+    "manual": _("Ručně z adminu"),
+    "MESICNE": _("Měsíčně"),
+    "N_TRENINGU": _("Po N trénincích"),
+    "CASTKA": _("Limit kreditu"),
+    "AUTO": _("Automaticky (limit kreditu)"),
+    "rodina": _("Vyúčtování rodiny"),
+}
+
+REZIM_LABELS = dict(VyuctovaniNastaveni.AutoRezim.choices)
+
+
+class VyuctovaniDatumFilter(admin.DateFieldListFilter):
+    def __init__(self, field, request, params, model, model_admin, field_path):
+        super().__init__(field, request, params, model, model_admin, field_path)
+        self.title = _("Data")
+        if self.links:
+            links = list(self.links)
+            links[0] = (_("Vše"), links[0][1])
+            self.links = links
+
+
+@admin.register(Vyuctovani)
+class VyuctovaniAdmin(RoleGateMixin, ConfigurableListPerPageMixin, admin.ModelAdmin):
+    role_check = staticmethod(can_access_vyuctovani)
+    change_form_template = "admin/core/vyuctovani/change_form.html"
+    change_list_template = "admin/core/vyuctovani/change_list.html"
+
+    def has_add_permission(self, request):
+        return False
+
+
+    def has_delete_permission(self, request, obj=None):
+        return is_platform_admin(request.user)
+
+    date_hierarchy = "created_at"
+    ordering = ("-period_to",)
+    list_filter = (("created_at", VyuctovaniDatumFilter),)
+    search_fields = ("hrac__jmeno", "hrac__prijmeni")
+    list_per_page_default = 50
+
+    list_display = (
+        "col_obdobi",
+        "hrac",
+        "col_nauctovano",
+        "col_platby",
+        "col_k_uhrade",
+        "col_online_platba",
+        "col_kredit",
+        "col_kredit_po_uhrade",
+    )
+
+    def get_urls(self):
+        urls = super().get_urls()
+        extra = [
+            path(
+                "nastaveni/",
+                self.admin_site.admin_view(self.nastaveni_view),
+                name="core_vyuctovani_nastaveni",
+            ),
+        ]
+        return extra + urls
+
+    def nastaveni_view(self, request):
+        if not self.has_module_permission(request):
+            from django.core.exceptions import PermissionDenied
+            raise PermissionDenied
+        nastaveni = VyuctovaniNastaveni.load()
+
+        if request.method == "POST":
+            form = VyuctovaniNastaveniForm(request.POST, instance=nastaveni)
+            if form.is_valid():
+                form.save()
+                nastaveni = VyuctovaniNastaveni.load()
+                # Globální režim platí u všech. U MANUAL hráčský field nemá stejné choices —
+                # synchronizujeme jen režimy, které Hrac.vyuctovani_rezim umí.
+                sync = form.cleaned_data.get("aplikovat_na_vsechny", True)
+                updated = 0
+                if sync and nastaveni.auto_rezim in {
+                    c.value for c in Hrac.RezimVyuctovani
+                }:
+                    updated = Hrac.objects.update(
+                        vyuctovani_rezim=nastaveni.auto_rezim,
+                        vyuctovani_n=nastaveni.auto_pocet_treninku,
+                        vyuctovani_threshold=nastaveni.auto_limit,
+                    )
+                if updated:
+                    self.message_user(
+                        request,
+                        gettext(
+                            "Nastavení uloženo. Režim „%(rezim)s“ synchronizován u %(updated)s hráčů."
+                        )
+                        % {
+                            "rezim": REZIM_LABELS.get(
+                                nastaveni.auto_rezim, nastaveni.auto_rezim
+                            ),
+                            "updated": updated,
+                        },
+                        level=messages.SUCCESS,
+                    )
+                else:
+                    self.message_user(
+                        request,
+                        gettext("Nastavení vyúčtování uloženo."),
+                        level=messages.SUCCESS,
+                    )
+                return redirect("admin:core_vyuctovani_nastaveni")
+            self.message_user(
+                request,
+                gettext("Nastavení se nepodařilo uložit. Zkontrolujte zvýrazněná pole."),
+                level=messages.ERROR,
+            )
+        else:
+            form = VyuctovaniNastaveniForm(instance=nastaveni)
+
+        hraci_qs = Hrac.objects.order_by("prijmeni", "jmeno")[:20]
+        for h in hraci_qs:
+            h.prepocitat_stav_uzaverky()
+
+        hraci_prehled = [
+            {
+                "jmeno": h.cele_jmeno,
+                "pocet_treninku": h.pocet_treninku_od_vyuctovani,
+                "posledni": self._fmt_dt(h.posledni_vyuctovani_at) if h.posledni_vyuctovani_at else _("zatím žádná"),
+                "url": reverse("admin:core_hrac_change", args=[h.pk]),
+            }
+            for h in hraci_qs
+        ]
+
+        from core.billing import stripe_api_configured
+        from core.money import get_mena_code
+        from core.models import ClubStripeConnect, SystemNastaveni
+        from core.player_payments import player_payments_ready
+
+        connect = ClubStripeConnect.load()
+        connect_account = (connect.stripe_account_id or "").strip()
+        connect_masked = ""
+        if connect_account:
+            connect_masked = (
+                f"{connect_account[:7]}…{connect_account[-4:]}"
+                if len(connect_account) > 14
+                else connect_account
+            )
+
+        ctx = {
+            **self.admin_site.each_context(request),
+            "title": _("Nastavení vyúčtování"),
+            "form": form,
+            "opts": self.model._meta,
+            "changelist_url": reverse("admin:core_vyuctovani_changelist"),
+            "hraci_url": reverse("admin:core_hrac_changelist"),
+            "system_nastaveni_url": reverse("admin:nastaveni"),
+            "hraci_prehled": hraci_prehled,
+            "hraci_celkem": Hrac.objects.count(),
+            "aktualni_rezim": REZIM_LABELS.get(nastaveni.auto_rezim, nastaveni.auto_rezim),
+            "aktualni_popis": nastaveni.popis_rezimu(),
+            "system_mena": get_mena_code(),
+            "stripe_api_configured": stripe_api_configured(),
+            "player_payments_ready": player_payments_ready(),
+            "connect_has_account": bool(connect_account),
+            "connect_account_id_masked": connect_masked,
+            "connect_charges_enabled": bool(connect.charges_enabled),
+            "connect_details_submitted": bool(connect.details_submitted),
+            "connect_onboarding_url": reverse("admin:nastaveni_connect_onboarding"),
+            "connect_refresh_url": reverse("admin:nastaveni_connect_refresh"),
+            "klub_nazev": SystemNastaveni.load().nazev_klubu or "",
+        }
+        if request.method == "POST" and not form.is_valid():
+            ctx["aktualni_rezim"] = REZIM_LABELS.get(
+                form.data.get("auto_rezim", nastaveni.auto_rezim),
+                nastaveni.auto_rezim,
+            )
+        return TemplateResponse(request, "admin/core/vyuctovani/nastaveni.html", ctx)
+
+    def get_search_results(self, request, queryset, search_term):
+        parts = parse_czech_date_parts(search_term)
+        if parts:
+            return filter_queryset_by_parsed_date(
+                queryset,
+                parts,
+                "period_from",
+                "period_to",
+                "created_at",
+            ), False
+        return super().get_search_results(request, queryset, search_term)
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        obj = self.get_object(request, object_id)
+        if obj is None:
+            return self._get_obj_does_not_exist_redirect(request, self.opts, object_id)
+
+        extra_context = extra_context or {}
+        extra_context.update(self._detail_context(request, obj))
+        return TemplateResponse(
+            request,
+            self.change_form_template,
+            {
+                **self.admin_site.each_context(request),
+                "title": gettext("Vyúčtování – %(name)s") % {"name": obj.hrac.cele_jmeno},
+                "subtitle": None,
+                "opts": self.model._meta,
+                "original": obj,
+                "object": obj,
+                "has_view_permission": self.has_view_permission(request, obj),
+                "has_change_permission": False,
+                "has_delete_permission": self.has_delete_permission(request, obj),
+                "has_editable_inline_admin_formsets": False,
+                "media": self.media,
+                "is_popup": False,
+                "save_as": False,
+                "show_delete": self.has_delete_permission(request, obj),
+                **extra_context,
+            },
+        )
+
+    def _detail_context(self, request, obj):
+        kredit_po = (Decimal(obj.credit_end or 0) + Decimal(obj.amount_due or 0)).quantize(Decimal("0.01"))
+        return {
+            "obdobi": self._fmt_obdobi(obj),
+            "duvod": REASON_LABELS.get(obj.reason, obj.reason),
+            "vytvoreno": self._fmt_dt(obj.created_at),
+            "pocet_treninku": obj.sessions_count,
+            "nauctovano": self._kc(obj.charges_total),
+            "platby": self._kc(obj.payments_total),
+            "k_uhrade": self._kc(obj.amount_due),
+            "online_platba": obj.get_payment_status_display(),
+            "kredit_start": self._kc_kredit(obj.credit_start),
+            "kredit_end": self._kc_kredit(obj.credit_end),
+            "kredit_po_uhrade": self._kc_kredit(kredit_po),
+            "hrac_change_url": reverse("admin:core_hrac_change", args=[obj.hrac_id]),
+            "vyuctovani_list_url": f"{reverse('admin:core_vyuctovani_changelist')}?hrac__id__exact={obj.hrac_id}",
+            "nastaveni_url": reverse("admin:core_vyuctovani_nastaveni"),
+            "delete_url": reverse("admin:core_vyuctovani_delete", args=[obj.pk]),
+            "history_url": reverse("admin:core_vyuctovani_history", args=[obj.pk]),
+        }
+
+    def _fmt_dt(self, dt):
+        if not dt:
+            return "—"
+        if dj_tz.is_aware(dt):
+            dt = dj_tz.localtime(dt)
+        return dt.strftime("%d.%m.%Y %H:%M")
+
+    def _fmt_obdobi(self, obj):
+        start = self._fmt_dt(obj.period_from) if obj.period_from else gettext("od začátku")
+        end = self._fmt_dt(obj.period_to)
+        return f"{start} → {end}"
+
+    def _kc(self, value: Decimal) -> str:
+        return format_castka(value, thousands=True)
+
+    def _kc_kredit(self, value: Decimal) -> str:
+        value = Decimal(value or 0).quantize(Decimal("0.01"))
+        if value < 0:
+            return format_html(
+                '<span class="vyuct-kredit-dluh">{} ({})</span>',
+                format_castka(abs(value), thousands=True),
+                gettext("dluh"),
+            )
+        if value > 0:
+            return format_html(
+                '<span class="vyuct-kredit-plus">+{} ({})</span>',
+                format_castka(value, thousands=True).lstrip("+"),
+                gettext("přeplatek"),
+            )
+        return format_castka(0)
+
+    @admin.display(description=_("Období"))
+    def col_obdobi(self, obj):
+        return self._fmt_obdobi(obj)
+
+    def _fallback_charges(self, obj):
+        return obj.nacitano_v_obdobi
+
+    def _fallback_payments(self, obj):
+        return obj.platby_v_obdobi
+
+    def _fallback_credit_end(self, obj):
+        return obj.kredit_na_konci
+
+    @admin.display(description=_("Naúčtováno"))
+    def col_nauctovano(self, obj):
+        val = obj.charges_total or 0
+        if val == 0 and obj.amount_due == 0 and obj.payments_total == 0:
+            val = self._fallback_charges(obj)
+        return self._kc(val)
+
+    @admin.display(description=_("Platby/vratky"))
+    def col_platby(self, obj):
+        val = obj.payments_total or 0
+        if val == 0 and obj.amount_due == 0 and obj.charges_total == 0:
+            val = self._fallback_payments(obj)
+        return self._kc(val)
+
+    @admin.display(description=_("K úhradě"))
+    def col_k_uhrade(self, obj):
+        if obj.amount_due is None or (obj.amount_due == 0 and obj.charges_total == 0 and obj.payments_total == 0):
+            val = (self._fallback_charges(obj) - self._fallback_payments(obj))
+        else:
+            val = obj.amount_due
+        return self._kc(val)
+
+    @admin.display(description=_("Online platba"))
+    def col_online_platba(self, obj):
+        status = (obj.payment_status or "").strip() or Vyuctovani.PaymentStatus.UNPAID
+        label = obj.get_payment_status_display()
+        if status == Vyuctovani.PaymentStatus.PAID:
+            return format_html('<span class="vyuct-kredit-plus">{}</span>', label)
+        if status == Vyuctovani.PaymentStatus.PENDING:
+            return format_html('<span class="vyuct-kredit-dluh">{}</span>', label)
+        if Decimal(obj.amount_due or 0) <= 0:
+            return "—"
+        return label
+
+    @admin.display(description=_("Kredit"))
+    def col_kredit(self, obj):
+        val = obj.credit_end or 0
+        if val == 0 and obj.amount_due == 0 and obj.charges_total == 0 and obj.payments_total == 0:
+            val = self._fallback_credit_end(obj)
+        return self._kc_kredit(val)
+
+    @admin.display(description=_("Kredit po úhradě"))
+    def col_kredit_po_uhrade(self, obj):
+        val = (Decimal(obj.credit_end or 0) + Decimal(obj.amount_due or 0))
+        return self._kc_kredit(val)

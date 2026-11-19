@@ -1,20 +1,117 @@
-/* Platby – měna zarovnaná na střed vedle bubliny (bez změny výšky inputu) */
-body.app-core.model-transakce.change-form .castka-mena-wrap {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  vertical-align: middle;
+/* Platba – vyhledávání hráče přímo v poli */
+
+body.model-transakce.change-form .ts-hrac-combo-wrap,
+body.model-transakce.add-form .ts-hrac-combo-wrap {
+  position: relative;
+  width: 100%;
+  max-width: var(--ts-field-max, 360px);
+  box-sizing: border-box;
 }
 
-body.app-core.model-transakce.change-form .castka-mena-wrap .castka-mena-suffix {
+/* Nativní select + Select2 nesmí zabírat místo (bílá lišta pod polem) */
+body.model-transakce.change-form .form-row.field-hrac select,
+body.model-transakce.add-form .form-row.field-hrac select,
+body.model-transakce.change-form .form-row.field-hrac .ts-hrac-combo-native,
+body.model-transakce.add-form .form-row.field-hrac .ts-hrac-combo-native,
+body.model-transakce.change-form .form-row.field-hrac .select2-container,
+body.model-transakce.add-form .form-row.field-hrac .select2-container,
+body.model-transakce.change-form .form-row.field-hrac .related-widget-wrapper > select,
+body.model-transakce.add-form .form-row.field-hrac .related-widget-wrapper > select {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  overflow: hidden !important;
+}
+
+body.model-transakce.change-form .form-row.field-hrac .ts-hrac-combo__list[hidden],
+body.model-transakce.add-form .form-row.field-hrac .ts-hrac-combo__list[hidden] {
+  display: none !important;
+}
+
+body.model-transakce.change-form .ts-hrac-combo,
+body.model-transakce.add-form .ts-hrac-combo {
+  position: relative;
+  width: 100%;
+  max-width: var(--ts-field-max, 360px);
+}
+
+body.model-transakce.change-form .ts-hrac-combo__input,
+body.model-transakce.add-form .ts-hrac-combo__input {
+  display: block !important;
+  width: 100% !important;
+  max-width: var(--ts-field-max, 360px) !important;
+  box-sizing: border-box !important;
+  height: var(--ts-field-h, 36px) !important;
+  min-height: var(--ts-field-h, 36px) !important;
+  padding: var(--ts-field-pad-y, 6px) var(--ts-field-pad-x, 10px) !important;
+  background: var(--ts-field-bg, var(--surface, #fff)) !important;
+  border: 1px solid var(--ts-field-border, var(--line-200, #929aa4)) !important;
+  border-radius: var(--ts-field-radius, 8px) !important;
+  color: var(--text, #1f2937) !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  box-shadow: none !important;
+}
+
+body.model-transakce.change-form .ts-hrac-combo.is-open .ts-hrac-combo__input,
+body.model-transakce.add-form .ts-hrac-combo.is-open .ts-hrac-combo__input,
+body.model-transakce.change-form .ts-hrac-combo__input:focus,
+body.model-transakce.add-form .ts-hrac-combo__input:focus {
+  outline: none !important;
+  border-color: var(--ts-field-border, var(--line-200, #929aa4)) !important;
+  box-shadow: none !important;
+}
+
+body.model-transakce.change-form .ts-hrac-combo__list,
+body.model-transakce.add-form .ts-hrac-combo__list {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 240px;
   margin: 0;
-  padding: 0;
+  padding: 4px;
+  list-style: none;
+  overflow: auto;
+  background: var(--surface, #fff);
+  border: 1px solid var(--ts-card-border, #e5e7eb);
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.12);
+}
+
+body.model-transakce.change-form .ts-hrac-combo__option,
+body.model-transakce.add-form .ts-hrac-combo__option,
+body.model-transakce.change-form .ts-hrac-combo__empty,
+body.model-transakce.add-form .ts-hrac-combo__empty {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
   font-size: 14px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--muted, #64748b);
-  white-space: nowrap;
-  background: none;
-  border: none;
-  box-shadow: none;
+  font-weight: 500;
+  color: var(--text, #1f2937);
+  cursor: pointer;
+}
+
+body.model-transakce.change-form .ts-hrac-combo__empty,
+body.model-transakce.add-form .ts-hrac-combo__empty {
+  color: var(--muted, #6b7280);
+  cursor: default;
+}
+
+body.model-transakce.change-form .ts-hrac-combo__option:hover,
+body.model-transakce.change-form .ts-hrac-combo__option.is-active,
+body.model-transakce.add-form .ts-hrac-combo__option:hover,
+body.model-transakce.add-form .ts-hrac-combo__option.is-active {
+  background: transparent;
+  color: var(--brand, #e67817);
 }

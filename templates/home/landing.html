@@ -17,15 +17,7 @@
 </head>
 <body>
   <div class="page">
-    <header class="nav">
-      <a class="nav__brand" href="{% url 'home' %}">
-        {% if logo_url %}
-        <img class="nav__logo" src="{{ logo_url }}" alt="">
-        {% else %}
-        <span class="nav__dot" aria-hidden="true"></span>
-        {% endif %}
-        {{ product_name }}
-      </a>
+    <header class="nav nav--links-only">
       <nav class="nav__links">
         <form class="nav__lang" action="{% url 'set_language' %}" method="post">
           {% csrf_token %}
@@ -200,6 +192,11 @@
         {% if contact_address %}
           <br><span>{{ contact_address }}</span>
         {% endif %}
+      </p>
+      <p class="foot__legal">
+        <a href="{% url 'privacy' %}">{% trans "Ochrana soukromí" %}</a>
+        <span aria-hidden="true"> · </span>
+        <a href="{% url 'terms' %}">{% trans "Podmínky užívání" %}</a>
       </p>
     </footer>
   </div>

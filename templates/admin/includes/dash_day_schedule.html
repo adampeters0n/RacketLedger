@@ -1,0 +1,159 @@
+{% load i18n static %}
+{# Kompaktní denní rozvrh (předpokládaný) – stejné eventy / QA jako plný kalendář #}
+<div class="dash-sched" data-dash-sched>
+  <div class="sched-scroll dash-sched__scroll">
+    <div class="sched-scroll-inner">
+      <div class="sched-wrap is-day is-predpokladany dash-sched__wrap"
+           style="--days: 1; --hour-count: {{ sched.hour_count }}; --sched-start: {{ sched.sched_start_hour }};"
+           data-focus-date="{{ sched.date_value }}">
+        <div class="sched-head">
+          <div></div>
+          <div class="sched-head-days">
+            {% for d in sched.days %}<div>{{ d.label }}</div>{% endfor %}
+          </div>
+        </div>
+
+        <div class="sched-grid">
+          <div class="sched-hours">
+            <div style="height: calc(var(--hour-count, 16) * var(--hour-h) + var(--tail)); position:relative;">
+              {% for h in sched.hours %}
+                <div class="sched-hour" style="--h: {{ h }};">{{ h|stringformat:"02d" }}:00</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="sched-days-pager" id="sched-days-pager">
+            {% for d in sched.days %}
+            <div class="sched-day" data-date="{{ d.date|date:'Y-m-d' }}" data-dow="{{ d.dow }}">
+              <div class="sched-day-hours" aria-hidden="true">
+                <div class="sched-day-hours__inner">
+                  {% for h in sched.hours %}
+                    <div class="sched-hour" style="--h: {{ h }};">{{ h|stringformat:"02d" }}:00</div>
+                  {% endfor %}
+                </div>
+              </div>
+              <div class="sched-day-body" data-longpress-slot>
+                <div class="sched-press-hint" hidden aria-hidden="true"></div>
+                {% for ev in d.events %}
+                  {% if ev.is_ghost %}
+                  <button type="button"
+                     class="ev ev--ghost-slot ev--staly-slot ev--{{ ev.fmt }} ev--{{ ev.fmt_code }} ev--nlanes-{{ ev.lanes|default:1 }} ev--players-{{ ev.names|length|default:1 }}"
+                     data-ghost="1"
+                     data-ghost-slot-id="{{ ev.ghost_slot_id }}"
+                     data-predpokladany-id="{{ ev.predpokladany_id }}"
+                     data-date="{{ ev.date }}"
+                     data-dur="{{ ev.dur_min }}"
+                     data-dow="{{ ev.dow }}"
+                     data-time="{{ ev.time }}"
+                     data-trener="{{ ev.trener_id }}"
+                     data-format="{{ ev.format }}"
+                     data-kurt="{{ ev.kurt }}"
+                     data-poznamka="{{ ev.poznamka }}"
+                     data-hraci="{{ ev.hraci_ids|join:',' }}"
+                     data-off="{{ ev.offset_min }}"
+                     title="{{ ev.title }} · {{ ev.fmt_label }} · {{ ev.sub }}"
+                     style="--off: {{ ev.offset_min }}; --dur: {{ ev.dur_min }}; --lane: {{ ev.lane|default:0 }}; --lanes: {{ ev.lanes|default:1 }};">
+                    <div class="ev-names">
+                      {% for name in ev.names %}
+                      <span class="ev-name">{{ name }}</span>
+                      {% empty %}
+                      <span class="ev-name">{{ ev.fmt_label|default:"—" }}</span>
+                      {% endfor %}
+                    </div>
+                    {% if ev.sub %}<div class="ev-sub">{{ ev.sub }}</div>{% endif %}
+                  </button>
+                  {% else %}
+                  <a class="ev ev--{{ ev.fmt }} ev--{{ ev.fmt_code }} ev--nlanes-{{ ev.lanes|default:1 }} ev--players-{{ ev.names|length|default:1 }}"
+                     href="{% url 'admin:core_trening_change' ev.id %}"
+                     data-id="{{ ev.id }}"
+                     data-dur="{{ ev.dur_min }}"
+                     data-off="{{ ev.offset_min }}"
+                     title="{{ ev.title }} · {{ ev.fmt_label }} · {{ ev.sub }}"
+                     style="--off: {{ ev.offset_min }}; --dur: {{ ev.dur_min }}; --lane: {{ ev.lane|default:0 }}; --lanes: {{ ev.lanes|default:1 }};">
+                    <div class="ev-names">
+                      {% for name in ev.names %}
+                      <span class="ev-name">{{ name }}</span>
+                      {% empty %}
+                      <span class="ev-name">—</span>
+                      {% endfor %}
+                    </div>
+                    {% if ev.sub %}<div class="ev-sub">{{ ev.sub }}</div>{% endif %}
+                  </a>
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="qa-overlay" id="qa-overlay" hidden>
+  <div class="qa-sheet" role="dialog" aria-modal="true" aria-labelledby="qa-title">
+    <header class="qa-sheet-head">
+      <div class="qa-sheet-titles">
+        <h2 id="qa-title">{% trans "Nový trénink" %}</h2>
+        <p class="qa-when" id="qa-when"></p>
+        <p class="qa-staly-note" id="qa-staly-note" hidden>{% trans "Nepropisuje se do tréninků ani vyúčtování." %}</p>
+      </div>
+      <div class="qa-sheet-actions">
+        <button type="button" class="qa-btn qa-btn-ghost" data-qa-cancel>{% trans "Zrušit" %}</button>
+        <button type="button" class="qa-btn qa-btn-danger" data-qa-delete hidden>{% trans "Smazat" %}</button>
+        <button type="button" class="qa-btn qa-btn-ghost" data-qa-save-next hidden>{% trans "Přidat a další" %}</button>
+        <button type="button" class="qa-btn qa-btn-primary" data-qa-save>{% trans "Přidat" %}</button>
+      </div>
+    </header>
+    <form class="qa-form" id="qa-form" autocomplete="off">
+      {% csrf_token %}
+      <input type="hidden" id="qa-slot-id" value="">
+      <input type="hidden" id="qa-dow" value="">
+      <input type="hidden" id="qa-ghost-slot-id" value="">
+      <input type="hidden" id="qa-predpokladany-id" value="">
+      <div class="qa-meta">
+        <div class="qa-row">
+          <label class="qa-field">
+            <span class="qa-label">{% trans "Trenér" %}</span>
+            <select name="trener" id="qa-trener" required></select>
+          </label>
+          <label class="qa-field">
+            <span class="qa-label">{% trans "Typ" %}</span>
+            <select name="format" id="qa-format" required></select>
+          </label>
+        </div>
+        <div class="qa-field" id="qa-delka-field">
+          <span class="qa-label">{% trans "Délka" %}</span>
+          <input type="hidden" name="delka_minut" id="qa-delka" value="60">
+          <div class="qa-chips" id="qa-delka-chips" role="group" aria-label="{% trans 'Délka' %}"></div>
+        </div>
+        <label class="qa-field qa-field--kurt">
+          <span class="qa-label">{% trans "Kurt" %}</span>
+          <select name="kurt" id="qa-kurt" required></select>
+        </label>
+      </div>
+      <div class="qa-field qa-field--hraci">
+        <span class="qa-label">{% trans "Hráči" %}</span>
+        <div class="qa-hraci" id="qa-hraci">
+          <div class="qa-hraci-rows" id="qa-hraci-rows"></div>
+          <button type="button" class="qa-btn qa-btn-ghost qa-hraci-add" id="qa-hraci-add">{% trans "+ Přidat hráče" %}</button>
+        </div>
+      </div>
+      <p class="qa-error" id="qa-error" hidden></p>
+    </form>
+  </div>
+</div>
+
+<script type="application/json" id="qa-options">{{ sched.quick_add_options_json|safe }}</script>
+<script
+  src="{% static 'admin/js/kalendar.js' %}?v=slot-scroll-2"
+  defer
+  data-quick-add-url="{{ sched.quick_add_url }}"
+  data-move-url="{{ sched.move_url }}"
+  data-add-url="{{ sched.add_training_url }}"
+  data-materialize-url="{{ sched.materialize_url }}"
+  data-skip-url="{{ sched.predpokladany_skip_url }}"
+  data-rozvrh="predpokladany"
+  data-hold-ms="480"
+></script>

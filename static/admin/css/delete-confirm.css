@@ -1,0 +1,147 @@
+/* Globální potvrzení smazání – stejný jazyk jako logout-confirm + ts-btn */
+
+body.delete-confirmation #content > h1,
+body.delete-confirmation #content-main > h1 {
+  display: none !important;
+}
+
+body.delete-confirmation .delete-confirm-card {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 0 24px;
+  padding: 20px 20px 18px;
+  background: var(--surface, #fff);
+  border: 1px solid var(--ts-card-border, var(--line, #e5e7eb));
+  border-radius: var(--ts-card-radius, 10px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  color: var(--text, #1f2937);
+}
+
+body.delete-confirmation .delete-confirm-text {
+  margin: 0 0 14px;
+  padding: 0;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--text, #1f2937);
+}
+
+body.delete-confirmation .delete-confirm-help {
+  margin: 0 0 16px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--muted, #6b7280);
+  max-width: none;
+}
+
+body.delete-confirmation .delete-confirm-card h2,
+body.delete-confirmation .delete-confirm-related-title {
+  margin: 0 0 8px;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-strong, #111827);
+  background: none;
+  border: none;
+}
+
+body.delete-confirmation .delete-confirm-card #deleted-objects,
+body.delete-confirmation .delete-confirm-card ul {
+  margin: 0 0 16px;
+  padding: 10px 12px 10px 28px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--line, #e5e7eb) 22%, var(--surface, #fff));
+  border: 1px solid color-mix(in srgb, var(--line, #e5e7eb) 70%, transparent);
+  color: var(--text, #1f2937);
+  font-size: 13px;
+  line-height: 1.4;
+  max-height: 220px;
+  overflow: auto;
+}
+
+body.delete-confirmation .delete-confirm-card .delete-summary,
+body.delete-confirmation .delete-confirm-card table {
+  margin: 0 0 14px;
+  width: 100%;
+  font-size: 13px;
+}
+
+body.delete-confirmation .delete-confirm-form {
+  margin: 0;
+}
+
+body.delete-confirmation .delete-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin: 0;
+}
+
+body.delete-confirmation .delete-confirm-actions .ts-btn,
+body.delete-confirmation .delete-confirm-actions .delete-confirm-submit,
+body.delete-confirmation .delete-confirm-actions a.delete-confirm-cancel,
+body.delete-confirmation .delete-confirm-actions a.cancel-link,
+body.delete-confirmation .delete-confirm-actions a.button {
+  text-decoration: none !important;
+}
+
+/* Zrušit = outline pill */
+body.delete-confirmation .delete-confirm-actions a.delete-confirm-cancel,
+body.delete-confirmation .delete-confirm-actions a.cancel-link {
+  background: var(--ts-btn-bg, #fff) !important;
+  color: var(--ts-btn-fg, var(--text-strong, #111827)) !important;
+  -webkit-text-fill-color: var(--ts-btn-fg, var(--text-strong, #111827)) !important;
+  border: 1px solid var(--ts-btn-border, var(--line, #e5e7eb)) !important;
+}
+
+body.delete-confirmation .delete-confirm-actions a.delete-confirm-cancel:hover,
+body.delete-confirmation .delete-confirm-actions a.cancel-link:hover {
+  background: var(--ts-btn-bg-hover, var(--brand-100, #fff4e8)) !important;
+  border-color: var(--ts-btn-border-hover, var(--brand, #E67817)) !important;
+  color: var(--ts-btn-fg, var(--text-strong, #111827)) !important;
+  -webkit-text-fill-color: var(--ts-btn-fg, var(--text-strong, #111827)) !important;
+  text-decoration: none !important;
+}
+
+@media (max-width: 520px) {
+  body.delete-confirmation .delete-confirm-card {
+    max-width: 100%;
+    padding: 16px;
+  }
+  body.delete-confirmation .delete-confirm-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  body.delete-confirmation .delete-confirm-actions .ts-btn,
+  body.delete-confirmation .delete-confirm-actions .delete-confirm-submit,
+  body.delete-confirmation .delete-confirm-actions a {
+    width: 100%;
+  }
+}
+
+html[data-mode="dark"] body.delete-confirmation .delete-confirm-card {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+
+html[data-mode="dark"] body.delete-confirmation .delete-confirm-text,
+html[data-mode="dark"] body.delete-confirmation .delete-confirm-related-title {
+  color: var(--text-strong, var(--text)) !important;
+}
+
+html[data-mode="dark"] body.delete-confirmation .delete-confirm-help {
+  color: var(--muted) !important;
+}
+
+html[data-mode="dark"] body.delete-confirmation .delete-confirm-card #deleted-objects,
+html[data-mode="dark"] body.delete-confirmation .delete-confirm-card ul {
+  background: color-mix(in srgb, var(--line) 22%, var(--surface)) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}

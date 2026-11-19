@@ -2,8 +2,8 @@
 {% load i18n admin_urls static %}
 
 {% block extrastyle %}
-  {{ block.super }}
 <link rel="stylesheet" href="{% static 'admin/css/transakce-change-list.css' %}">
+  {{ block.super }}
 {% endblock %}
 
 {% block extrahead %}
@@ -14,8 +14,7 @@
 <script src="{% static 'admin/js/transakce-change-list.js' %}" defer></script>
 {% endblock %}
 
-{% block content %}
-{{ block.super }}
+{% block after_changelist %}
 <div id="transakce-day-trainings" class="transakce-day-trainings-card" style="display:none;">
   <h2 id="transakce-day-trainings-title">{% trans "Tréninky" %}</h2>
   <div id="transakce-day-trainings-body"></div>

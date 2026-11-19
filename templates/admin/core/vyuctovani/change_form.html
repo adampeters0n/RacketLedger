@@ -1,82 +1,98 @@
 {% extends "admin/base_site.html" %}
 {% load static i18n admin_urls %}
 
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} change-form ts-page-vyuct-detail{% endblock %}
+
 {% block extrastyle %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'admin/css/vyuctovani-change-form.css' %}">
+<link rel="stylesheet" href="{% static 'admin/css/form-detail.css' %}?v=vyuct-detail-1">
+<link rel="stylesheet" href="{% static 'admin/css/vyuctovani-change-form.css' %}?v=global-1">
 {% endblock %}
 
-{% block content %}
-<div id="content-main" class="vyuct-detail">
-  <div class="vyuct-header">
-    <div>
-      <h1>{{ original.hrac.cele_jmeno }}</h1>
-      <p class="vyuct-lead">{{ obdobi }}</p>
-    </div>
-    <div class="vyuct-header-actions">
-      {% if has_delete_permission and show_delete %}
-        <a href="{{ delete_url }}" class="button vyuct-btn-danger">{% trans "Smazat" %}</a>
-      {% endif %}
-      <a href="{{ history_url }}" class="button">{% trans "Historie" %}</a>
-      <a href="{{ vyuctovani_list_url }}" class="button">{% trans "Všechna vyúčtování hráče" %}</a>
-      <a href="{{ nastaveni_url }}" class="button">{% trans "Nastavení vyúčtování" %}</a>
-      <a href="{{ hrac_change_url }}" class="button default">{% trans "Profil hráče" %}</a>
-    </div>
-  </div>
+{% block content_title %}{% endblock %}
 
-  <div class="vyuct-kpi-bar">
-    <div class="vyuct-kpi vyuct-kpi-highlight">
-      <span class="vyuct-kpi-label">{% trans "K úhradě" %}</span>
-      <strong class="vyuct-kpi-value">{{ k_uhrade }}</strong>
+{% block content %}
+<header class="ts-page-head" data-ts-page-head>
+  <div class="ts-page-head__text">
+    <p class="ts-page-head__eyebrow">{% trans "Vyúčtování" %}</p>
+    <h1 class="ts-page-head__title">{{ original.hrac.cele_jmeno }}</h1>
+    <p class="ts-page-head__sub">{{ obdobi }}</p>
+    <span class="ts-page-head__rule" aria-hidden="true"></span>
+  </div>
+  <ul class="object-tools">
+    <li>
+      <a href="{% url 'admin:core_vyuctovani_changelist' %}" class="ts-btn">{% trans "← Seznam" %}</a>
+    </li>
+    <li>
+      <a href="{{ hrac_change_url }}" class="ts-btn">{% trans "Profil hráče" %}</a>
+    </li>
+    <li>
+      <a href="{{ vyuctovani_list_url }}" class="ts-btn">{% trans "Vyúčtování hráče" %}</a>
+    </li>
+    <li>
+      <a href="{{ history_url }}" class="ts-btn historylink">{% trans "Historie" %}</a>
+    </li>
+    <li>
+      <a href="{{ nastaveni_url }}" class="ts-btn">{% trans "Nastavení" %}</a>
+    </li>
+    {% if has_delete_permission and show_delete %}
+    <li>
+      <a href="{{ delete_url }}" class="ts-btn deletelink">{% trans "Smazat" %}</a>
+    </li>
+    {% endif %}
+  </ul>
+</header>
+
+<div id="content-main" class="vyuct-detail">
+  <div class="ts-kpi-bar" aria-label="{% trans 'Souhrn vyúčtování' %}">
+    <div class="ts-kpi ts-kpi--accent">
+      <span class="ts-kpi__label">{% trans "K úhradě" %}</span>
+      <span class="ts-kpi__value">{{ k_uhrade }}</span>
     </div>
-    <div class="vyuct-kpi">
-      <span class="vyuct-kpi-label">{% trans 'Naúčtováno' %}</span>
-      <strong class="vyuct-kpi-value">{{ nauctovano }}</strong>
+    <div class="ts-kpi">
+      <span class="ts-kpi__label">{% trans "Naúčtováno" %}</span>
+      <span class="ts-kpi__value">{{ nauctovano }}</span>
     </div>
-    <div class="vyuct-kpi">
-      <span class="vyuct-kpi-label">{% trans "Platby a vratky" %}</span>
-      <strong class="vyuct-kpi-value">{{ platby }}</strong>
+    <div class="ts-kpi">
+      <span class="ts-kpi__label">{% trans "Platby a vratky" %}</span>
+      <span class="ts-kpi__value">{{ platby }}</span>
     </div>
-    <div class="vyuct-kpi">
-      <span class="vyuct-kpi-label">{% trans 'Počet tréninků' %}</span>
-      <strong class="vyuct-kpi-value">{{ pocet_treninku }}</strong>
+    <div class="ts-kpi">
+      <span class="ts-kpi__label">{% trans "Počet tréninků" %}</span>
+      <span class="ts-kpi__value">{{ pocet_treninku }}</span>
     </div>
   </div>
 
   <div class="vyuct-grid">
-    <section class="vyuct-card">
-      <h2>{% trans "Kredit" %}</h2>
+    <section class="ts-card">
+      <h2 class="ts-card__title">{% trans "Kredit" %}</h2>
       <dl class="vyuct-dl">
-        <dt>{% trans 'Na začátku období' %}</dt>
+        <dt>{% trans "Na začátku období" %}</dt>
         <dd>{{ kredit_start }}</dd>
-        <dt>{% trans 'Na konci období' %}</dt>
+        <dt>{% trans "Na konci období" %}</dt>
         <dd>{{ kredit_end }}</dd>
-        <dt>{% trans 'Po zaplacení částky k úhradě' %}</dt>
+        <dt>{% trans "Po zaplacení částky k úhradě" %}</dt>
         <dd>{{ kredit_po_uhrade }}</dd>
       </dl>
-      <p class="vyuct-hint">
+      <p class="ts-card__hint">
         {% trans "Kladný kredit = přeplatek, záporný = dluh. Částka k úhradě je to, co bylo v e-mailu požadováno k zaplacení." %}
       </p>
     </section>
 
-    <section class="vyuct-card">
-      <h2>{% trans "Informace" %}</h2>
+    <section class="ts-card">
+      <h2 class="ts-card__title">{% trans "Informace" %}</h2>
       <dl class="vyuct-dl">
-        <dt>{% trans 'Důvod vyúčtování' %}</dt>
+        <dt>{% trans "Důvod vyúčtování" %}</dt>
         <dd>{{ duvod }}</dd>
-        <dt>{% trans 'Vytvořeno' %}</dt>
+        <dt>{% trans "Vytvořeno" %}</dt>
         <dd>{{ vytvoreno }}</dd>
-        <dt>{% trans 'Hráč' %}</dt>
-        <dd><a href="{{ hrac_change_url }}">{{ original.hrac.cele_jmeno }}</a></dd>
+        <dt>{% trans "Hráč" %}</dt>
+        <dd><a class="vyuct-inline-link" href="{{ hrac_change_url }}">{{ original.hrac.cele_jmeno }}</a></dd>
       </dl>
-      <p class="vyuct-hint">
-        {% trans "Toto je archivní záznam – čísla odpovídají stavu v okamžiku vytvoření vyúčtování." %}
+      <p class="ts-card__hint">
+        {% trans "Toto je archivní záznam, čísla odpovídají stavu v okamžiku vytvoření vyúčtování." %}
       </p>
     </section>
   </div>
-
-  <p class="vyuct-back">
-    <a href="{% url 'admin:core_vyuctovani_changelist' %}">{% trans "← Zpět na seznam vyúčtování" %}</a>
-  </p>
 </div>
 {% endblock %}

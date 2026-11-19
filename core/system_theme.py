@@ -39,7 +39,7 @@ MODEL_FIELD_MAP = {
     "line": "barva_ohraniceni",
 }
 
-# 6 palet ve stylu Microsoft Excel – pruh 5 barev (hlavní barva první) + odvozené UI barvy
+# 6 palet ve stylu Microsoft Excel – pruh barev + odvozené UI barvy
 THEME_VARIANTS: dict[str, dict[str, Any]] = {
     "oranzova": {
         "label": _("Tenis"),
@@ -47,7 +47,7 @@ THEME_VARIANTS: dict[str, dict[str, Any]] = {
         "brand": "#E67817",
         "brand_600": "#D1640C",
         "brand_100": "#FFF1DE",
-        "stripe": ("#E67817", "#D1640C", "#F59E0B", "#FFF1DE", "#14833B"),
+        "stripe": ("#D1640C", "#E67817", "#F59E0B", "#FFF1DE", "#14833B"),
     },
     "modra": {
         "label": _("Modrá"),
@@ -55,7 +55,7 @@ THEME_VARIANTS: dict[str, dict[str, Any]] = {
         "brand": "#2563EB",
         "brand_600": "#1D4ED8",
         "brand_100": "#EFF6FF",
-        "stripe": ("#2563EB", "#1D4ED8", "#3B82F6", "#BFDBFE", "#0891B2"),
+        "stripe": ("#1D4ED8", "#2563EB", "#3B82F6", "#BFDBFE", "#0891B2"),
     },
     "zelena": {
         "label": _("Zelená"),
@@ -63,15 +63,15 @@ THEME_VARIANTS: dict[str, dict[str, Any]] = {
         "brand": "#14833B",
         "brand_600": "#0F6B2E",
         "brand_100": "#E9F7EE",
-        "stripe": ("#14833B", "#0F6B2E", "#22C55E", "#BBF7D0", "#2563EB"),
+        "stripe": ("#0F6B2E", "#14833B", "#22C55E", "#BBF7D0", "#2563EB"),
     },
     "cervena": {
-        "label": _("Teplá"),
+        "label": _("Červená"),
         "description": _("Energetická červeno-oranžová"),
         "brand": "#DC2626",
         "brand_600": "#B91C1C",
         "brand_100": "#FEF2F2",
-        "stripe": ("#DC2626", "#B91C1C", "#F97316", "#FED7AA", "#E67817"),
+        "stripe": ("#B91C1C", "#DC2626", "#F97316", "#FED7AA", "#E67817"),
     },
     "fialova": {
         "label": _("Fialová"),
@@ -79,7 +79,7 @@ THEME_VARIANTS: dict[str, dict[str, Any]] = {
         "brand": "#7C3AED",
         "brand_600": "#6D28D9",
         "brand_100": "#F5F3FF",
-        "stripe": ("#7C3AED", "#6D28D9", "#A78BFA", "#DDD6FE", "#EC4899"),
+        "stripe": ("#6D28D9", "#7C3AED", "#A78BFA", "#DDD6FE", "#EC4899"),
     },
     "seda": {
         "label": _("Neutrální"),
@@ -87,7 +87,7 @@ THEME_VARIANTS: dict[str, dict[str, Any]] = {
         "brand": "#475569",
         "brand_600": "#334155",
         "brand_100": "#F1F5F9",
-        "stripe": ("#475569", "#1E293B", "#94A3B8", "#CBD5E1", "#F8FAFC"),
+        "stripe": ("#1E293B", "#475569", "#94A3B8", "#CBD5E1"),
     },
 }
 
@@ -125,32 +125,33 @@ def _palette(brand: str, brand_600: str, brand_100: str, *, light: bool) -> dict
             "brand": brand,
             "brand_600": brand_600,
             "brand_100": brand_100,
-            # Čisté bílé pozadí (jako na light screenu)
             "bg": "#FFFFFF",
             "surface": "#FFFFFF",
             "text": "#1F2937",
             "text_strong": "#111111",
-            # Neutrální šedá hlavička – bez brandového odstínu po sloupcích
-            "table_head": "#F3F4F6",
-            "table_row_alt": "#F9FAFB",
-            "table_row_hover": "#F8FAFC",
-            "line": "#E5E7EB",
+            "table_head": "#FFFFFF",
+            "table_row_alt": "#FFFFFF",
+            "table_row_hover": "#FBFCFD",
+            "line": "#E2E5EA",
             "muted": "#64748B",
         }
-    # Apple Dark Mode (Settings / grouped): charcoal layers, not pure black
+    dark_bg = "#1A252F"
+    dark_surface = "#1A252F"
+    dark_brand_100 = _mix(brand_100, dark_bg, 0.72)
     return {
         "brand": brand,
         "brand_600": brand_600,
-        "brand_100": _mix(brand, "#1C1C1E", 0.78),
-        "bg": "#1C1C1E",
-        "surface": "#2C2C2E",
-        "text": "#EBEBF5",
-        "text_strong": "#FFFFFF",
-        "table_head": "#3A3A3C",
-        "table_row_alt": "#2C2C2E",
-        "table_row_hover": "#48484A",
-        "line": "#38383A",
-        "muted": "#8E8E93",
+        "brand_100": dark_brand_100,
+        "bg": dark_bg,
+        "surface": dark_surface,
+        "text": "#E5E7EB",
+        "text_strong": "#F9FAFB",
+        "table_head": dark_surface,
+        "table_row_alt": dark_surface,
+        "table_row_hover": "#1C2732",
+        # Border paleta dark mode – jediný zdroj; o stupeň světlejší než bg (#1A252F)
+        "line": "#4A5C6E",
+        "muted": "#9CA3AF",
     }
 
 
@@ -176,56 +177,35 @@ def resolve_theme_colors(nastaveni) -> dict[str, str]:
     return colors
 
 
-def resolve_effective_theme(user=None, nastaveni=None) -> tuple[str, bool, dict[str, str]]:
-    """
-    Efektivní paleta + režim pro request.
-    Preference přihlášeného uživatele má přednost, jinak systémové výchozí.
-    """
-    if nastaveni is None:
-        from .models import SystemNastaveni
+def resolve_appearance_for_user(user, nastaveni=None) -> tuple[str, bool, dict[str, str]]:
+    """Vrátí (palette, dark, colors) – uživatelský vzhled má přednost před klubem."""
+    from django.core.exceptions import ObjectDoesNotExist
 
-        try:
-            nastaveni = SystemNastaveni.load()
-        except Exception:
-            nastaveni = None
+    variant = DEFAULT_THEME
+    dark = False
+    use_system_custom = True
 
     if nastaveni is not None:
         variant = getattr(nastaveni, "barevna_varianta", None) or DEFAULT_THEME
         dark = bool(getattr(nastaveni, "tmavy_rezim", False))
-    else:
-        variant = DEFAULT_THEME
-        dark = False
 
     pref = None
-    if user is not None and getattr(user, "is_authenticated", False) and getattr(user, "pk", None):
+    if user is not None and getattr(user, "is_authenticated", False):
         try:
-            from .models import UserPreference
-
-            # Vždy z DB – reverse OneToOne cache na userovi může být zastaralá.
-            pref = UserPreference.objects.filter(user_id=user.pk).first()
-        except Exception:
+            pref = user.vzhled  # type: ignore[attr-defined]
+        except ObjectDoesNotExist:
             pref = None
-        if pref is not None:
-            if pref.barevna_varianta:
-                variant = pref.barevna_varianta
-            if pref.tmavy_rezim is not None:
-                dark = bool(pref.tmavy_rezim)
+
+    if pref is not None:
+        variant = getattr(pref, "barevna_varianta", None) or variant
+        dark = bool(getattr(pref, "tmavy_rezim", False))
+        use_system_custom = False
 
     if variant not in THEME_VARIANTS:
         variant = DEFAULT_THEME
 
-    # Uživatelská paleta vždy z presetu; vlastní barvy klubu jen bez user override.
-    user_overrides_palette = bool(pref and pref.barevna_varianta)
-    if nastaveni is not None and not user_overrides_palette:
+    if use_system_custom and nastaveni is not None:
         colors = resolve_theme_colors(nastaveni)
-        # resolve_theme_colors uses system dark — recompute if user only overrides dark
-        if pref is not None and pref.tmavy_rezim is not None:
-            colors = preset_colors(variant, dark=dark)
-            if getattr(nastaveni, "vlastni_barvy", False):
-                for key, field in MODEL_FIELD_MAP.items():
-                    override = normalize_hex(getattr(nastaveni, field, None))
-                    if override:
-                        colors[key] = override
     else:
         colors = preset_colors(variant, dark=dark)
 
@@ -274,6 +254,7 @@ def theme_options_for_template() -> list[dict[str, Any]]:
             "key": key,
             "label": meta["label"],
             "description": meta["description"],
+            "color": meta["brand"],
             "stripe": meta["stripe"],
         }
         for key, meta in THEME_VARIANTS.items()

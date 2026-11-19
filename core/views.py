@@ -1,6 +1,8 @@
 # core/views.py
 from django.conf import settings
 from django.contrib.auth import logout
+from django.db import connection
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse, NoReverseMatch
 from django.utils import timezone
@@ -36,7 +38,8 @@ def _school_from_system_nastaveni(nast) -> dict:
     }
 
 
-def home(request):
+def _landing_branding_context():
+    """Společný branding pro landing / legal stránky."""
     from .models import SystemNastaveni
 
     contact_email = settings.CONTACT_EMAIL
@@ -63,13 +66,42 @@ def home(request):
     except Exception:
         pass
 
+    return {
+        "product_name": product_name,
+        "contact_email": contact_email,
+        "contact_phone": contact_phone,
+        "contact_address": contact_address,
+        "slogan": slogan,
+        "logo_url": logo_url,
+        "favicon_url": favicon_url,
+        "nast": nast,
+        "now": timezone.now(),
+    }
+
+
+def health(request):
+    """Veřejný liveness/readiness ping pro uptime monitoring (bez auth)."""
+    try:
+        connection.ensure_connection()
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+    except Exception:
+        return JsonResponse({"status": "error"}, status=503)
+    return JsonResponse({"status": "ok"})
+
+
+def home(request):
+    brand = _landing_branding_context()
+    nast = brand.pop("nast", None)
+
     schools = _schools_from_settings()
     if not schools and nast is not None:
         schools = [_school_from_system_nastaveni(nast)]
     elif not schools:
         schools = [{
             "slug": "club",
-            "name": product_name,
+            "name": brand["product_name"],
             "city": "",
             "region": "",
             "admin_url": _admin_url("index"),
@@ -82,21 +114,26 @@ def home(request):
     primary_admin_url = active_schools[0]["admin_url"] if active_schools else _admin_url("index")
 
     ctx = {
-        "product_name": product_name,
+        **brand,
         "schools": schools,
         "active_schools": active_schools,
         "upcoming_schools": upcoming_schools,
         "single_school": single_school,
         "primary_admin_url": primary_admin_url,
-        "contact_email": contact_email,
-        "contact_phone": contact_phone,
-        "contact_address": contact_address,
-        "slogan": slogan,
-        "logo_url": logo_url,
-        "favicon_url": favicon_url,
-        "now": timezone.now(),
     }
     return render(request, "home/landing.html", ctx)
+
+
+def privacy(request):
+    brand = _landing_branding_context()
+    brand.pop("nast", None)
+    return render(request, "home/privacy.html", brand)
+
+
+def terms(request):
+    brand = _landing_branding_context()
+    brand.pop("nast", None)
+    return render(request, "home/terms.html", brand)
 
 
 def logout_to_home(request):
@@ -110,7 +147,7 @@ def logout_to_home(request):
 
     cancel_url = request.META.get("HTTP_REFERER", "")
     site_root = request.build_absolute_uri("/")[:-1]
-    if not cancel_url.startswith(site_root):
+    if not cancel_url or not cancel_url.startswith(site_root):
         cancel_url = _admin_url("index")
 
     return render(
@@ -118,3 +155,17 @@ def logout_to_home(request):
         "admin/logout_confirm.html",
         {"cancel_url": cancel_url},
     )
+
+
+def payment_success(request):
+    """Veřejná stránka po úspěšné online platbě hráče (Stripe Checkout return)."""
+    brand = _landing_branding_context()
+    brand.pop("nast", None)
+    return render(request, "home/payment_success.html", brand)
+
+
+def payment_cancelled(request):
+    """Veřejná stránka po zrušení Stripe Checkout."""
+    brand = _landing_branding_context()
+    brand.pop("nast", None)
+    return render(request, "home/payment_cancelled.html", brand)

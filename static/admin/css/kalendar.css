@@ -1,11 +1,32 @@
+/* Rozvrh – stejná šířka stránky jako globální admin (--page-pad) */
+body.ts-page-schedule #content,
+body.ts-page-schedule #content-main {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+body.ts-page-schedule .sched-toolbar,
+body.ts-page-schedule .sched-scroll,
+body.ts-page-schedule .sched-wrap {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+}
+
 :root{
-    --sched-bg:#f6f7fb;
-    --sched-card:#ffffff;
-    --sched-border:#e5e7eb;
-    --sched-text:#111827;
-    --sched-muted:#6b7280;
-    --sched-brand:#f59e0b;
-    --sched-brand-weak:#ffedd5;
+    --sched-bg:var(--bg, #f6f7fb);
+    --sched-card:var(--surface, #ffffff);
+    --sched-border:var(--line, #e5e7eb);
+    --sched-text:var(--text-strong, #111827);
+    --sched-muted:var(--muted, #6b7280);
+    /* Barvy z nastavení vzhledu (theme.js → --brand*) */
+    --sched-brand:var(--brand, #E67817);
+    --sched-brand-weak:var(--brand-100, #ffedd5);
+    --sched-brand-strong:var(--brand-600, #D1640C);
+    /* Aktivní chip: % brandu z nastavení → vyšší = sytější, nižší = světlejší */
+    --sched-chip-fill:color-mix(in srgb, var(--sched-brand) 70%, #ffffff);
+    --sched-chip-text:var(--sched-brand-strong);
 
     /* výška 1 hodiny – větší mezery mezi hodinami pro více tréninků */
     --hour-h: 115px;
@@ -15,48 +36,283 @@
     --tail: 24px;
   }
 
-  .sched-toolbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:10px 0 14px; }
-  .sched-toolbar .button{ padding:8px 10px; border-radius:10px; }
+  .sched-toolbar{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+    margin:10px 0 14px;
+  }
+  /* .sched-toolbar .button → ts-buttons.css */
+  /* Skupina filtrů – jen layout, bez rámu/pozadí */
+  .sched-toolbar__controls{
+    display:inline-flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+    flex:1 1 auto;
+    min-width:0;
+  }
   .sched-toolbar input[type="date"], .sched-toolbar select{
-    border:1px solid var(--sched-border); border-radius:10px; padding:8px 10px; height:36px; background:var(--sched-card);
+    border:1px solid color-mix(in srgb, var(--sched-border) 88%, var(--sched-text));
+    border-radius:999px;
+    padding:8px 14px;
+    height:38px;
+    background:var(--sched-card);
+    color:var(--sched-text);
+    font-weight:600;
+    font-size:13px;
+    box-shadow:none;
+    transition:border-color .15s ease, background .15s ease, color .15s ease;
   }
-  .sched-toolbar .seg{ display:inline-flex; border:1px solid var(--sched-border); border-radius:10px; overflow:hidden; }
-  .sched-toolbar .seg a{ padding:8px 12px; text-decoration:none; color:var(--sched-text); background:var(--sched-card); display:inline-block; }
-  .sched-toolbar .seg a.is-active{ background:var(--sched-brand-weak); color:#92400e; font-weight:700; }
-  .sched-toolbar .add-day-copy-from-cal{
-    background: #fffaf5;
-    border-color: #E67817;
-    color: #9a3412;
-    font-weight: 600;
+  .sched-toolbar input[type="date"]{
+    width:10.75rem;
+    max-width:100%;
+    box-sizing:border-box;
   }
+  .sched-toolbar select{
+    min-width:9.5rem;
+    cursor:pointer;
+    padding-right:28px;
+  }
+  .sched-toolbar input[type="date"]:hover,
+  .sched-toolbar select:hover{
+    border-color:color-mix(in srgb, var(--sched-border) 70%, var(--sched-text));
+    background:var(--sched-card);
+  }
+  .sched-toolbar input[type="date"]:focus,
+  .sched-toolbar select:focus{
+    outline:none;
+    outline-offset:0;
+    border-color:color-mix(in srgb, var(--sched-border) 70%, var(--sched-text));
+    background:var(--sched-card);
+    box-shadow:none;
+  }
+  .sched-toolbar__spacer{
+    flex:1 1 auto;
+    min-width:8px;
+  }
+  /* Segmentovaný switch: Aktuální / Stálý / Předpokládaný (+ Tréninky/Pronájmy) */
+  .sched-toolbar .seg{
+    --seg-pad: 2px;
+    --seg-gap: 0px;
+    position:relative;
+    display:inline-grid;
+    grid-auto-flow:column;
+    grid-auto-columns:1fr;
+    align-items:stretch;
+    gap:var(--seg-gap);
+    padding:var(--seg-pad);
+    border:1px solid color-mix(in srgb, var(--sched-border) 88%, var(--sched-text));
+    border-radius:999px;
+    background:color-mix(in srgb, var(--sched-border) 28%, var(--sched-card));
+    overflow:hidden;
+    box-shadow:none;
+    box-sizing:border-box;
+  }
+  .sched-toolbar .seg--rozvrh{
+    min-width:0;
+  }
+  .sched-toolbar .seg__thumb{
+    position:absolute;
+    top:var(--seg-pad);
+    bottom:var(--seg-pad);
+    left:var(--seg-pad);
+    width:calc((100% - 2 * var(--seg-pad)) / 3);
+    border-radius:999px;
+    background:var(--sched-card);
+    border:1px solid color-mix(in srgb, var(--sched-border) 80%, var(--sched-text));
+    box-shadow:0 1px 2px rgba(17, 24, 39, 0.08);
+    pointer-events:none;
+    z-index:0;
+    transition:transform .2s cubic-bezier(.2,.8,.2,1);
+    will-change:transform;
+  }
+  .sched-toolbar .seg--rozvrh.is-aktualni .seg__thumb{ transform:translateX(0); }
+  .sched-toolbar .seg--rozvrh.is-staly .seg__thumb{ transform:translateX(100%); }
+  .sched-toolbar .seg--rozvrh.is-predpokladany .seg__thumb{ transform:translateX(200%); }
+  .sched-toolbar .seg--kind .seg__thumb{ display:none; }
+  /* !important kvůli #content a { color: var(--text-strong) !important } v custom.css */
+  .sched-toolbar .seg a{
+    position:relative;
+    z-index:1;
+    padding:5px 10px;
+    min-height:26px;
+    text-decoration:none !important;
+    color:var(--sched-muted) !important;
+    -webkit-text-fill-color:var(--sched-muted);
+    background:transparent;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:999px;
+    border:none;
+    font-size:12px;
+    font-weight:650;
+    letter-spacing:0.01em;
+    line-height:1.1;
+    white-space:nowrap;
+    -webkit-tap-highlight-color:transparent;
+    transition:color .15s ease, -webkit-text-fill-color .15s ease;
+  }
+  .sched-toolbar .seg a:hover{
+    color:var(--sched-brand-strong) !important;
+    -webkit-text-fill-color:var(--sched-brand-strong);
+    background:transparent;
+  }
+  .sched-toolbar .seg a.is-active{
+    background:transparent;
+    color:var(--sched-brand-strong) !important;
+    -webkit-text-fill-color:var(--sched-brand-strong);
+    font-weight:750;
+    box-shadow:none;
+  }
+  .sched-toolbar .seg a.is-active:hover{
+    background:transparent;
+    color:var(--sched-brand-strong) !important;
+    -webkit-text-fill-color:var(--sched-brand-strong);
+  }
+  /* Tréninky / Pronájmy – kompaktní pill */
+  .sched-toolbar .seg--kind a{
+    padding:5px 11px;
+  }
+  .sched-toolbar .seg--kind a.is-active{
+    background:var(--sched-brand);
+    color:#fff !important;
+    -webkit-text-fill-color:#fff;
+    box-shadow:0 1px 2px rgba(17, 24, 39, 0.12);
+  }
+  .sched-toolbar .seg .seg__label--short{ display:none; }
+  .sched-toolbar .seg .seg__label--full{ display:inline; }
+  /* .sched-action-btn → ts-buttons.css */
 
-  /* Jeden scroll kontejner (obě osy), aby sticky fungovalo – dny nahoře, hodiny vlevo */
+  /* Jeden scroll kontejner (obě osy), aby sticky fungovalo – dny nahoře, hodiny vlevo.
+     Border musí být tady (ne na .sched-wrap), jinak ho overflow ořízne na hranách. */
   .sched-scroll{
     overflow: auto;
     -webkit-overflow-scrolling: touch;
     width: 100%;
+    max-width: none;
     max-height: min(calc(100vh - 180px), 900px);
+    box-sizing: border-box;
+    background: var(--sched-card);
+    border: 1px solid var(--sched-border);
+    border-radius: 12px;
   }
-  /* širší kalendář = širší sloupce pro jednotlivé dny */
-  .sched-scroll-inner{ min-width: min(100%, 1200px); }
-  @media (max-width: 768px){
-    .sched-scroll-inner{ min-width: 1050px; }
+  /* širší kalendář = širší sloupce; na úzkém viewportu 100 % */
+  .sched-scroll-inner{
+    width: 100%;
+    min-width: 100%;
+    box-sizing: border-box;
+  }
+  @media (min-width: 1100px) {
+    .sched-scroll-inner{ min-width: min(100%, 1200px); }
   }
 
-  .sched-wrap{ background:var(--sched-card); border:1px solid var(--sched-border); border-radius:12px; }
+  /* Mobilní pás dnů – na desktopu skrytý */
+  .sched-day-strip{
+    display:none;
+    position:relative;
+    gap:2px;
+    margin:0 0 12px;
+    padding:4px;
+    border-radius:14px;
+    background:color-mix(in srgb, var(--sched-border) 28%, var(--sched-card));
+    border:1px solid var(--sched-border);
+    box-shadow:none;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .sched-day-strip::-webkit-scrollbar{ display:none; }
+  .sched-day-strip__pill{
+    position:absolute;
+    top:4px;
+    left:0;
+    height:calc(100% - 8px);
+    width:44px;
+    border-radius:10px;
+    background:var(--sched-brand-weak);
+    border:1px solid color-mix(in srgb, var(--sched-brand) 28%, transparent);
+    box-shadow:none;
+    pointer-events:none;
+    z-index:0;
+    transform:translateX(4px);
+    transition:none;
+    will-change:transform,width;
+  }
+  .sched-day-strip__btn{
+    position:relative;
+    z-index:1;
+    flex:1 1 0;
+    min-width:44px;
+    margin:0;
+    padding:8px 4px;
+    border:0;
+    border-radius:10px;
+    background:transparent;
+    color:var(--sched-muted);
+    cursor:pointer;
+    font:inherit;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+    -webkit-tap-highlight-color:transparent;
+    transition:color .15s ease;
+  }
+  .sched-day-strip__dow{
+    font-size:13px;
+    font-weight:700;
+    line-height:1.1;
+    text-transform:lowercase;
+  }
+  .sched-day-strip__date{
+    font-size:11px;
+    font-weight:600;
+    opacity:.8;
+  }
+  .sched-day-strip__btn.is-active{
+    background:transparent;
+    color:var(--sched-brand-strong);
+  }
+
+  .sched-wrap{
+    background:var(--sched-card);
+    border:none;
+    border-radius:0;
+  }
 
   /* Řádek dnů zakotvený nahoře při vertikálním scrollování */
   .sched-head{
-    display:grid; grid-template-columns: 52px repeat(var(--days), minmax(140px, 1fr));
+    display:grid; grid-template-columns: 52px minmax(0, 1fr);
     background:var(--sched-card); border-bottom:1px solid var(--sched-border);
     position:sticky; top:0; z-index:3;
     box-shadow: 0 2px 4px rgba(0,0,0,.04);
   }
-  .sched-head div{ padding:10px 12px; font-weight:700; color:var(--sched-text); white-space:nowrap; }
+  .sched-head-days{
+    display:grid;
+    grid-template-columns: repeat(var(--days), minmax(140px, 1fr));
+    min-width:0;
+  }
+  .sched-head-days div{ padding:10px 12px; font-weight:700; color:var(--sched-text); white-space:nowrap; }
   /* Rohová buňka (nad hodinami) zakotvená vlevo při horizontálním scrollování */
-  .sched-head div:first-child{ position:sticky; left:0; z-index:4; background:var(--sched-card); border-right:1px solid var(--sched-border); padding:10px 4px !important; min-width:0; }
+  .sched-head > div:first-child{
+    position:sticky; left:0; z-index:4; background:var(--sched-card);
+    border-right:1px solid var(--sched-border); padding:10px 4px !important; min-width:0;
+  }
 
-  .sched-grid{ position:relative; display:grid; grid-template-columns: 52px repeat(var(--days), minmax(140px, 1fr)); background:var(--sched-bg); }
+  .sched-grid{
+    position:relative;
+    display:grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    background:var(--sched-bg);
+  }
+  .sched-days-pager{
+    display:grid;
+    grid-template-columns: repeat(var(--days), minmax(140px, 1fr));
+    min-width:0;
+  }
 
   /* Sloupec hodin zakotvený vlevo při horizontálním scrollování */
   .sched-hours{ position:sticky; left:0; z-index:2; background:var(--sched-card); border-right:1px solid var(--sched-border); }
@@ -66,9 +322,240 @@
     top: calc( (var(--h) - var(--sched-start, 6)) * var(--hour-h) );
   }
 
-  .sched-day{ position:relative; background:var(--sched-card); border-right:1px solid var(--sched-border); }
+  .sched-day{ position:relative; background:var(--sched-card); border-right:1px solid var(--sched-border); min-width:0; }
   .sched-day:last-child{ border-right:none; }
   .sched-day-body{ position:relative; height: calc(var(--hour-count, 16) * var(--hour-h) + var(--tail)); }
+  /* Hodiny uvnitř dne – na desktopu skryté (používá se sticky .sched-hours) */
+  .sched-day-hours{ display:none; }
+
+  /* === Mobilní denní pager (iOS styl) ===
+     Portrait: šířka ≤820px
+     Landscape telefon: nízká výška + šířka do tabletu (iPhone landscape ~844×390) */
+  @media (max-width: 820px), (max-height: 500px) and (max-width: 1024px){
+    .sched-day-strip{
+      display:flex;
+    }
+    /* ts-buttons.css má .sched-toolbar .button { display:inline-flex !important } */
+    body.ts-page-schedule .sched-toolbar .sched-nav-prev,
+    body.ts-page-schedule .sched-toolbar .sched-nav-next,
+    body.ts-page-schedule .sched-toolbar a.button.sched-nav-prev,
+    body.ts-page-schedule .sched-toolbar a.button.sched-nav-next{
+      display:none !important;
+    }
+    .sched-toolbar{
+      margin:8px 0 10px;
+    }
+    .sched-toolbar__controls{
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:stretch;
+      gap:8px;
+    }
+    .sched-toolbar__spacer{ display:none; }
+    .sched-toolbar select{
+      width:100%;
+      min-width:0;
+      box-sizing:border-box;
+      height:42px;
+      font-size:14px;
+      border-radius:12px;
+    }
+    /* Datum: kompaktní, ne přes celou šířku (iOS jinak uřízne ikonu) */
+    .sched-toolbar input[type="date"]{
+      width:10.75rem;
+      max-width:100%;
+      min-width:0;
+      align-self:flex-start;
+      box-sizing:border-box;
+      height:42px;
+      padding:8px 10px;
+      font-size:14px;
+      border-radius:12px;
+      -webkit-appearance:none;
+      appearance:none;
+    }
+    .sched-toolbar input[type="date"]::-webkit-calendar-picker-indicator{
+      margin:0;
+      padding:0;
+      opacity:0.7;
+    }
+    /* Typ rozvrhu – full-width switch, krátké labely */
+    .sched-toolbar .seg--rozvrh{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      width:100%;
+      min-width:0;
+      gap:0;
+      box-sizing:border-box;
+    }
+    .sched-toolbar .seg--kind{
+      width:100%;
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+    }
+    .sched-toolbar .seg--rozvrh a,
+    .sched-toolbar .seg--kind a{
+      width:100%;
+      min-width:0;
+      padding:7px 4px;
+      font-size:12px;
+      letter-spacing:0.01em;
+      text-align:center;
+    }
+    .sched-toolbar .seg--rozvrh .seg__label--full{ display:none; }
+    .sched-toolbar .seg--rozvrh .seg__label--short{ display:inline; }
+    .sched-scroll-inner{
+      min-width:0 !important;
+      width:100%;
+    }
+    .sched-scroll{
+      max-height: calc(100dvh - 210px);
+      overflow-x:hidden;
+      overflow-y:auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .sched-scroll::-webkit-scrollbar{
+      display:none;
+      width:0;
+      height:0;
+    }
+    .sched-head{
+      display:none;
+    }
+    /* Celá šířka = pager; hodiny jedou uvnitř každého dne */
+    .sched-grid{
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .sched-hours{
+      display:none !important;
+    }
+    .sched-days-pager{
+      display:flex;
+      gap:0;
+      overflow-x:auto;
+      overflow-y:hidden;
+      scroll-snap-type:x mandatory;
+      scroll-behavior:auto;
+      -webkit-overflow-scrolling:touch;
+      overscroll-behavior-x:contain;
+      scrollbar-width:none;
+      background:var(--sched-card);
+      width:100%;
+      min-width:0;
+    }
+    .sched-days-pager::-webkit-scrollbar{ display:none; }
+    .sched-days-pager.is-paging{
+      scroll-snap-type:none !important;
+    }
+    .sched-day{
+      display:flex;
+      flex-direction:row;
+      align-items:stretch;
+      flex:0 0 100%;
+      flex-shrink:0;
+      width:100%;
+      min-width:100%;
+      max-width:100%;
+      box-sizing:border-box;
+      scroll-snap-align:start;
+      scroll-snap-stop:always;
+      border-right:none;
+      border-radius:0;
+      overflow:hidden;
+      background:var(--sched-card);
+      box-shadow:none;
+      position:relative;
+      transform:none !important;
+      opacity:1 !important;
+    }
+    .sched-day-hours{
+      display:block;
+      flex:0 0 44px;
+      width:44px;
+      min-width:44px;
+      max-width:44px;
+      position:relative;
+      z-index:2;
+      background:var(--sched-card);
+      border-right:1px solid var(--sched-border);
+      pointer-events:none;
+    }
+    .sched-day-hours__inner{
+      position:relative;
+      height: calc(var(--hour-count, 16) * var(--hour-h) + var(--tail));
+    }
+    .sched-day-hours .sched-hour{
+      left:0;
+      right:0;
+      text-align:center;
+      font-size:11px;
+      font-weight:600;
+      letter-spacing:-0.01em;
+      color:var(--sched-muted);
+      transform:translateY(-50%);
+    }
+    .sched-day > .sched-day-body{
+      flex:1 1 auto;
+      min-width:0;
+      width:auto;
+      transform:none !important;
+      opacity:1 !important;
+    }
+    html.qa-dragging .sched-days-pager{
+      scroll-snap-type:none !important;
+      scroll-behavior:auto;
+      touch-action:none !important;
+    }
+    html.qa-dragging.qa-paging-day .sched-days-pager{
+      scroll-snap-type:none !important;
+      touch-action:none !important;
+    }
+  }
+
+  /* Landscape mobil – víc místa pro grid, stejný denní pager */
+  @media (max-height: 500px) and (max-width: 1024px){
+    .sched-toolbar{
+      margin:4px 0 8px;
+      gap:6px;
+    }
+    .sched-toolbar__controls{
+      gap:6px;
+    }
+    .sched-toolbar .seg a{
+      padding:6px 10px;
+      font-size:12px;
+    }
+    .sched-toolbar input[type="date"],
+    .sched-toolbar select{
+      height:34px;
+      padding:6px 10px;
+      font-size:12px;
+    }
+    .sched-day-strip{
+      margin:0 0 8px;
+      padding:3px;
+      border-radius:12px;
+    }
+    .sched-day-strip__btn{
+      padding:6px 4px;
+    }
+    .sched-day-strip__dow{ font-size:12px; }
+    .sched-day-strip__date{ font-size:10px; }
+    .sched-help{
+      display:none;
+    }
+    .sched-scroll{
+      max-height: calc(100dvh - 150px);
+    }
+    .sched-day-hours{
+      flex-basis:40px;
+      width:40px;
+      min-width:40px;
+      max-width:40px;
+    }
+  }
 
   .sched-day-body::before{
     content:""; position:absolute; inset:0; background:
@@ -88,12 +575,12 @@
   /* Základ eventu – pozice podle skutečného času (minuty), ne jen celých hodin */
   .ev{
     position:absolute; box-sizing:border-box;
-    background:var(--ev-bg, var(--sched-brand-weak));
-    border:1px solid var(--ev-border, var(--sched-brand));
+    background:var(--sched-brand-weak);
+    border:1px solid var(--sched-brand);
     border-radius:4px;
     padding:4px 6px;
-    color:var(--ev-text, #7c2d12);
-    box-shadow:0 4px 12px rgba(0,0,0,.06);
+    color:var(--sched-brand-strong);
+    box-shadow:none;
     overflow:hidden;
     container-type: inline-size;
     container-name: ev;
@@ -145,6 +632,31 @@
     letter-spacing:.01em;
     overflow-wrap:anywhere;
     word-break:break-word;
+  }
+  .ev.ev--pronajem-slot .ev-kurt{
+    flex-shrink:0;
+    font-size:var(--ev-sub-size);
+    line-height:1.1;
+    font-weight:700;
+    letter-spacing:.01em;
+    opacity:.9;
+    overflow-wrap:anywhere;
+    word-break:break-word;
+  }
+  .ev.ev--pronajem-slot .ev-sub--pronajem{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:6px;
+    width:100%;
+  }
+  .ev.ev--pronajem-slot .ev-time{
+    min-width:0;
+  }
+  .ev.ev--pronajem-slot .ev-cena{
+    flex-shrink:0;
+    text-align:right;
+    white-space:nowrap;
   }
   .ev:hover{ filter:brightness(.98); z-index:2; }
 
@@ -201,12 +713,155 @@
     .ev-sub{ font-size: min(var(--ev-sub-size), 6px); }
   }
 
-  /* Barvy typů tréninku přicházejí z ceníku přes CSS proměnné (--ev-bg / --ev-border / --ev-text). */
+  /* === Barevné varianty podle formátu (stejné barvy jako legenda) ===
+     Třída je ev--{{ ev.fmt }} (slug z get_format_display). */
+  .ev[class*="ev--solo"]        { background:#ffedd5; border-color:#f59e0b; color:#7c2d12; }
+  .ev[class*="ev--dvojice"]     { background:#dbeafe; border-color:#3b82f6; color:#1e3a8a; }
+  .ev[class*="ev--trojice"],
+  .ev[class*="ev--trio"]        { background:#ede9fe; border-color:#8b5cf6; color:#4c1d95; }
+  .ev[class*="ev--ctverice"],
+  .ev[class*="ev--ctver"],
+  .ev[class*="ev--ctyr"]        { background:#dcfce7; border-color:#22c55e; color:#14532d; }
+  .ev[class*="ev--skupina"],
+  .ev[class*="ev--skup"],
+  .ev[class*="ev--petice"],
+  .ev[class*="ev--sobota"]      { background:#ccfbf1; border-color:#14b8a6; color:#115e59; }
+  .ev.ev--kurt-tre,
+  .ev[class*="ev--kurt-rezervace"] { background:#ffe4e6; border-color:#e11d48; color:#9f1239; }
 
   /* legenda – barvy shodné s událostmi v kalendáři */
   .legend{ margin-top:12px; color:var(--sched-muted); font-size:13px; display:flex; gap:18px; flex-wrap:wrap; align-items:center; }
   .legend .item{ display:flex; align-items:center; gap:8px; }
-  .chip{
-    width:12px; height:12px; border-radius:4px; border:1px solid var(--ev-border, #9ca3af);
-    background:var(--ev-bg, #f3f4f6); display:inline-block;
+  .chip{ width:12px; height:12px; border-radius:4px; border:1px solid transparent; display:inline-block; }
+  .chip--solo     { background:#ffedd5; border-color:#f59e0b; }
+  .chip--dvojice  { background:#dbeafe; border-color:#3b82f6; }
+  .chip--trojice  { background:#ede9fe; border-color:#8b5cf6; }
+  .chip--ctverice { background:#dcfce7; border-color:#22c55e; }
+  .chip--skupina  { background:#ccfbf1; border-color:#14b8a6; }
+  .chip--rezervace { background:#ffe4e6; border-color:#e11d48; }
+  .chip--staly    { background:#f3f4f6; border-color:#9ca3af; border-style:dashed; }
+
+  .sched-staly-hint{
+    margin:0 0 12px;
+    padding:10px 12px;
+    border-radius:10px;
+    background:#f8fafc;
+    border:1px solid var(--sched-border);
+    color:var(--sched-muted);
+    font-size:13px;
+    line-height:1.4;
   }
+  .sched-help{
+    margin:0 0 12px;
+    border-radius:12px;
+    background:var(--surface, #fff);
+    border:1px solid var(--sched-border, #e5e7eb);
+    box-shadow:none;
+    color:var(--sched-text, #111);
+    font-size:13px;
+    line-height:1.45;
+    overflow:hidden;
+  }
+  .sched-help[open]{
+    border-color:var(--sched-border, #e5e7eb);
+    background:var(--surface, #fff);
+  }
+  .sched-help__summary{
+    cursor:pointer;
+    list-style:none;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:11px 14px;
+    font-weight:750;
+    color:var(--text-strong, #111);
+    user-select:none;
+  }
+  .sched-help__summary::-webkit-details-marker{ display:none; }
+  .sched-help__icon{
+    flex-shrink:0;
+    width:22px; height:22px;
+    display:inline-flex; align-items:center; justify-content:center;
+    border-radius:999px;
+    font-size:12px; font-weight:800; line-height:1;
+    color:var(--sched-muted, #6b7280);
+    background:#f3f4f6;
+    border:1px solid var(--sched-border, #e5e7eb);
+  }
+  .sched-help__title{ flex:1 1 auto; min-width:0; }
+  .sched-help__chev{
+    flex-shrink:0;
+    width:8px; height:8px;
+    border-right:2px solid currentColor;
+    border-bottom:2px solid currentColor;
+    transform:rotate(-45deg);
+    opacity:.45;
+    transition:transform .18s ease, opacity .15s ease;
+    margin-top:-2px;
+  }
+  .sched-help[open] .sched-help__chev{
+    transform:rotate(45deg);
+    opacity:.75;
+    margin-top:0;
+  }
+  .sched-help__body{
+    padding:2px 14px 14px 46px;
+    color:var(--sched-muted, #6b7280);
+  }
+  .sched-help__body ul{
+    margin:0;
+    padding-left:1.1em;
+  }
+  .sched-help__body li{ margin:0 0 7px; }
+  .sched-help__body li:last-child{ margin-bottom:0; }
+  .sched-help__body li::marker{
+    color:var(--sched-muted, #6b7280);
+  }
+  .sched-wrap.is-staly .ev--staly,
+  .ev.ev--staly{
+    background:#f3f4f6;
+    border:1.5px dashed #9ca3af;
+    color:#374151;
+    cursor:pointer;
+    text-align:left;
+    font:inherit;
+    appearance:none;
+    -webkit-appearance:none;
+  }
+  .ev.ev--staly:hover{
+    filter:none;
+    background:#e5e7eb;
+    border-color:#6b7280;
+  }
+  .ev.ev--staly .ev-name{ font-weight:700; }
+
+  /* Stálý slot s formátem – barvy jako trénink, ale přerušovaný okraj */
+  .ev.ev--staly-slot{
+    cursor:pointer;
+    text-align:left;
+    font:inherit;
+    appearance:none;
+    -webkit-appearance:none;
+    border-style:dashed !important;
+    border-width:1.5px !important;
+  }
+  .ev.ev--staly-slot:hover{
+    filter:brightness(.97);
+  }
+  .qa-staly-note{
+    margin:4px 0 0;
+    font-size:12px;
+    color:var(--sched-brand-strong);
+    font-weight:600;
+  }
+  .sched-toolbar .sched-trener-filter{
+    border-color:color-mix(in srgb, var(--sched-border) 88%, var(--sched-text));
+    box-shadow:none;
+  }
+  .qa-btn-danger{
+    background:#fff1f2;
+    border:1px solid #fb7185;
+    color:#9f1239;
+    font-weight:700;
+  }
+  .qa-btn-danger:hover{ background:#ffe4e6; }

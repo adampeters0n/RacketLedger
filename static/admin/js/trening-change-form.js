@@ -1,14 +1,4 @@
 (function () {
-      function readI18n() {
-        try {
-          var el = document.getElementById('ts-global-i18n');
-          return el ? JSON.parse(el.textContent) : {};
-        } catch (e) {
-          return {};
-        }
-      }
-      var I18N = readI18n();
-
       function wireDochazka(ctx) {
         var group = ctx.querySelector('#dochazka_set-group') || ctx.querySelector('#dochazky-group') ||
           Array.from(ctx.querySelectorAll('.inline-group')).find(function (g) {
@@ -27,31 +17,37 @@
         if (isFirstRun) {
           var thead = group.querySelector('thead');
           if (thead) {
-            var headerMap = [
-              [/hrac|hráč/i, I18N.player || 'Hráč'],
-              [/cena/i, I18N.price || 'Cena'],
-              [/castka|na[uú]ct|naúčt/i, I18N.charged || 'Naúčtováno'],
-              [/nauceno|naúčteno|kdy/i, I18N.chargedWhen || 'Kdy naúčtováno'],
-            ];
-            thead.querySelectorAll('th').forEach(function (th) {
+            var ths = thead.querySelectorAll('th');
+            ths.forEach(function (th, idx) {
               var raw = (th.textContent || '').trim();
-              if (!raw || raw.length < 2) return;
-              for (var j = 0; j < headerMap.length; j++) {
-                if (headerMap[j][0].test(raw)) {
-                  th.textContent = headerMap[j][1];
-                  break;
-                }
+              if (/odstran|delete/i.test(raw) || idx === ths.length - 1) {
+                th.textContent = '';
+                th.setAttribute('aria-label', '');
+                return;
+              }
+              if (/hrac|hráč/i.test(raw) || idx === 0) {
+                th.textContent = 'Hráči';
               }
             });
           }
           var h2 = group.querySelector('h2');
-          if (h2) h2.style.display = 'none';
-          group.querySelectorAll('.inline_label, td.original, th.original').forEach(function (n) { n.remove(); });
+          if (h2) {
+            h2.textContent = 'Hráči';
+            h2.style.display = '';
+          }
+          /* Skrýt Django „original“ sloupec CSS (ne mazat – rozbíjí layout) */
+          group.querySelectorAll('.inline_label').forEach(function (n) { n.remove(); });
+          group.querySelectorAll('a.related-widget-wrapper-link').forEach(function (n) {
+            n.style.display = 'none';
+          });
 
           var addRow = group.querySelector('.add-row');
           if (addRow) {
             var a = addRow.querySelector('a');
-            if (a) a.textContent = I18N.addAttendance || 'Přidat docházku';
+            if (a) {
+              a.textContent = '+ Přidat hráče';
+              a.classList.add('ts-btn');
+            }
             addRow.style.display = '';
             addRow.style.visibility = '';
           }
@@ -108,7 +104,7 @@
             a.href = '#';
             a.className = 'x-clear-hrac';
             a.textContent = '×';
-            a.setAttribute('aria-label', I18N.remove || 'Odstranit');
+            a.setAttribute('aria-label', 'Odstranit');
             lastTd.appendChild(a);
           });
         }
@@ -137,12 +133,8 @@
         }
         var shortcuts = row.querySelectorAll('.datetimeshortcuts');
         shortcuts.forEach(function(span) {
-          span.style.setProperty('display', 'inline-flex', 'important');
-          span.style.setProperty('justify-content', 'flex-start', 'important');
-          span.style.setProperty('text-align', 'left', 'important');
-          span.style.setProperty('margin-left', '0', 'important');
-          span.style.setProperty('margin-right', 'auto', 'important');
-          span.style.setProperty('align-self', 'flex-start', 'important');
+          // Date/time pickery nahrazují Django shortcuts – vždy skrýt
+          span.style.setProperty('display', 'none', 'important');
         });
         var timeInput = row.querySelector('input.vTimeField');
         if (timeInput) {
@@ -169,17 +161,112 @@
         if (!group) return;
         group.querySelectorAll('tbody tr.form-row').forEach(function (tr) {
           if (tr.classList.contains('empty-form')) return;
+          /* Už uložení hráči (has_original) nikdy neschovávat */
+          if (tr.classList.contains('has_original')) {
+            tr.style.display = '';
+            tr.style.visibility = 'visible';
+            tr.removeAttribute('data-x-empty-hrac');
+            return;
+          }
           var sel = tr.querySelector('select[name$="-hrac"]');
-          if (!sel || sel.value) return;
+          var hasVal = sel && String(sel.value || '').length > 0;
+          if (hasVal) {
+            tr.style.display = '';
+            tr.style.visibility = 'visible';
+            tr.removeAttribute('data-x-empty-hrac');
+            return;
+          }
           tr.style.display = 'none';
           tr.setAttribute('data-x-empty-hrac', '1');
         });
+      }
+
+      function formatIsSluzba(format) {
+        return String(format || '').indexOf('V_') === 0;
+      }
+
+      function kurtHasOption(sel, value) {
+        if (!sel) return false;
+        return Array.prototype.some.call(sel.options || [], function (o) {
+          return o.value === value;
+        });
+      }
+
+      function restoreSportKurt(kurtSel) {
+        if (!kurtSel) return;
+        var prev = kurtSel.getAttribute('data-prev-kurt') || '';
+        var next = prev && prev !== 'SLUZBA' ? prev : 'HALA';
+        if (next === 'SLUZBA') next = 'HALA';
+        if (!kurtHasOption(kurtSel, next)) {
+          if (kurtHasOption(kurtSel, 'HALA')) next = 'HALA';
+          else if (kurtHasOption(kurtSel, 'VENEK')) next = 'VENEK';
+          else return;
+        }
+        kurtSel.value = next;
+      }
+
+      function syncSluzbaDelkaUi(ctx) {
+        var formatSel = ctx.querySelector('#id_format');
+        var kurtSel = ctx.querySelector('#id_kurt');
+        var delkaRow =
+          ctx.querySelector('.add-day-row--delka') ||
+          ctx.querySelector('.form-row.field-delka_minut') ||
+          (ctx.querySelector('#id_delka_minut') &&
+            ctx.querySelector('#id_delka_minut').closest('.form-row, .add-day-row'));
+        var delkaSel = ctx.querySelector('#id_delka_minut');
+        if (!formatSel && !kurtSel) return;
+        var format = formatSel ? formatSel.value : '';
+        var kurt = kurtSel ? kurtSel.value : '';
+        var fmtService = formatIsSluzba(format);
+
+        if (fmtService) {
+          if (kurtSel && kurt && kurt !== 'SLUZBA') {
+            kurtSel.setAttribute('data-prev-kurt', kurt);
+          }
+          if (kurtSel && kurtHasOption(kurtSel, 'SLUZBA') && kurtSel.value !== 'SLUZBA') {
+            kurtSel.value = 'SLUZBA';
+          }
+          if (delkaRow) {
+            delkaRow.hidden = true;
+            delkaRow.classList.add('is-sluzba-hidden');
+          }
+          if (delkaSel) delkaSel.value = '60';
+          return;
+        }
+
+        if (kurtSel && kurtSel.value === 'SLUZBA') {
+          restoreSportKurt(kurtSel);
+          kurt = kurtSel.value;
+        }
+
+        var service = kurt === 'SLUZBA';
+        if (delkaRow) {
+          delkaRow.hidden = !!service;
+          delkaRow.classList.toggle('is-sluzba-hidden', !!service);
+        }
+        if (service && delkaSel) delkaSel.value = '60';
+      }
+
+      function wireSluzbaDelka(ctx) {
+        var formatSel = ctx.querySelector('#id_format');
+        var kurtSel = ctx.querySelector('#id_kurt');
+        if (!formatSel && !kurtSel) return;
+        if (ctx.__tsSluzbaWired) {
+          syncSluzbaDelkaUi(ctx);
+          return;
+        }
+        ctx.__tsSluzbaWired = true;
+        function onChange() { syncSluzbaDelkaUi(ctx); }
+        if (formatSel) formatSel.addEventListener('change', onChange);
+        if (kurtSel) kurtSel.addEventListener('change', onChange);
+        syncSluzbaDelkaUi(ctx);
       }
 
       function boot() {
         wireDochazka(document);
         ensureCasNadBublinou();
         hideEmptyDochazkaRows(document);
+        wireSluzbaDelka(document);
       }
       document.addEventListener('DOMContentLoaded', boot);
       window.addEventListener('load', boot);
